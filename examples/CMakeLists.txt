@@ -1,5 +1,6 @@
 add_subdirectory(buzzer)
 add_subdirectory(dbus)
+add_subdirectory(imu)
 add_subdirectory(laser)
 add_subdirectory(led)
 add_subdirectory(motor)
