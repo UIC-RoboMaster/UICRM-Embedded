@@ -1,4 +1,5 @@
 add_subdirectory(buzzer)
+add_subdirectory(chassis)
 add_subdirectory(dbus)
 add_subdirectory(imu)
 add_subdirectory(laser)
