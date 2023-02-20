@@ -9,13 +9,13 @@
 #define KEY_GPIO_PIN KEY_Pin
 
 // Refer to typeA datasheet for channel detail
-static bsp::CAN* can1 = nullptr;
+static bsp::CAN*can2 = nullptr;
 static control::Motor2006* motor1= nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart6);
-    can1 = new bsp::CAN(&hcan1, 0x201, true);
-    motor1 = new control::Motor2006(can1,0x201);
+    can2 = new bsp::CAN(&hcan1, 0x201, true);
+    motor1 = new control::Motor2006(can2,0x201);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
