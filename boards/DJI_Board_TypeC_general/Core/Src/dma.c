@@ -72,7 +72,9 @@ void MX_DMA_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
-__weak void RM_DMA_IRQHandler(SPI_HandleTypeDef *hspi) {
+__weak void RM_DMA_SPI_IRQHandler(SPI_HandleTypeDef *hspi) {
+}
+__weak void RM_DMA_I2C_IRQHandler(I2C_HandleTypeDef * hi2c) {
 }
 /* USER CODE END 2 */
 

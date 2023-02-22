@@ -7,3 +7,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_pwm
 uicrm_add_arm_executable(${PROJECT_NAME}_m2006
     TARGET DJI_Board_TypeC_general
     SOURCES m2006.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_m6020
+        TARGET DJI_Board_TypeC_general
+        SOURCES m6020.cpp)
