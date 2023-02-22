@@ -30,7 +30,7 @@ Gimbal::Gimbal(gimbal_t gimbal)
       float yaw_omega_max_iout = 25000; // 10000
       float yaw_omega_max_out = 30000;
       pitch_theta_pid_param_ = new float[3]{15, 0, 0};
-      pitch_omega_pid_param_ = new float[3]{2900, 60, 0};
+      pitch_omega_pid_param_ = new float[3]{1800, 60, 0};
       yaw_theta_pid_param_ = new float[3]{26, 0, 0.3};
       yaw_omega_pid_param_ = new float[3]{3600, 20, 0};
       pitch_theta_pid_ = new ConstrainedPID(
@@ -154,6 +154,12 @@ void Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
 void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
   pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
   yaw_angle_ = yaw_motor_->GetTheta() + rel_yaw;
+}
+
+void Gimbal::UpdateOffset(float pitch_offset, float yaw_offset) {
+  data_.pitch_offset_ =
+      wrap<float>(pitch_offset + data_.pitch_offset_, 0, 2 * PI);
+  data_.yaw_offset_ = wrap<float>(yaw_offset + data_.yaw_offset_, 0, 2 * PI);
 }
 
 } // namespace control
