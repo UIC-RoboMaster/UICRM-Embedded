@@ -52,6 +52,11 @@ static control::MotorCANBase* yaw_motor = nullptr;
 static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 
+float pitch_ratio, yaw_ratio;
+float pitch_curr, yaw_curr;
+float pitch_target = 0, yaw_target = 0;
+float pitch_diff, yaw_diff;
+
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,
@@ -66,7 +71,7 @@ osThreadId_t gimbalTaskHandle;
 void gimbalTask(void* arg) {
   UNUSED(arg);
 
-  control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
+  control::MotorCANBase* gimbal_motors[] = {yaw_motor,pitch_motor};
 
   print("Wait for beginning signal...\r\n");
   laser->SetVal(255);
@@ -86,7 +91,14 @@ void gimbalTask(void* arg) {
     osDelay(1);
     ++i;
   }
-
+  i=0;
+  while(i<5000){
+    gimbal->TargetAbs(0, 0);
+    gimbal->Update();
+    control::MotorCANBase::TransmitOutput(gimbal_motors, 2);
+    osDelay(1);
+    ++i;
+  }
   print("Start Calibration.\r\n");
   laser->SetVal(0);
   imu->Calibrate();
@@ -103,10 +115,7 @@ void gimbalTask(void* arg) {
   print("Gimbal Begin!\r\n");
   laser->SetVal(255);
 
-  float pitch_ratio, yaw_ratio;
-  float pitch_curr, yaw_curr;
-  float pitch_target = 0, yaw_target = 0;
-  float pitch_diff, yaw_diff;
+
 
   while (true) {
     if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN) {
@@ -118,15 +127,15 @@ void gimbalTask(void* arg) {
       }
     }
 
-    pitch_ratio = -dbus->mouse.y / 32767.0 * 7.5 / 7.0;
+    pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
     yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-    pitch_ratio += -dbus->ch3 / 18000.0 / 7.0;
+    pitch_ratio += dbus->ch3 / 18000.0 / 7.0;
     yaw_ratio += -dbus->ch2 / 18000.0 / 7.0;
     pitch_target = clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
                                gimbal_param->pitch_max_);
-    yaw_target = wrap<float>(yaw_target + yaw_ratio, -PI, PI);
+    yaw_target = wrap<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_, -gimbal_param->yaw_max_);
 
-    pitch_curr = imu->INS_angle[1];
+    pitch_curr = imu->INS_angle[2];
     yaw_curr = imu->INS_angle[0];
 
     pitch_diff = clip<float>(pitch_target - pitch_curr, -PI, PI);
@@ -136,7 +145,7 @@ void gimbalTask(void* arg) {
       pitch_diff = 0;
     }
 
-    gimbal->TargetRel(-pitch_diff / 60, yaw_diff / 100);
+    gimbal->TargetRel(pitch_diff / 60, yaw_diff / 100);
 
     gimbal->Update();
     control::MotorCANBase::TransmitOutput(gimbal_motors, 2);
@@ -145,8 +154,8 @@ void gimbalTask(void* arg) {
 }
 
 void RM_RTOS_Init(void) {
-  //print_use_uart(&huart1);
-  print_use_usb();
+  print_use_uart(&huart6);
+  //print_use_usb();
   can2 = new bsp::CAN(&hcan2, 0x205, false);
   dbus = new remote::DBUS(&huart3);
   laser = new bsp::Laser(&htim3, 3,100000);
@@ -178,8 +187,8 @@ void RM_RTOS_Init(void) {
   imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
   imu = new IMU(imu_init, false);
 
-  pitch_motor = new control::Motor6020(can2, 0x205);
-  yaw_motor = new control::Motor6020(can2, 0x206);
+  pitch_motor = new control::Motor6020(can2, 0x206);
+  yaw_motor = new control::Motor6020(can2, 0x205);
   control::gimbal_t gimbal_data;
   gimbal_data.pitch_motor = pitch_motor;
   gimbal_data.yaw_motor = yaw_motor;
@@ -194,7 +203,7 @@ void RM_RTOS_Threads_Init(void) {
 }
 
 void KillAll() {
-  control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
+  control::MotorCANBase* gimbal_motors[] = {yaw_motor,pitch_motor};
 
   RM_EXPECT_TRUE(false, "Operation killed\r\n");
   while (true) {
@@ -226,9 +235,12 @@ void RM_RTOS_Default_Task(const void* arg) {
           imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180,
           imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m",
           dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->timestamp);
-
-
-
+    pitch_motor->PrintData();
+    yaw_motor->PrintData();
+    print("Pitch Target: %.2f, Pitch Current: %.2f, Pitch Diff: %.2f\r\n",
+          pitch_target, pitch_curr, pitch_diff);
+    print("Yaw Target: %.2f, Yaw Current: %.2f, Yaw Diff: %.2f\r\n",
+          yaw_target, yaw_curr, yaw_diff);
     osDelay(100);
   }
 }

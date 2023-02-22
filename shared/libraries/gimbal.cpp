@@ -15,10 +15,10 @@ Gimbal::Gimbal(gimbal_t gimbal)
   // data initialization using acquired model
   switch (gimbal.model) {
     case GIMBAL_FORTRESS:
-      data_.pitch_offset_ = 5.205564f;
-      data_.yaw_offset_ = 1.8132f;
-      data_.pitch_max_ = 0.5080f;
-      data_.yaw_max_ = PI;
+      data_.pitch_offset_ = 4.68515f;
+      data_.yaw_offset_ = 3.6478;
+      data_.pitch_max_ = 0.4713f;
+      data_.yaw_max_ = 1.7058f;
       {
         float pitch_theta_max_iout = 0;
         float pitch_theta_max_out = 10;
@@ -135,8 +135,8 @@ void Gimbal::Update() {
 
   float yt_diff = yaw_motor_->GetThetaDelta(yaw_angle_);
   float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
-  float yt_in = yaw_motor_->GetOmegaDelta(yt_out);
-  float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yt_in);
+  float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
+  float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
 
   pitch_motor_->SetOutput(po_out);
   yaw_motor_->SetOutput(yo_out);
