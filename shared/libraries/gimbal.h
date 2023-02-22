@@ -82,6 +82,14 @@ public:
    */
   void TargetRel(float new_pitch, float new_yaw);
 
+  /**
+   * @brief update the offset of the gimbal
+   *
+   * @param pitch_offset new pitch offset
+   * @param yaw_offset   new yaw offset
+   */
+  void UpdateOffset(float pitch_offset, float yaw_offset);
+
 private:
   // acquired from user
   MotorCANBase *pitch_motor_ = nullptr;

@@ -118,8 +118,8 @@ void gimbalTask(void *arg) {
 
     pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
     yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-    pitch_ratio += dbus->ch3 / 18000.0 / 7.0;
-    yaw_ratio += -dbus->ch2 / 18000.0 / 7.0;
+    pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
+    yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
     pitch_target =
         clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
                     gimbal_param->pitch_max_);
@@ -136,7 +136,7 @@ void gimbalTask(void *arg) {
       pitch_diff = 0;
     }
 
-    gimbal->TargetRel(pitch_diff / 60, yaw_diff / 100);
+    gimbal->TargetRel(pitch_diff, yaw_diff);
 
     gimbal->Update();
     control::MotorCANBase::TransmitOutput(gimbal_motors, 2);
