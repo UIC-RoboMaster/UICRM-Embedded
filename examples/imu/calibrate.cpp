@@ -17,8 +17,8 @@ typedef struct {
   char terminator;
 } __attribute__((packed)) imu_data_t;
 
-static bsp::MPU6500* imu = nullptr;
-static bsp::VirtualUSB* usb = nullptr;
+static bsp::MPU6500 *imu = nullptr;
+static bsp::VirtualUSB *usb = nullptr;
 
 static imu_data_t imu_data;
 
@@ -28,7 +28,7 @@ void RM_RTOS_Init(void) {
   imu_data.terminator = '\0';
 }
 
-void RM_RTOS_Default_Task(const void* arguments) {
+void RM_RTOS_Default_Task(const void *arguments) {
   UNUSED(arguments);
 
   bsp::GPIO chip_select(ONBOARD_IMU_CS_GROUP, ONBOARD_IMU_CS_PIN);
@@ -41,7 +41,7 @@ void RM_RTOS_Default_Task(const void* arguments) {
     imu_data.acce = imu->acce;
     imu_data.gyro = imu->gyro;
     imu_data.mag = imu->mag;
-    usb->Write((uint8_t*)&imu_data, sizeof(imu_data));
+    usb->Write((uint8_t *)&imu_data, sizeof(imu_data));
     osDelay(10);
   }
 }

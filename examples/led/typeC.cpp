@@ -2,11 +2,11 @@
 #include "main.h"
 #include "rgb.h"
 
-static display::RGB* led = nullptr;
+static display::RGB *led = nullptr;
 
 void RM_RTOS_Init(void) { led = new display::RGB(&htim5, 3, 2, 1, 1000000); }
 
-void RM_RTOS_Default_Task(const void* args) {
+void RM_RTOS_Default_Task(const void *args) {
   UNUSED(args);
 
   int RGB_FLOW_COLOR_CHANGE_TIME = 300;
@@ -43,8 +43,8 @@ void RM_RTOS_Default_Task(const void* args) {
       green += delta_green;
       blue += delta_blue;
 
-      aRGB = ((uint32_t)(alpha)) << 24 | ((uint32_t)(red)) << 16 | ((uint32_t)(green)) << 8 |
-             ((uint32_t)(blue)) << 0;
+      aRGB = ((uint32_t)(alpha)) << 24 | ((uint32_t)(red)) << 16 |
+             ((uint32_t)(green)) << 8 | ((uint32_t)(blue)) << 0;
       led->Display(aRGB);
       osDelay(1);
     }

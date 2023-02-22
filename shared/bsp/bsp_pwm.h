@@ -5,18 +5,19 @@
 namespace bsp {
 
 class PWM {
- public:
+public:
   /**
    * @brief constructor for a pwm output manager
    *
    * @param htim         HAL timer handle
-   * @param channel      channel associated with the timer, choose from [1,2,3,4]
+   * @param channel      channel associated with the timer, choose from
+   * [1,2,3,4]
    * @param clock_freq   clock frequency associated with the timer, in [Hz]
    * @param output_freq  desired pwm output frequency, in [Hz]
    * @param pulse_width  desired pwm output pulse width, is [us]
    */
-  PWM(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq,
-      uint32_t pulse_width);
+  PWM(TIM_HandleTypeDef *htim, uint8_t channel, uint32_t clock_freq,
+      uint32_t output_freq, uint32_t pulse_width);
 
   /**
    * @brief start pwm output signal generation
@@ -42,8 +43,8 @@ class PWM {
    */
   void SetPulseWidth(uint32_t pulse_width);
 
- private:
-  TIM_HandleTypeDef* htim_;
+private:
+  TIM_HandleTypeDef *htim_;
   uint32_t channel_;
   uint32_t clock_freq_;
   uint32_t output_freq_;

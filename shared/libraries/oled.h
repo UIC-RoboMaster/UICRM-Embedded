@@ -24,8 +24,8 @@ typedef enum {
 } pen_typedef;
 
 class OLED {
- public:
-  OLED(I2C_HandleTypeDef* hi2c, uint16_t OLED_i2c_addr);
+public:
+  OLED(I2C_HandleTypeDef *hi2c, uint16_t OLED_i2c_addr);
 
   bool IsReady();
 
@@ -69,7 +69,8 @@ class OLED {
   void SetPos(uint8_t x, uint8_t y);
 
   /**
-  * @brief          draw one bit of graphic raw, operate one point of screan(128*64)
+  * @brief          draw one bit of graphic raw, operate one point of
+  screan(128*64)
   * @param[in]      x: x-axis, [0, X_WIDTH-1]
   * @param[in]      y: y-axis, [0, Y_WIDTH-1]
   * @param[in]      pen: type of operation,
@@ -89,7 +90,8 @@ class OLED {
    * @param[in]      pen: type of operation,PEN_CLEAR,PEN_WRITE,PEN_INVERSION.
    * @retval         none
    */
-  void DrawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, pen_typedef pen);
+  void DrawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
+                pen_typedef pen);
 
   /**
    * @brief          show a character
@@ -109,18 +111,18 @@ class OLED {
    * @param[in]      chr: the pointer to character string
    * @retval         none
    */
-  void ShowString(uint8_t row, uint8_t col, uint8_t* chr);
+  void ShowString(uint8_t row, uint8_t col, uint8_t *chr);
 
   /**
    * @brief          formatted output in oled 128*64
    * @param[in]      row: row of character string begin, 0 <= row <= 4;
    * @param[in]      col: column of character string begin, 0 <= col <= 20;
    * @param          *fmt: the pointer to format character string
-   * @note           if the character length is more than one row at a time, the extra characters
-   * will be truncated
+   * @note           if the character length is more than one row at a time, the
+   * extra characters will be truncated
    * @retval         none
    */
-  void Printf(uint8_t row, uint8_t col, const char* fmt, ...);
+  void Printf(uint8_t row, uint8_t col, const char *fmt, ...);
 
   /**
    * @brief          send the data of gram to oled sreen
@@ -138,9 +140,10 @@ class OLED {
   void ShowIlliniRMLOGO(void);
   void DrawCat(void);
 
- private:
+private:
   /**
-   * @brief          write data/command to OLED, if you use spi, please rewrite the function
+   * @brief          write data/command to OLED, if you use spi, please rewrite
+   * the function
    * @param[in]      dat: the data ready to write
    * @param[in]      cmd: OLED_CMD means command; OLED_DATA means data
    * @retval         none
@@ -151,9 +154,9 @@ class OLED {
 
   unsigned long CatCount_ = 0;
 
-  I2C_HandleTypeDef* hi2c_;
+  I2C_HandleTypeDef *hi2c_;
   uint16_t OLED_i2c_addr_;
   uint8_t OLED_GRAM_[128][8];
 };
 
-}  // namespace display
+} // namespace display

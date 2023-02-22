@@ -6,10 +6,10 @@
 using Note = bsp::BuzzerNote;
 /*
 static bsp::BuzzerNoteDelayed Mario[] = {
-    {Note::Mi3M, 80}, {Note::Silent, 80},  {Note::Mi3M, 80}, {Note::Silent, 240},
-    {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::Do1M, 80}, {Note::Silent, 80},
-    {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::So5M, 80}, {Note::Silent, 560},
-    {Note::So5L, 80}, {Note::Silent, 0},   {Note::Finish, 0}};
+    {Note::Mi3M, 80}, {Note::Silent, 80},  {Note::Mi3M, 80}, {Note::Silent,
+240}, {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::Do1M, 80}, {Note::Silent,
+80}, {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::So5M, 80}, {Note::Silent,
+560}, {Note::So5L, 80}, {Note::Silent, 0},   {Note::Finish, 0}};
 // uncomment to play the full song
 static bsp::BuzzerNoteDelayed War_Cant_of_Mars[] = {
     //    {Note::So5M, 400},   {Note::So5M, 200},  {Note::So5M, 200},
@@ -51,14 +51,10 @@ static bsp::BuzzerNoteDelayed War_Cant_of_Mars[] = {
 };
 */
 static bsp::BuzzerNoteDelayed DJI[] = {
-        {Note::Do1M, 300},
-        {Note::Re2M, 300},
-        {Note::So5M, 600},
-        {Note::Finish, 0}
-};
+    {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
 void RM_RTOS_Init(void) {
   bsp::Buzzer buzzer(&htim4, 3, 1000000);
   buzzer.SingSong(DJI);
-  //buzzer.SingSong(War_Cant_of_Mars);
+  // buzzer.SingSong(War_Cant_of_Mars);
 }
