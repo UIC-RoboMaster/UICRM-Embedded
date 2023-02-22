@@ -61,6 +61,8 @@ public:
   // left and right switch information
   switch_t swl;
   switch_t swr;
+  // left track wheel
+  int16_t ch4;
   // mouse movement and button information
   mouse_t mouse;
   // keyboard key information
