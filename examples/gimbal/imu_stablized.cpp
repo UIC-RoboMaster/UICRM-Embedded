@@ -12,11 +12,11 @@
 #define KEY_GPIO_GROUP GPIOB
 #define KEY_GPIO_PIN GPIO_PIN_2
 
-bsp::CAN* can = nullptr;
-control::MotorCANBase* pitch_motor = nullptr;
-control::MotorCANBase* yaw_motor = nullptr;
-control::Gimbal* gimbal = nullptr;
-remote::DBUS* dbus = nullptr;
+bsp::CAN *can = nullptr;
+control::MotorCANBase *pitch_motor = nullptr;
+control::MotorCANBase *yaw_motor = nullptr;
+control::Gimbal *gimbal = nullptr;
+remote::DBUS *dbus = nullptr;
 bool status = false;
 
 // init imu
@@ -25,8 +25,8 @@ bool status = false;
 #define ONBOARD_IMU_CS_PIN GPIO_PIN_6
 #define PRING_UART huart8
 
-static bsp::MPU6500* imu;
-static control::Pose* poseEstimator;
+static bsp::MPU6500 *imu;
+static control::Pose *poseEstimator;
 
 /* init IMU task START */
 
@@ -49,12 +49,13 @@ const osThreadAttr_t IMUTaskAttributes = {.name = "AddTask",
                                           .cb_size = 0,
                                           .stack_mem = nullptr,
                                           .stack_size = 128 * 4,
-                                          .priority = (osPriority_t)osPriorityNormal,
+                                          .priority =
+                                              (osPriority_t)osPriorityNormal,
                                           .tz_module = 0,
                                           .reserved = 0};
 
 // pose estimation task
-void IMU_Task(void* argument) {
+void IMU_Task(void *argument) {
   UNUSED(argument);
   bsp::GPIO laser(LASER_GPIO_Port, LASER_Pin);
   laser.High();
@@ -115,14 +116,14 @@ void RM_RTOS_Init() {
 }
 
 // Gimbal task
-void RM_RTOS_Default_Task(const void* args) {
+void RM_RTOS_Default_Task(const void *args) {
   UNUSED(args);
 
-  osDelay(500);  // DBUS initialization needs time
+  osDelay(500); // DBUS initialization needs time
 
-  control::MotorCANBase* motors[] = {pitch_motor, yaw_motor};
+  control::MotorCANBase *motors[] = {pitch_motor, yaw_motor};
 
-  float yaw, pitch;  //, roll;
+  float yaw, pitch; //, roll;
   while (true) {
     // update rpy
     yaw = poseEstimator->GetYaw();
