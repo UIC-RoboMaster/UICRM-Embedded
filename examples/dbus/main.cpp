@@ -7,7 +7,7 @@
 static remote::DBUS *dbus;
 
 void RM_RTOS_Init(void) {
-  print_use_usb();
+  print_use_uart(&huart6);
   dbus = new remote::DBUS(&huart3);
 }
 
@@ -19,10 +19,11 @@ void RM_RTOS_Default_Task(const void *arguments) {
   while (true) {
     set_cursor(0, 0);
     clear_screen();
-    print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d @ %d "
+    print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d TWL: %d "
+          "@ %d "
           "ms\r\n",
           dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr,
-          dbus->timestamp);
-    osDelay(500);
+          dbus->ch4, dbus->timestamp);
+    osDelay(50);
   }
 }

@@ -28,7 +28,7 @@ typedef struct {
   remote::mouse_t mouse;
   /* keyboard key information */
   remote::keyboard_t keyboard;
-  uint16_t reserved;
+  uint16_t ch4 : 11;
 } __packed dbus_t;
 
 DBUS::DBUS(UART_HandleTypeDef *huart) : bsp::UART(huart) {
@@ -49,11 +49,12 @@ void DBUS::RxCompleteCallback() {
   this->ch1 = repr->ch1 - RC_ROCKER_MID;
   this->ch2 = repr->ch2 - RC_ROCKER_MID;
   this->ch3 = repr->ch3 - RC_ROCKER_MID;
+  this->ch4 = repr->ch4 - RC_ROCKER_MID;
   this->ch0 = abs(this->ch0) <= RC_ROCKER_ZERO_DRIFT ? 0 : this->ch0;
   this->ch1 = abs(this->ch1) <= RC_ROCKER_ZERO_DRIFT ? 0 : this->ch1;
   this->ch2 = abs(this->ch2) <= RC_ROCKER_ZERO_DRIFT ? 0 : this->ch2;
   this->ch3 = abs(this->ch3) <= RC_ROCKER_ZERO_DRIFT ? 0 : this->ch3;
-
+  this->ch4 = abs(this->ch4) <= RC_ROCKER_ZERO_DRIFT ? 0 : this->ch4;
   this->swl = static_cast<switch_t>(repr->swl);
   this->swr = static_cast<switch_t>(repr->swr);
 
