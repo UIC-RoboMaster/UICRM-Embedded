@@ -11,7 +11,7 @@ namespace bsp {
  *
  * @note this has to be called before starting rtos scheduler
  */
-void SetHighresClockTimer(TIM_HandleTypeDef* htim);
+void SetHighresClockTimer(TIM_HandleTypeDef *htim);
 
 /**
  * @brief get the current counter value of the highres timer in [us]

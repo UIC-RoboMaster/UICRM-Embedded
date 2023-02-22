@@ -5,14 +5,14 @@
 #include "cmsis_os.h"
 #include "dbus.h"
 
-bsp::CAN* can = nullptr;
-control::MotorCANBase* fl_motor = nullptr;
-control::MotorCANBase* fr_motor = nullptr;
-control::MotorCANBase* bl_motor = nullptr;
-control::MotorCANBase* br_motor = nullptr;
+bsp::CAN *can = nullptr;
+control::MotorCANBase *fl_motor = nullptr;
+control::MotorCANBase *fr_motor = nullptr;
+control::MotorCANBase *bl_motor = nullptr;
+control::MotorCANBase *br_motor = nullptr;
 
-control::Chassis* chassis = nullptr;
-remote::DBUS* dbus = nullptr;
+control::Chassis *chassis = nullptr;
+remote::DBUS *dbus = nullptr;
 
 void RM_RTOS_Init() {
   print_use_uart(&huart1);
@@ -22,7 +22,7 @@ void RM_RTOS_Init() {
   bl_motor = new control::Motor3508(can, 0x203);
   br_motor = new control::Motor3508(can, 0x204);
 
-  control::MotorCANBase* motors[control::FourWheel::motor_num];
+  control::MotorCANBase *motors[control::FourWheel::motor_num];
   motors[control::FourWheel::front_left] = fl_motor;
   motors[control::FourWheel::front_right] = fr_motor;
   motors[control::FourWheel::back_left] = bl_motor;
@@ -36,12 +36,12 @@ void RM_RTOS_Init() {
   dbus = new remote::DBUS(&huart3);
 }
 
-void RM_RTOS_Default_Task(const void* args) {
+void RM_RTOS_Default_Task(const void *args) {
   UNUSED(args);
 
-  osDelay(500);  // DBUS initialization needs time
+  osDelay(500); // DBUS initialization needs time
 
-  control::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
+  control::MotorCANBase *motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
 
   while (true) {
     chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);

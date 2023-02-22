@@ -13,14 +13,14 @@
 #define ONBOARD_IMU_CS_PIN GPIO_PIN_6
 #define PRING_UART huart8
 
-static bsp::MPU6500* imu;
+static bsp::MPU6500 *imu;
 
 void RM_RTOS_Init(void) {
   bsp::SetHighresClockTimer(&htim2);
   print_use_uart(&PRING_UART);
 }
 
-void RM_RTOS_Default_Task(const void* arguments) {
+void RM_RTOS_Default_Task(const void *arguments) {
   UNUSED(arguments);
 
   // init IMU instance
@@ -49,7 +49,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
   // reset timer and pose for IMU
   poseEstimator.PoseInit();
 
-  /* NOTE: IMU SHOULD BE PLACED ON A FLAT PLANE WHILE RUNNING THE FUNCTIONS ABOVE */
+  /* NOTE: IMU SHOULD BE PLACED ON A FLAT PLANE WHILE RUNNING THE FUNCTIONS
+   * ABOVE */
 
   while (true) {
     // update estimated pose with complementary filter

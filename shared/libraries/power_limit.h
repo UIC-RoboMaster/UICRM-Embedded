@@ -14,13 +14,13 @@ typedef struct {
 } power_limit_t;
 
 class PowerLimit {
- public:
+public:
   PowerLimit(int motor_num);
   void Output(bool turn_on, power_limit_t power_limit_info, float chassis_power,
-              float chassis_power_buffer, float* PID_output, float* output);
+              float chassis_power_buffer, float *PID_output, float *output);
 
- private:
+private:
   int motor_num_;
 };
 
-}  // namespace control
+} // namespace control

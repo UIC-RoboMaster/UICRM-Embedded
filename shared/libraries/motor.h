@@ -7,7 +7,7 @@
 
 namespace control {
 
-constexpr int MOTOR_RANGE = 30000;  // TODO: 32767 or 30000?
+constexpr int MOTOR_RANGE = 30000; // TODO: 32767 or 30000?
 
 int16_t ClipMotorRange(float output);
 
@@ -15,13 +15,13 @@ int16_t ClipMotorRange(float output);
  * @brief base class for motor representation
  */
 class MotorBase {
- public:
+public:
   MotorBase() : output_(0) {}
   virtual ~MotorBase() {}
 
   virtual void SetOutput(int16_t val) { output_ = val; }
 
- protected:
+protected:
   int16_t output_;
 };
 
@@ -29,14 +29,14 @@ class MotorBase {
  * @brief base class for CAN motor representation
  */
 class MotorCANBase : public MotorBase {
- public:
+public:
   /**
    * @brief base constructor
    *
    * @param can    CAN instance
    * @param rx_id  CAN rx id
    */
-  MotorCANBase(bsp::CAN* can, uint16_t rx_id);
+  MotorCANBase(bsp::CAN *can, uint16_t rx_id);
 
   /**
    * @brief update motor feedback data
@@ -101,7 +101,7 @@ class MotorCANBase : public MotorBase {
    * @param motors[]    array of CAN motor pointers
    * @param num_motors  number of motors to transmit
    */
-  static void TransmitOutput(MotorCANBase* motors[], uint8_t num_motors);
+  static void TransmitOutput(MotorCANBase *motors[], uint8_t num_motors);
 
   /**
    * @brief set ServoMotor as friend of MotorCANBase since they need to use
@@ -111,12 +111,12 @@ class MotorCANBase : public MotorBase {
 
   volatile bool connection_flag_ = false;
 
- protected:
+protected:
   volatile float theta_;
   volatile float omega_;
 
- private:
-  bsp::CAN* can_;
+private:
+  bsp::CAN *can_;
   uint16_t rx_id_;
   uint16_t tx_id_;
 };
@@ -125,9 +125,9 @@ class MotorCANBase : public MotorBase {
  * @brief DJI 2006 motor class
  */
 class Motor2006 : public MotorCANBase {
- public:
+public:
   /* constructor wrapper over MotorCANBase */
-  Motor2006(bsp::CAN* can, uint16_t rx_id);
+  Motor2006(bsp::CAN *can, uint16_t rx_id);
   /* implements data update callback */
   void UpdateData(const uint8_t data[]) override final;
   /* implements data printout */
@@ -137,7 +137,7 @@ class Motor2006 : public MotorCANBase {
 
   int16_t GetCurr() const override final;
 
- private:
+private:
   volatile int16_t raw_current_get_ = 0;
 };
 
@@ -145,9 +145,9 @@ class Motor2006 : public MotorCANBase {
  * @brief DJI 3508 motor class
  */
 class Motor3508 : public MotorCANBase {
- public:
+public:
   /* constructor wrapper over MotorCANBase */
-  Motor3508(bsp::CAN* can, uint16_t rx_id);
+  Motor3508(bsp::CAN *can, uint16_t rx_id);
   /* implements data update callback */
   void UpdateData(const uint8_t data[]) override final;
   /* implements data printout */
@@ -159,7 +159,7 @@ class Motor3508 : public MotorCANBase {
 
   uint16_t GetTemp() const override final;
 
- private:
+private:
   volatile int16_t raw_current_get_ = 0;
   volatile uint8_t raw_temperature_ = 0;
 };
@@ -168,9 +168,9 @@ class Motor3508 : public MotorCANBase {
  * @brief DJI 6020 motor class
  */
 class Motor6020 : public MotorCANBase {
- public:
+public:
   /* constructor wrapper over MotorCANBase */
-  Motor6020(bsp::CAN* can, uint16_t rx_id);
+  Motor6020(bsp::CAN *can, uint16_t rx_id);
   /* implements data update callback */
   void UpdateData(const uint8_t data[]) override final;
   /* implements data printout */
@@ -182,7 +182,7 @@ class Motor6020 : public MotorCANBase {
 
   uint16_t GetTemp() const override final;
 
- private:
+private:
   volatile int16_t raw_current_get_ = 0;
   volatile uint8_t raw_temperature_ = 0;
 };
@@ -191,9 +191,9 @@ class Motor6020 : public MotorCANBase {
  * @brief DJI 6623 motor class
  */
 class Motor6623 : public MotorCANBase {
- public:
+public:
   /* constructor wrapper over MotorCANBase */
-  Motor6623(bsp::CAN* can, uint16_t rx_id);
+  Motor6623(bsp::CAN *can, uint16_t rx_id);
   /* implements data update callback */
   void UpdateData(const uint8_t data[]) override final;
   /* implements data printout */
@@ -204,18 +204,18 @@ class Motor6623 : public MotorCANBase {
   float GetOmega() const override final;
   float GetOmegaDelta(const float target) const override final;
 
- private:
+private:
   volatile int16_t raw_current_get_ = 0;
   volatile int16_t raw_current_set_ = 0;
 
-  static const int16_t CURRENT_CORRECTION = -1;  // current direction is reversed
+  static const int16_t CURRENT_CORRECTION = -1; // current direction is reversed
 };
 
 /**
  * @brief PWM motor base class
  */
 class MotorPWMBase : public MotorBase {
- public:
+public:
   /**
    * @brief constructor
    *
@@ -225,19 +225,21 @@ class MotorPWMBase : public MotorBase {
    * @param output_freq    desired output frequency, in [Hz]
    * @param idle_throttle  idling pulse width, in [us]
    *
-   * @note M3508 have idle_throttle about 1500, snail have idle_throttle about 1100
+   * @note M3508 have idle_throttle about 1500, snail have idle_throttle about
+   * 1100
    */
-  MotorPWMBase(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq,
-               uint32_t idle_throttle);
+  MotorPWMBase(TIM_HandleTypeDef *htim, uint8_t channel, uint32_t clock_freq,
+               uint32_t output_freq, uint32_t idle_throttle);
 
   /**
    * @brief set and transmit output
    *
-   * @param val offset value with respect to the idle throttle pulse width, in [us]
+   * @param val offset value with respect to the idle throttle pulse width, in
+   * [us]
    */
   virtual void SetOutput(int16_t val) override;
 
- private:
+private:
   bsp::PWM pwm_;
   uint32_t idle_throttle_;
 };
@@ -246,26 +248,27 @@ class MotorPWMBase : public MotorBase {
  * @brief DJI snail 2305 motor class
  */
 class Motor2305 : public MotorPWMBase {
- public:
+public:
   /* override base implementation with max current protection */
   void SetOutput(int16_t val) override final;
 };
 
 /**
  * @brief servomotor turning mode
- * @note the turning direction is determined as if user is facing the motor, may subject to
- *       change depending on motor type
+ * @note the turning direction is determined as if user is facing the motor, may
+ * subject to change depending on motor type
  */
 typedef enum {
-  SERVO_CLOCKWISE = -1,   /* Servomotor always turn clockwisely                      */
-  SERVO_NEAREST = 0,      /* Servomotor turn in direction that make movement minimum */
-  SERVO_ANTICLOCKWISE = 1 /* Servomotor always turn anticlockwisely                  */
+  SERVO_CLOCKWISE = -1, /* Servomotor always turn clockwisely */
+  SERVO_NEAREST =
+      0, /* Servomotor turn in direction that make movement minimum */
+  SERVO_ANTICLOCKWISE = 1 /* Servomotor always turn anticlockwisely */
 } servo_mode_t;
 
 /**
  * @brief servomotor status
- * @note the turning direction is determined as if user is facing the motor, may subject to
- *       change depending on motor type
+ * @note the turning direction is determined as if user is facing the motor, may
+ * subject to change depending on motor type
  */
 typedef enum {
   TURNING_CLOCKWISE = -1,   /* Servomotor is turning clockwisely         */
@@ -274,49 +277,54 @@ typedef enum {
 } servo_status_t;
 
 /**
- * @brief transmission ratios of DJI motors, reference to motor manuals for more details
+ * @brief transmission ratios of DJI motors, reference to motor manuals for more
+ * details
  */
 #define M3508P19_RATIO (3591.0 / 187) /* Transmission ratio of M3508P19 */
 #define M2006P36_RATIO 36             /* Transmission ratio of M2006P36 */
 
 typedef struct {
-  servo_mode_t mode; /* turning mode of servomotor, refer to type servo_mode_t */
-  float speed;       /* motor shaft turning speed                              */
+  servo_mode_t
+      mode;    /* turning mode of servomotor, refer to type servo_mode_t */
+  float speed; /* motor shaft turning speed                              */
 } servo_jam_t;
 
-class ServoMotor;  // declare first for jam_callback_t to have correct param type
+class ServoMotor; // declare first for jam_callback_t to have correct param type
 /**
  * @brief jam callback template
  */
-typedef void (*jam_callback_t)(ServoMotor* servo, const servo_jam_t data);
+typedef void (*jam_callback_t)(ServoMotor *servo, const servo_jam_t data);
 
 /**
  * @brief structure used when servomotor instance is initialized
  */
 typedef struct {
-  MotorCANBase* motor;      /* motor instance to be wrapped as a servomotor      */
-  float max_speed;          /* desired turning speed of motor shaft, in [rad/s]  */
-  float max_acceleration;   /* desired acceleration of motor shaft, in [rad/s^2] */
-  float transmission_ratio; /* transmission ratio of motor                       */
-  float* omega_pid_param;   /* pid parameter used to control speed of motor      */
+  MotorCANBase *motor; /* motor instance to be wrapped as a servomotor      */
+  float max_speed;     /* desired turning speed of motor shaft, in [rad/s]  */
+  float
+      max_acceleration; /* desired acceleration of motor shaft, in [rad/s^2] */
+  float transmission_ratio; /* transmission ratio of motor */
+  float *omega_pid_param;   /* pid parameter used to control speed of motor   */
   float max_iout;
   float max_out;
 } servo_t;
 
 /**
- * @brief wrapper class for motor to enable the motor shaft angle to be precisely controlled with
- *        possible external gearbox present
- * @note this is a calculation class that calculate the motor output for desired output, but it does
- * not directly command a motor to turn.
+ * @brief wrapper class for motor to enable the motor shaft angle to be
+ * precisely controlled with possible external gearbox present
+ * @note this is a calculation class that calculate the motor output for desired
+ * output, but it does not directly command a motor to turn.
  */
 class ServoMotor {
- public:
+public:
   /**
    * @brief base constructor
    *
    * @param servo         initialization struct, refer to type servo_t
-   * @param proximity_in  critical difference angle for the motor to enter hold state
-   * @param proximity_out critical difference angle for the motor to exit hold state
+   * @param proximity_in  critical difference angle for the motor to enter hold
+   * state
+   * @param proximity_out critical difference angle for the motor to exit hold
+   * state
    *
    * @note proximity_out should be greater than proximity_in
    */
@@ -324,13 +332,14 @@ class ServoMotor {
              float proximity_out = 0.15);
 
   /**
-   * @brief set next target for servomotor, will have no effect if last set target has not been
-   * achieved
-   * @note if motor is not holding, call to this function will have no effect unless override is
-   * true
+   * @brief set next target for servomotor, will have no effect if last set
+   * target has not been achieved
+   * @note if motor is not holding, call to this function will have no effect
+   * unless override is true
    *
    * @param target   next target for the motor in [rad]
-   * @param override if true, override current target even if motor is not holding right now
+   * @param override if true, override current target even if motor is not
+   * holding right now
    * @return current turning mode of motor
    */
   servo_status_t SetTarget(const float target, bool override = false);
@@ -349,13 +358,15 @@ class ServoMotor {
    *
    * @note should always be positive, negative inputs will be ignored
    *
-   * @param max_acceleration speed of desired motor shaft turning speed, in [rad/s]
+   * @param max_acceleration speed of desired motor shaft turning speed, in
+   * [rad/s]
    */
   void SetMaxAcceleration(const float max_acceleration);
 
   /**
    * @brief calculate the output of the motors under current configuration
-   * @note this function will not command the motor, it only calculate the desired input
+   * @note this function will not command the motor, it only calculate the
+   * desired input
    */
   void CalcOutput();
 
@@ -376,16 +387,18 @@ class ServoMotor {
 
   /**
    * @brief register a callback function that would be called if motor is jammed
-   * @note Jam detection uses a moving window across inputs to the motor. It uses a circular buffer
-   * of size detect_period to store history inputs and calculates a rolling average of the inputs.
-   *       Everytime the average of inputs is greater than
-   *       effect_threshold * 32768(maximum command a motor can accept), the jam callback function
-   * will be triggered once. The callback will only be triggered once each time the rolling average
-   *       cross the threshold from lower to higher. For a standard jam callback function, refer to
-   *       example motor_m3508_antijam
+   * @note Jam detection uses a moving window across inputs to the motor. It
+   * uses a circular buffer of size detect_period to store history inputs and
+   * calculates a rolling average of the inputs. Everytime the average of inputs
+   * is greater than effect_threshold * 32768(maximum command a motor can
+   * accept), the jam callback function will be triggered once. The callback
+   * will only be triggered once each time the rolling average cross the
+   * threshold from lower to higher. For a standard jam callback function, refer
+   * to example motor_m3508_antijam
    *
    * @param callback         callback function to be registered
-   * @param effort_threshold threshold for motor to be determined as jammed, ranged between (0, 1)
+   * @param effort_threshold threshold for motor to be determined as jammed,
+   * ranged between (0, 1)
    * @param detect_period    detection window length
    */
   void RegisterJamCallback(jam_callback_t callback, float effort_threshold,
@@ -438,9 +451,9 @@ class ServoMotor {
 
   friend class SteeringMotor;
 
- private:
+private:
   // refer to servo_t for details
-  MotorCANBase* motor_;
+  MotorCANBase *motor_;
   float max_speed_;
   float max_acceleration_;
   float transmission_ratio_;
@@ -448,31 +461,42 @@ class ServoMotor {
   float proximity_out_;
 
   // angle control
-  bool hold_; /* true if motor is holding now, otherwise moving now                      */
+  bool hold_; /* true if motor is holding now, otherwise moving now */
   uint32_t start_time_;
-  float target_angle_; /* desired target angle, range between [0, 2PI] in [rad]                   */
-  float align_angle_;  /* motor angle when a instance of this class is created with that motor    */
-  float motor_angle_;  /* current motor angle in [rad], with align_angle subtracted               */
-  float offset_angle_; /* cumulative offset angle of motor shaft, range between [0, 2PI] in [rad] */
-  float servo_angle_;  /* current angle of motor shaft, range between [0, 2PI] in [rad]           */
+  float
+      target_angle_; /* desired target angle, range between [0, 2PI] in [rad] */
+  float align_angle_;  /* motor angle when a instance of this class is created
+                          with that motor    */
+  float motor_angle_;  /* current motor angle in [rad], with align_angle
+                          subtracted               */
+  float offset_angle_; /* cumulative offset angle of motor shaft, range between
+                          [0, 2PI] in [rad] */
+  float servo_angle_; /* current angle of motor shaft, range between [0, 2PI] in
+                         [rad]           */
   float cumulated_angle_;
 
   // jam detection
-  jam_callback_t jam_callback_; /* callback function that will be invoked if motor jammed */
-  int detect_head_;     /* circular buffer current head                                       */
-  int detect_period_;   /* circular buffer length                                             */
-  int detect_total_;    /* rolling sum of motor inputs                                        */
-  int jam_threshold_;   /* threshold for rolling sum for the motor to be considered as jammed */
-  int16_t* detect_buf_; /* circular buffer                                                    */
+  jam_callback_t jam_callback_; /* callback function that will be invoked if
+                                   motor jammed */
+  int detect_head_;             /* circular buffer current head             */
+  int detect_period_;           /* circular buffer length           */
+  int detect_total_;            /* rolling sum of motor inputs            */
+  int jam_threshold_;           /* threshold for rolling sum for the motor to be
+                                   considered as jammed */
+  int16_t *detect_buf_;         /* circular buffer         */
 
   // pid controllers
   ConstrainedPID omega_pid_; /* pid for controlling speed of motor */
 
   // edge detectors
-  FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
-  FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
-  BoolEdgeDetector* hold_detector_; /* detect motor is in mode toggling, reset pid accordingly  */
-  BoolEdgeDetector* jam_detector_;  /* detect motor jam toggling, call jam callback accordingly */
+  FloatEdgeDetector
+      *inner_wrap_detector_; /* detect motor motion across encoder boarder */
+  FloatEdgeDetector
+      *outer_wrap_detector_; /* detect motor motion across encoder boarder */
+  BoolEdgeDetector *hold_detector_; /* detect motor is in mode toggling, reset
+                                       pid accordingly  */
+  BoolEdgeDetector *jam_detector_;  /* detect motor jam toggling, call jam
+                                       callback accordingly */
 };
 
 typedef bool (*align_detect_t)(void);
@@ -481,13 +505,14 @@ typedef bool (*align_detect_t)(void);
  * @brief structure used when steering motor instance is initialized
  */
 typedef struct {
-  MotorCANBase* motor; /* motor instance to be wrapped as a servomotor      */
+  MotorCANBase *motor; /* motor instance to be wrapped as a servomotor      */
   float max_speed;     /* desired turning speed of motor shaft, in [rad/s]  */
   float test_speed;
-  float max_acceleration;   /* desired acceleration of motor shaft, in [rad/s^2] */
-  float transmission_ratio; /* transmission ratio of motor                       */
+  float
+      max_acceleration; /* desired acceleration of motor shaft, in [rad/s^2] */
+  float transmission_ratio; /* transmission ratio of motor */
   float offset_angle;
-  float* omega_pid_param; /* pid parameter used to control speed of motor      */
+  float *omega_pid_param; /* pid parameter used to control speed of motor */
   float max_iout;
   float max_out;
   align_detect_t align_detect_func;
@@ -495,7 +520,7 @@ typedef struct {
 } steering_t;
 
 class SteeringMotor {
- public:
+public:
   SteeringMotor(steering_t data);
   float GetRawTheta() const;
   /**
@@ -507,15 +532,15 @@ class SteeringMotor {
   bool AlignUpdate();
   void Update();
 
- private:
-  ServoMotor* servo_;
+private:
+  ServoMotor *servo_;
 
   float test_speed_;
   align_detect_t align_detect_func;
   float calibrate_offset;
 
   float align_angle_;
-  BoolEdgeDetector* align_detector;
+  BoolEdgeDetector *align_detector;
   bool align_complete_;
 };
 

@@ -1,5 +1,6 @@
 ### Clion CMake folder
 cmake-build-debug
+build
 
 ### CMake template
 CMakeLists.txt.user

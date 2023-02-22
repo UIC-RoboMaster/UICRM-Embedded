@@ -4,14 +4,14 @@
 #include "bsp_print.h"
 #include "cmsis_os.h"
 
-static bsp::Laser* laser = nullptr;
+static bsp::Laser *laser = nullptr;
 
 void RM_RTOS_Init(void) {
   print_use_uart(&huart1);
   laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 
-void RM_RTOS_Default_Task(const void* arguments) {
+void RM_RTOS_Default_Task(const void *arguments) {
   UNUSED(arguments);
 
   while (true) {

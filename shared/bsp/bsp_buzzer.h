@@ -5,29 +5,29 @@
 namespace bsp {
 
 enum class BuzzerNote {
-  Do1L = 262,  ///*261.63Hz*/    3822us
-  Re2L = 294,  ///*293.66Hz*/    3405us
-  Mi3L = 330,  ///*329.63Hz*/    3034us
-  Fa4L = 349,  ///*349.23Hz*/    2863us
-  So5L = 392,  ///*392.00Hz*/    2551us
-  La6L = 440,  ///*440.00Hz*/    2272us
-  Si7L = 494,  ///*493.88Hz*/    2052us
+  Do1L = 262, ///*261.63Hz*/    3822us
+  Re2L = 294, ///*293.66Hz*/    3405us
+  Mi3L = 330, ///*329.63Hz*/    3034us
+  Fa4L = 349, ///*349.23Hz*/    2863us
+  So5L = 392, ///*392.00Hz*/    2551us
+  La6L = 440, ///*440.00Hz*/    2272us
+  Si7L = 494, ///*493.88Hz*/    2052us
 
-  Do1M = 523,  ///*523.25Hz*/    1911us
-  Re2M = 587,  ///*587.33Hz*/    1703us
-  Mi3M = 659,  ///*659.26Hz*/    1517us
-  Fa4M = 698,  ///*698.46Hz*/    1432us
-  So5M = 784,  ///*784.00Hz*/    1276us
-  La6M = 880,  ///*880.00Hz*/    1136us
-  Si7M = 988,  ///*987.77Hz*/    1012us
+  Do1M = 523, ///*523.25Hz*/    1911us
+  Re2M = 587, ///*587.33Hz*/    1703us
+  Mi3M = 659, ///*659.26Hz*/    1517us
+  Fa4M = 698, ///*698.46Hz*/    1432us
+  So5M = 784, ///*784.00Hz*/    1276us
+  La6M = 880, ///*880.00Hz*/    1136us
+  Si7M = 988, ///*987.77Hz*/    1012us
 
-  Do1H = 1047,  ///*1046.50Hz*/   956us
-  Re2H = 1175,  ///*1174.66Hz*/   851us
-  Mi3H = 1319,  ///*1318.51Hz*/   758us
-  Fa4H = 1397,  ///*1396.91Hz*/   716us
-  So5H = 1568,  ///*1567.98Hz*/   638us
-  La6H = 1760,  ///*1760.00Hz*/   568us
-  Si7H = 1976,  ///*1975.53Hz*/   506us
+  Do1H = 1047, ///*1046.50Hz*/   956us
+  Re2H = 1175, ///*1174.66Hz*/   851us
+  Mi3H = 1319, ///*1318.51Hz*/   758us
+  Fa4H = 1397, ///*1396.91Hz*/   716us
+  So5H = 1568, ///*1567.98Hz*/   638us
+  La6H = 1760, ///*1760.00Hz*/   568us
+  Si7H = 1976, ///*1975.53Hz*/   506us
 
   Silent = 0,
   Finish = -1,
@@ -41,7 +41,7 @@ struct BuzzerNoteDelayed {
 typedef void (*buzzer_delay_t)(uint32_t milli);
 
 class Buzzer {
- public:
+public:
   /**
    * @brief constructor for a buzzer instance
    *
@@ -50,14 +50,14 @@ class Buzzer {
    * 2, 3, 4]
    * @param clock_freq clock frequency associated with the timer
    */
-  Buzzer(TIM_HandleTypeDef* htim, uint32_t channel, uint32_t clock_freq);
+  Buzzer(TIM_HandleTypeDef *htim, uint32_t channel, uint32_t clock_freq);
 
   /**
    * @brief sing a single tone indefinitely long
    *
    * @param note  note frequency to sing
    */
-  void SingTone(const BuzzerNote& note);
+  void SingTone(const BuzzerNote &note);
 
   /**
    * @brief sing a sequence of delayed notes
@@ -68,12 +68,12 @@ class Buzzer {
    *                    defaults to HAL_Delay implementation
    */
   void SingSong(
-      const BuzzerNoteDelayed* notes,
+      const BuzzerNoteDelayed *notes,
       buzzer_delay_t delay_func = [](uint32_t milli) { HAL_Delay(milli); });
 
   void Off();
 
- private:
+private:
   /* pwm instance associated with the buzzer */
   PWM pwm_;
 };

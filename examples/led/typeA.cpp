@@ -11,7 +11,7 @@ void RM_RTOS_Init(void) {
   gpio_green->Low();
 }
 
-void RM_RTOS_Default_Task(const void* args) {
+void RM_RTOS_Default_Task(const void *args) {
   UNUSED(args);
   while (true) {
     gpio_red->Toggle();
