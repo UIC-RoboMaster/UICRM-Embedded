@@ -16,6 +16,7 @@ void RM_RTOS_Init() {
   can1 = new bsp::CAN(&hcan1, 0x201, true);
   motor1 = new control::Motor2006(can1, 0x201);
 
+
   // Snail need to be run at idle throttle for some
   HAL_Delay(1000);
 }

@@ -25,6 +25,7 @@
 #include "usart.h"
 #include "dma.h"
 #include "spi.h"
+#include "i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -339,7 +340,7 @@ void USART3_IRQHandler(void)
 void DMA1_Stream7_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream7_IRQn 0 */
-
+  RM_DMA_I2C_IRQHandler(&hi2c2);
   /* USER CODE END DMA1_Stream7_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_i2c2_tx);
   /* USER CODE BEGIN DMA1_Stream7_IRQn 1 */

@@ -35,13 +35,14 @@ extern "C" {
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
-
+#define RM_DMA_IRQHandler(hspi) RM_DMA_SPI_IRQHandler(hspi)
 /* USER CODE END Private defines */
 
 void MX_DMA_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-void RM_DMA_IRQHandler(SPI_HandleTypeDef* hspi);
+void RM_DMA_SPI_IRQHandler(SPI_HandleTypeDef* hspi);
+void RM_DMA_I2C_IRQHandler(I2C_HandleTypeDef * hi2c);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
