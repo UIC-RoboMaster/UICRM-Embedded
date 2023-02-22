@@ -7,8 +7,8 @@
 #include "main.h"
 #include "spi.h"
 
-static bsp::CAN* can1 = nullptr;
-static remote::DBUS* dbus = nullptr;
+static bsp::CAN *can1 = nullptr;
+static remote::DBUS *dbus = nullptr;
 
 #define RX_SIGNAL (1 << 0)
 
@@ -18,36 +18,40 @@ const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
                                          .cb_size = 0,
                                          .stack_mem = nullptr,
                                          .stack_size = 256 * 4,
-                                         .priority = (osPriority_t)osPriorityNormal,
+                                         .priority =
+                                             (osPriority_t)osPriorityNormal,
                                          .tz_module = 0,
                                          .reserved = 0};
 osThreadId_t imuTaskHandle;
 
 class IMU : public bsp::IMU_typeC {
- public:
+public:
   using bsp::IMU_typeC::IMU_typeC;
 
- protected:
-  void RxCompleteCallback() final { osThreadFlagsSet(imuTaskHandle, RX_SIGNAL); }
+protected:
+  void RxCompleteCallback() final {
+    osThreadFlagsSet(imuTaskHandle, RX_SIGNAL);
+  }
 };
 
-static IMU* imu = nullptr;
+static IMU *imu = nullptr;
 
-void imuTask(void* arg) {
+void imuTask(void *arg) {
   UNUSED(arg);
 
   while (true) {
-    uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-    if (flags & RX_SIGNAL) {  // unnecessary check
+    uint32_t flags =
+        osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
+    if (flags & RX_SIGNAL) { // unnecessary check
       imu->Update();
     }
   }
 }
 
-static control::MotorCANBase* pitch_motor = nullptr;
-static control::MotorCANBase* yaw_motor = nullptr;
-static control::Gimbal* gimbal = nullptr;
-static control::gimbal_data_t* gimbal_param = nullptr;
+static control::MotorCANBase *pitch_motor = nullptr;
+static control::MotorCANBase *yaw_motor = nullptr;
+static control::Gimbal *gimbal = nullptr;
+static control::gimbal_data_t *gimbal_param = nullptr;
 
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
                                             .attr_bits = osThreadDetached,
@@ -55,15 +59,16 @@ const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
                                             .cb_size = 0,
                                             .stack_mem = nullptr,
                                             .stack_size = 256 * 4,
-                                            .priority = (osPriority_t)osPriorityNormal,
+                                            .priority =
+                                                (osPriority_t)osPriorityNormal,
                                             .tz_module = 0,
                                             .reserved = 0};
 osThreadId_t gimbalTaskHandle;
 
-void gimbalTask(void* arg) {
+void gimbalTask(void *arg) {
   UNUSED(arg);
 
-  control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
+  control::MotorCANBase *gimbal_motors[] = {pitch_motor, yaw_motor};
 
   print("Wait for beginning signal...\r\n");
   while (true) {
@@ -115,9 +120,11 @@ void gimbalTask(void* arg) {
     yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
     pitch_ratio += dbus->ch3 / 18000.0 / 7.0;
     yaw_ratio += -dbus->ch2 / 18000.0 / 7.0;
-    pitch_target = clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
-                               gimbal_param->pitch_max_);
-    yaw_target = clip<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
+    pitch_target =
+        clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
+                    gimbal_param->pitch_max_);
+    yaw_target = clip<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_,
+                             gimbal_param->yaw_max_);
 
     pitch_curr = imu->INS_angle[2];
     yaw_curr = imu->INS_angle[0];
@@ -186,7 +193,7 @@ void RM_RTOS_Threads_Init(void) {
 }
 
 void KillAll() {
-  control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
+  control::MotorCANBase *gimbal_motors[] = {pitch_motor, yaw_motor};
 
   RM_EXPECT_TRUE(false, "Operation killed\r\n");
   while (true) {
@@ -200,24 +207,27 @@ void KillAll() {
   }
 }
 
-void RM_RTOS_Default_Task(const void* arg) {
+void RM_RTOS_Default_Task(const void *arg) {
   UNUSED(arg);
 
   while (true) {
-    if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN) KillAll();
+    if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN)
+      KillAll();
 
     set_cursor(0, 0);
     clear_screen();
 
     print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
-          imu->CaliDone() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
+          imu->CaliDone() ? "\033[1;42mReady\033[0m"
+                          : "\033[1;41mNot Ready\033[0m");
     print("Temp: %.2f\r\n", imu->Temp);
     print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
           imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
 
     print("\r\n");
 
-    print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ", dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3);
+    print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ", dbus->ch0, dbus->ch1,
+          dbus->ch2, dbus->ch3);
     print("SWL: %d SWR: %d @ %d ms\r\n", dbus->swl, dbus->swr, dbus->timestamp);
 
     osDelay(100);

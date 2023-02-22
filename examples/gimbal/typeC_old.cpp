@@ -128,9 +128,11 @@ void gimbalTask(void *arg) {
     yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
     pitch_ratio += -dbus->ch3 / 18000.0 / 7.0;
     yaw_ratio += -dbus->ch2 / 18000.0 / 7.0;
-    pitch_target = clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
-                               gimbal_param->pitch_max_);
-    yaw_target = clip<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
+    pitch_target =
+        clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
+                    gimbal_param->pitch_max_);
+    yaw_target = clip<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_,
+                             gimbal_param->yaw_max_);
 
     pitch_curr = imu->INS_angle[2];
     yaw_curr = imu->INS_angle[0];
@@ -141,7 +143,7 @@ void gimbalTask(void *arg) {
     if (-0.005 < pitch_diff && pitch_diff < 0.005) {
       pitch_diff = 0;
     }
-    if(-0.005 < yaw_diff && yaw_diff < 0.005) {
+    if (-0.005 < yaw_diff && yaw_diff < 0.005) {
       yaw_diff = 0;
     }
 

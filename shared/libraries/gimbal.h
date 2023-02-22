@@ -22,8 +22,8 @@ typedef struct {
                           center) */
   float yaw_offset_;   /* yaw offset angle (angle when muzzle is at horizontal
                           center) */
-  float pitch_max_;    /* maximum pitch angle the gimbal can turn from center    */
-  float yaw_max_;      /* maximum yaw angle the gimbal can turn from center      */
+  float pitch_max_; /* maximum pitch angle the gimbal can turn from center    */
+  float yaw_max_;   /* maximum yaw angle the gimbal can turn from center      */
 } gimbal_data_t;
 
 /**
