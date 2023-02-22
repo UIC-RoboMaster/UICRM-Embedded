@@ -13,27 +13,31 @@ const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
                                          .cb_size = 0,
                                          .stack_mem = nullptr,
                                          .stack_size = 256 * 4,
-                                         .priority = (osPriority_t)osPriorityNormal,
+                                         .priority =
+                                             (osPriority_t)osPriorityNormal,
                                          .tz_module = 0,
                                          .reserved = 0};
 osThreadId_t imuTaskHandle;
 
 class IMU : public bsp::IMU_typeC {
- public:
+public:
   using bsp::IMU_typeC::IMU_typeC;
 
- protected:
-  void RxCompleteCallback() final { osThreadFlagsSet(imuTaskHandle, RX_SIGNAL); }
+protected:
+  void RxCompleteCallback() final {
+    osThreadFlagsSet(imuTaskHandle, RX_SIGNAL);
+  }
 };
 
-static IMU* imu = nullptr;
+static IMU *imu = nullptr;
 
-void imuTask(void* arg) {
+void imuTask(void *arg) {
   UNUSED(arg);
 
   while (true) {
-    uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-    if (flags & RX_SIGNAL) {  // unnecessary check
+    uint32_t flags =
+        osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
+    if (flags & RX_SIGNAL) { // unnecessary check
       imu->Update();
     }
   }
@@ -74,18 +78,20 @@ void RM_RTOS_Threads_Init(void) {
   imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
 }
 
-void RM_RTOS_Default_Task(const void* arg) {
+void RM_RTOS_Default_Task(const void *arg) {
   UNUSED(arg);
   imu->Calibrate();
   while (true) {
     set_cursor(0, 0);
     clear_screen();
     print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
-          imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
+          imu->DataReady() ? "\033[1;42mReady\033[0m"
+                           : "\033[1;41mNot Ready\033[0m");
     print("Temp: %.2f\r\n", imu->Temp);
     print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
           imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
-    print("Is Calibrated: %s\r\n", imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+    print("Is Calibrated: %s\r\n",
+          imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
     osDelay(50);
   }
 }

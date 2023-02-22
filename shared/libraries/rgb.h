@@ -12,14 +12,14 @@ const uint32_t color_cyan = 0xFF00FFFF;
 const uint32_t color_magenta = 0xFFFF00FF;
 
 class RGB {
- public:
-  RGB(TIM_HandleTypeDef* htim, uint8_t channelR, uint8_t channelG, uint8_t channelB,
-      uint32_t clock_freq);
+public:
+  RGB(TIM_HandleTypeDef *htim, uint8_t channelR, uint8_t channelG,
+      uint8_t channelB, uint32_t clock_freq);
   void Display(uint32_t aRGB);
   void Stop();
 
- private:
+private:
   bsp::PWM R_, G_, B_;
 };
 
-}  // namespace display
+} // namespace display

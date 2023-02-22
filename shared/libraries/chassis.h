@@ -17,7 +17,7 @@ typedef enum { CHASSIS_MECANUM_WHEEL, CHASSIS_ONE_WHEEL } chassis_model_t;
  * @brief structure used when chassis instance is initialized
  */
 typedef struct {
-  MotorCANBase** motors; /* motor instances of all chassis motors */
+  MotorCANBase **motors; /* motor instances of all chassis motors */
   chassis_model_t model; /* chassis model                         */
 } chassis_t;
 
@@ -36,11 +36,12 @@ struct OneWheel {
  * @brief wrapper class for chassis
  */
 class Chassis {
- public:
+public:
   /**
    * @brief constructor for chassis
    *
-   * @param chassis structure that used to initialize chassis, refer to type chassis_t
+   * @param chassis structure that used to initialize chassis, refer to type
+   * chassis_t
    */
   Chassis(const chassis_t chassis);
 
@@ -56,7 +57,8 @@ class Chassis {
    * @param y_speed chassis speed on y-direction
    * @param turn_speed chassis clockwise turning speed
    */
-  void SetSpeed(const float x_speed, const float y_speed = 0, const float turn_speed = 0);
+  void SetSpeed(const float x_speed, const float y_speed = 0,
+                const float turn_speed = 0);
 
   /**
    * @brief calculate the output of the motors under current configuration
@@ -65,17 +67,17 @@ class Chassis {
   void Update(bool power_limit_on, float power_limit, float chassis_power,
               float chassis_power_buffer);
 
- private:
+private:
   // acquired from user
-  MotorCANBase** motors_ = nullptr;
+  MotorCANBase **motors_ = nullptr;
   chassis_model_t model_;
 
   // pids and current speeds for each motor on the chassis
   ConstrainedPID pids_[MAX_WHEEL_NUM];
-  PowerLimit* power_limit_ = nullptr;
-  float* speeds_ = nullptr;
+  PowerLimit *power_limit_ = nullptr;
+  float *speeds_ = nullptr;
 
   power_limit_t power_limit_info_;
 };
 
-}  // namespace control
+} // namespace control

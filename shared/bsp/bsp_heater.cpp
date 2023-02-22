@@ -33,4 +33,4 @@ float Heater::Update(float real_temp) {
   pwm_.SetPulseWidth((uint32_t)output);
   return output;
 }
-}
+} // namespace bsp

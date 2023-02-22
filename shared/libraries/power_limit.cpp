@@ -4,10 +4,12 @@ namespace control {
 
 PowerLimit::PowerLimit(int motor_num) { motor_num_ = motor_num; }
 
-void PowerLimit::Output(bool turn_on, power_limit_t power_limit_info, float chassis_power,
-                        float chassis_power_buffer, float* PID_output, float* output) {
+void PowerLimit::Output(bool turn_on, power_limit_t power_limit_info,
+                        float chassis_power, float chassis_power_buffer,
+                        float *PID_output, float *output) {
   if (!turn_on) {
-    for (int i = 0; i < motor_num_; ++i) output[i] = PID_output[i];
+    for (int i = 0; i < motor_num_; ++i)
+      output[i] = PID_output[i];
     return;
   }
   float total_current_limit;
@@ -21,7 +23,8 @@ void PowerLimit::Output(bool turn_on, power_limit_t power_limit_info, float chas
       power_scale = 5.0f / power_limit_info.WARNING_power_buff;
     }
     // scale down
-    total_current_limit = power_limit_info.buffer_total_current_limit * power_scale;
+    total_current_limit =
+        power_limit_info.buffer_total_current_limit * power_scale;
   } else {
     // power > WARNING_POWER
     if (chassis_power > power_limit_info.WARNING_power) {
@@ -29,18 +32,20 @@ void PowerLimit::Output(bool turn_on, power_limit_t power_limit_info, float chas
       // power < 80w
       if (chassis_power < power_limit_info.power_limit) {
         // scale down
-        power_scale = (power_limit_info.power_limit - chassis_power) /
-                      (power_limit_info.power_limit - power_limit_info.WARNING_power);
+        power_scale =
+            (power_limit_info.power_limit - chassis_power) /
+            (power_limit_info.power_limit - power_limit_info.WARNING_power);
       } else {
         // power > 80w
         power_scale = 0.0f;
       }
-      total_current_limit = power_limit_info.buffer_total_current_limit +
-                            power_limit_info.power_total_current_limit * power_scale;
+      total_current_limit =
+          power_limit_info.buffer_total_current_limit +
+          power_limit_info.power_total_current_limit * power_scale;
     } else {
       // power < WARNING_POWER
-      total_current_limit =
-          power_limit_info.buffer_total_current_limit + power_limit_info.power_total_current_limit;
+      total_current_limit = power_limit_info.buffer_total_current_limit +
+                            power_limit_info.power_total_current_limit;
     }
   }
   float total_current = 0;
@@ -59,4 +64,4 @@ void PowerLimit::Output(bool turn_on, power_limit_t power_limit_info, float chas
   }
 }
 
-}  // namespace control
+} // namespace control

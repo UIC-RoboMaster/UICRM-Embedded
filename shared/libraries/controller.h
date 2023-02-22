@@ -1,7 +1,7 @@
 #pragma once
 
-/* NOTE(alvin): DSP libraries depends on macro definitions on FPU computability, so the
- *              main.h must be included before arm_math.h */
+/* NOTE(alvin): DSP libraries depends on macro definitions on FPU computability,
+ * so the main.h must be included before arm_math.h */
 // clang-format off
 #include "main.h"
 // clang-format on
@@ -14,7 +14,7 @@ namespace control {
  * @brief simple PID controller
  */
 class PIDController {
- public:
+public:
   /**
    * @brief PID controller default constructor
    */
@@ -34,7 +34,7 @@ class PIDController {
    *
    * @param param gains of PID controller, formated as [kp, ki, kd]
    */
-  PIDController(float* param);
+  PIDController(float *param);
 
   /**
    * @brief compute output base on current error
@@ -46,7 +46,8 @@ class PIDController {
   float ComputeOutput(float error);
 
   /**
-   * @brief compute output base on current error but constraint to range of int16_t
+   * @brief compute output base on current error but constraint to range of
+   * int16_t
    *
    * @param error error of the system, i.e. (target - actual)
    *
@@ -56,8 +57,8 @@ class PIDController {
   int16_t ComputeConstrainedOutput(float error);
 
   /**
-   * @brief reinitialize the pid instance using another set of gains, but does not clear
-   *        current status
+   * @brief reinitialize the pid instance using another set of gains, but does
+   * not clear current status
    *
    * @param kp new proportional gain
    * @param ki new integral gain
@@ -66,24 +67,24 @@ class PIDController {
   void Reinit(float kp, float ki, float kd);
 
   /**
-   * @brief reinitialize the pid instance using another set of gains, but does not clear
-   *        current status
+   * @brief reinitialize the pid instance using another set of gains, but does
+   * not clear current status
    *
    * @param param gains of PID controller, formated as [kp, ki, kd]
    */
-  void Reinit(float* param);
+  void Reinit(float *param);
 
   /**
    * @brief clear the remembered states of the controller
    */
   void Reset();
 
- private:
+private:
   arm_pid_instance_f32 pid_f32_;
 };
 
 class ConstrainedPID {
- public:
+public:
   ConstrainedPID();
   /**
    * @brief PID controller constructor
@@ -99,7 +100,7 @@ class ConstrainedPID {
    *
    * @param param gains of PID controller, formated as [kp, ki, kd]
    */
-  ConstrainedPID(float* param, float max_iout, float max_out);
+  ConstrainedPID(float *param, float max_iout, float max_out);
 
   /**
    * @brief compute output base on current error
@@ -114,8 +115,8 @@ class ConstrainedPID {
   int16_t ComputeConstrainedOutput(float error);
 
   /**
-   * @brief reinitialize the pid instance using another set of gains, but does not clear
-   *        current status
+   * @brief reinitialize the pid instance using another set of gains, but does
+   * not clear current status
    *
    * @param kp new proportional gain
    * @param ki new integral gain
@@ -124,12 +125,12 @@ class ConstrainedPID {
   void Reinit(float kp, float ki, float kd, float max_iout, float max_out);
 
   /**
-   * @brief reinitialize the pid instance using another set of gains, but does not clear
-   *        current status
+   * @brief reinitialize the pid instance using another set of gains, but does
+   * not clear current status
    *
    * @param param gains of PID controller, formated as [kp, ki, kd]
    */
-  void Reinit(float* param, float max_iout, float max_out);
+  void Reinit(float *param, float max_iout, float max_out);
 
   /**
    * @brief clear the remembered states of the controller
@@ -144,7 +145,7 @@ class ConstrainedPID {
 
   float cumulated_err_;
 
- private:
+private:
   float last_err_;
 
   float max_iout_;

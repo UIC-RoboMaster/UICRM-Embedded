@@ -41,23 +41,23 @@ typedef enum {
 } switch_t;
 
 class DBUS : public bsp::UART {
- public:
+public:
   /**
    * @brief intialize DBUS the same way as a generic UART peripheral
    * @note like uart, dbus needs time to initialize
    *
    * @param huart uart instance
    */
-  DBUS(UART_HandleTypeDef* huart);
+  DBUS(UART_HandleTypeDef *huart);
 
   // Add custom rx data handler
   void RxCompleteCallback() override final;
 
   // rocker channel information
-  int16_t ch0;  // S1*             *S2
-  int16_t ch1;  //   C3-^       ^-C1
-  int16_t ch2;  // C2-<   >+ -<   >+C0
-  int16_t ch3;  //     +v       v+
+  int16_t ch0; // S1*             *S2
+  int16_t ch1; //   C3-^       ^-C1
+  int16_t ch2; // C2-<   >+ -<   >+C0
+  int16_t ch3; //     +v       v+
   // left and right switch information
   switch_t swl;
   switch_t swr;

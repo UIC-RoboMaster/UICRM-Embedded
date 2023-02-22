@@ -1,6 +1,6 @@
 #include "bsp_error_handler.h"
 
-void bsp_error_handler(const char* func, int line, const char* msg) {
+void bsp_error_handler(const char *func, int line, const char *msg) {
   print("[ERROR at ");
   print("%s:", func);
   print("%d] ", line);

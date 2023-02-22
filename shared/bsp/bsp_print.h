@@ -9,7 +9,7 @@
  *
  * @param huart HAL uart handle
  */
-void print_use_uart(UART_HandleTypeDef* huart);
+void print_use_uart(UART_HandleTypeDef *huart);
 
 /**
  * @brief use USB virtual com port for debug print
@@ -28,7 +28,7 @@ void print_use_usb();
  * @note    maximum print length is 32
  * @note    will perform no-op in NDEBUG mode
  */
-int32_t print(const char* format, ...);
+int32_t print(const char *format, ...);
 
 /* escape codes helper functions -- http://www.termsys.demon.co.uk/vtansi.htm */
 

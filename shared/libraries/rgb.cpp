@@ -2,8 +2,8 @@
 
 namespace display {
 
-RGB::RGB(TIM_HandleTypeDef* htim, uint8_t channelR, uint8_t channelG, uint8_t channelB,
-         uint32_t clock_freq)
+RGB::RGB(TIM_HandleTypeDef *htim, uint8_t channelR, uint8_t channelG,
+         uint8_t channelB, uint32_t clock_freq)
     : R_(htim, channelR, clock_freq, 0, 0),
       G_(htim, channelG, clock_freq, 0, 0),
       B_(htim, channelB, clock_freq, 0, 0) {
@@ -35,4 +35,4 @@ void RGB::Stop() {
   B_.Stop();
 }
 
-}  // namespace display
+} // namespace display
