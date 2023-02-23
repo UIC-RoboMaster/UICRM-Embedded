@@ -19,7 +19,7 @@ Gimbal::Gimbal(gimbal_t gimbal)
     data_.pitch_offset_ = 4.72515f;
     data_.yaw_offset_ = 3.6478f;
     data_.pitch_max_ = 0.4253f;
-    data_.yaw_max_ = 1.7058f;
+    data_.yaw_max_ = PI;
     {
       float pitch_theta_max_iout = 0;
       float pitch_theta_max_out = 10;
