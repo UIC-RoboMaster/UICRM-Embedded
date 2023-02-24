@@ -90,7 +90,14 @@ void gimbalTask(void *arg) {
 
   control::MotorCANBase *gimbal_motors[] = {pitch_motor, yaw_motor,
                                             steering_motor};
-
+  osDelay(2000);
+  while (true) {
+    if ((HAL_GetTick() - last_timestamp) < 500 &&
+        (dbus->keyboard.bit.V || dbus->swr != remote::DOWN)) {
+      break;
+    }
+    osDelay(10);
+  }
   int i = 0;
   while (i < 5000 || !imu->DataReady()) {
     gimbal->TargetAbs(0, 0);
@@ -119,14 +126,10 @@ void gimbalTask(void *arg) {
 
   while (true) {
     if (HAL_GetTick() - last_timestamp > 550) {
-      pitch_motor->SetOutput(0);
-      yaw_motor->SetOutput(0);
-      steering_motor->SetOutput(0);
-      control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
       while (1) {
         if (HAL_GetTick() - last_timestamp < 500)
           break;
-        osDelay(50);
+        osDelay(10);
       }
     }
     if (dbus->keyboard.bit.B || dbus->swr == remote::DOWN) {
@@ -139,15 +142,15 @@ void gimbalTask(void *arg) {
     }
     pitch_curr = imu->INS_angle[2];
     yaw_curr = imu->INS_angle[0];
-    if (dbus->swr == remote::UP) {
-      gimbal->TargetAbs(0, 0);
-      gimbal->Update();
-      pitch_target = pitch_curr;
-      yaw_target = yaw_curr;
-      control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
-      osDelay(1);
-      continue;
-    }
+//    if (dbus->swr == remote::UP) {
+//      gimbal->TargetAbs(0, 0);
+//      gimbal->Update();
+//      pitch_target = pitch_curr;
+//      yaw_target = yaw_curr;
+//      control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
+//      osDelay(1);
+//      continue;
+//    }
     pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
     yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
     pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
@@ -164,8 +167,15 @@ void gimbalTask(void *arg) {
     if (-0.005 < pitch_diff && pitch_diff < 0.005) {
       pitch_diff = 0;
     }
+    if (dbus->swr == remote::UP) {
+      gimbal->TargetAbsYawRelPitch(pitch_diff, 0);
+      gimbal->Update();
+      yaw_target = yaw_curr;
+    }
+    else{
+      gimbal->TargetRel(pitch_diff, yaw_diff);
+    }
 
-    gimbal->TargetRel(pitch_diff, yaw_diff);
 
     gimbal->Update();
     control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
@@ -188,9 +198,18 @@ osThreadId_t chassisTaskHandle;
 void chassisTask(void *arg) {
   UNUSED(arg);
 
-  osDelay(10000); // DBUS initialization needs time
-
   control::MotorCANBase *motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
+
+  while (true) {
+    if ((HAL_GetTick() - last_timestamp) < 500 &&
+        (dbus->keyboard.bit.V || dbus->swr != remote::DOWN)) {
+      break;
+    }
+    osDelay(10);
+  }
+  while (!imu->DataReady() || !imu->CaliDone()) {
+    osDelay(1);
+  }
 
   float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
@@ -211,19 +230,12 @@ void chassisTask(void *arg) {
 
   while (true) {
     if (HAL_GetTick() - last_timestamp > 550) {
-
-      chassis->SetSpeed(0, 0, 0);
-      chassis->Update(false, 30, 20, 60);
-      fl_motor->SetOutput(0);
-      fr_motor->SetOutput(0);
-      bl_motor->SetOutput(0);
-      br_motor->SetOutput(0);
-      control::MotorCANBase::TransmitOutput(motors, 4);
-      while (1) {
+      while (true) {
         if (HAL_GetTick() - last_timestamp < 500)
           break;
-        osDelay(50);
+        osDelay(10);
       }
+      continue ;
     }
     if (dbus->keyboard.bit.B || dbus->swr == remote::DOWN) {
       while (true) {
@@ -232,6 +244,7 @@ void chassisTask(void *arg) {
         }
         osDelay(10);
       }
+      continue ;
     }
     relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
     float yt_diff = wrap<float>(relative_angle, -PI, PI);
@@ -317,7 +330,7 @@ void RM_RTOS_Init(void) {
 
 void KillAll() {
   control::MotorCANBase *motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
-  control::MotorCANBase *gimbal_motors[] = {pitch_motor, yaw_motor};
+  control::MotorCANBase *gimbal_motors[] = {pitch_motor, yaw_motor, steering_motor};
 
   RM_EXPECT_TRUE(false, "Operation killed\r\n");
   while (true) {
@@ -331,10 +344,12 @@ void KillAll() {
     fr_motor->SetOutput(0);
     bl_motor->SetOutput(0);
     br_motor->SetOutput(0);
+    control::MotorCANBase::TransmitOutput(motors, 4);
+
     pitch_motor->SetOutput(0);
     yaw_motor->SetOutput(0);
+    steering_motor->SetOutput(0);
     control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
-    control::MotorCANBase::TransmitOutput(motors, 4);
     osDelay(10);
   }
 }
@@ -347,7 +362,7 @@ void RM_RTOS_Threads_Init(void) {
 
 void RM_RTOS_Default_Task(const void *arg) {
   UNUSED(arg);
-
+  osDelay(1000);
   while (true) {
     last_timestamp = dbus->timestamp;
     if (HAL_GetTick() - last_timestamp > 550)

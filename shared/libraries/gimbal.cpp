@@ -151,6 +151,12 @@ void Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
   yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
 }
 
+void Gimbal::TargetAbsYawRelPitch(float rel_pitch, float abs_yaw) {
+  float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
+  pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
+  yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
+}
+
 void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
   pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
   yaw_angle_ = yaw_motor_->GetTheta() + rel_yaw;
