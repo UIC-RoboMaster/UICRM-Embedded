@@ -80,6 +80,14 @@ public:
    * @param new_pitch new pitch angled
    * @param new_yaw   new yaw angled
    */
+  void TargetAbsYawRelPitch(float new_pitch, float new_yaw);
+
+  /**
+   * @brief set motors to point to a new orientation
+   *
+   * @param new_pitch new pitch angled
+   * @param new_yaw   new yaw angled
+   */
   void TargetRel(float new_pitch, float new_yaw);
 
   /**
