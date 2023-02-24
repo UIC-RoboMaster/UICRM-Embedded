@@ -142,15 +142,15 @@ void gimbalTask(void *arg) {
     }
     pitch_curr = imu->INS_angle[2];
     yaw_curr = imu->INS_angle[0];
-//    if (dbus->swr == remote::UP) {
-//      gimbal->TargetAbs(0, 0);
-//      gimbal->Update();
-//      pitch_target = pitch_curr;
-//      yaw_target = yaw_curr;
-//      control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
-//      osDelay(1);
-//      continue;
-//    }
+    //    if (dbus->swr == remote::UP) {
+    //      gimbal->TargetAbs(0, 0);
+    //      gimbal->Update();
+    //      pitch_target = pitch_curr;
+    //      yaw_target = yaw_curr;
+    //      control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
+    //      osDelay(1);
+    //      continue;
+    //    }
     pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
     yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
     pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
@@ -171,11 +171,9 @@ void gimbalTask(void *arg) {
       gimbal->TargetAbsYawRelPitch(pitch_diff, 0);
       gimbal->Update();
       yaw_target = yaw_curr;
-    }
-    else{
+    } else {
       gimbal->TargetRel(pitch_diff, yaw_diff);
     }
-
 
     gimbal->Update();
     control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
@@ -235,7 +233,7 @@ void chassisTask(void *arg) {
           break;
         osDelay(10);
       }
-      continue ;
+      continue;
     }
     if (dbus->keyboard.bit.B || dbus->swr == remote::DOWN) {
       while (true) {
@@ -244,7 +242,7 @@ void chassisTask(void *arg) {
         }
         osDelay(10);
       }
-      continue ;
+      continue;
     }
     relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
     float yt_diff = wrap<float>(relative_angle, -PI, PI);
@@ -330,7 +328,8 @@ void RM_RTOS_Init(void) {
 
 void KillAll() {
   control::MotorCANBase *motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
-  control::MotorCANBase *gimbal_motors[] = {pitch_motor, yaw_motor, steering_motor};
+  control::MotorCANBase *gimbal_motors[] = {pitch_motor, yaw_motor,
+                                            steering_motor};
 
   RM_EXPECT_TRUE(false, "Operation killed\r\n");
   while (true) {
