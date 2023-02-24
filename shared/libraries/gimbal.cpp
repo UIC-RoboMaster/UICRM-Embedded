@@ -19,7 +19,7 @@ Gimbal::Gimbal(gimbal_t gimbal)
     data_.pitch_offset_ = 4.72515f;
     data_.yaw_offset_ = 3.6478f;
     data_.pitch_max_ = 0.4253f;
-    data_.yaw_max_ = 1.7058f;
+    data_.yaw_max_ = PI;
     {
       float pitch_theta_max_iout = 0;
       float pitch_theta_max_out = 10;
@@ -148,6 +148,12 @@ void Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
       clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
   float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
   pitch_angle_ = wrap<float>(clipped_pitch + data_.pitch_offset_, 0, 2 * PI);
+  yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
+}
+
+void Gimbal::TargetAbsYawRelPitch(float rel_pitch, float abs_yaw) {
+  float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
+  pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
   yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
 }
 
