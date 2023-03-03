@@ -264,6 +264,19 @@ void chassisTask(void *arg) {
   }
 }
 
+
+
+#define SHOOT_OS_DELAY 1
+
+void jam_callback(control::ServoMotor* servo, const control::servo_jam_t data) {
+  UNUSED(data);
+  float servo_target = servo->GetTarget();
+  if (servo_target > servo->GetTheta()) {
+    float prev_target = servo->GetTarget() - 2*PI/8;
+    servo->SetTarget(prev_target, true);
+  }
+}
+
 const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .attr_bits = osThreadDetached,
                                            .cb_mem = nullptr,
@@ -297,14 +310,13 @@ void shootTask(void *arg) {
   int shoot_state_2 = 0;
   int last_shoot_key = 0;
   int shoot_state_key = 0;
-  int steering_hold = 0;
+  int shoot_time_count = 0;
 
   RampSource ramp_1 = RampSource(0, 0, 450, 0.001);
   RampSource ramp_2 = RampSource(0, 0, 450, 0.001);
 
   load_servo->SetTarget(load_servo->GetTheta(), true);
   load_servo->CalcOutput();
-  steering_hold = 1;
 
   while (true) {
     if (HAL_GetTick() - last_timestamp > 550) {
@@ -347,6 +359,7 @@ void shootTask(void *arg) {
     case 2:
       shoot_flywheel_offset = 100;
       break;
+
     }
     if (shoot_state == 1 && ramp_1.Get() == ramp_1.GetMax() &&
         ramp_2.Get() == ramp_2.GetMax()) {
@@ -360,15 +373,22 @@ void shootTask(void *arg) {
       shoot_state_key = shoot_key->Read();
       // 检测是否需要发射子弹
       if (dbus->swl == remote::DOWN) {
-        if (last_state_2 == remote::MID)
+        if (last_state_2 == remote::MID){
           last_state_2 = remote::DOWN;
-      } else if (dbus->swl == remote::MID) {
-        if (last_state_2 == remote::DOWN) {
-          last_state_2 = remote::MID;
           if (shoot_state_2 == 0) {
             shoot_state_2 = 1;
           }
+          shoot_time_count = 0;
         }
+        shoot_time_count++;
+        if (shoot_time_count > 1000/SHOOT_OS_DELAY) {
+          shoot_state_2 = 2;
+        }
+      } else if (dbus->swl == remote::MID) {
+        if (last_state_2 == remote::DOWN) {
+          last_state_2 = remote::MID;
+        }
+        shoot_state_2 = 0;
       }
       // 发射子弹
       if (shoot_state_2 == 1) {
@@ -382,29 +402,28 @@ void shootTask(void *arg) {
         // 如果发射未完成，则需要发射子弹
         if (shoot_state_2 == 1) {
           load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-          steering_hold = 0;
         } else {
-          if (steering_hold == 0) {
+          if (!load_servo->Holding()) {
             load_servo->SetTarget(load_servo->GetTheta(), true);
-            steering_hold = 1;
           }
         }
+      } else if (shoot_state_2 == 2){
+        //连续发射
+        load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
       } else if (shoot_state_key == 1) {
         // 不需要发射子弹，但是未装弹完毕，则需要装填子弹
         load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-        steering_hold = 0;
       } else {
         // 不需要发射子弹，且装弹完毕，则需要锁定拔弹电机
-        if (steering_hold == 0) {
+        if (!load_servo->Holding()) {
           load_servo->SetTarget(load_servo->GetTheta(), true);
-          steering_hold = 1;
         }
       }
     }
     // 计算输出，由于拔弹电机的输出系统由云台托管，不需要再次处理can的传输
     load_servo->CalcOutput();
 
-    osDelay(1);
+    osDelay(SHOOT_OS_DELAY);
   }
 }
 
@@ -486,6 +505,7 @@ void RM_RTOS_Init(void) {
 
   load_servo = new control::ServoMotor(servo_data);
   load_servo->SetTarget(load_servo->GetTheta(), true);
+  load_servo->RegisterJamCallback(jam_callback, 0.6);
 
   shoot_key = new bsp::GPIO(BUTTON_TRI_GPIO_Port, BUTTON_TRI_Pin);
 }
