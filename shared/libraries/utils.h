@@ -100,3 +100,18 @@ private:
   bool posEdge_;
   bool negEdge_;
 };
+class RampSource {
+public:
+  RampSource(float initial, float min, float max, float step);
+  float Calc(float input);
+  float Get();
+  float GetMax();
+  float GetMin();
+
+private:
+  float input_;
+  float output_;
+  float min_;
+  float max_;
+  float step_;
+};
