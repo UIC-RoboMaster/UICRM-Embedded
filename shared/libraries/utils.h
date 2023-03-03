@@ -114,6 +114,4 @@ private:
   float min_;
   float max_;
   float step_;
-
-
 };

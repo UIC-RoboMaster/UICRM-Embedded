@@ -1,9 +1,9 @@
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
+#include "dbus.h"
 #include "main.h"
 #include "motor.h"
-#include "dbus.h"
 #include "utils.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
@@ -38,34 +38,27 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void *args) {
   UNUSED(args);
   bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-  RampSource ramp_1 = RampSource(0, 0,450,0.001);
-  RampSource ramp_2 = RampSource(0, 0,450,0.001);
+  RampSource ramp_1 = RampSource(0, 0, 450, 0.001);
+  RampSource ramp_2 = RampSource(0, 0, 450, 0.001);
   int current = 0;
   int state = 0;
   int8_t last_state = remote::MID;
   while (true) {
-    if (dbus->swl == remote::UP){
-      if(last_state == remote::MID)
+    if (dbus->swl == remote::UP) {
+      if (last_state == remote::MID)
         last_state = remote::UP;
-    }
-    else if (dbus->swl == remote::MID){
-      if(last_state == remote::UP){
+    } else if (dbus->swl == remote::MID) {
+      if (last_state == remote::UP) {
         last_state = remote::MID;
 
-          if(state == 0){
-            state=1;
-            current = 100;
-          }
-          else{
-            state=0;
-            current = -100;
-          }
-
+        if (state == 0) {
+          state = 1;
+          current = 100;
+        } else {
+          state = 0;
+          current = -100;
+        }
       }
-
-
-
-
     }
     motor1->SetOutput((int16_t)ramp_1.Calc((float)current));
     motor2->SetOutput((int16_t)ramp_2.Calc((float)current));

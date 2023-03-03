@@ -1,10 +1,10 @@
 #include "bsp_gpio.h"
+#include "bsp_os.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
+#include "dbus.h"
 #include "main.h"
 #include "motor.h"
-#include "dbus.h"
-#include "bsp_os.h"
 
 bsp::CAN *can2 = NULL;
 control::MotorCANBase *motor1 = NULL;
@@ -29,7 +29,6 @@ void RM_RTOS_Init() {
   servo_data.max_iout = 1000;
   servo_data.max_out = 10000;
 
-
   load_servo = new control::ServoMotor(servo_data);
 }
 
@@ -40,24 +39,21 @@ void RM_RTOS_Default_Task(const void *args) {
   int state = 0;
 
   while (true) {
-    if (dbus->swl == remote::UP){
-      if(last_state == remote::MID)
+    if (dbus->swl == remote::UP) {
+      if (last_state == remote::MID)
         last_state = remote::UP;
-    }
-    else if (dbus->swl == remote::MID){
-      if(last_state == remote::UP){
+    } else if (dbus->swl == remote::MID) {
+      if (last_state == remote::UP) {
         last_state = remote::MID;
         load_servo->SetTarget(load_servo->GetTarget() + load_step_angle);
-        if(state == 0){
-          state=1;
-        }
-        else{
-          state=0;
+        if (state == 0) {
+          state = 1;
+        } else {
+          state = 0;
         }
       }
     }
     load_servo->CalcOutput();
-
 
     control::MotorCANBase::TransmitOutput(motors, 1);
     osDelay(1);

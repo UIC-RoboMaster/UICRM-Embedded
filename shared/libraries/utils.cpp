@@ -61,5 +61,3 @@ float RampSource::Get() { return output_; }
 float RampSource::GetMax() { return max_; }
 
 float RampSource::GetMin() { return min_; }
-
-
