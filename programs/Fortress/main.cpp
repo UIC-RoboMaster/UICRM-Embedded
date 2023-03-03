@@ -264,15 +264,13 @@ void chassisTask(void *arg) {
   }
 }
 
-
-
 #define SHOOT_OS_DELAY 1
 
-void jam_callback(control::ServoMotor* servo, const control::servo_jam_t data) {
+void jam_callback(control::ServoMotor *servo, const control::servo_jam_t data) {
   UNUSED(data);
   float servo_target = servo->GetTarget();
   if (servo_target > servo->GetTheta()) {
-    float prev_target = servo->GetTarget() - 2*PI/8;
+    float prev_target = servo->GetTarget() - 2 * PI / 8;
     servo->SetTarget(prev_target, true);
   }
 }
@@ -359,7 +357,6 @@ void shootTask(void *arg) {
     case 2:
       shoot_flywheel_offset = 100;
       break;
-
     }
     if (shoot_state == 1 && ramp_1.Get() == ramp_1.GetMax() &&
         ramp_2.Get() == ramp_2.GetMax()) {
@@ -373,7 +370,7 @@ void shootTask(void *arg) {
       shoot_state_key = shoot_key->Read();
       // 检测是否需要发射子弹
       if (dbus->swl == remote::DOWN) {
-        if (last_state_2 == remote::MID){
+        if (last_state_2 == remote::MID) {
           last_state_2 = remote::DOWN;
           if (shoot_state_2 == 0) {
             shoot_state_2 = 1;
@@ -381,7 +378,7 @@ void shootTask(void *arg) {
           shoot_time_count = 0;
         }
         shoot_time_count++;
-        if (shoot_time_count > 1000/SHOOT_OS_DELAY) {
+        if (shoot_time_count > 1000 / SHOOT_OS_DELAY) {
           shoot_state_2 = 2;
         }
       } else if (dbus->swl == remote::MID) {
@@ -407,8 +404,8 @@ void shootTask(void *arg) {
             load_servo->SetTarget(load_servo->GetTheta(), true);
           }
         }
-      } else if (shoot_state_2 == 2){
-        //连续发射
+      } else if (shoot_state_2 == 2) {
+        // 连续发射
         load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
       } else if (shoot_state_key == 1) {
         // 不需要发射子弹，但是未装弹完毕，则需要装填子弹
