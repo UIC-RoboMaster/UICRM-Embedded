@@ -1,6 +1,7 @@
 #include "main.h"
 #include "bsp_buzzer.h"
 #include "bsp_imu.h"
+#include "bsp_os.h"
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
@@ -70,6 +71,10 @@ static control::MotorPWMBase *flywheel_left = nullptr;
 static control::MotorPWMBase *flywheel_right = nullptr;
 
 static control::MotorCANBase *steering_motor = nullptr;
+
+static control::ServoMotor *load_servo = nullptr;
+
+static bsp::GPIO *shoot_key = nullptr;
 
 uint32_t last_timestamp = 0;
 
@@ -255,11 +260,156 @@ void chassisTask(void *arg) {
 
     chassis->Update(false, 30, 20, 60);
     control::MotorCANBase::TransmitOutput(motors, 4);
+    osDelay(1);
+  }
+}
+
+const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
+                                           .attr_bits = osThreadDetached,
+                                           .cb_mem = nullptr,
+                                           .cb_size = 0,
+                                           .stack_mem = nullptr,
+                                           .stack_size = 256 * 4,
+                                           .priority =
+                                               (osPriority_t)osPriorityNormal,
+                                           .tz_module = 0,
+                                           .reserved = 0};
+osThreadId_t shootTaskHandle;
+
+void shootTask(void *arg) {
+  UNUSED(arg);
+  // 启动等待
+  while (true) {
+    if ((HAL_GetTick() - last_timestamp) < 500 &&
+        (dbus->keyboard.bit.V || dbus->swr != remote::DOWN)) {
+      break;
+    }
     osDelay(10);
+  }
+  // 等待IMU初始化
+  while (!imu->DataReady() || !imu->CaliDone()) {
+    osDelay(1);
+  }
+  int last_state = remote::MID;
+  int last_state_2 = remote::MID;
+  int shoot_state = 0;
+  int shoot_flywheel_offset = 0;
+  int shoot_state_2 = 0;
+  int last_shoot_key = 0;
+  int shoot_state_key = 0;
+  int steering_hold = 0;
+
+  RampSource ramp_1 = RampSource(0, 0, 450, 0.001);
+  RampSource ramp_2 = RampSource(0, 0, 450, 0.001);
+
+  load_servo->SetTarget(load_servo->GetTheta(), true);
+  load_servo->CalcOutput();
+  steering_hold = 1;
+
+  while (true) {
+    if (HAL_GetTick() - last_timestamp > 550) {
+      while (true) {
+        if (HAL_GetTick() - last_timestamp < 500)
+          break;
+        osDelay(10);
+      }
+      continue;
+    }
+    if (dbus->keyboard.bit.B || dbus->swr == remote::DOWN) {
+      while (true) {
+        if (dbus->keyboard.bit.V || dbus->swr != remote::DOWN) {
+          break;
+        }
+        osDelay(10);
+      }
+      continue;
+    }
+    // 检测开关状态，向上来回打即启动拔弹
+    if (dbus->swl == remote::UP) {
+      if (last_state == remote::MID)
+        last_state = remote::UP;
+    } else if (dbus->swl == remote::MID) {
+      if (last_state == remote::UP) {
+        last_state = remote::MID;
+        if (shoot_state == 0) {
+          shoot_state = 1;
+        } else {
+          shoot_state = 0;
+          shoot_state_2 = 0;
+        }
+      }
+    }
+    switch (shoot_state) {
+    case 0:
+      shoot_flywheel_offset = -100;
+      break;
+    case 1:
+    case 2:
+      shoot_flywheel_offset = 100;
+      break;
+    }
+    if (shoot_state == 1 && ramp_1.Get() == ramp_1.GetMax() &&
+        ramp_2.Get() == ramp_2.GetMax()) {
+      shoot_state = 2;
+    }
+    flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
+    flywheel_right->SetOutput(ramp_2.Calc(shoot_flywheel_offset));
+    // 启动拔弹电机后的操作
+    if (shoot_state == 2) {
+      // 检测是否已装填子弹
+      shoot_state_key = shoot_key->Read();
+      // 检测是否需要发射子弹
+      if (dbus->swl == remote::DOWN) {
+        if (last_state_2 == remote::MID)
+          last_state_2 = remote::DOWN;
+      } else if (dbus->swl == remote::MID) {
+        if (last_state_2 == remote::DOWN) {
+          last_state_2 = remote::MID;
+          if (shoot_state_2 == 0) {
+            shoot_state_2 = 1;
+          }
+        }
+      }
+      // 发射子弹
+      if (shoot_state_2 == 1) {
+        // 检测是否已经发射完毕
+        if (last_shoot_key == 0 && shoot_state_key == 1) {
+          last_shoot_key = 1;
+        } else if (last_shoot_key == 1 && shoot_state_key == 0) {
+          last_shoot_key = 0;
+          shoot_state_2 = 0;
+        }
+        // 如果发射未完成，则需要发射子弹
+        if (shoot_state_2 == 1) {
+          load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+          steering_hold = 0;
+        } else {
+          if (steering_hold == 0) {
+            load_servo->SetTarget(load_servo->GetTheta(), true);
+            steering_hold = 1;
+          }
+        }
+      } else if (shoot_state_key == 1) {
+        // 不需要发射子弹，但是未装弹完毕，则需要装填子弹
+        load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+        steering_hold = 0;
+      } else {
+        // 不需要发射子弹，且装弹完毕，则需要锁定拔弹电机
+        if (steering_hold == 0) {
+          load_servo->SetTarget(load_servo->GetTheta(), true);
+          steering_hold = 1;
+        }
+      }
+    }
+    // 计算输出，由于拔弹电机的输出系统由云台托管，不需要再次处理can的传输
+    load_servo->CalcOutput();
+
+    osDelay(1);
   }
 }
 
 void RM_RTOS_Init(void) {
+  bsp::SetHighresClockTimer(&htim5);
   print_use_uart(&huart6);
 
   can1 = new bsp::CAN(&hcan2, 0x201, false);
@@ -324,6 +474,20 @@ void RM_RTOS_Init(void) {
   flywheel_right = new control::MotorPWMBase(&htim1, 2, 1000000, 500, 1080);
   flywheel_left->SetOutput(0);
   flywheel_right->SetOutput(0);
+
+  control::servo_t servo_data;
+  servo_data.motor = steering_motor;
+  servo_data.max_speed = 2 * PI;
+  servo_data.max_acceleration = 8 * PI;
+  servo_data.transmission_ratio = M2006P36_RATIO;
+  servo_data.omega_pid_param = new float[3]{25, 5, 22};
+  servo_data.max_iout = 1000;
+  servo_data.max_out = 10000;
+
+  load_servo = new control::ServoMotor(servo_data);
+  load_servo->SetTarget(load_servo->GetTheta(), true);
+
+  shoot_key = new bsp::GPIO(BUTTON_TRI_GPIO_Port, BUTTON_TRI_Pin);
 }
 
 void KillAll() {
@@ -349,6 +513,8 @@ void KillAll() {
     yaw_motor->SetOutput(0);
     steering_motor->SetOutput(0);
     control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
+    flywheel_left->SetOutput(0);
+    flywheel_right->SetOutput(0);
     osDelay(10);
   }
 }
@@ -357,6 +523,7 @@ void RM_RTOS_Threads_Init(void) {
   imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
   gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
   chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
+  shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void *arg) {
