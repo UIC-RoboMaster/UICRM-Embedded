@@ -351,7 +351,7 @@ void shootTask(void *arg) {
     switch (shoot_state) {
     case 0:
       shoot_flywheel_offset = -200;
-      servo_back = 0;
+
       break;
     case 1:
     case 2:
