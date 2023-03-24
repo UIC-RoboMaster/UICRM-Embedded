@@ -103,3 +103,5 @@ dkms.conf
 *.out
 *.app
 
+
+.idea/codeStyles/Project.xml
