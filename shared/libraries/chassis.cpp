@@ -84,10 +84,12 @@ namespace control {
     void Chassis::SetSpeed(const float x_speed, const float y_speed, const float turn_speed) {
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
+                // 简单计算比例，使得最大电流不超过MAX_ABS_CURRENT
                 constexpr int MAX_ABS_CURRENT = 12288;  // refer to MotorM3508 for details
                 float move_sum = fabs(x_speed) + fabs(y_speed) + fabs(turn_speed);
                 float scale = move_sum >= MAX_ABS_CURRENT ? MAX_ABS_CURRENT / move_sum : 1;
 
+                // 计算速度, 储存在speeds_数组中
                 speeds_[FourWheel::front_left] = scale * (y_speed + x_speed + turn_speed);
                 speeds_[FourWheel::back_left] = scale * (y_speed - x_speed + turn_speed);
                 speeds_[FourWheel::front_right] = -scale * (y_speed - x_speed - turn_speed);
@@ -114,9 +116,8 @@ namespace control {
                 power_limit_info_.power_total_current_limit =
                     5000 * FourWheel::motor_num / 80.0 * power_limit;
 
+                // 计算PID输出，结果储存在PID_output数组中
                 float PID_output[FourWheel::motor_num];
-                float output[FourWheel::motor_num];
-
                 PID_output[FourWheel::front_left] = pids_[FourWheel::front_left].ComputeOutput(
                     motors_[FourWheel::front_left]->GetOmegaDelta(speeds_[FourWheel::front_left]));
                 PID_output[FourWheel::back_left] = pids_[FourWheel::back_left].ComputeOutput(
@@ -127,9 +128,12 @@ namespace control {
                 PID_output[FourWheel::back_right] = pids_[FourWheel::back_right].ComputeOutput(
                     motors_[FourWheel::back_right]->GetOmegaDelta(speeds_[FourWheel::back_right]));
 
+                // 计算电流限制后的输出，结果储存在output数组中
+                float output[FourWheel::motor_num];
                 power_limit_->Output(power_limit_on, power_limit_info_, chassis_power,
                                      chassis_power_buffer, PID_output, output);
 
+                // 结果输出给电机类
                 motors_[FourWheel::front_left]->SetOutput(
                     control::ClipMotorRange(output[FourWheel::front_left]));
                 motors_[FourWheel::back_left]->SetOutput(
