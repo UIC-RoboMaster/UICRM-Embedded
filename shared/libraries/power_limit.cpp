@@ -2,11 +2,12 @@
 
 namespace control {
 
-    PowerLimit::PowerLimit(int motor_num) { motor_num_ = motor_num; }
+    PowerLimit::PowerLimit(int motor_num) {
+        motor_num_ = motor_num;
+    }
 
-    void PowerLimit::Output(bool turn_on, power_limit_t power_limit_info,
-                            float chassis_power, float chassis_power_buffer,
-                            float *PID_output, float *output) {
+    void PowerLimit::Output(bool turn_on, power_limit_t power_limit_info, float chassis_power,
+                            float chassis_power_buffer, float* PID_output, float* output) {
         // 不使用功耗限制，直接原样输出
         if (!turn_on) {
             for (int i = 0; i < motor_num_; ++i)
@@ -26,25 +27,22 @@ namespace control {
                 power_scale = 5.0f / power_limit_info.WARNING_power_buff;
             }
             // scale down
-            total_current_limit =
-                    power_limit_info.buffer_total_current_limit * power_scale;
+            total_current_limit = power_limit_info.buffer_total_current_limit * power_scale;
         } else {
             if (chassis_power > power_limit_info.WARNING_power) {
                 // power > WARNING_POWER
                 float power_scale;
                 if (chassis_power < power_limit_info.power_limit) {
                     // power < 80w, scale down
-                    power_scale =
-                            (power_limit_info.power_limit - chassis_power) /
-                            (power_limit_info.power_limit - power_limit_info.WARNING_power);
+                    power_scale = (power_limit_info.power_limit - chassis_power) /
+                                  (power_limit_info.power_limit - power_limit_info.WARNING_power);
                 } else {
                     // power > 80w
                     power_scale = 0.0f;
                 }
 
-                total_current_limit =
-                        power_limit_info.buffer_total_current_limit +
-                        power_limit_info.power_total_current_limit * power_scale;
+                total_current_limit = power_limit_info.buffer_total_current_limit +
+                                      power_limit_info.power_total_current_limit * power_scale;
             } else {
                 // power < WARNING_POWER
                 total_current_limit = power_limit_info.buffer_total_current_limit +
