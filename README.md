@@ -4,7 +4,7 @@
 
 Embedded system development @ BNU-HKBU UIC RoboMaster
 
-## User Guide (Linux / Mac)
+## User Guide
 
 You can follow the instructions below to setup the necessary environments for
 building the source code and flashing the embedded chips.
