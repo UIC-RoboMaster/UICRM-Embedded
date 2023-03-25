@@ -1,4 +1,5 @@
 #include "main.h"
+
 #include "bsp_buzzer.h"
 #include "bsp_imu.h"
 #include "bsp_os.h"
@@ -163,7 +164,7 @@ void gimbalTask(void *arg) {
     pitch_target =
         clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
                     gimbal_param->pitch_max_);
-    yaw_target = clip<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_,
+    yaw_target = wrap<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_,
                              gimbal_param->yaw_max_);
 
     pitch_diff = clip<float>(pitch_target - pitch_curr, -PI, PI);
@@ -216,21 +217,8 @@ void chassisTask(void *arg) {
 
   float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-  float yaw_theta_max_iout = 0;
-  float yaw_theta_max_out = 10;
-  float yaw_omega_max_iout = 4000; // 10000
-  float yaw_omega_max_out = 12288;
-
-  float yaw_theta_pid_param_[3] = {10, 0, 0.3};
-  float yaw_omega_pid_param_[3] = {20, 5, 0};
-
-  control::ConstrainedPID *yaw_theta_pid_ = new control::ConstrainedPID(
-      yaw_theta_pid_param_, yaw_theta_max_iout, yaw_theta_max_out);
-  control::ConstrainedPID *yaw_omega_pid_ = new control::ConstrainedPID(
-      yaw_omega_pid_param_, yaw_omega_max_iout, yaw_omega_max_out);
-
   // float last_speed = 0;
-
+  float sin_yaw, cos_yaw, vx_set, vy_set, vz_set, vx_set_org, vy_set_org;
   while (true) {
     if (HAL_GetTick() - last_timestamp > 550) {
       while (true) {
@@ -249,14 +237,20 @@ void chassisTask(void *arg) {
       }
       continue;
     }
-    relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-    float yt_diff = wrap<float>(relative_angle, -PI, PI);
-    float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
-    float yo_in = yaw_motor->GetOmegaDelta(yt_out);
-    float yo_out = yaw_omega_pid_->ComputeOutput(yo_in);
-    yo_out = clip<float>(yo_out, -12288, 12288);
+    if (dbus->swr == remote::UP) {
+      chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
+    } else {
+      relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-    chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
+      sin_yaw = arm_sin_f32(relative_angle);
+      cos_yaw = arm_cos_f32(relative_angle);
+      vx_set_org = dbus->ch0;
+      vy_set_org = dbus->ch1;
+      vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
+      vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
+      vz_set = dbus->ch2;
+      chassis->SetSpeed(vx_set, vy_set, vz_set);
+    }
 
     chassis->Update(false, 30, 20, 60);
     control::MotorCANBase::TransmitOutput(motors, 4);
@@ -303,12 +297,13 @@ void shootTask(void *arg) {
   }
   int last_state = remote::MID;
   int last_state_2 = remote::MID;
-  int shoot_state = 0;
+  uint8_t shoot_state = 0;
   int shoot_flywheel_offset = 0;
-  int shoot_state_2 = 0;
-  int last_shoot_key = 0;
-  int shoot_state_key = 0;
-  int shoot_time_count = 0;
+  uint8_t shoot_state_2 = 0;
+  uint8_t last_shoot_key = 0;
+  uint8_t shoot_state_key = 0;
+  uint16_t shoot_time_count = 0;
+  uint8_t servo_back = 0;
 
   RampSource ramp_1 = RampSource(0, 0, 450, 0.001);
   RampSource ramp_2 = RampSource(0, 0, 450, 0.001);
@@ -351,11 +346,16 @@ void shootTask(void *arg) {
     }
     switch (shoot_state) {
     case 0:
-      shoot_flywheel_offset = -100;
+      shoot_flywheel_offset = -200;
+
       break;
     case 1:
     case 2:
-      shoot_flywheel_offset = 100;
+      shoot_flywheel_offset = 200;
+      if (servo_back == 0) {
+        load_servo->SetTarget(load_servo->GetTheta() - 2 * PI / 32, true);
+        servo_back = 1;
+      }
       break;
     }
     if (shoot_state == 1 && ramp_1.Get() == ramp_1.GetMax() &&
@@ -496,8 +496,8 @@ void RM_RTOS_Init(void) {
   servo_data.max_speed = 2 * PI;
   servo_data.max_acceleration = 8 * PI;
   servo_data.transmission_ratio = M2006P36_RATIO;
-  servo_data.omega_pid_param = new float[3]{25, 5, 22};
-  servo_data.max_iout = 1000;
+  servo_data.omega_pid_param = new float[3]{150, 2, 0.01};
+  servo_data.max_iout = 2000;
   servo_data.max_out = 10000;
 
   load_servo = new control::ServoMotor(servo_data);
