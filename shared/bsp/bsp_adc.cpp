@@ -1,4 +1,5 @@
 #include "bsp_adc.h"
+
 #include "string.h"
 namespace bsp {
 bADC::bADC(ADC_HandleTypeDef *hadc, uint32_t channel, uint32_t rank,

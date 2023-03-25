@@ -2244,7 +2244,7 @@ void OLED::ShowString(uint8_t row, uint8_t col, uint8_t *chr) {
   uint8_t n = 0;
 
   while (chr[n] != '\0') {
-    if ( chr[n] == '\n'){
+    if (chr[n] == '\n') {
       col = 0;
       row += 1;
       ++n;

@@ -1,4 +1,5 @@
 #include "main.h"
+
 #include "bsp_buzzer.h"
 #include "bsp_imu.h"
 #include "bsp_os.h"
@@ -158,8 +159,8 @@ void gimbalTask(void *arg) {
     //    }
     pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
     yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-    pitch_ratio = dbus->ch3 / 18000.0 / 7.0 ;
-    yaw_ratio = dbus->ch4 / 18000.0 / 7.0 ;
+    pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
+    yaw_ratio = dbus->ch4 / 18000.0 / 7.0;
     pitch_target =
         clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
                     gimbal_param->pitch_max_);
@@ -216,7 +217,6 @@ void chassisTask(void *arg) {
 
   float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-
   // float last_speed = 0;
   float sin_yaw, cos_yaw, vx_set, vy_set, vz_set, vx_set_org, vy_set_org;
   while (true) {
@@ -237,10 +237,9 @@ void chassisTask(void *arg) {
       }
       continue;
     }
-    if(dbus->swr == remote::UP){
+    if (dbus->swr == remote::UP) {
       chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
-    }
-    else{
+    } else {
       relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
       sin_yaw = arm_sin_f32(relative_angle);
@@ -252,9 +251,6 @@ void chassisTask(void *arg) {
       vz_set = dbus->ch2;
       chassis->SetSpeed(vx_set, vy_set, vz_set);
     }
-
-
-
 
     chassis->Update(false, 30, 20, 60);
     control::MotorCANBase::TransmitOutput(motors, 4);
