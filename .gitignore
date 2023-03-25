@@ -103,3 +103,6 @@ dkms.conf
 *.out
 *.app
 
+# Python venv
+venv
+.venv
