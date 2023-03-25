@@ -54,7 +54,7 @@ static bsp::BuzzerNoteDelayed DJI[] = {
     {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
 void RM_RTOS_Init(void) {
-  bsp::Buzzer buzzer(&htim4, 3, 1000000);
-  buzzer.SingSong(DJI);
-  // buzzer.SingSong(War_Cant_of_Mars);
+    bsp::Buzzer buzzer(&htim4, 3, 1000000);
+    buzzer.SingSong(DJI);
+    // buzzer.SingSong(War_Cant_of_Mars);
 }

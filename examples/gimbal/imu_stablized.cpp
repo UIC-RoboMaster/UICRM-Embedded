@@ -12,11 +12,11 @@
 #define KEY_GPIO_GROUP GPIOB
 #define KEY_GPIO_PIN GPIO_PIN_2
 
-bsp::CAN *can = nullptr;
-control::MotorCANBase *pitch_motor = nullptr;
-control::MotorCANBase *yaw_motor = nullptr;
-control::Gimbal *gimbal = nullptr;
-remote::DBUS *dbus = nullptr;
+bsp::CAN* can = nullptr;
+control::MotorCANBase* pitch_motor = nullptr;
+control::MotorCANBase* yaw_motor = nullptr;
+control::Gimbal* gimbal = nullptr;
+remote::DBUS* dbus = nullptr;
 bool status = false;
 
 // init imu
@@ -25,8 +25,8 @@ bool status = false;
 #define ONBOARD_IMU_CS_PIN GPIO_PIN_6
 #define PRING_UART huart8
 
-static bsp::MPU6500 *imu;
-static control::Pose *poseEstimator;
+static bsp::MPU6500* imu;
+static control::Pose* poseEstimator;
 
 /* init IMU task START */
 
@@ -49,44 +49,43 @@ const osThreadAttr_t IMUTaskAttributes = {.name = "AddTask",
                                           .cb_size = 0,
                                           .stack_mem = nullptr,
                                           .stack_size = 128 * 4,
-                                          .priority =
-                                              (osPriority_t)osPriorityNormal,
+                                          .priority = (osPriority_t)osPriorityNormal,
                                           .tz_module = 0,
                                           .reserved = 0};
 
 // pose estimation task
-void IMU_Task(void *argument) {
-  UNUSED(argument);
-  bsp::GPIO laser(LASER_GPIO_Port, LASER_Pin);
-  laser.High();
+void IMU_Task(void* argument) {
+    UNUSED(argument);
+    bsp::GPIO laser(LASER_GPIO_Port, LASER_Pin);
+    laser.High();
 
-  // IMU init
-  bsp::GPIO chip_select(ONBOARD_IMU_CS_GROUP, ONBOARD_IMU_CS_PIN);
-  imu = new bsp::MPU6500(&ONBOARD_IMU_SPI, chip_select, MPU6500_IT_Pin);
-  osDelay(4000);
-  laser.Low();
-  print("IMU Initialized!\r\n");
+    // IMU init
+    bsp::GPIO chip_select(ONBOARD_IMU_CS_GROUP, ONBOARD_IMU_CS_PIN);
+    imu = new bsp::MPU6500(&ONBOARD_IMU_SPI, chip_select, MPU6500_IT_Pin);
+    osDelay(4000);
+    laser.Low();
+    print("IMU Initialized!\r\n");
 
-  // init pose estimator instance
-  poseEstimator = new control::Pose(imu);
+    // init pose estimator instance
+    poseEstimator = new control::Pose(imu);
 
-  // Set alpha for the complementary filter in the pose estimator
-  poseEstimator->SetAlpha(0.99);
+    // Set alpha for the complementary filter in the pose estimator
+    poseEstimator->SetAlpha(0.99);
 
-  // calibrate the Offset for IMU acce meter and gyro
-  // Need the gimbal to be stable for 1sec
-  poseEstimator->Calibrate();
+    // calibrate the Offset for IMU acce meter and gyro
+    // Need the gimbal to be stable for 1sec
+    poseEstimator->Calibrate();
 
-  // reset timer and pose for IMU
-  poseEstimator->PoseInit();
+    // reset timer and pose for IMU
+    poseEstimator->PoseInit();
 
-  laser.High();
+    laser.High();
 
-  while (true) {
-    // update estimated pose with complementary filter
-    poseEstimator->ComplementaryFilterUpdate();
-    osDelay(5);
-  }
+    while (true) {
+        // update estimated pose with complementary filter
+        poseEstimator->ComplementaryFilterUpdate();
+        osDelay(5);
+    }
 } /* IMU task ends */
 
 /* init IMU task END */
@@ -97,42 +96,42 @@ void RM_RTOS_Mutexes_Init(void) {
 }
 */
 void RM_RTOS_Threads_Init(void) {
-  IMUTaskHandle = osThreadNew(IMU_Task, nullptr, &IMUTaskAttributes);
+    IMUTaskHandle = osThreadNew(IMU_Task, nullptr, &IMUTaskAttributes);
 }
 
 void RM_RTOS_Init() {
-  print_use_uart(&PRING_UART);
-  bsp::SetHighresClockTimer(&htim2);
-  can = new bsp::CAN(&hcan1, 0x205);
-  pitch_motor = new control::Motor6020(can, 0x205);
-  yaw_motor = new control::Motor6020(can, 0x206);
+    print_use_uart(&PRING_UART);
+    bsp::SetHighresClockTimer(&htim2);
+    can = new bsp::CAN(&hcan1, 0x205);
+    pitch_motor = new control::Motor6020(can, 0x205);
+    yaw_motor = new control::Motor6020(can, 0x206);
 
-  control::gimbal_t gimbal_data;
-  gimbal_data.pitch_motor = pitch_motor;
-  gimbal_data.yaw_motor = yaw_motor;
-  gimbal = new control::Gimbal(gimbal_data);
+    control::gimbal_t gimbal_data;
+    gimbal_data.pitch_motor = pitch_motor;
+    gimbal_data.yaw_motor = yaw_motor;
+    gimbal = new control::Gimbal(gimbal_data);
 
-  dbus = new remote::DBUS(&huart1);
+    dbus = new remote::DBUS(&huart1);
 }
 
 // Gimbal task
-void RM_RTOS_Default_Task(const void *args) {
-  UNUSED(args);
+void RM_RTOS_Default_Task(const void* args) {
+    UNUSED(args);
 
-  osDelay(500); // DBUS initialization needs time
+    osDelay(500);  // DBUS initialization needs time
 
-  control::MotorCANBase *motors[] = {pitch_motor, yaw_motor};
+    control::MotorCANBase* motors[] = {pitch_motor, yaw_motor};
 
-  float yaw, pitch; //, roll;
-  while (true) {
-    // update rpy
-    yaw = poseEstimator->GetYaw();
-    pitch = poseEstimator->GetPitch();
-    // roll = poseEstimator->GetRoll();
-    gimbal->TargetRel(pitch / 8, -yaw / 3);
+    float yaw, pitch;  //, roll;
+    while (true) {
+        // update rpy
+        yaw = poseEstimator->GetYaw();
+        pitch = poseEstimator->GetPitch();
+        // roll = poseEstimator->GetRoll();
+        gimbal->TargetRel(pitch / 8, -yaw / 3);
 
-    gimbal->Update();
-    control::MotorCANBase::TransmitOutput(motors, 2);
-    osDelay(10);
-  }
+        gimbal->Update();
+        control::MotorCANBase::TransmitOutput(motors, 2);
+        osDelay(10);
+    }
 }

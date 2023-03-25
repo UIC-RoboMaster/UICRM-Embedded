@@ -67,4 +67,4 @@ namespace control {
         }
     }
 
-} // namespace control
+}  // namespace control
