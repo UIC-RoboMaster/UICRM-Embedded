@@ -12,8 +12,9 @@
  *
  * @note undefined behavior if min > max
  */
-template <typename T> T clip(T value, T min, T max) {
-  return value < min ? min : (value > max ? max : value);
+template <typename T>
+T clip(T value, T min, T max) {
+    return value < min ? min : (value > max ? max : value);
 }
 
 /**
@@ -28,9 +29,10 @@ template <typename T> T clip(T value, T min, T max) {
  *
  * @note undefined behavior if value is more than one cycle away from min or max
  */
-template <typename T> T wrap(T value, T min, T max) {
-  const T range = max - min;
-  return value < min ? value + range : (value > max ? value - range : value);
+template <typename T>
+T wrap(T value, T min, T max) {
+    const T range = max - min;
+    return value < min ? value + range : (value > max ? value - range : value);
 }
 
 /**
@@ -42,8 +44,9 @@ template <typename T> T wrap(T value, T min, T max) {
  *
  * @return the max of the values
  */
-template <typename T> T max(T value1, T value2) {
-  return value1 < value2 ? value2 : value1;
+template <typename T>
+T max(T value1, T value2) {
+    return value1 < value2 ? value2 : value1;
 }
 
 /**
@@ -55,8 +58,9 @@ template <typename T> T max(T value1, T value2) {
  *
  * @return the min of the values
  */
-template <typename T> T min(T value1, T value2) {
-  return value1 < value2 ? value1 : value2;
+template <typename T>
+T min(T value1, T value2) {
+    return value1 < value2 ? value1 : value2;
 }
 
 /**
@@ -68,50 +72,51 @@ template <typename T> T min(T value1, T value2) {
  *
  * @return -1 for less than, 1 for greater than, and 0 for equal to
  */
-template <typename T> int sign(T value, T zero) {
-  return value < zero ? -1 : (value > zero ? 1 : 0);
+template <typename T>
+int sign(T value, T zero) {
+    return value < zero ? -1 : (value > zero ? 1 : 0);
 }
 
 class BoolEdgeDetector {
-public:
-  BoolEdgeDetector(bool initial);
-  void input(bool signal);
-  bool edge();
-  bool posEdge();
-  bool negEdge();
+  public:
+    BoolEdgeDetector(bool initial);
+    void input(bool signal);
+    bool edge();
+    bool posEdge();
+    bool negEdge();
 
-private:
-  bool prev_;
-  bool posEdge_;
-  bool negEdge_;
+  private:
+    bool prev_;
+    bool posEdge_;
+    bool negEdge_;
 };
 
 class FloatEdgeDetector {
-public:
-  FloatEdgeDetector(float initial, float threshold);
-  void input(float signal);
-  bool edge();
-  bool posEdge();
-  bool negEdge();
+  public:
+    FloatEdgeDetector(float initial, float threshold);
+    void input(float signal);
+    bool edge();
+    bool posEdge();
+    bool negEdge();
 
-private:
-  float prev_;
-  float threshold_;
-  bool posEdge_;
-  bool negEdge_;
+  private:
+    float prev_;
+    float threshold_;
+    bool posEdge_;
+    bool negEdge_;
 };
 class RampSource {
-public:
-  RampSource(float initial, float min, float max, float step);
-  float Calc(float input);
-  float Get();
-  float GetMax();
-  float GetMin();
+  public:
+    RampSource(float initial, float min, float max, float step);
+    float Calc(float input);
+    float Get();
+    float GetMax();
+    float GetMin();
 
-private:
-  float input_;
-  float output_;
-  float min_;
-  float max_;
-  float step_;
+  private:
+    float input_;
+    float output_;
+    float min_;
+    float max_;
+    float step_;
 };
