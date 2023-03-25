@@ -20,7 +20,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
         set_cursor(0, 0);
         clear_screen();
         print(
-            "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d TWL: %d "
+            "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
+            "TWL: %d "
             "@ %d "
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,

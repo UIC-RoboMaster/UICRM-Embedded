@@ -259,8 +259,8 @@ namespace control {
 
     /**
      * @brief servomotor turning mode
-     * @note the turning direction is determined as if user is facing the motor, may
-     * subject to change depending on motor type
+     * @note the turning direction is determined as if user is facing the motor,
+     * may subject to change depending on motor type
      */
     typedef enum {
         SERVO_CLOCKWISE = -1,   /* Servomotor always turn clockwisely */
@@ -270,8 +270,8 @@ namespace control {
 
     /**
      * @brief servomotor status
-     * @note the turning direction is determined as if user is facing the motor, may
-     * subject to change depending on motor type
+     * @note the turning direction is determined as if user is facing the motor,
+     * may subject to change depending on motor type
      */
     typedef enum {
         TURNING_CLOCKWISE = -1,   /* Servomotor is turning clockwisely         */
@@ -280,8 +280,8 @@ namespace control {
     } servo_status_t;
 
 /**
- * @brief transmission ratios of DJI motors, reference to motor manuals for more
- * details
+ * @brief transmission ratios of DJI motors, reference to motor manuals for
+ * more details
  */
 #define M3508P19_RATIO (3591.0 / 187) /* Transmission ratio of M3508P19 */
 #define M2006P36_RATIO 36             /* Transmission ratio of M2006P36 */
@@ -291,7 +291,8 @@ namespace control {
         float speed;       /* motor shaft turning speed                              */
     } servo_jam_t;
 
-    class ServoMotor;  // declare first for jam_callback_t to have correct param type
+    class ServoMotor;  // declare first for jam_callback_t to have correct param
+                       // type
     /**
      * @brief jam callback template
      */
@@ -313,8 +314,8 @@ namespace control {
     /**
      * @brief wrapper class for motor to enable the motor shaft angle to be
      * precisely controlled with possible external gearbox present
-     * @note this is a calculation class that calculate the motor output for desired
-     * output, but it does not directly command a motor to turn.
+     * @note this is a calculation class that calculate the motor output for
+     * desired output, but it does not directly command a motor to turn.
      */
     class ServoMotor {
       public:
@@ -387,15 +388,16 @@ namespace control {
         float GetTarget() const;
 
         /**
-         * @brief register a callback function that would be called if motor is jammed
+         * @brief register a callback function that would be called if motor is
+         * jammed
          * @note Jam detection uses a moving window across inputs to the motor. It
          * uses a circular buffer of size detect_period to store history inputs and
-         * calculates a rolling average of the inputs. Everytime the average of inputs
-         * is greater than effect_threshold * 32768(maximum command a motor can
-         * accept), the jam callback function will be triggered once. The callback
-         * will only be triggered once each time the rolling average cross the
-         * threshold from lower to higher. For a standard jam callback function, refer
-         * to example motor_m3508_antijam
+         * calculates a rolling average of the inputs. Everytime the average of
+         * inputs is greater than effect_threshold * 32768(maximum command a motor
+         * can accept), the jam callback function will be triggered once. The
+         * callback will only be triggered once each time the rolling average cross
+         * the threshold from lower to higher. For a standard jam callback function,
+         * refer to example motor_m3508_antijam
          *
          * @param callback         callback function to be registered
          * @param effort_threshold threshold for motor to be determined as jammed,
@@ -464,15 +466,16 @@ namespace control {
         // angle control
         bool hold_; /* true if motor is holding now, otherwise moving now */
         uint32_t start_time_;
-        float target_angle_; /* desired target angle, range between [0, 2PI] in [rad] */
+        float target_angle_; /* desired target angle, range between [0, 2PI] in [rad]
+                              */
         float align_angle_;  /* motor angle when a instance of this class is created
                                 with that motor    */
         float motor_angle_;  /* current motor angle in [rad], with align_angle
                                 subtracted               */
         float offset_angle_; /* cumulative offset angle of motor shaft, range between
                                 [0, 2PI] in [rad] */
-        float servo_angle_;  /* current angle of motor shaft, range between [0, 2PI] in
-                                [rad]           */
+        float servo_angle_;  /* current angle of motor shaft, range between [0, 2PI]
+                                in  [rad]           */
         float cumulated_angle_;
 
         // jam detection

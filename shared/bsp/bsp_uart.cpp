@@ -46,8 +46,8 @@ namespace bsp {
              * error) */
             SET_BIT(huart->Instance->CR3, USART_CR3_EIE);
 
-            /* Enable the DMA transfer for the receiver request by setting the DMAR bit
-            in the UART CR3 register */
+            /* Enable the DMA transfer for the receiver request by setting the DMAR
+            bit in the UART CR3 register */
             SET_BIT(huart->Instance->CR3, USART_CR3_DMAR);
 
             return HAL_OK;

@@ -33,8 +33,8 @@ namespace bsp {
         /**
          * @brief set up usb receiver
          *
-         * @param rx_buffer_size  receive buffer size (all data that has not been read
-         * out is queued into this buffer if there is no callbacks registered)
+         * @param rx_buffer_size  receive buffer size (all data that has not been
+         * read out is queued into this buffer if there is no callbacks registered)
          */
         void SetupRx(uint32_t rx_buffer_size);
 
@@ -59,8 +59,8 @@ namespace bsp {
          *
          * @return number of bytes written
          *
-         * @note multiple burst calls to this function can potentially cause tx buffer
-         *       to fill up, so remember to check return value for the actual number
+         * @note multiple burst calls to this function can potentially cause tx
+         * buffer to fill up, so remember to check return value for the actual number
          *       of bytes successfully transmitted
          */
         uint32_t Write(uint8_t* data, uint32_t length);

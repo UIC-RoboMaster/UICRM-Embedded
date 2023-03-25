@@ -117,8 +117,8 @@ namespace display {
          * @param[in]      row: row of character string begin, 0 <= row <= 4;
          * @param[in]      col: column of character string begin, 0 <= col <= 20;
          * @param          *fmt: the pointer to format character string
-         * @note           if the character length is more than one row at a time, the
-         * extra characters will be truncated
+         * @note           if the character length is more than one row at a time,
+         * the extra characters will be truncated
          * @retval         none
          */
         void Printf(uint8_t row, uint8_t col, const char* fmt, ...);

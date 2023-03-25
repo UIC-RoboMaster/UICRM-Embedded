@@ -27,7 +27,8 @@ T clip(T value, T min, T max) {
  *
  * @return wrapped around value that falls in the range [min, max]
  *
- * @note undefined behavior if value is more than one cycle away from min or max
+ * @note undefined behavior if value is more than one cycle away from min or
+ * max
  */
 template <typename T>
 T wrap(T value, T min, T max) {

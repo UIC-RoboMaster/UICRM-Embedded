@@ -25,8 +25,8 @@ namespace bsp {
          * @brief set up uart receiver in the background optionally registering a
          * callback
          *
-         * @param rx_buffer_size  receive buffer size (all data that has not been read
-         *                        out is queued into this buffer)
+         * @param rx_buffer_size  receive buffer size (all data that has not been
+         * read out is queued into this buffer)
          */
         void SetupRx(uint32_t rx_buffer_size);
 
@@ -62,8 +62,8 @@ namespace bsp {
          *
          * @return number of bytes written
          *
-         * @note multiple burst calls to this function can potentially cause tx buffer
-         *       to fill up, so remember to check return value for the actual number
+         * @note multiple burst calls to this function can potentially cause tx
+         * buffer to fill up, so remember to check return value for the actual number
          *       of bytes successfully transmitted
          */
         template <bool FromISR = false>

@@ -35,8 +35,8 @@ namespace control {
     int16_t PIDController::ComputeConstrainedOutput(float error) {
         /*
          * CAN protocal uses a 16-bit signed number to drive the motors, so this
-         * version of the output computation can make sure that no unexpected behavior
-         * (overflow) can happen.
+         * version of the output computation can make sure that no unexpected
+         * behavior (overflow) can happen.
          */
         return control::ClipMotorRange(arm_pid_f32(&pid_f32_, error));
     }

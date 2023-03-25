@@ -1,7 +1,7 @@
 #pragma once
 
-/* NOTE(alvin): DSP libraries depends on macro definitions on FPU computability,
- * so the main.h must be included before arm_math.h */
+/* NOTE(alvin): DSP libraries depends on macro definitions on FPU
+ * computability, so the main.h must be included before arm_math.h */
 // clang-format off
 #include "main.h"
 // clang-format on

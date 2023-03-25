@@ -30,7 +30,8 @@ void print_use_usb();
  */
 int32_t print(const char* format, ...);
 
-/* escape codes helper functions -- http://www.termsys.demon.co.uk/vtansi.htm */
+/* escape codes helper functions -- http://www.termsys.demon.co.uk/vtansi.htm
+ */
 
 /**
  * @brief set the cursor with escape codes
