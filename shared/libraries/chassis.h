@@ -20,7 +20,7 @@ namespace control {
      * @brief 底盘参数，初始化时用
      */
     typedef struct {
-        MotorCANBase* motors;  /* motor instances of all chassis motors */
+        MotorCANBase** motors;  /* motor instances of all chassis motors */
         chassis_model_t model; /* chassis model                         */
     } chassis_t;
 
