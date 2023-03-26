@@ -103,5 +103,6 @@ dkms.conf
 *.out
 *.app
 
-
-.idea/codeStyles/Project.xml
+# Python venv
+venv
+.venv

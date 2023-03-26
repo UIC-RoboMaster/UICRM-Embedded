@@ -20,6 +20,10 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m6020
         TARGET DJI_Board_TypeC_general
         SOURCES m6020.cpp)
 
-uicrm_add_arm_executable(${PROJECT_NAME}_servo
+uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
         TARGET DJI_Board_TypeC_general
-        SOURCES servo.cpp)
+        SOURCES servo_m2006.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_servo_m3508
+        TARGET DJI_Board_TypeC_general
+        SOURCES servo_m3508.cpp)
