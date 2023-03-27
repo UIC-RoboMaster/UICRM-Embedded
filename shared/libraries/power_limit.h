@@ -12,7 +12,7 @@ namespace control {
         float power_limit;                 //  瞬时总功耗限制值
         float WARNING_power;               // 瞬时总功耗警告值
         float WARNING_power_buff;          // 剩余总能量警告值
-        float buffer_total_current_limit;  //剩余总能量限制值
+        float buffer_total_current_limit;  // 剩余总能量限制值
         float power_total_current_limit;
     } power_limit_t;
 

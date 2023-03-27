@@ -9,6 +9,10 @@
 namespace control {
 
     /**
+     * @brief chassis models
+     *
+     */
+    /**
      * @brief 底盘类型
      */
     typedef enum {
@@ -16,6 +20,9 @@ namespace control {
         CHASSIS_ONE_WHEEL,      // 单轮底盘
     } chassis_model_t;
 
+    /**
+     * @brief structure used when chassis instance is initialized
+     */
     /**
      * @brief 底盘参数，初始化时用
      */
@@ -26,6 +33,9 @@ namespace control {
 
     /**
      * @brief motor configs for four wheel vehicles
+     */
+    /**
+     * @brief 麦轮底盘电机编号
      */
     struct FourWheel {
         enum { front_left, front_right, back_left, back_right, motor_num };
@@ -38,6 +48,9 @@ namespace control {
     /**
      * @brief wrapper class for chassis
      */
+    /**
+     * @brief 底盘类
+     */
     class Chassis {
       public:
         /**
@@ -46,30 +59,53 @@ namespace control {
          * @param chassis structure that used to initialize chassis, refer to type
          * chassis_t
          */
+        /**
+         * @brief 底盘构造函数
+         *
+         * @param chassis 底盘参数，参考类型chassis_t
+         *
+         */
         Chassis(const chassis_t chassis);
 
         /**
          * @brief destructor for chassis
          */
+        /**
+         * @brief 底盘析构函数
+         */
         ~Chassis();
 
+        /**
+         * @brief set the speed for chassis motors
+         * @note the speed is cached in speeds_ array
+         * @param x_speed chassis speed on x-direction
+         * @param y_speed chassis speed on y-direction
+         * @param turn_speed chassis clockwise turning speed
+         */
         /**
          * @brief 设置底盘速度并解算
          * @note 缓存在speeds_数组中
          *
          * @param x_speed chassis speed on x-direction
+         * 底盘x方向速度
          * @param y_speed chassis speed on y-direction
+         * 底盘y方向速度
          * @param turn_speed chassis clockwise turning speed
+         * 底盘顺时针旋转速度
          */
         void SetSpeed(const float x_speed, const float y_speed = 0, const float turn_speed = 0);
 
         /**
+         * @brief calculate the output of the motors under current configuration
          * @brief 输入当前功耗，计算电机16bit电流，发送给电机类
+         * @param power_limit_on Turn on/off power limit
          * @param power_limit_on 是否开启功耗限制
+         *
          * @param power_limit 单位？
          * @param chassis_power 单位？
          * @param chassis_power_buffer 单位？
          * @note does not command the motor immediately
+         * @note 不会立即发送电机指令
          */
         void Update(bool power_limit_on, float power_limit, float chassis_power,
                     float chassis_power_buffer);
