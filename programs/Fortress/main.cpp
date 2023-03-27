@@ -298,8 +298,8 @@ void shootTask(void* arg) {
     uint16_t shoot_time_count = 0;
     uint8_t servo_back = 0;
 
-    RampSource ramp_1 = RampSource(0, 0, 450, 0.001);
-    RampSource ramp_2 = RampSource(0, 0, 450, 0.001);
+    RampSource ramp_1 = RampSource(0, 0, 325, 0.001);
+    RampSource ramp_2 = RampSource(0, 0, 325, 0.001);
 
     load_servo->SetTarget(load_servo->GetTheta(), true);
     load_servo->CalcOutput();
