@@ -130,35 +130,46 @@ namespace control {
     }
 
     void Gimbal::Update() {
+        // 俯仰pid
         float pt_diff = pitch_motor_->GetThetaDelta(pitch_angle_);
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
         float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
 
+        // 偏航pid
         float yt_diff = yaw_motor_->GetThetaDelta(yaw_angle_);
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
 
+        // 为啥要用角度+角速度？
+
+        // 发送给电机
         pitch_motor_->SetOutput(po_out);
         yaw_motor_->SetOutput(yo_out);
     }
 
     void Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
+        // 俯仰：输入绝对角度
         float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
-        float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
         pitch_angle_ = wrap<float>(clipped_pitch + data_.pitch_offset_, 0, 2 * PI);
+        // 偏航：输入绝对角度
+        float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
         yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
     }
 
     void Gimbal::TargetAbsYawRelPitch(float rel_pitch, float abs_yaw) {
-        float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
+        // 俯仰：输入相对角度
         pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
+        // 偏航：输入绝对角度
+        float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
         yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
     }
 
     void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
+        // 俯仰：输入相对角度
         pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
+        // 偏航：输入相对角度
         yaw_angle_ = yaw_motor_->GetTheta() + rel_yaw;
     }
 

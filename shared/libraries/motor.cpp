@@ -344,6 +344,7 @@ namespace control {
         } else {
             command = omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_diff * 50));
         }
+        // 调用电机类以输出
         motor_->SetOutput(command);
 
         // jam detection mechanism
@@ -433,6 +434,7 @@ namespace control {
         // sense a negative edge, which means that the motor is turning in positive
         // direction when crossing encoder boarder. Vice versa for motor angle jumped
         // from near 0 to near 2PI
+        // 如果电机角度从接近2PI跳到接近0，那么包装检测器将感知到一个负边缘，这意味着电机在跨越编码器边界时转动方向为正。反之亦然
         motor_angle_ = motor_->theta_ - align_angle_;
         inner_wrap_detector_->input(motor_angle_);
         if (inner_wrap_detector_->negEdge())
