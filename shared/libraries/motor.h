@@ -66,13 +66,13 @@ namespace control {
          * @brief update motor feedback data
          * @note only used in CAN callback, do not call elsewhere
          *
-         * @param data[]  raw data bytes
+         * @param data  raw data bytes
          */
         /**
          * @brief 解析电调协议，保存电机发送的数据
          * @note 仅在CAN中断中调用，不要在其他地方调用
          *
-         * @param data[]  原始数据字节
+         * @param data  原始数据字节
          */
         virtual void UpdateData(const uint8_t data[]) = 0;
 
@@ -150,7 +150,7 @@ namespace control {
         /**
          * @brief transmit CAN message for setting motor outputs
          *
-         * @param motors[]    array of CAN motor pointers
+         * @param motors    array of CAN motor pointers
          * @param num_motors  number of motors to transmit
          * @note static function, pack up to four motor output currents into a
          *      32bit data and send to CAN
@@ -158,7 +158,7 @@ namespace control {
         /**
          * @brief 发送电机设置的输出电流到CAN缓存
          *
-         * @param motors[]    CAN协议电机指针
+         * @param motors    CAN协议电机指针
          * @param num_motors  电机数量
          *
          * @note static函数，将一组最多四个电机的输出电流值打包成一个32bit的数据一起发送到CAN
@@ -648,12 +648,12 @@ namespace control {
          * @brief update the current theta for the servomotor
          * @note only used in CAN callback, do not call elsewhere
          *
-         * @param data[]  raw data bytes
+         * @param data  raw data bytes
          */
         /**
          * @brief 更新电机的当前角度
          * @note 仅在CAN回调函数中使用，不要在其他地方调用
-         * @param data[]  原始数据字节
+         * @param data  原始数据字节
          */
         void UpdateData(const uint8_t data[]);
 
