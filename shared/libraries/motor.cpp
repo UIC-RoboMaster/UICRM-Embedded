@@ -68,19 +68,19 @@ namespace control {
         motors[0]->can_->Transmit(motors[0]->tx_id_, data, 8);
     }
 
-    float MotorCANBase::GetTheta() const {
+    float MotorCANBase::GetAngle() const {
         return theta_;
     }
 
-    float MotorCANBase::GetThetaDelta(float target) const {
+    float MotorCANBase::GetAngleOffset(float target) const {
         return wrap<float>(target - theta_, -PI, PI);
     }
 
-    float MotorCANBase::GetOmega() const {
+    float MotorCANBase::GetAngleSpeed() const {
         return omega_;
     }
 
-    float MotorCANBase::GetOmegaDelta(float target) const {
+    float MotorCANBase::GetAngleSpeedOffset(float target) const {
         return target - omega_;
     }
 
@@ -111,8 +111,8 @@ namespace control {
     }
 
     void Motor3508::PrintData() const {
-        print("theta: % .4f ", GetTheta());
-        print("omega: % .4f ", GetOmega());
+        print("theta: % .4f ", GetAngle());
+        print("omega: % .4f ", GetAngleSpeed());
         print("raw temperature: %3d ", raw_temperature_);
         print("raw current get: % d \r\n", raw_current_get_);
     }
@@ -149,8 +149,8 @@ namespace control {
     }
 
     void Motor6020::PrintData() const {
-        print("theta: % .4f ", GetTheta());
-        print("omega: % .4f ", GetOmega());
+        print("theta: % .4f ", GetAngle());
+        print("omega: % .4f ", GetAngleSpeed());
         print("raw temperature: %3d ", raw_temperature_);
         print("raw current get: % d \r\n", raw_current_get_);
     }
@@ -184,7 +184,7 @@ namespace control {
     }
 
     void Motor6623::PrintData() const {
-        print("theta: % .4f ", GetTheta());
+        print("theta: % .4f ", GetAngle());
         print("raw current get: % d ", raw_current_get_);
         print("raw current set: % d \r\n", raw_current_set_);
     }
@@ -194,12 +194,12 @@ namespace control {
         output_ = clip<int16_t>(val * CURRENT_CORRECTION, -MAX_ABS_CURRENT, MAX_ABS_CURRENT);
     }
 
-    float Motor6623::GetOmega() const {
+    float Motor6623::GetAngleSpeed() const {
         RM_EXPECT_TRUE(false, "6623 does not support omega messurement");
         return 0;
     }
 
-    float Motor6623::GetOmegaDelta(const float target) const {
+    float Motor6623::GetAngleSpeedOffset(const float target) const {
         UNUSED(target);
         RM_EXPECT_TRUE(false, "6623 does not support omega messurement");
         return 0;
@@ -223,8 +223,8 @@ namespace control {
     }
 
     void Motor2006::PrintData() const {
-        print("theta: % .4f ", GetTheta());
-        print("omega: % .4f ", GetOmega());
+        print("theta: % .4f ", GetAngle());
+        print("omega: % .4f ", GetAngleSpeed());
         print("raw current get: % d \r\n", raw_current_get_);
     }
 
@@ -345,9 +345,9 @@ namespace control {
                 speed_max_start > speed_max_target ? speed_max_target : speed_max_start;
             current_speed = clip<float>(current_speed, 0, max_speed_);
             command = omega_pid_.ComputeConstrainedOutput(
-                motor_->GetOmegaDelta(sign<float>(target_diff, 0) * current_speed));
+                    motor_->GetAngleSpeedOffset(sign<float>(target_diff, 0) * current_speed));
         } else {
-            command = omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_diff * 50));
+            command = omega_pid_.ComputeConstrainedOutput(motor_->GetAngleSpeedOffset(target_diff * 50));
         }
         // 调用电机类以输出
         motor_->SetOutput(command);
@@ -424,7 +424,7 @@ namespace control {
     }
 
     float ServoMotor::GetOmegaDelta(const float target) const {
-        return target - motor_->GetOmega() / transmission_ratio_;
+        return target - motor_->GetAngleSpeed() / transmission_ratio_;
     }
 
     void ServoMotor::UpdateData(const uint8_t data[]) {
@@ -504,7 +504,7 @@ namespace control {
             servo_->CalcOutput();
             return true;
         } else if (align_detect_func()) {
-            float current_theta = servo_->motor_->GetTheta();
+            float current_theta = servo_->motor_->GetAngle();
             float offset = wrap<float>(servo_->align_angle_ - current_theta, -PI, PI);
             float current =
                 (current_theta + offset - servo_->align_angle_) / servo_->transmission_ratio_ +
@@ -516,7 +516,7 @@ namespace control {
             return true;
         } else {
             servo_->motor_->SetOutput(servo_->omega_pid_.ComputeConstrainedOutput(
-                servo_->motor_->GetOmegaDelta(test_speed_ * servo_->transmission_ratio_)));
+                    servo_->motor_->GetAngleSpeedOffset(test_speed_ * servo_->transmission_ratio_)));
         }
         return false;
     }

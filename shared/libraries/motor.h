@@ -92,7 +92,7 @@ namespace control {
          * @brief 获得电机的角度，单位为 [rad]
          * @return 角度，范围为 [0, 2PI]，单位为 [rad]
          */
-        virtual float GetTheta() const;
+        virtual float GetAngle() const;
         /**
          * @brief get angle difference (target - actual), in [rad]
          * @param target  target angle, in [rad]
@@ -104,7 +104,7 @@ namespace control {
          * @param target  目标角度, 单位为 [rad]
          * @return 角度差，范围为 [-PI, PI]，单位为 [rad]
          */
-        virtual float GetThetaDelta(const float target) const;
+        virtual float GetAngleOffset(const float target) const;
         /**
          * @brief get angular velocity, in [rad / s]
          * @return angular velocity
@@ -113,7 +113,7 @@ namespace control {
          * @brief 获得电机的角速度
          * @return 角速度，单位为[rad / s]
          */
-        virtual float GetOmega() const;
+        virtual float GetAngleSpeed() const;
 
         /**
          * @brief get angular velocity difference (target - actual), in [rad / s]
@@ -125,7 +125,7 @@ namespace control {
          * @param target  目标角速度, 单位为 [rad / s]
          * @return 角速度差，单位为 [rad / s]
          */
-        virtual float GetOmegaDelta(const float target) const;
+        virtual float GetAngleSpeedOffset(const float target) const;
 
         /**
          * @brief get motor current
@@ -292,9 +292,9 @@ namespace control {
         void SetOutput(int16_t val) override final;
 
         /* override default implementation with not implemented */
-        float GetOmega() const override final;
+        float GetAngleSpeed() const override final;
 
-        float GetOmegaDelta(const float target) const override final;
+        float GetAngleSpeedOffset(const float target) const override final;
 
       private:
         volatile int16_t raw_current_get_ = 0;

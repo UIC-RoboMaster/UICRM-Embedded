@@ -209,7 +209,7 @@ void chassisTask(void* arg) {
         osDelay(1);
     }
 
-    float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+    float relative_angle = yaw_motor->GetAngleOffset(gimbal_param->yaw_offset_);
 
     // float last_speed = 0;
     float sin_yaw, cos_yaw, vx_set, vy_set, vz_set, vx_set_org, vy_set_org;
@@ -234,7 +234,7 @@ void chassisTask(void* arg) {
         if (dbus->swr == remote::UP) {
             chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
         } else {
-            relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+            relative_angle = yaw_motor->GetAngleOffset(gimbal_param->yaw_offset_);
 
             sin_yaw = arm_sin_f32(relative_angle);
             cos_yaw = arm_cos_f32(relative_angle);

@@ -131,15 +131,15 @@ namespace control {
 
     void Gimbal::Update() {
         // 俯仰pid
-        float pt_diff = pitch_motor_->GetThetaDelta(pitch_angle_);
+        float pt_diff = pitch_motor_->GetAngleOffset(pitch_angle_);
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
-        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
+        float po_in = pitch_motor_->GetAngleSpeedOffset(pt_out);
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
 
         // 偏航pid
-        float yt_diff = yaw_motor_->GetThetaDelta(yaw_angle_);
+        float yt_diff = yaw_motor_->GetAngleOffset(yaw_angle_);
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
-        float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
+        float yo_in = yaw_motor_->GetAngleSpeedOffset(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
 
         // 为啥要用角度+角速度？
@@ -160,7 +160,7 @@ namespace control {
 
     void Gimbal::TargetAbsYawRelPitch(float rel_pitch, float abs_yaw) {
         // 俯仰：输入相对角度
-        pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
+        pitch_angle_ = pitch_motor_->GetAngle() + rel_pitch;
         // 偏航：输入绝对角度
         float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
         yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
@@ -168,9 +168,9 @@ namespace control {
 
     void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
         // 俯仰：输入相对角度
-        pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
+        pitch_angle_ = pitch_motor_->GetAngle() + rel_pitch;
         // 偏航：输入相对角度
-        yaw_angle_ = yaw_motor_->GetTheta() + rel_yaw;
+        yaw_angle_ = yaw_motor_->GetAngle() + rel_yaw;
     }
 
     void Gimbal::UpdateOffset(float pitch_offset, float yaw_offset) {
