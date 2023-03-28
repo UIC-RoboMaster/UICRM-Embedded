@@ -88,6 +88,7 @@ const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
                                             .reserved = 0};
 osThreadId_t gimbalTaskHandle;
 
+// 云台主任务
 void gimbalTask(void* arg) {
     UNUSED(arg);
 
@@ -121,9 +122,9 @@ void gimbalTask(void* arg) {
         ++i;
     }
     buzzer->SingTone(bsp::BuzzerNote::Silent);
-    float pitch_ratio, yaw_ratio;
-    float pitch_curr, yaw_curr;
-    float pitch_target = 0, yaw_target = 0;
+    float pitch_ratio, yaw_ratio;            //遥控器读到的摇杆比例
+    float pitch_curr, yaw_curr;              //当前imu读取到的pitch和yaw
+    float pitch_target = 0, yaw_target = 0;  // 当前目标pitch和yaw
     float pitch_diff, yaw_diff;
 
     while (true) {
@@ -153,26 +154,37 @@ void gimbalTask(void* arg) {
         //      osDelay(1);
         //      continue;
         //    }
-        pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
-        yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
+
+        // 备用鼠标控制
+        // pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
+        // yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
+
+        // 读取摇杆比例
         pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
         yaw_ratio = dbus->ch4 / 18000.0 / 7.0;
+
+        // 计算目标pitch和yaw
         pitch_target = clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
                                    gimbal_param->pitch_max_);
         yaw_target =
             wrap<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
+        // 根据imu读取的当前值计算差值
         pitch_diff = clip<float>(pitch_target - pitch_curr, -PI, PI);
         yaw_diff = wrap<float>(yaw_target - yaw_curr, -PI, PI);
 
+        //忽略微小差值
         if (-0.005 < pitch_diff && pitch_diff < 0.005) {
             pitch_diff = 0;
         }
+
         if (dbus->swr == remote::UP) {
+            // 云台锁死对准前方
             gimbal->TargetAbsYawRelPitch(pitch_diff, 0);
             gimbal->Update();
             yaw_target = yaw_curr;
         } else {
+            // 云台解锁
             gimbal->TargetRel(pitch_diff, yaw_diff);
         }
 
@@ -193,6 +205,7 @@ const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
                                              .reserved = 0};
 osThreadId_t chassisTaskHandle;
 
+// 底盘主任务
 void chassisTask(void* arg) {
     UNUSED(arg);
 
