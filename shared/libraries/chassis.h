@@ -85,26 +85,26 @@ namespace control {
         /**
          * @brief 设置底盘速度并解算
          * @note 缓存在speeds_数组中
-         *
-         * @param x_speed chassis speed on x-direction
-         * 底盘x方向速度
-         * @param y_speed chassis speed on y-direction
-         * 底盘y方向速度
-         * @param turn_speed chassis clockwise turning speed
-         * 底盘顺时针旋转速度
+         * @param x_speed 底盘x方向速度
+         * @param y_speed 底盘y方向速度
+         * @param turn_speed 底盘顺时针旋转速度
          */
         void SetSpeed(const float x_speed, const float y_speed = 0, const float turn_speed = 0);
 
         /**
          * @brief calculate the output of the motors under current configuration
-         * @brief 输入当前功耗，计算电机16bit电流，发送给电机类
          * @param power_limit_on Turn on/off power limit
-         * @param power_limit_on 是否开启功耗限制
-         *
-         * @param power_limit 单位？
-         * @param chassis_power 单位？
-         * @param chassis_power_buffer 单位？
+         * @param power_limit The current power limit
+         * @param chassis_power The current chassis power
+         * @param chassis_power_buffer The current chassis power buffer
          * @note does not command the motor immediately
+         */
+        /**
+         * @brief 输入当前功耗，计算电机16bit电流，发送给电机类
+         * @param power_limit_on 是否打开功耗限制
+         * @param power_limit 当前的功耗限制
+         * @param chassis_power 当前的实时功耗
+         * @param chassis_power_buffer 当前的实时功耗缓冲
          * @note 不会立即发送电机指令
          */
         void Update(bool power_limit_on, float power_limit, float chassis_power,
