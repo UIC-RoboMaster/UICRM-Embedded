@@ -55,10 +55,7 @@ building the source code and flashing the embedded chips.
    for Mingw-w64.
    
 ### Install Make (Windows only)
-1. Run the command below
-```sh
-winget install GnuWin32.Make
-```
+1. Go to the [official download page](https://sourceforge.net/projects/gnuwin32/files/make/3.81/)
 
 ### Compile Project (CLion)
 You can directly open the project in CLion and build it.
