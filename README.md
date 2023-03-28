@@ -53,6 +53,12 @@ building the source code and flashing the embedded chips.
 ### Install Mingw-w64 (Windows only)
 1. Go to the [official download page](https://sourceforge.net/projects/mingw-w64/files/)
    for Mingw-w64.
+   
+### Install Make (Windows only)
+1. Run the command below
+```sh
+winget install GnuWin32.Make
+```
 
 ### Compile Project (CLion)
 You can directly open the project in CLion and build it.
@@ -68,7 +74,10 @@ You need to set the path of the embedded toolchain in the CLion settings.
    cmake -DCMAKE_BUILD_TYPE=Release ..
    make -j
    ```
-
+   In  Windows you should add the option to let cmake use make to build.
+   ```sh
+   cmake -DCMAKE_BUILD_TYPE=Release ... -G "Unix Makefiles"
+   ```
    Change build type to `Debug` or `RelWithDebInfo` in order to debug with `gdb`.
    Note that `Debug` build could be much slower than the other two due to lack
    of compiler optimizations.
@@ -127,10 +136,10 @@ The continuous integration system will check the source code against
 All codes are required to be formatted correctly before merging. There are several
 integrated build commands that can help you automatically format your changes.
 
-**Prerequisite**: install `clang-format` (version 10 recommended)
+**Prerequisite**: install `clang-format`
 
 * Linux users can simply install it using `sudo apt install clang-format-10`.
-* Mac users need to download prebuilt binaries from
+* Mac and Windows users need to download prebuilt binaries from
   [here](https://releases.llvm.org/download.html).
 
 With `clang-format` installed, you can run the following commands inside `build/`
