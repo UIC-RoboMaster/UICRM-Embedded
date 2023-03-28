@@ -323,7 +323,7 @@ namespace control {
 
     /**
      * @brief 包装类，有齿轮箱时精确控制轴角度
-     * @note 这是一个计算类，用于计算所需的输出，但它不会直接命令电机转动
+     * @note 这是一个计算类，用于计算所需的输出，调用电机类的SetOutput()函数来实际输出
      */
     class ServoMotor {
       public:
@@ -371,7 +371,7 @@ namespace control {
         void SetMaxAcceleration(const float max_acceleration);
 
         /**
-         * @note 不发送电机指令，仅计算电流
+         * @note 计算输出，调用电机类的SetOutput()实际输出
          */
         void CalcOutput();
 
@@ -455,23 +455,22 @@ namespace control {
         MotorCANBase* motor_;
         float max_speed_;
         float max_acceleration_;
-        float transmission_ratio_;
-        float proximity_in_;
-        float proximity_out_;
+        float transmission_ratio_;  // 齿轮传动比
+        float proximity_in_;        // 小于该误差则进入Holding模式
+        float proximity_out_;       // 大于该误差则退出Holding模式
 
         // angle control
         bool hold_; /* true if motor is holding now, otherwise moving now */
         uint32_t start_time_;
-        float target_angle_; /* desired target angle, range between [0, 2PI] in [rad] */
-        float align_angle_;  /* motor angle when a instance of this class is created
-                          with that motor    */
-        float motor_angle_;  /* current motor angle in [rad], with align_angle
-                          subtracted               */
-        float offset_angle_; /* cumulative offset angle of motor shaft, range between
-                          [0, 2PI] in [rad] */
-        float servo_angle_;  /* current angle of motor shaft, range between [0, 2PI] in
-                          [rad]           */
-        float cumulated_angle_;
+        float target_angle_;     /* 设定的目标角度，范围 [0, 2PI]，单位[rad] */
+        float align_angle_;      /* motor angle when a instance of this class is created
+                              with that motor    */
+        float motor_angle_;      /* 当前角度，单位 [rad], with align_angle subtracted */
+        float offset_angle_;     /* cumulative offset angle of motor shaft, range between
+                              [0, 2PI] in [rad] */
+        float servo_angle_;      /* 电机轴角度, range between [0, 2PI] in
+                              [rad]           */
+        float cumulated_angle_;  //累积角度？
 
         // jam detection
         jam_callback_t jam_callback_; /* callback function that will be invoked if

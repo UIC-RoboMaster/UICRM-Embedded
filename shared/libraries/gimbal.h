@@ -16,18 +16,17 @@ namespace control {
      * @brief offset, max, and proximity angles of different gimbals
      * @note except for proximity is determined by user, these should be obtained
      * by reading encoder values through uart/gdb
+     * @note 除了proximity由用户决定，其他的都应该通过读取编码器的值来获取
      */
     typedef struct {
-        float pitch_offset_; /* pitch offset angle (angle when muzzle is at vertical
-                                center) */
-        float yaw_offset_;   /* yaw offset angle (angle when muzzle is at horizontal
-                                center) */
-        float pitch_max_;    /* maximum pitch angle the gimbal can turn from center */
-        float yaw_max_;      /* maximum yaw angle the gimbal can turn from center      */
+        float pitch_offset_; /* 俯仰偏移角（枪口位于垂直中心时的角度） */
+        float yaw_offset_;   /* 偏航偏移角（枪口位于水平中心时的角度） */
+        float pitch_max_;    /* 云台最大俯仰角                    */
+        float yaw_max_;      /* 云台最大偏航角                    */
     } gimbal_data_t;
 
     /**
-     * @brief structure used when gimbal instance is initialized
+     * @brief 云台初始化时用
      */
     typedef struct {
         MotorCANBase* pitch_motor; /* pitch motor instance */
@@ -61,32 +60,33 @@ namespace control {
         gimbal_data_t* GetData();
 
         /**
-         * @brief calculate the output of the motors under current configuration
+         * @brief 计算电机输出
+         * @note 会调用电机的SetSpeed()函数以设置电机速度
          * @note does not command the motor immediately
          */
         void Update();
 
         /**
-         * @brief set motors to point to a new orientation
+         * @brief 设置云台电机绝对角度
          *
-         * @param new_pitch new pitch angled
-         * @param new_yaw   new yaw angled
+         * @param new_pitch 新绝对俯仰角
+         * @param new_yaw   新绝对偏航角
          */
         void TargetAbs(float new_pitch, float new_yaw);
 
         /**
-         * @brief set motors to point to a new orientation
+         * @brief 设置俯仰轴电机相对角度，偏航轴电机绝对角度
          *
-         * @param new_pitch new pitch angled
-         * @param new_yaw   new yaw angled
+         * @param new_pitch 新相对俯仰角
+         * @param new_yaw   新绝对偏航角
          */
         void TargetAbsYawRelPitch(float new_pitch, float new_yaw);
 
         /**
-         * @brief set motors to point to a new orientation
+         * @brief 设置云台相对角度（变化角度）
          *
-         * @param new_pitch new pitch angled
-         * @param new_yaw   new yaw angled
+         * @param new_pitch 新相对俯仰角
+         * @param new_yaw   新相对偏航角
          */
         void TargetRel(float new_pitch, float new_yaw);
 
