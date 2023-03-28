@@ -10,13 +10,19 @@ namespace control {
     /**
      * @brief gimbal models
      */
+    /**
+     * @brief 云台类型
+     */
     typedef enum { GIMBAL_FORTRESS, GIMBAL_SENTRY, GIMBAL_STEERING } gimbal_model_t;
 
     /**
      * @brief offset, max, and proximity angles of different gimbals
      * @note except for proximity is determined by user, these should be obtained
      * by reading encoder values through uart/gdb
-     * @note 除了proximity由用户决定，其他的都应该通过读取编码器的值来获取
+     */
+    /**
+     * @brief 云台相关常数
+     * @note 除了proximity由用户确定，其他应该通过读取编码器值来获取
      */
     typedef struct {
         float pitch_offset_; /* 俯仰偏移角（枪口位于垂直中心时的角度） */
@@ -26,7 +32,10 @@ namespace control {
     } gimbal_data_t;
 
     /**
-     * @brief 云台初始化时用
+     * @brief structure used when gimbal instance is initialized
+     */
+    /**
+     * @brief 云台初始化结构体
      */
     typedef struct {
         MotorCANBase* pitch_motor; /* pitch motor instance */
@@ -37,6 +46,9 @@ namespace control {
     /**
      * @brief wrapper class for gimbal
      */
+    /**
+     * @brief 云台类
+     */
     class Gimbal {
       public:
         /**
@@ -45,10 +57,18 @@ namespace control {
          * @param gimbal structure that used to initialize gimbal, refer to type
          * gimbal_t
          */
+        /**
+         * @brief 构造函数
+         *
+         * @param gimbal 云台初始化结构体
+         */
         Gimbal(gimbal_t gimbal);
 
         /**
          * @brief destructor for gimbal
+         */
+        /**
+         * @brief 析构函数
          */
         ~Gimbal();
 
@@ -57,15 +77,29 @@ namespace control {
          *
          * @return refer to gimbal_data_t
          */
+        /**
+         * @brief 获取云台相关常数
+         * @return 云台常数结构体
+         */
         gimbal_data_t* GetData();
 
         /**
+         * @brief calculate the output of the motors under current configuration
+         * @note does not command the motor immediately
+         */
+        /**
          * @brief 计算电机输出
          * @note 会调用电机的SetSpeed()函数以设置电机速度
-         * @note does not command the motor immediately
+         * @note 不会立即命令电机
          */
         void Update();
 
+        /**
+         * @brief set motors to point to a new orientation
+         *
+         * @param new_pitch new pitch angled
+         * @param new_yaw   new yaw angled
+         */
         /**
          * @brief 设置云台电机绝对角度
          *
@@ -75,6 +109,12 @@ namespace control {
         void TargetAbs(float new_pitch, float new_yaw);
 
         /**
+         * @brief set motors to point to a new orientation
+         *
+         * @param new_pitch new pitch angled
+         * @param new_yaw   new yaw angled
+         */
+        /**
          * @brief 设置俯仰轴电机相对角度，偏航轴电机绝对角度
          *
          * @param new_pitch 新相对俯仰角
@@ -82,6 +122,12 @@ namespace control {
          */
         void TargetAbsYawRelPitch(float new_pitch, float new_yaw);
 
+        /**
+         * @brief set motors to point to a new orientation
+         *
+         * @param new_pitch new pitch angled
+         * @param new_yaw   new yaw angled
+         */
         /**
          * @brief 设置云台相对角度（变化角度）
          *
@@ -95,6 +141,11 @@ namespace control {
          *
          * @param pitch_offset new pitch offset
          * @param yaw_offset   new yaw offset
+         */
+        /**
+         * @brief 更新云台偏移角
+         * @param pitch_offset 新的俯仰偏移角
+         * @param yaw_offset  新的偏航偏移角
          */
         void UpdateOffset(float pitch_offset, float yaw_offset);
 
