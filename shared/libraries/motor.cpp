@@ -345,9 +345,10 @@ namespace control {
                 speed_max_start > speed_max_target ? speed_max_target : speed_max_start;
             current_speed = clip<float>(current_speed, 0, max_speed_);
             command = omega_pid_.ComputeConstrainedOutput(
-                    motor_->GetAngleSpeedOffset(sign<float>(target_diff, 0) * current_speed));
+                motor_->GetAngleSpeedOffset(sign<float>(target_diff, 0) * current_speed));
         } else {
-            command = omega_pid_.ComputeConstrainedOutput(motor_->GetAngleSpeedOffset(target_diff * 50));
+            command =
+                omega_pid_.ComputeConstrainedOutput(motor_->GetAngleSpeedOffset(target_diff * 50));
         }
         // 调用电机类以输出
         motor_->SetOutput(command);
@@ -516,7 +517,7 @@ namespace control {
             return true;
         } else {
             servo_->motor_->SetOutput(servo_->omega_pid_.ComputeConstrainedOutput(
-                    servo_->motor_->GetAngleSpeedOffset(test_speed_ * servo_->transmission_ratio_)));
+                servo_->motor_->GetAngleSpeedOffset(test_speed_ * servo_->transmission_ratio_)));
         }
         return false;
     }
