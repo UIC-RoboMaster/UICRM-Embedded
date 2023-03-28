@@ -21,6 +21,11 @@ namespace control {
      * @param data data that come from motor
      * @param args pointer to a MotorCANBase instance
      */
+    /*
+     * @brief 标准的电机回调函数，用于更新电机数据
+     * @param data 电机传来的数据
+     * @param args 指向MotorCANBase实例的指针
+     */
     static void can_motor_callback(const uint8_t data[], void* args) {
         MotorCANBase* motor = reinterpret_cast<MotorCANBase*>(args);
         motor->UpdateData(data);
