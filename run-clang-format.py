@@ -53,10 +53,11 @@ def excludes_from_file(ignore_file):
                     # allow empty lines
                     continue
                 excludes.append(pattern)
+                excludes.append(str(os.path.join(os.getcwd(),pattern)))
     except EnvironmentError as e:
         if e.errno != errno.ENOENT:
             raise
-    return excludes;
+    return excludes
 
 def list_files(files, recursive=False, extensions=None, exclude=None):
     if extensions is None:

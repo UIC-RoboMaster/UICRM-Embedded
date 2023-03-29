@@ -1,0 +1,6 @@
+boards/*
+shared/third_party/*
+build/*
+cmake-build-debug/*
+venv/*
+.git/*
