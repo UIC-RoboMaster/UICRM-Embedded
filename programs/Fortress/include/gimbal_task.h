@@ -1,15 +1,14 @@
 #pragma once
-#include "main.h"
-#include "cmsis_os2.h"
 #include "bsp_can.h"
-#include "gimbal.h"
-#include "motor.h"
-#include "user_define.h"
 #include "buzzer.h"
+#include "cmsis_os2.h"
+#include "gimbal.h"
 #include "imu_task.h"
+#include "main.h"
+#include "motor.h"
 #include "remote_task.h"
 #include "shoot_task.h"
-
+#include "user_define.h"
 
 extern osThreadId_t gimbalTaskHandle;
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
@@ -28,3 +27,4 @@ extern control::MotorCANBase* pitch_motor;
 extern control::MotorCANBase* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
 void init_gimbal();
+void kill_gimbal();

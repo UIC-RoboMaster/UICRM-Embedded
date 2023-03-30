@@ -18,17 +18,18 @@ void jam_callback(control::ServoMotor* servo, const control::servo_jam_t data) {
     }
 }
 
-
 osThreadId_t shootTaskHandle;
 
 void shootTask(void* arg) {
     UNUSED(arg);
     // 启动等待
-    //TODO: 启动等待
-
+    osDelay(1000);
+    while (remote_mode == REMOTE_MODE_KILL) {
+        osDelay(SHOOT_OS_DELAY);
+    }
     // 等待IMU初始化
     while (!imu->DataReady() || !imu->CaliDone()) {
-        osDelay(1);
+        osDelay(SHOOT_OS_DELAY);
     }
     int last_state = remote::MID;
     int last_state_2 = remote::MID;
@@ -47,7 +48,12 @@ void shootTask(void* arg) {
     load_servo->CalcOutput();
 
     while (true) {
-        //TODO: 离线处理
+        if (remote_mode == REMOTE_MODE_KILL) {
+            while (remote_mode == REMOTE_MODE_KILL) {
+                kill_shoot();
+                osDelay(SHOOT_OS_DELAY);
+            }
+        }
         if (dbus->keyboard.bit.B || dbus->swr == remote::DOWN) {
             while (true) {
                 if (dbus->keyboard.bit.V || dbus->swr != remote::DOWN) {
@@ -152,7 +158,7 @@ void shootTask(void* arg) {
     }
 }
 
-void init_shoot(){
+void init_shoot() {
     flywheel_left = new control::MotorPWMBase(&htim1, 1, 1000000, 500, 1080);
     flywheel_right = new control::MotorPWMBase(&htim1, 2, 1000000, 500, 1080);
     flywheel_left->SetOutput(0);
@@ -172,4 +178,9 @@ void init_shoot(){
     load_servo->RegisterJamCallback(jam_callback, 0.6);
 
     shoot_key = new bsp::GPIO(BUTTON_TRI_GPIO_Port, BUTTON_TRI_Pin);
+}
+void kill_shoot() {
+    steering_motor->SetOutput(0);
+    flywheel_left->SetOutput(0);
+    flywheel_right->SetOutput(0);
 }

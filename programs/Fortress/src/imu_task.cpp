@@ -1,17 +1,10 @@
-//
-// Created by yangr on 2023/3/30.
-//
-
 #include "imu_task.h"
-
 
 osThreadId_t imuTaskHandle;
 
-
-    void IMU::RxCompleteCallback() {
-        osThreadFlagsSet(imuTaskHandle, RX_SIGNAL);
-    }
-
+void IMU::RxCompleteCallback() {
+    osThreadFlagsSet(imuTaskHandle, RX_SIGNAL);
+}
 
 IMU* imu = nullptr;
 
@@ -26,7 +19,7 @@ void imuTask(void* arg) {
     }
 }
 
-void init_imu(){
+void init_imu() {
     bsp::IST8310_init_t IST8310_init;
     IST8310_init.hi2c = &hi2c3;
     IST8310_init.int_pin = DRDY_IST8310_Pin;

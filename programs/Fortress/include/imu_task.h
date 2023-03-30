@@ -1,9 +1,9 @@
 #pragma once
-#include "main.h"
+#include "bsp_imu.h"
 #include "cmsis_os2.h"
 #include "i2c.h"
+#include "main.h"
 #include "spi.h"
-#include "bsp_imu.h"
 #define RX_SIGNAL (1 << 0)
 extern osThreadId_t imuTaskHandle;
 const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",

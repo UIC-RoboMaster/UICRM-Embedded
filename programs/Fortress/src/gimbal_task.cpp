@@ -1,6 +1,5 @@
 #include "gimbal_task.h"
 
-
 osThreadId_t gimbalTaskHandle;
 
 bsp::CAN* can2 = nullptr;
@@ -13,14 +12,24 @@ void gimbalTask(void* arg) {
     UNUSED(arg);
 
     control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor, steering_motor};
-    osDelay(2000);
-
+    osDelay(1500);
+    while (remote_mode == REMOTE_MODE_KILL) {
+        kill_gimbal();
+        osDelay(GIMBAL_OS_DELAY);
+    }
     int i = 0;
     while (i < 5000 || !imu->DataReady()) {
+        if (remote_mode == REMOTE_MODE_KILL) {
+            while (remote_mode == REMOTE_MODE_KILL) {
+                kill_gimbal();
+                osDelay(GIMBAL_OS_DELAY);
+            }
+            i = 0;
+        }
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
         control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
-        osDelay(1);
+        osDelay(GIMBAL_OS_DELAY);
         ++i;
     }
 
@@ -42,7 +51,13 @@ void gimbalTask(void* arg) {
     float pitch_diff, yaw_diff;
 
     while (true) {
-
+        if (remote_mode == REMOTE_MODE_KILL) {
+            while (remote_mode == REMOTE_MODE_KILL) {
+                kill_gimbal();
+                osDelay(GIMBAL_OS_DELAY);
+            }
+            continue;
+        }
         pitch_curr = imu->INS_angle[2];
         yaw_curr = imu->INS_angle[0];
         //    if (dbus->swr == remote::UP) {
@@ -69,21 +84,26 @@ void gimbalTask(void* arg) {
         if (-0.005 < pitch_diff && pitch_diff < 0.005) {
             pitch_diff = 0;
         }
-        if (dbus->swr == remote::UP) {
-            gimbal->TargetAbsYawRelPitch(pitch_diff, 0);
-            gimbal->Update();
-            yaw_target = yaw_curr;
-        } else {
-            gimbal->TargetRel(pitch_diff, yaw_diff);
+        switch (remote_mode) {
+            case REMOTE_MODE_MANUAL:
+                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->Update();
+                break;
+            case REMOTE_MODE_SPIN:
+                gimbal->TargetAbsYawRelPitch(pitch_diff, 0);
+                gimbal->Update();
+                yaw_target = yaw_curr;
+                break;
+            default:
+                kill_gimbal();
         }
 
-        gimbal->Update();
         control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
         osDelay(GIMBAL_OS_DELAY);
     }
 }
 
-void init_gimbal(){
+void init_gimbal() {
     can2 = new bsp::CAN(&hcan2, 0x201, false);
     pitch_motor = new control::Motor6020(can2, 0x206);
     yaw_motor = new control::Motor6020(can2, 0x205);
@@ -94,4 +114,11 @@ void init_gimbal(){
     gimbal_data.model = control::GIMBAL_FORTRESS;
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
+}
+void kill_gimbal() {
+    control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor, steering_motor};
+    yaw_motor->SetOutput(0);
+    pitch_motor->SetOutput(0);
+    // steering_motor->SetOutput(0);
+    control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
 }

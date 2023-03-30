@@ -1,7 +1,7 @@
 #pragma once
-#include "main.h"
 #include "bsp_buzzer.h"
+#include "main.h"
 
 extern bsp::Buzzer* buzzer;
 
-void  init_buzzer();
+void init_buzzer();

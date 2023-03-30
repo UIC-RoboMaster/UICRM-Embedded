@@ -1,12 +1,11 @@
 #pragma once
-#include "main.h"
-#include "cmsis_os2.h"
 #include "bsp_can.h"
-#include "motor.h"
 #include "chassis.h"
-
-#include "imu_task.h"
+#include "cmsis_os2.h"
 #include "gimbal_task.h"
+#include "imu_task.h"
+#include "main.h"
+#include "motor.h"
 extern osThreadId_t chassisTaskHandle;
 const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
                                              .attr_bits = osThreadDetached,
@@ -19,3 +18,4 @@ const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
                                              .reserved = 0};
 void chassisTask(void* arg);
 void init_chassis();
+void kill_chassis();

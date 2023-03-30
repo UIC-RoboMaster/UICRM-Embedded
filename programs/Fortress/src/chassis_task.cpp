@@ -9,13 +9,14 @@ static control::MotorCANBase* br_motor = nullptr;
 static control::Chassis* chassis = nullptr;
 void chassisTask(void* arg) {
     UNUSED(arg);
-
+    osDelay(1000);
     control::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
 
-    while (true) {
-        //TODO: Wait until the system up
-        osDelay(10);
+    while (remote_mode == REMOTE_MODE_KILL) {
+        kill_chassis();
+        osDelay(CHASSIS_OS_DELAY);
     }
+
     while (!imu->DataReady() || !imu->CaliDone()) {
         osDelay(1);
     }
@@ -25,39 +26,42 @@ void chassisTask(void* arg) {
     // float last_speed = 0;
     float sin_yaw, cos_yaw, vx_set, vy_set, vz_set, vx_set_org, vy_set_org;
     while (true) {
-        //TODO: Offline Check
-        //TODO: Mode Check
-        if (dbus->keyboard.bit.B || dbus->swr == remote::DOWN) {
-            while (true) {
-                if (dbus->keyboard.bit.V || dbus->swr != remote::DOWN) {
-                    break;
-                }
-                osDelay(10);
+        if (remote_mode == REMOTE_MODE_KILL) {
+            while (remote_mode == REMOTE_MODE_KILL) {
+                kill_chassis();
+                osDelay(CHASSIS_OS_DELAY);
             }
             continue;
         }
-        if (dbus->swr == remote::UP) {
-            chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
-        } else {
-            relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        switch (remote_mode) {
+            case REMOTE_MODE_MANUAL:
+                chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
+                chassis->Update(false, 30, 20, 60);
+                break;
+            case REMOTE_MODE_SPIN:
+                relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-            sin_yaw = arm_sin_f32(relative_angle);
-            cos_yaw = arm_cos_f32(relative_angle);
-            vx_set_org = dbus->ch0;
-            vy_set_org = dbus->ch1;
-            vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
-            vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
-            vz_set = dbus->ch2;
-            chassis->SetSpeed(vx_set, vy_set, vz_set);
+                sin_yaw = arm_sin_f32(relative_angle);
+                cos_yaw = arm_cos_f32(relative_angle);
+                vx_set_org = dbus->ch0;
+                vy_set_org = dbus->ch1;
+                vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
+                vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
+                vz_set = dbus->ch2;
+                chassis->SetSpeed(vx_set, vy_set, vz_set);
+                chassis->Update(false, 30, 20, 60);
+                break;
+            default:
+                // Not Support
+                kill_chassis();
         }
 
-        chassis->Update(false, 30, 20, 60);
         control::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(CHASSIS_OS_DELAY);
     }
 }
 
-void init_chassis(){
+void init_chassis() {
     can1 = new bsp::CAN(&hcan1, 0x201, true);
     fl_motor = new control::Motor3508(can1, 0x202);
     fr_motor = new control::Motor3508(can1, 0x201);
@@ -74,4 +78,12 @@ void init_chassis(){
     chassis_data.motors = motors;
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
     chassis = new control::Chassis(chassis_data);
+}
+void kill_chassis() {
+    control::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
+    fl_motor->SetOutput(0);
+    fr_motor->SetOutput(0);
+    bl_motor->SetOutput(0);
+    br_motor->SetOutput(0);
+    control::MotorCANBase::TransmitOutput(motors, 4);
 }
