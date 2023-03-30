@@ -41,8 +41,10 @@ namespace control {
          * @brief Limit the output power
          * @param turn_on Whether to turn on the power limit
          * @param power_limit_info Power limit information
-         * @param chassis_power Current chassis instant total power, passed in after reading from the referee system
-         * @param chassis_power_buffer Current chassis remaining total energy, passed in after reading from the referee system
+         * @param chassis_power Current chassis instant total power, passed in after reading from
+         * the referee system
+         * @param chassis_power_buffer Current chassis remaining total energy, passed in after
+         * reading from the referee system
          * @param PID_output Motor output after PID control *array*, input
          * @param output Motor output after power limit *array*, output
          */

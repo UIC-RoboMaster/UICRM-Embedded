@@ -122,8 +122,8 @@ void gimbalTask(void* arg) {
         ++i;
     }
     buzzer->SingTone(bsp::BuzzerNote::Silent);
-    float pitch_ratio, yaw_ratio;            //遥控器读到的摇杆比例
-    float pitch_curr, yaw_curr;              //当前imu读取到的pitch和yaw
+    float pitch_ratio, yaw_ratio;            // 遥控器读到的摇杆比例
+    float pitch_curr, yaw_curr;              // 当前imu读取到的pitch和yaw
     float pitch_target = 0, yaw_target = 0;  // 当前目标pitch和yaw
     float pitch_diff, yaw_diff;
 
@@ -173,7 +173,7 @@ void gimbalTask(void* arg) {
         pitch_diff = clip<float>(pitch_target - pitch_curr, -PI, PI);
         yaw_diff = wrap<float>(yaw_target - yaw_curr, -PI, PI);
 
-        //忽略微小差值
+        // 忽略微小差值
         if (-0.005 < pitch_diff && pitch_diff < 0.005) {
             pitch_diff = 0;
         }
