@@ -6,7 +6,10 @@
 namespace control {
 
     /**
-     * @brief 功耗限制信息
+     * @brief Struct for power limit information
+     */
+    /**
+     * @brief 功耗限制变量结构体
      */
     typedef struct {
         float power_limit;                 //  瞬时总功耗限制值
@@ -16,10 +19,33 @@ namespace control {
         float power_total_current_limit;
     } power_limit_t;
 
+    /**
+     * @brief Class for power limit
+     */
+    /**
+     * @brief 功耗限制类
+     */
     class PowerLimit {
       public:
+        /**
+         * @brief Constructor
+         * @param motor_num Number of motors
+         */
+        /**
+         * @brief 构造函数
+         * @param motor_num 电机的数量
+         */
         PowerLimit(int motor_num);
 
+        /**
+         * @brief Limit the output power
+         * @param turn_on Whether to turn on the power limit
+         * @param power_limit_info Power limit information
+         * @param chassis_power Current chassis instant total power, passed in after reading from the referee system
+         * @param chassis_power_buffer Current chassis remaining total energy, passed in after reading from the referee system
+         * @param PID_output Motor output after PID control *array*, input
+         * @param output Motor output after power limit *array*, output
+         */
         /**
          * @brief 输出功耗限制
          * @param turn_on 是否开启功耗限制
