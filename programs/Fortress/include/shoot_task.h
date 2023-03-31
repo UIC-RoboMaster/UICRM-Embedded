@@ -6,6 +6,7 @@
 #include "motor.h"
 #include "remote_task.h"
 #include "user_define.h"
+#include "public_port.h"
 extern osThreadId_t shootTaskHandle;
 const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .attr_bits = osThreadDetached,

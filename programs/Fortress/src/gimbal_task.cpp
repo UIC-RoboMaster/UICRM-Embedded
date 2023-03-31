@@ -2,7 +2,7 @@
 
 osThreadId_t gimbalTaskHandle;
 
-bsp::CAN* can2 = nullptr;
+
 control::MotorCANBase* pitch_motor = nullptr;
 control::MotorCANBase* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
@@ -19,13 +19,12 @@ void gimbalTask(void* arg) {
     }
     int i = 0;
     while (i < 5000 || !imu->DataReady()) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+
             while (remote_mode == REMOTE_MODE_KILL) {
                 kill_gimbal();
                 osDelay(GIMBAL_OS_DELAY);
             }
-            i = 0;
-        }
+
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
         control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
@@ -52,10 +51,8 @@ void gimbalTask(void* arg) {
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
-            while (remote_mode == REMOTE_MODE_KILL) {
                 kill_gimbal();
                 osDelay(GIMBAL_OS_DELAY);
-            }
             continue;
         }
         pitch_curr = imu->INS_angle[2];
@@ -85,11 +82,11 @@ void gimbalTask(void* arg) {
             pitch_diff = 0;
         }
         switch (remote_mode) {
-            case REMOTE_MODE_MANUAL:
+            case REMOTE_MODE_SPIN:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
-            case REMOTE_MODE_SPIN:
+            case REMOTE_MODE_MANUAL:
                 gimbal->TargetAbsYawRelPitch(pitch_diff, 0);
                 gimbal->Update();
                 yaw_target = yaw_curr;
@@ -104,10 +101,8 @@ void gimbalTask(void* arg) {
 }
 
 void init_gimbal() {
-    can2 = new bsp::CAN(&hcan2, 0x201, false);
     pitch_motor = new control::Motor6020(can2, 0x206);
     yaw_motor = new control::Motor6020(can2, 0x205);
-    steering_motor = new control::Motor2006(can2, 0x207);
     control::gimbal_t gimbal_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;

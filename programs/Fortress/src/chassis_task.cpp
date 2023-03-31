@@ -1,12 +1,11 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
-static bsp::CAN* can1 = nullptr;
-static control::MotorCANBase* fl_motor = nullptr;
-static control::MotorCANBase* fr_motor = nullptr;
-static control::MotorCANBase* bl_motor = nullptr;
-static control::MotorCANBase* br_motor = nullptr;
+control::MotorCANBase* fl_motor = nullptr;
+control::MotorCANBase* fr_motor = nullptr;
+control::MotorCANBase* bl_motor = nullptr;
+control::MotorCANBase* br_motor = nullptr;
 
-static control::Chassis* chassis = nullptr;
+control::Chassis* chassis = nullptr;
 void chassisTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
@@ -27,10 +26,10 @@ void chassisTask(void* arg) {
     float sin_yaw, cos_yaw, vx_set, vy_set, vz_set, vx_set_org, vy_set_org;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
-            while (remote_mode == REMOTE_MODE_KILL) {
+
                 kill_chassis();
                 osDelay(CHASSIS_OS_DELAY);
-            }
+
             continue;
         }
         switch (remote_mode) {
@@ -62,7 +61,6 @@ void chassisTask(void* arg) {
 }
 
 void init_chassis() {
-    can1 = new bsp::CAN(&hcan1, 0x201, true);
     fl_motor = new control::Motor3508(can1, 0x202);
     fr_motor = new control::Motor3508(can1, 0x201);
     bl_motor = new control::Motor3508(can1, 0x203);

@@ -9,7 +9,7 @@
 #include "remote_task.h"
 #include "shoot_task.h"
 #include "user_define.h"
-
+#include "public_port.h"
 extern osThreadId_t gimbalTaskHandle;
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
                                             .attr_bits = osThreadDetached,

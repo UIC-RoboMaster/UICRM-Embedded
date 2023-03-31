@@ -1,7 +1,7 @@
 #include "shoot_task.h"
 
-control::MotorPWMBase* flywheel_left = nullptr;
-control::MotorPWMBase* flywheel_right = nullptr;
+static control::MotorPWMBase* flywheel_left = nullptr;
+static control::MotorPWMBase* flywheel_right = nullptr;
 
 control::MotorCANBase* steering_motor = nullptr;
 
@@ -48,21 +48,13 @@ void shootTask(void* arg) {
     load_servo->CalcOutput();
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
-            while (remote_mode == REMOTE_MODE_KILL) {
+            if (remote_mode == REMOTE_MODE_KILL) {
                 kill_shoot();
                 osDelay(SHOOT_OS_DELAY);
+                continue ;
             }
-        }
-        if (dbus->keyboard.bit.B || dbus->swr == remote::DOWN) {
-            while (true) {
-                if (dbus->keyboard.bit.V || dbus->swr != remote::DOWN) {
-                    break;
-                }
-                osDelay(10);
-            }
-            continue;
-        }
+
+
         // 检测开关状态，向上来回打即启动拔弹
         if (dbus->swl == remote::UP) {
             if (last_state == remote::MID)
@@ -163,6 +155,8 @@ void init_shoot() {
     flywheel_right = new control::MotorPWMBase(&htim1, 2, 1000000, 500, 1080);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
+
+    steering_motor = new control::Motor2006(can2, 0x207);
 
     control::servo_t servo_data;
     servo_data.motor = steering_motor;

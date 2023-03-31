@@ -6,6 +6,7 @@
 extern remote::DBUS* dbus;
 void init_dbus();
 enum RemoteMode {
+    REMOTE_MODE_PREPARE = -2,
     REMOTE_MODE_KILL = -1,
     REMOTE_MODE_STOP = 0,
     REMOTE_MODE_MANUAL = 1,

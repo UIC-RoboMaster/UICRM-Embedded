@@ -2,7 +2,7 @@
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_MANUAL;
-RemoteMode last_remote_mode = REMOTE_MODE_STOP;
+RemoteMode last_remote_mode = REMOTE_MODE_MANUAL;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_MANUAL, REMOTE_MODE_SPIN};
 const int8_t remote_mode_max = 2;
 const int8_t remote_mode_min = 1;

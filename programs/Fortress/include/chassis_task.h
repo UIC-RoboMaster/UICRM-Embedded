@@ -6,6 +6,7 @@
 #include "imu_task.h"
 #include "main.h"
 #include "motor.h"
+#include "public_port.h"
 extern osThreadId_t chassisTaskHandle;
 const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
                                              .attr_bits = osThreadDetached,
@@ -19,3 +20,4 @@ const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
 void chassisTask(void* arg);
 void init_chassis();
 void kill_chassis();
+extern control::Chassis* chassis;
