@@ -26,9 +26,8 @@ void chassisTask(void* arg) {
     float sin_yaw, cos_yaw, vx_set, vy_set, vz_set, vx_set_org, vy_set_org;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
-
-                kill_chassis();
-                osDelay(CHASSIS_OS_DELAY);
+            kill_chassis();
+            osDelay(CHASSIS_OS_DELAY);
 
             continue;
         }

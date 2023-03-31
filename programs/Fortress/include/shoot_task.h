@@ -4,9 +4,9 @@
 #include "imu_task.h"
 #include "main.h"
 #include "motor.h"
+#include "public_port.h"
 #include "remote_task.h"
 #include "user_define.h"
-#include "public_port.h"
 extern osThreadId_t shootTaskHandle;
 const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .attr_bits = osThreadDetached,

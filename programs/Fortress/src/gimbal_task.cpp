@@ -2,7 +2,6 @@
 
 osThreadId_t gimbalTaskHandle;
 
-
 control::MotorCANBase* pitch_motor = nullptr;
 control::MotorCANBase* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
@@ -19,11 +18,10 @@ void gimbalTask(void* arg) {
     }
     int i = 0;
     while (i < 5000 || !imu->DataReady()) {
-
-            while (remote_mode == REMOTE_MODE_KILL) {
-                kill_gimbal();
-                osDelay(GIMBAL_OS_DELAY);
-            }
+        while (remote_mode == REMOTE_MODE_KILL) {
+            kill_gimbal();
+            osDelay(GIMBAL_OS_DELAY);
+        }
 
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
@@ -51,8 +49,8 @@ void gimbalTask(void* arg) {
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
-                kill_gimbal();
-                osDelay(GIMBAL_OS_DELAY);
+            kill_gimbal();
+            osDelay(GIMBAL_OS_DELAY);
             continue;
         }
         pitch_curr = imu->INS_angle[2];

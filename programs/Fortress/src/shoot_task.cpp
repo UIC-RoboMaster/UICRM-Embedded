@@ -48,12 +48,11 @@ void shootTask(void* arg) {
     load_servo->CalcOutput();
 
     while (true) {
-            if (remote_mode == REMOTE_MODE_KILL) {
-                kill_shoot();
-                osDelay(SHOOT_OS_DELAY);
-                continue ;
-            }
-
+        if (remote_mode == REMOTE_MODE_KILL) {
+            kill_shoot();
+            osDelay(SHOOT_OS_DELAY);
+            continue;
+        }
 
         // 检测开关状态，向上来回打即启动拔弹
         if (dbus->swl == remote::UP) {

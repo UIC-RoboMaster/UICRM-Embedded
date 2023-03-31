@@ -7,9 +7,9 @@
 #include "cmsis_os.h"
 #include "gimbal_task.h"
 #include "imu_task.h"
+#include "public_port.h"
 #include "remote_task.h"
 #include "shoot_task.h"
-#include "public_port.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
     print_use_uart(&huart6);
@@ -37,27 +37,27 @@ void RM_RTOS_Default_Task(const void* arg) {
     while (true) {
         set_cursor(0, 0);
         clear_screen();
-        switch(remote_mode){
+        switch (remote_mode) {
             case REMOTE_MODE_PREPARE:
-                strcpy(s,"PREPARE");
+                strcpy(s, "PREPARE");
                 break;
-                case REMOTE_MODE_STOP:
-                        strcpy(s,"STOP");
-                        break;
-                case REMOTE_MODE_KILL:
-                    strcpy(s,"KILL");
-                    break;
-                case REMOTE_MODE_MANUAL:
-                        strcpy(s,"MANUAL");
-                        break;
-                case REMOTE_MODE_SPIN:
-                        strcpy(s,"SPIN");
-                        break;
-                default:
-                        strcpy(s,"UNKNOWN");
-                        break;
+            case REMOTE_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case REMOTE_MODE_KILL:
+                strcpy(s, "KILL");
+                break;
+            case REMOTE_MODE_MANUAL:
+                strcpy(s, "MANUAL");
+                break;
+            case REMOTE_MODE_SPIN:
+                strcpy(s, "SPIN");
+                break;
+            default:
+                strcpy(s, "UNKNOWN");
+                break;
         }
-        print("Mode:%s\r\n",s);
+        print("Mode:%s\r\n", s);
         print(
             "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
             "TWL: %d "
