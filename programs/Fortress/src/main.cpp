@@ -10,12 +10,14 @@
 #include "public_port.h"
 #include "remote_task.h"
 #include "shoot_task.h"
+#include "referee_task.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
     init_can();
     init_imu();
     init_buzzer();
+    init_referee();
     init_remote();
     init_shoot();
     init_gimbal();
@@ -25,6 +27,7 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
+    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
@@ -72,6 +75,14 @@ void RM_RTOS_Default_Task(const void* arg) {
               imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
         print("Is Calibrated: %s\r\n",
               imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
+        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
+        print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
+        print("\r\n");
+        print("Shooter Cooling Heat: %hu\r\n",
+              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
+        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
         osDelay(50);
     }
 }

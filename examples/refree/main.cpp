@@ -51,9 +51,9 @@ void refereeTask(void* arg) {
 }
 
 void RM_RTOS_Init(void) {
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
 
-    referee_uart = new CustomUART(&huart1);
+    referee_uart = new CustomUART(&huart6);
     referee_uart->SetupRx(300);
     referee_uart->SetupTx(300);
 
