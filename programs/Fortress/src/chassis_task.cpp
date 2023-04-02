@@ -34,7 +34,7 @@ void chassisTask(void* arg) {
         switch (remote_mode) {
             case REMOTE_MODE_MANUAL:
                 chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
-                chassis->Update(false, (float)referee->game_robot_status.chassis_power_limit,
+                chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
                                 referee->power_heat_data.chassis_power,
                                 (float)referee->power_heat_data.chassis_power_buffer);
                 break;
@@ -49,7 +49,7 @@ void chassisTask(void* arg) {
                 vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
                 vz_set = dbus->ch2;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
-                chassis->Update(false, (float)referee->game_robot_status.chassis_power_limit,
+                chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
                                 referee->power_heat_data.chassis_power,
                                 (float)referee->power_heat_data.chassis_power_buffer);
                 break;

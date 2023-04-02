@@ -13,7 +13,7 @@ const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .cb_mem = nullptr,
                                            .cb_size = 0,
                                            .stack_mem = nullptr,
-                                           .stack_size = 256 * 4,
+                                           .stack_size = 512 * 4,
                                            .priority = (osPriority_t)osPriorityNormal,
                                            .tz_module = 0,
                                            .reserved = 0};
