@@ -44,13 +44,11 @@ void remoteTask(void* arg) {
         // remote mode switch
         if (dbus->swr == remote::UP) {
             if (last_state == remote::MID) {
-
                 mode_switch = true;
             }
             last_state = remote::UP;
         } else if (dbus->swr == remote::MID) {
-            if (last_state == remote::UP) {
-            }
+            if (last_state == remote::UP) {}
             last_state = remote::MID;
         }
         if (mode_switch) {

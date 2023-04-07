@@ -2,8 +2,8 @@
 #include "cmsis_os2.h"
 #include "dbus.h"
 #include "main.h"
-#include "user_define.h"
 #include "referee_task.h"
+#include "user_define.h"
 extern remote::DBUS* dbus;
 void init_dbus();
 enum RemoteMode {

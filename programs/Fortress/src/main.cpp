@@ -8,9 +8,9 @@
 #include "gimbal_task.h"
 #include "imu_task.h"
 #include "public_port.h"
+#include "referee_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"
-#include "referee_task.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
     print_use_uart(&huart1);
@@ -26,8 +26,8 @@ void RM_RTOS_Init(void) {
 
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
-    remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
+    remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
