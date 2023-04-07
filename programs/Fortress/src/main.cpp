@@ -71,6 +71,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
               imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
         print("Temp: %.2f\r\n", imu->Temp);
+        print("Heater: %.2f\r\n", imu->TempPWM);
         print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
               imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
         print("Is Calibrated: %s\r\n",
@@ -83,6 +84,10 @@ void RM_RTOS_Default_Task(const void* arg) {
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        osDelay(50);
+        print("\r\n");
+        yaw_motor->PrintData();
+        pitch_motor->PrintData();
+
+        osDelay(75);
     }
 }

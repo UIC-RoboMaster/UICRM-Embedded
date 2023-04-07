@@ -73,11 +73,16 @@ void RM_RTOS_Default_Task(const void* argument) {
         print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
         print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
         print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
+        print("Chassis Power Limit: %d\r\n", referee->game_robot_status.chassis_power_limit);
         print("\r\n");
         print("Shooter Cooling Heat: %hu\r\n",
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        print("\r\n");
+        print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
+              referee->game_robot_status.max_HP);
+        print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_17mm);
         osDelay(100);
     }
 }

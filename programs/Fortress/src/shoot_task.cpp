@@ -49,11 +49,27 @@ void shootTask(void* arg) {
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
+            //死了
+            shoot_flywheel_offset = -5000;
+            ramp_1.Calc(shoot_flywheel_offset);
+            ramp_2.Calc(shoot_flywheel_offset);
+            shoot_state = 0;
+            shoot_state_2 = 0;
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
-
+//        if (referee->bullet_remaining.bullet_remaining_num_17mm == 0){
+//            //没子弹了
+//            shoot_flywheel_offset = -200;
+//            flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
+//            flywheel_right->SetOutput(ramp_2.Calc(shoot_flywheel_offset));
+//            shoot_state = 0;
+//            shoot_state_2 = 0;
+//            kill_shoot();
+//            osDelay(SHOOT_OS_DELAY);
+//            continue;
+//        }
         // 检测开关状态，向上来回打即启动拔弹
         if (dbus->swl == remote::UP) {
             if (last_state == remote::MID)

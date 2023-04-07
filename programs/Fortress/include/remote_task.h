@@ -3,6 +3,7 @@
 #include "dbus.h"
 #include "main.h"
 #include "user_define.h"
+#include "referee_task.h"
 extern remote::DBUS* dbus;
 void init_dbus();
 enum RemoteMode {
