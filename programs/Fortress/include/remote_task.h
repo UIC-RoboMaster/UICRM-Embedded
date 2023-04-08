@@ -12,7 +12,7 @@ enum RemoteMode {
     REMOTE_MODE_STOP = 0,
     REMOTE_MODE_MANUAL = 1,
     REMOTE_MODE_SPIN = 2,
-
+    REMOTE_MODE_ADVANCED = 3
 };
 extern RemoteMode remote_mode;
 extern osThreadId_t remoteTaskHandle;

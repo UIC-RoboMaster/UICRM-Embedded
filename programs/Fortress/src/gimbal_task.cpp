@@ -67,7 +67,7 @@ void gimbalTask(void* arg) {
         pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
         yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
         pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
-        yaw_ratio = dbus->ch4 / 18000.0 / 7.0;
+        yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
         pitch_target = clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
                                    gimbal_param->pitch_max_);
         yaw_target =
@@ -81,14 +81,12 @@ void gimbalTask(void* arg) {
         }
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
+            case REMOTE_MODE_ADVANCED:
+            case REMOTE_MODE_MANUAL:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
-            case REMOTE_MODE_MANUAL:
-                gimbal->TargetAbsYawRelPitch(pitch_diff, 0);
-                gimbal->Update();
-                yaw_target = yaw_curr;
-                break;
+
             default:
                 kill_gimbal();
         }
