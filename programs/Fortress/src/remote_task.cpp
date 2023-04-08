@@ -20,7 +20,10 @@ void remoteTask(void* arg) {
     while (1) {
         last_timestamp = dbus->timestamp;
         // Offline Detection
-        if (HAL_GetTick() - last_timestamp > 500 || dbus->swr == remote::DOWN) {
+        bool is_dbus_offline = HAL_GetTick() - last_timestamp > 500 || dbus->swr == remote::DOWN;
+        // Kill Detection
+        bool is_robot_dead = referee->game_robot_status.remain_HP == 0;
+        if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
@@ -41,13 +44,12 @@ void remoteTask(void* arg) {
         // remote mode switch
         if (dbus->swr == remote::UP) {
             if (last_state == remote::MID) {
-                last_state = remote::UP;
                 mode_switch = true;
             }
+            last_state = remote::UP;
         } else if (dbus->swr == remote::MID) {
-            if (last_state == remote::UP) {
-                last_state = remote::MID;
-            }
+            if (last_state == remote::UP) {}
+            last_state = remote::MID;
         }
         if (mode_switch) {
             mode_switch = false;

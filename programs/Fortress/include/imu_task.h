@@ -11,8 +11,8 @@ const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
                                          .cb_mem = nullptr,
                                          .cb_size = 0,
                                          .stack_mem = nullptr,
-                                         .stack_size = 256 * 4,
-                                         .priority = (osPriority_t)osPriorityNormal,
+                                         .stack_size = 128 * 4,
+                                         .priority = (osPriority_t)osPriorityRealtime,
                                          .tz_module = 0,
                                          .reserved = 0};
 

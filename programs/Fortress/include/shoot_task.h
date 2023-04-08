@@ -5,6 +5,7 @@
 #include "main.h"
 #include "motor.h"
 #include "public_port.h"
+#include "referee_task.h"
 #include "remote_task.h"
 #include "user_define.h"
 extern osThreadId_t shootTaskHandle;
@@ -13,7 +14,7 @@ const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .cb_mem = nullptr,
                                            .cb_size = 0,
                                            .stack_mem = nullptr,
-                                           .stack_size = 256 * 4,
+                                           .stack_size = 512 * 4,
                                            .priority = (osPriority_t)osPriorityNormal,
                                            .tz_module = 0,
                                            .reserved = 0};
