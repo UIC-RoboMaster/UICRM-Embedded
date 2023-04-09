@@ -40,7 +40,7 @@ void shootTask(void* arg) {
     uint8_t shoot_state_key = 0;
     uint16_t shoot_time_count = 0;
     uint8_t servo_back = 0;
-
+    bool can_shoot_click = false;
     RampSource ramp_1 = RampSource(0, 0, 325, 0.001);
     RampSource ramp_2 = RampSource(0, 0, 325, 0.001);
 
@@ -71,6 +71,28 @@ void shootTask(void* arg) {
         //            continue;
         //        }
         // 检测开关状态，向上来回打即启动拔弹
+        if (can_shoot_click) {
+            if (dbus->keyboard.bit.CTRL == 1) {
+                if (shoot_state == 0) {
+                    shoot_state = 1;
+                } else {
+                    shoot_state = 0;
+                    shoot_state_2 = 0;
+                }
+            }
+            if (shoot_state != 0) {
+                if (dbus->mouse.l == 1) {
+                    shoot_state_2 = 2;
+                } else if (dbus->mouse.l == 0) {
+                    shoot_state_2 = 0;
+                }
+            }
+        }
+        if (dbus->keyboard.bit.CTRL == 0) {
+            can_shoot_click = true;
+        } else {
+            can_shoot_click = false;
+        }
         if (dbus->swl == remote::UP) {
             if (last_state == remote::MID)
                 last_state = remote::UP;
@@ -110,23 +132,25 @@ void shootTask(void* arg) {
             // 检测是否已装填子弹
             shoot_state_key = shoot_key->Read();
             // 检测是否需要发射子弹
-            if (dbus->swl == remote::DOWN) {
-                if (last_state_2 == remote::MID) {
-                    last_state_2 = remote::DOWN;
-                    if (shoot_state_2 == 0) {
-                        shoot_state_2 = 1;
+            if (dbus->mouse.l == 0 && dbus->mouse.r == 0) {
+                if (dbus->swl == remote::DOWN) {
+                    if (last_state_2 == remote::MID) {
+                        last_state_2 = remote::DOWN;
+                        if (shoot_state_2 == 0) {
+                            shoot_state_2 = 1;
+                        }
+                        shoot_time_count = 0;
                     }
-                    shoot_time_count = 0;
+                    shoot_time_count++;
+                    if (shoot_time_count > 1000 / SHOOT_OS_DELAY) {
+                        shoot_state_2 = 2;
+                    }
+                } else if (dbus->swl == remote::MID) {
+                    if (last_state_2 == remote::DOWN) {
+                        last_state_2 = remote::MID;
+                    }
+                    shoot_state_2 = 0;
                 }
-                shoot_time_count++;
-                if (shoot_time_count > 1000 / SHOOT_OS_DELAY) {
-                    shoot_state_2 = 2;
-                }
-            } else if (dbus->swl == remote::MID) {
-                if (last_state_2 == remote::DOWN) {
-                    last_state_2 = remote::MID;
-                }
-                shoot_state_2 = 0;
             }
             // 发射子弹
             if (shoot_state_2 == 1) {

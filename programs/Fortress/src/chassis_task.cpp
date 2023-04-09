@@ -24,10 +24,12 @@ void chassisTask(void* arg) {
 
     // float last_speed = 0;
     float sin_yaw, cos_yaw, vx_set, vy_set, vz_set, vx_set_org, vy_set_org;
+    float offset_yaw;
     float spin_speed = 500;
     float manual_mode_yaw_pid_args[3] = {500, 0, 0};
     float manual_mode_yaw_pid_max_iout = 0;
     float manual_mode_yaw_pid_max_out = 660;
+    float keyboard_speed = 500;
     control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
         manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
     manual_mode_pid->Reset();
@@ -43,8 +45,30 @@ void chassisTask(void* arg) {
 
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
-        vx_set_org = dbus->ch0;
-        vy_set_org = dbus->ch1;
+        if (dbus->mouse.z != 0) {
+            keyboard_speed += dbus->mouse.z/10.0;
+        }
+        if (dbus->keyboard.bit.A) {
+            vx_set_org = 660;
+        } else if (dbus->keyboard.bit.D) {
+            vx_set_org = -660;
+        } else {
+            vx_set_org = dbus->ch0;
+        }
+        if (dbus->keyboard.bit.W) {
+            vy_set_org = 660;
+        } else if (dbus->keyboard.bit.S) {
+            vy_set_org = -660;
+        } else {
+            vy_set_org = dbus->ch1;
+        }
+        if (dbus->keyboard.bit.Q) {
+            offset_yaw = 200;
+        } else if (dbus->keyboard.bit.E) {
+            offset_yaw = -200;
+        } else {
+            offset_yaw = dbus->ch4;
+        }
         vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
@@ -58,7 +82,7 @@ void chassisTask(void* arg) {
                 break;
             case REMOTE_MODE_SPIN:
 
-                if (dbus->ch4 != 0) {
+                if (offset_yaw != 0) {
                     spin_speed = spin_speed + (float)(dbus->ch4) / 200;
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
@@ -69,7 +93,7 @@ void chassisTask(void* arg) {
                                 (float)referee->power_heat_data.chassis_power_buffer);
                 break;
             case REMOTE_MODE_ADVANCED:
-                vz_set = dbus->ch4;
+                vz_set = offset_yaw;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
                                 referee->power_heat_data.chassis_power,

@@ -7,7 +7,7 @@
 static remote::DBUS* dbus;
 
 void RM_RTOS_Init(void) {
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
     dbus = new remote::DBUS(&huart3);
 }
 
@@ -26,6 +26,16 @@ void RM_RTOS_Default_Task(const void* arguments) {
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
             dbus->timestamp);
+        print("W: %d A: %d S: %d D: %d\r\n", dbus->keyboard.bit.W, dbus->keyboard.bit.A,
+              dbus->keyboard.bit.S, dbus->keyboard.bit.D);
+        print("Q: %d E: %d R: %d F: %d G: %d\r\n", dbus->keyboard.bit.Q, dbus->keyboard.bit.E,
+              dbus->keyboard.bit.R, dbus->keyboard.bit.F, dbus->keyboard.bit.G);
+        print("Z: %d X: %d C: %d V: %d B: %d\r\n", dbus->keyboard.bit.Z, dbus->keyboard.bit.X,
+              dbus->keyboard.bit.C, dbus->keyboard.bit.V, dbus->keyboard.bit.B);
+        print("SHIFT: %d CTRL: %d\r\n", dbus->keyboard.bit.SHIFT, dbus->keyboard.bit.CTRL);
+        print("Mouse: x: %d y: %d z: %d l: %d r: %d\r\n", dbus->mouse.x, dbus->mouse.y,
+              dbus->mouse.z, dbus->mouse.l, dbus->mouse.r);
+
         osDelay(50);
     }
 }

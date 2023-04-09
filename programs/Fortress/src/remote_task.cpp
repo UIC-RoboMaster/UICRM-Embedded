@@ -17,6 +17,7 @@ void remoteTask(void* arg) {
     unsigned int last_timestamp = dbus->timestamp;
     remote::switch_t last_state = dbus->swr;
     bool mode_switch = false;
+    bool can_mouse_switch = false;
     while (1) {
         last_timestamp = dbus->timestamp;
         // Offline Detection
@@ -42,14 +43,24 @@ void remoteTask(void* arg) {
             continue;
         }
         // remote mode switch
-        if (dbus->swr == remote::UP) {
-            if (last_state == remote::MID) {
-                mode_switch = true;
+
+        if (dbus->mouse.r == 1 && dbus->mouse.l == 0 && can_mouse_switch) {
+            mode_switch = true;
+        } else {
+            if (dbus->swr == remote::UP) {
+                if (last_state == remote::MID) {
+                    mode_switch = true;
+                }
+                last_state = remote::UP;
+            } else if (dbus->swr == remote::MID) {
+                if (last_state == remote::UP) {}
+                last_state = remote::MID;
             }
-            last_state = remote::UP;
-        } else if (dbus->swr == remote::MID) {
-            if (last_state == remote::UP) {}
-            last_state = remote::MID;
+        }
+        if (dbus->mouse.r == 0 && dbus->mouse.l == 0) {
+            can_mouse_switch = true;
+        } else {
+            can_mouse_switch = false;
         }
         if (mode_switch) {
             mode_switch = false;
