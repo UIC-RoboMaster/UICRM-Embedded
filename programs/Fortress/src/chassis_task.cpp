@@ -46,26 +46,27 @@ void chassisTask(void* arg) {
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
         if (dbus->mouse.z != 0) {
-            keyboard_speed += dbus->mouse.z/10.0;
+            keyboard_speed += dbus->mouse.z / 10.0;
+            keyboard_speed = clip<float>(keyboard_speed, 0, 660);
         }
         if (dbus->keyboard.bit.A) {
-            vx_set_org = 660;
+            vx_set_org = -keyboard_speed;
         } else if (dbus->keyboard.bit.D) {
-            vx_set_org = -660;
+            vx_set_org = keyboard_speed;
         } else {
             vx_set_org = dbus->ch0;
         }
         if (dbus->keyboard.bit.W) {
-            vy_set_org = 660;
+            vy_set_org = keyboard_speed;
         } else if (dbus->keyboard.bit.S) {
-            vy_set_org = -660;
+            vy_set_org = -keyboard_speed;
         } else {
             vy_set_org = dbus->ch1;
         }
         if (dbus->keyboard.bit.Q) {
-            offset_yaw = 200;
+            offset_yaw = keyboard_speed / 3;
         } else if (dbus->keyboard.bit.E) {
-            offset_yaw = -200;
+            offset_yaw = -keyboard_speed / 3;
         } else {
             offset_yaw = dbus->ch4;
         }
