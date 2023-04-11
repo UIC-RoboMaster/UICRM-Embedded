@@ -38,6 +38,7 @@ void shootTask(void* arg) {
     //    uint8_t shoot_state_2 = 0;
     //    uint8_t last_shoot_key = 0;
     uint8_t shoot_state_key = 0;
+    uint8_t shoot_state_key_storage = 0; //射击状态保存
     //    uint16_t shoot_time_count = 0;
     uint8_t servo_back = 0;
     //    bool can_shoot_click = false;
@@ -168,18 +169,36 @@ void shootTask(void* arg) {
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
+                    shoot_state_key_storage = 0;
                     if (shoot_state_key == 0) {
                         shoot_mode = SHOOT_MODE_PREPARING;
+                        break;
+                    }
+                    if(!load_servo->Holding()) {
+                        load_servo->SetTarget(load_servo->GetTheta(), true);
                     }
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
-                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, true);
-                    shoot_mode = SHOOT_MODE_PREPARED;
+                    if(shoot_state_key_storage == 0 && shoot_state_key == 0) {
+                        shoot_state_key_storage = 1;
+                    }
+                    else if(shoot_state_key_storage == 1 && shoot_state_key == 1){
+                        shoot_state_key_storage = 0;
+                        shoot_mode = SHOOT_MODE_PREPARED;
+                        break ;
+                    }
+//                    else if(shoot_state_key_storage == 1 && shoot_state_key == 1){
+//                        shoot_state_key_storage = 0;
+//                        shoot_mode = SHOOT_MODE_PREPARED;
+//                    }
+                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+//                    shoot_mode = SHOOT_MODE_PREPARED;
                     break;
                 case SHOOT_MODE_BURST:
                     // 连发子弹
                     load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+                    shoot_state_key_storage = 0;
                     break;
                 case SHOOT_MODE_STOP:
                     // 停止发射
@@ -259,8 +278,8 @@ void init_shoot() {
 
     control::servo_t servo_data;
     servo_data.motor = steering_motor;
-    servo_data.max_speed = 2 * PI;
-    servo_data.max_acceleration = 8 * PI;
+    servo_data.max_speed = 4 * PI;
+    servo_data.max_acceleration = 16 * PI;
     servo_data.transmission_ratio = M2006P36_RATIO;
     servo_data.omega_pid_param = new float[3]{150, 2, 0.01};
     servo_data.max_iout = 2000;

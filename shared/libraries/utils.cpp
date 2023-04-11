@@ -81,3 +81,11 @@ float RampSource::GetMax() {
 float RampSource::GetMin() {
     return min_;
 }
+
+void RampSource::SetMax(float max) {
+    max_ = max;
+}
+
+void RampSource::SetMin(float min) {
+    min_ = min;
+}

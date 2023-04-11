@@ -136,6 +136,9 @@ void remoteTask(void* arg) {
                             } else if (mouse.l == 0 && last_mouse.l == 1) {
                                 shoot_stop_switch = true;
                             }
+                            else {
+                                shoot_stop_switch = true;
+                            }
                             break;
                     }
                     break;
@@ -176,7 +179,7 @@ void remoteTask(void* arg) {
             // 停止射击
             if (shoot_stop_switch) {
                 shoot_stop_switch = false;
-                if (shoot_mode == SHOOT_MODE_SINGLE || shoot_mode == SHOOT_MODE_BURST) {
+                if (shoot_mode == SHOOT_MODE_BURST) {
                     shoot_mode = SHOOT_MODE_PREPARED;
                 }
             }

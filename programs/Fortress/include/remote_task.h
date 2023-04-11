@@ -42,7 +42,7 @@ const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
                                             .cb_size = 0,
                                             .stack_mem = nullptr,
                                             .stack_size = 512 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh,
+                                            .priority = (osPriority_t)osPriorityHigh7,
                                             .tz_module = 0,
                                             .reserved = 0};
 void remoteTask(void* arg);
