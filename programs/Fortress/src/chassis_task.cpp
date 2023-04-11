@@ -24,6 +24,16 @@ void chassisTask(void* arg) {
 
     // float last_speed = 0;
     float sin_yaw, cos_yaw, vx_set, vy_set, vz_set, vx_set_org, vy_set_org;
+    float offset_yaw;
+    float spin_speed = 500;
+    float manual_mode_yaw_pid_args[3] = {500, 0, 0};
+    float manual_mode_yaw_pid_max_iout = 0;
+    float manual_mode_yaw_pid_max_out = 660;
+    float keyboard_speed = 500;
+    control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
+        manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
+    manual_mode_pid->Reset();
+    float manual_mode_pid_output = 0;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
@@ -31,23 +41,60 @@ void chassisTask(void* arg) {
 
             continue;
         }
+        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+
+        sin_yaw = arm_sin_f32(relative_angle);
+        cos_yaw = arm_cos_f32(relative_angle);
+        if (dbus->mouse.z != 0) {
+            keyboard_speed += dbus->mouse.z / 10.0;
+            keyboard_speed = clip<float>(keyboard_speed, 0, 660);
+        }
+        if (dbus->keyboard.bit.A) {
+            vx_set_org = -keyboard_speed;
+        } else if (dbus->keyboard.bit.D) {
+            vx_set_org = keyboard_speed;
+        } else {
+            vx_set_org = dbus->ch0;
+        }
+        if (dbus->keyboard.bit.W) {
+            vy_set_org = keyboard_speed;
+        } else if (dbus->keyboard.bit.S) {
+            vy_set_org = -keyboard_speed;
+        } else {
+            vy_set_org = dbus->ch1;
+        }
+        if (dbus->keyboard.bit.Q) {
+            offset_yaw = keyboard_speed / 3;
+        } else if (dbus->keyboard.bit.E) {
+            offset_yaw = -keyboard_speed / 3;
+        } else {
+            offset_yaw = dbus->ch4;
+        }
+        vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
+        vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
             case REMOTE_MODE_MANUAL:
-                chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
+                manual_mode_pid_output = manual_mode_pid->ComputeOutput(
+                    yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
+                chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);
                 chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
                                 referee->power_heat_data.chassis_power,
                                 (float)referee->power_heat_data.chassis_power_buffer);
                 break;
             case REMOTE_MODE_SPIN:
-                relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-                sin_yaw = arm_sin_f32(relative_angle);
-                cos_yaw = arm_cos_f32(relative_angle);
-                vx_set_org = dbus->ch0;
-                vy_set_org = dbus->ch1;
-                vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
-                vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
-                vz_set = dbus->ch2;
+                if (offset_yaw != 0) {
+                    spin_speed = spin_speed + (float)(dbus->ch4) / 200;
+                    spin_speed = clip<float>(spin_speed, -660, 660);
+                }
+                vz_set = spin_speed;
+                chassis->SetSpeed(vx_set, vy_set, vz_set);
+                chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
+                                referee->power_heat_data.chassis_power,
+                                (float)referee->power_heat_data.chassis_power_buffer);
+                break;
+            case REMOTE_MODE_ADVANCED:
+                vz_set = offset_yaw;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
                                 referee->power_heat_data.chassis_power,

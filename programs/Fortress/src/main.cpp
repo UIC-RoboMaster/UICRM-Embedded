@@ -61,6 +61,42 @@ void RM_RTOS_Default_Task(const void* arg) {
                 break;
         }
         print("Mode:%s\r\n", s);
+        switch (shoot_fric_mode) {
+            case SHOOT_FRIC_MODE_PREPARING:
+                strcpy(s, "PREPARE");
+                break;
+            case SHOOT_FRIC_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case SHOOT_FRIC_MODE_PREPARED:
+                strcpy(s, "PREPARED");
+                break;
+            case SHOOT_FRIC_MODE_DISABLE:
+                strcpy(s, "DISABLE");
+                break;
+        }
+        print("Shoot Fric Mode:%s\r\n", s);
+        switch (shoot_mode) {
+            case SHOOT_MODE_PREPARING:
+                strcpy(s, "PREPARE");
+                break;
+            case SHOOT_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case SHOOT_MODE_PREPARED:
+                strcpy(s, "PREPARED");
+                break;
+            case SHOOT_MODE_DISABLE:
+                strcpy(s, "DISABLE");
+                break;
+            case SHOOT_MODE_SINGLE:
+                strcpy(s, "SINGLE");
+                break;
+            case SHOOT_MODE_BURST:
+                strcpy(s, "BURST");
+                break;
+        }
+        print("Shoot Mode:%s\r\n", s);
         print(
             "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
             "TWL: %d "
@@ -84,9 +120,9 @@ void RM_RTOS_Default_Task(const void* arg) {
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        print("\r\n");
-        yaw_motor->PrintData();
-        pitch_motor->PrintData();
+        // print("\r\n");
+        // yaw_motor->PrintData();
+        // pitch_motor->PrintData();
 
         osDelay(75);
     }

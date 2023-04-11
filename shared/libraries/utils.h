@@ -113,6 +113,8 @@ class RampSource {
     float Get();
     float GetMax();
     float GetMin();
+    void SetMax(float max);
+    void SetMin(float min);
 
   private:
     float input_;
