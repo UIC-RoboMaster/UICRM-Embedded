@@ -135,8 +135,7 @@ void remoteTask(void* arg) {
                                 }
                             } else if (mouse.l == 0 && last_mouse.l == 1) {
                                 shoot_stop_switch = true;
-                            }
-                            else {
+                            } else {
                                 shoot_stop_switch = true;
                             }
                             break;
