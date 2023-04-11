@@ -1,5 +1,6 @@
 #pragma once
 #include "bsp_gpio.h"
+#include "bsp_laser.h"
 #include "cmsis_os2.h"
 #include "imu_task.h"
 #include "main.h"
