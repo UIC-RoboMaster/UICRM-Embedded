@@ -6,7 +6,7 @@ namespace bsp {
         pwm_.Start();
         pwm_.SetFrequency(3921);
     }
-    void Laser::SetVal(uint16_t value) {
+    void Laser::SetOutput(uint16_t value) {
         pwm_.SetPulseWidth(value);
     }
 } /* namespace bsp */

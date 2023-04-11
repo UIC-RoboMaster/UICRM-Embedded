@@ -8,6 +8,7 @@
 #include "referee_task.h"
 #include "remote_task.h"
 #include "user_define.h"
+#include "bsp_laser.h"
 extern osThreadId_t shootTaskHandle;
 const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .attr_bits = osThreadDetached,

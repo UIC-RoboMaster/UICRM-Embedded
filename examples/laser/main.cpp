@@ -17,22 +17,22 @@ void RM_RTOS_Default_Task(const void* arguments) {
     while (true) {
         set_cursor(0, 0);
         clear_screen();
-        laser->SetVal(0);
+        laser->SetOutput(0);
         print("laser on\r\n");
         osDelay(1000);
         set_cursor(0, 0);
         clear_screen();
-        laser->SetVal(127);
+        laser->SetOutput(127);
         print("laser on\r\n");
         osDelay(1000);
         set_cursor(0, 0);
         clear_screen();
-        laser->SetVal(255);
+        laser->SetOutput(255);
         print("laser on\r\n");
         osDelay(1000);
         set_cursor(0, 0);
         clear_screen();
-        laser->SetVal(127);
+        laser->SetOutput(127);
         print("laser off\r\n");
         osDelay(1000);
     }

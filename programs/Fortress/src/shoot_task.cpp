@@ -9,6 +9,8 @@ control::ServoMotor* load_servo = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
+bsp::Laser* laser = nullptr;
+
 void jam_callback(control::ServoMotor* servo, const control::servo_jam_t data) {
     UNUSED(data);
     float servo_target = servo->GetTarget();
@@ -130,12 +132,15 @@ void shootTask(void* arg) {
             case SHOOT_FRIC_MODE_PREPARING:
             case SHOOT_FRIC_MODE_PREPARED:
                 shoot_flywheel_offset = 200;
+                laser->SetOutput(255);
                 break;
             case SHOOT_FRIC_MODE_STOP:
                 shoot_flywheel_offset = -200;
+                laser->SetOutput(0);
                 break;
             default:
                 shoot_flywheel_offset = -1000;
+                laser->SetOutput(0);
                 break;
         }
         flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
@@ -290,6 +295,7 @@ void init_shoot() {
     load_servo->RegisterJamCallback(jam_callback, 0.6);
 
     shoot_key = new bsp::GPIO(BUTTON_TRI_GPIO_Port, BUTTON_TRI_Pin);
+    laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
     steering_motor->SetOutput(0);
