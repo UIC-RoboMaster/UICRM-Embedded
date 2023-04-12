@@ -16,12 +16,14 @@ namespace control {
         void UpdateData(const uint8_t data[]);
         void SetTargetPower(float power);
         volatile bool connection_flag_ = false;
+        float GetPercent();
 
         cap_message_t info;
       private:
         bsp::CAN* can_;
         uint16_t supercap_rx_id_;
         uint16_t supercap_tx_id_;
+        float percent_;
     };
 
 }
