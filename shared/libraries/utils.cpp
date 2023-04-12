@@ -89,3 +89,7 @@ void RampSource::SetMax(float max) {
 void RampSource::SetMin(float min) {
     min_ = min;
 }
+
+void RampSource::SetCurrent(float current) {
+    output_ = current;
+}

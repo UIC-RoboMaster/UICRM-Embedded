@@ -64,21 +64,21 @@ void RM_RTOS_Default_Task(const void* arg) {
                 break;
         }
         print("Mode:%s\r\n", s);
-        switch (shoot_fric_mode) {
-            case SHOOT_FRIC_MODE_PREPARING:
-                strcpy(s, "PREPARE");
-                break;
-            case SHOOT_FRIC_MODE_STOP:
-                strcpy(s, "STOP");
-                break;
-            case SHOOT_FRIC_MODE_PREPARED:
-                strcpy(s, "PREPARED");
-                break;
-            case SHOOT_FRIC_MODE_DISABLE:
-                strcpy(s, "DISABLE");
-                break;
-        }
-        print("Shoot Fric Mode:%s\r\n", s);
+//        switch (shoot_fric_mode) {
+//            case SHOOT_FRIC_MODE_PREPARING:
+//                strcpy(s, "PREPARE");
+//                break;
+//            case SHOOT_FRIC_MODE_STOP:
+//                strcpy(s, "STOP");
+//                break;
+//            case SHOOT_FRIC_MODE_PREPARED:
+//                strcpy(s, "PREPARED");
+//                break;
+//            case SHOOT_FRIC_MODE_DISABLE:
+//                strcpy(s, "DISABLE");
+//                break;
+//        }
+//        print("Shoot Fric Mode:%s\r\n", s);
         switch (shoot_mode) {
             case SHOOT_MODE_PREPARING:
                 strcpy(s, "PREPARE");

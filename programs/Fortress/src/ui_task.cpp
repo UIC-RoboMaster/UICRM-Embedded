@@ -1,23 +1,20 @@
 #include "ui_task.h"
 
+
+
 osThreadId_t uiTaskHandle;
 communication::UserInterface* UI = nullptr;
 void uiTask(void* arg) {
     UNUSED(arg);
 
 
-    //   int tryLIDAR = 0;
-    //   while (!LIDAR->begin()) {
-    //     if (++tryLIDAR >= 5) break;
-    //     osDelay(10);
-    //   }
-    //   tryLIDAR = 0;
-    //   while (!LIDAR->startFilter()) {
-    //     if (++tryLIDAR >= 5) break;
-    //     osDelay(10);
-    //   }
+
     osDelay(3000);
+    while(remote_mode == REMOTE_MODE_KILL) {
+        osDelay(UI_OS_DELAY);
+    }
     UI->SetID(referee->game_robot_status.robot_id);
+    osDelay(UI_OS_DELAY);
 
     communication::package_t frame;
     communication::graphic_data_t graphGimbal;
@@ -37,20 +34,8 @@ void uiTask(void* arg) {
     communication::graphic_data_t graphPercent;
     communication::graphic_data_t graphDiag;
     communication::graphic_data_t graphMode;
-    communication::graphic_data_t graphDist;
-    //  communication::graphic_data_t graphLid;
+//    communication::graphic_data_t graphDist;
     communication::graphic_data_t graphWheel;
-
-//    char msgBuffer1[30] = "PITCH MOTOR UNCONNECTED";
-//    char msgBuffer2[30] = "YAW MOTOR UNCONNECTED";
-//    char msgBuffer3[30] = "L SHOOTER MOTOR UNCONNECTED";
-//    char msgBuffer4[30] = "R SHOOTER MOTOR UNCONNECTED";
-//    char msgBuffer5[30] = "LOAD MOTOR UNCONNECTED";
-//    char msgBuffer6[30] = "FRONT L MOTOR UNCONNECTED";
-//    char msgBuffer7[30] = "FRONT R MOTOR UNCONNECTED";
-//    char msgBuffer8[30] = "BACK L MOTOR UNCONNECTED";
-//    char msgBuffer9[30] = "BACK R MOTOR UNCONNECTED";
-
     // Initialize chassis GUI
     UI->ChassisGUIInit(&graphChassis, &graphArrow, &graphGimbal, &graphCali, &graphEmpty2);
     UI->GraphRefresh((uint8_t*)(&referee->graphic_five), 5, graphChassis, graphArrow, graphGimbal,
@@ -58,7 +43,7 @@ void uiTask(void* arg) {
     referee->PrepareUIContent(communication::FIVE_GRAPH);
     frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
     referee_uart->Write(frame.data, frame.length);
-    osDelay(UI_OS_DELAY);
+    osDelay(100);
 
     // Initialize crosshair GUI
     UI->CrosshairGUI(&graphCrosshair1, &graphCrosshair2, &graphCrosshair3, &graphCrosshair4,
@@ -69,7 +54,7 @@ void uiTask(void* arg) {
     referee->PrepareUIContent(communication::SEVEN_GRAPH);
     frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
     referee_uart->Write(frame.data, frame.length);
-    osDelay(UI_OS_DELAY);
+    osDelay(100);
 
     // Initialize supercapacitor GUI
     UI->CapGUIInit(&graphBarFrame, &graphBar);
@@ -77,7 +62,7 @@ void uiTask(void* arg) {
     referee->PrepareUIContent(communication::DOUBLE_GRAPH);
     frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
     referee_uart->Write(frame.data, frame.length);
-    osDelay(UI_OS_DELAY);
+    osDelay(100);
 
     // Initialize Supercapacitor string GUI
     UI->CapGUICharInit(&graphPercent);
@@ -86,7 +71,7 @@ void uiTask(void* arg) {
     referee->PrepareUIContent(communication::CHAR_GRAPH);
     frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
     referee_uart->Write(frame.data, frame.length);
-    osDelay(UI_OS_DELAY);
+    osDelay(100);
 
     // Initialize self-diagnosis GUI
     char diagStr[30] = "";
@@ -95,7 +80,7 @@ void uiTask(void* arg) {
     referee->PrepareUIContent(communication::CHAR_GRAPH);
     frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
     referee_uart->Write(frame.data, frame.length);
-    osDelay(UI_OS_DELAY);
+    osDelay(100);
 
     // Initialize current mode GUI
     char followModeStr[15] = "FOLLOW MODE";
@@ -107,17 +92,19 @@ void uiTask(void* arg) {
     referee->PrepareUIContent(communication::CHAR_GRAPH);
     frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
     referee_uart->Write(frame.data, frame.length);
-    osDelay(UI_OS_DELAY);
+    osDelay(100);
+
+
 
     // Initialize distance GUI
-    char distanceStr[15] = "0.0";
-    UI->DistanceGUIInit(&graphDist);
-    UI->CharRefresh((uint8_t*)(&referee->graphic_character), graphDist, distanceStr,
-                    sizeof distanceStr);
-    referee->PrepareUIContent(communication::CHAR_GRAPH);
-    frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
-    referee_uart->Write(frame.data, frame.length);
-    osDelay(UI_OS_DELAY);
+//    char distanceStr[15] = "0.0";
+//    UI->DistanceGUIInit(&graphDist);
+//    UI->CharRefresh((uint8_t*)(&referee->graphic_character), graphDist, distanceStr,
+//                    sizeof distanceStr);
+//    referee->PrepareUIContent(communication::CHAR_GRAPH);
+//    frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
+//    referee_uart->Write(frame.data, frame.length);
+//    osDelay(UI_OS_DELAY);
 
     // TODO: add lid UI in the future
 
@@ -139,7 +126,7 @@ void uiTask(void* arg) {
     referee->PrepareUIContent(communication::CHAR_GRAPH);
     frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
     referee_uart->Write(frame.data, frame.length);
-    osDelay(UI_OS_DELAY);
+    osDelay(100);
 
     float j = 1;
     float relative_angle = 0;
@@ -180,23 +167,23 @@ void uiTask(void* arg) {
         char modeStr[30];
         switch(remote_mode){
             case REMOTE_MODE_STOP:
-                strcpy(modeStr, "STOP MODE");
+                strcpy(modeStr, "STOP MODE     ");
                 modeColor = UI_Color_Purplish_red;
                 break;
             case REMOTE_MODE_MANUAL:
-                strcpy(modeStr, "FOLLOW MODE");
+                strcpy(modeStr, "FOLLOW MODE   ");
                 modeColor = UI_Color_Green;
                 break;
             case REMOTE_MODE_SPIN:
-                strcpy(modeStr, "SPIN MODE");
+                strcpy(modeStr, "SPIN MODE     ");
                 modeColor = UI_Color_Orange;
                 break;
             case REMOTE_MODE_ADVANCED:
-                strcpy(modeStr, "ADVANCED MODE");
+                strcpy(modeStr, "ADVANCED MODE ");
                 modeColor = UI_Color_Green;
                 break;
             default:
-                strcpy(modeStr, "UNKNOWN MODE");
+                strcpy(modeStr, "UNKNOWN MODE   ");
                 modeColor = UI_Color_Purplish_red;
                 break;
 
@@ -247,9 +234,6 @@ void uiTask(void* arg) {
         osDelay(UI_OS_DELAY);
 
         // Update self-diagnosis messages
-
-
-
 
 
 

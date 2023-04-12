@@ -6,6 +6,9 @@ control::MotorCANBase* bl_motor = nullptr;
 control::MotorCANBase* br_motor = nullptr;
 
 control::Chassis* chassis = nullptr;
+
+float chassis_keyboard_mode_speed = 500;
+
 void chassisTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
@@ -29,11 +32,14 @@ void chassisTask(void* arg) {
     float manual_mode_yaw_pid_args[3] = {500, 0, 0};
     float manual_mode_yaw_pid_max_iout = 0;
     float manual_mode_yaw_pid_max_out = 660;
-    float keyboard_speed = 500;
+
     control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
         manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
     manual_mode_pid->Reset();
     float manual_mode_pid_output = 0;
+    RampSource* ramp_x = new RampSource(0,-660,660,0.001);
+    RampSource* ramp_y = new RampSource(0,-660,660,0.001);
+    float ramp_offset = 0;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
@@ -45,28 +51,35 @@ void chassisTask(void* arg) {
 
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
-        if (dbus->mouse.z != 0) {
-            keyboard_speed += dbus->mouse.z / 10.0;
-            keyboard_speed = clip<float>(keyboard_speed, 0, 660);
+        if (dbus->mouse.z != 0 && dbus->keyboard.bit.SHIFT == 0) {
+            chassis_keyboard_mode_speed += dbus->mouse.z / 10.0;
+            chassis_keyboard_mode_speed = clip<float>(chassis_keyboard_mode_speed, 0, 660);
         }
+        ramp_x->SetMax(chassis_keyboard_mode_speed);
+        ramp_y->SetMax(chassis_keyboard_mode_speed);
+        ramp_x->SetMin(-chassis_keyboard_mode_speed);
+        ramp_y->SetMin(-chassis_keyboard_mode_speed);
+        ramp_offset = chassis_keyboard_mode_speed / 0.5;
         if (dbus->keyboard.bit.A) {
-            vx_set_org = -keyboard_speed;
+            vx_set_org = ramp_x->Calc(-ramp_offset);
         } else if (dbus->keyboard.bit.D) {
-            vx_set_org = keyboard_speed;
+            vx_set_org = ramp_x->Calc(ramp_offset);
         } else {
+            ramp_x->SetCurrent(0);
             vx_set_org = dbus->ch0;
         }
         if (dbus->keyboard.bit.W) {
-            vy_set_org = keyboard_speed;
+            vy_set_org = ramp_y->Calc(ramp_offset);
         } else if (dbus->keyboard.bit.S) {
-            vy_set_org = -keyboard_speed;
+            vy_set_org = ramp_y->Calc(-ramp_offset);
         } else {
+            ramp_y->SetCurrent(0);
             vy_set_org = dbus->ch1;
         }
         if (dbus->keyboard.bit.Q) {
-            offset_yaw = keyboard_speed / 3;
+            offset_yaw = chassis_keyboard_mode_speed / 3;
         } else if (dbus->keyboard.bit.E) {
-            offset_yaw = -keyboard_speed / 3;
+            offset_yaw = -chassis_keyboard_mode_speed / 3;
         } else {
             offset_yaw = dbus->ch4;
         }

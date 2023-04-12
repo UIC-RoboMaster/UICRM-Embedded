@@ -72,6 +72,14 @@ void remoteTask(void* arg) {
             osDelay(REMOTE_OS_DELAY);
             continue;
         }
+
+        if(last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
+            shoot_fric_mode = SHOOT_FRIC_SPEEDUP;
+        }
+        if(last_keyboard.bit.B == 1 && keyboard.bit.B == 0) {
+            shoot_fric_mode = SHOOT_FRIC_SPEEDDOWN;
+        }
+
         // remote mode switch
         switch (state_r) {
             case remote::UP:
@@ -80,7 +88,7 @@ void remoteTask(void* arg) {
                 }
                 break;
             case remote::MID:
-                if (keyboard.bit.SHIFT == 1 && last_keyboard.bit.SHIFT == 0) {
+                if (keyboard.bit.SHIFT == 0 && last_keyboard.bit.SHIFT == 1) {
                     mode_switch = true;
                 }
                 break;

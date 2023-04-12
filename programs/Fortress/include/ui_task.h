@@ -8,9 +8,10 @@
 #include "user_define.h"
 #include "imu_task.h"
 #include "gimbal_task.h"
+#include "chassis_task.h"
 #include <cmath>
 #include <cstring>
-
+#include <cstdio>
 #include <algorithm>
 extern osThreadId_t uiTaskHandle;
 const osThreadAttr_t uiTaskAttribute = {.name = "uiTask",
