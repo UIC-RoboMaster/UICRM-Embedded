@@ -159,7 +159,7 @@ namespace control {
 
     void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
         float clipped_pitch = clip<float>(rel_pitch, -data_.pitch_max_, data_.pitch_max_);
-        float clipped_yaw = clip<float>(pitch_angle_+rel_yaw, -data_.yaw_max_, data_.yaw_max_);
+        float clipped_yaw = clip<float>(rel_yaw, -data_.yaw_max_, data_.yaw_max_);
         pitch_angle_ = wrap<float>(clipped_pitch + pitch_angle_, 0, 2 * PI);
         yaw_angle_ = wrap<float>(clipped_yaw + yaw_angle_, 0, 2 * PI);
     }
