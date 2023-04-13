@@ -26,12 +26,12 @@ namespace control {
                     float pitch_omega_max_out = 30000;
                     float yaw_theta_max_iout = 0;
                     float yaw_theta_max_out = 10;
-                    float yaw_omega_max_iout = 25000;  // 10000
+                    float yaw_omega_max_iout = 5000;  // 10000
                     float yaw_omega_max_out = 30000;
                     pitch_theta_pid_param_ = new float[3]{15, 0, 0};
-                    pitch_omega_pid_param_ = new float[3]{2400, 60, 0.3};
+                    pitch_omega_pid_param_ = new float[3]{2900, 60, 0};
                     yaw_theta_pid_param_ = new float[3]{26, 0, 0.3};
-                    yaw_omega_pid_param_ = new float[3]{3600, 20, 5};
+                    yaw_omega_pid_param_ = new float[3]{3600, 20, 0};
                     pitch_theta_pid_ = new ConstrainedPID(
                         pitch_theta_pid_param_, pitch_theta_max_iout, pitch_theta_max_out);
                     pitch_omega_pid_ = new ConstrainedPID(
@@ -84,9 +84,9 @@ namespace control {
                     float yaw_theta_max_out = 10;
                     float yaw_omega_max_iout = 10000;  // 10000
                     float yaw_omega_max_out = 30000;
-                    pitch_theta_pid_param_ = new float[3]{20, 0, 0};
+                    pitch_theta_pid_param_ = new float[3]{30, 0, 0};
                     pitch_omega_pid_param_ = new float[3]{2900, 60, 0};
-                    yaw_theta_pid_param_ = new float[3]{30, 0, 0.3};
+                    yaw_theta_pid_param_ = new float[3]{50, 0, 0.3};
                     yaw_omega_pid_param_ = new float[3]{3600, 20, 0};
                     pitch_theta_pid_ = new ConstrainedPID(
                         pitch_theta_pid_param_, pitch_theta_max_iout, pitch_theta_max_out);
@@ -158,8 +158,10 @@ namespace control {
     }
 
     void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
-        pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
-        yaw_angle_ = yaw_motor_->GetTheta() + rel_yaw;
+        float clipped_pitch = clip<float>(rel_pitch, -data_.pitch_max_, data_.pitch_max_);
+        float clipped_yaw = clip<float>(pitch_angle_+rel_yaw, -data_.yaw_max_, data_.yaw_max_);
+        pitch_angle_ = wrap<float>(clipped_pitch + pitch_angle_, 0, 2 * PI);
+        yaw_angle_ = wrap<float>(clipped_yaw + yaw_angle_, 0, 2 * PI);
     }
 
     void Gimbal::UpdateOffset(float pitch_offset, float yaw_offset) {
