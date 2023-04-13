@@ -66,6 +66,8 @@ namespace control {
          */
         void Update();
 
+        void UpdateIMU(float pitch, float yaw);
+
         /**
          * @brief set motors to point to a new orientation
          *

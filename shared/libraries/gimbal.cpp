@@ -144,6 +144,31 @@ namespace control {
         yaw_motor_->SetOutput(yo_out);
     }
 
+    void Gimbal::UpdateIMU(float pitch, float yaw) {
+        float clipped_pitch = clip<float>(pitch, -data_.pitch_max_, data_.pitch_max_);
+        float clipped_yaw = clip<float>(yaw, -data_.yaw_max_, data_.yaw_max_);
+        pitch = wrap<float>(clipped_pitch + data_.pitch_offset_, 0, 2 * PI);
+        yaw = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
+        float pt_diff = pitch_motor_->GetThetaDelta(pitch);
+        if(abs(pt_diff)<0.005){
+            pt_diff = 0;
+        }
+        float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
+        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
+        float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
+
+        float yt_diff = yaw_motor_->GetThetaDelta(yaw);
+        if(abs(yt_diff)<0.005){
+            yt_diff = 0;
+        }
+        float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
+        float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
+        float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
+
+        pitch_motor_->SetOutput(po_out);
+        yaw_motor_->SetOutput(yo_out);
+    }
+
     void Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
         float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
         float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
