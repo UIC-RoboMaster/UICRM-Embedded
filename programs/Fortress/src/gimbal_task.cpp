@@ -77,17 +77,16 @@ void gimbalTask(void* arg) {
             yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
         }
 
-        pitch_target = clip<float>( pitch_ratio, -gimbal_param->pitch_max_,
-                                   gimbal_param->pitch_max_);
-        yaw_target =
-            wrap<float>( yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
+        pitch_target =
+            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
         yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
-//        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
-//            pitch_diff = 0;
-//        }
+        //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
+        //            pitch_diff = 0;
+        //        }
 
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
@@ -96,14 +95,12 @@ void gimbalTask(void* arg) {
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
-//                gimbal->TargetRel(pitch_diff, yaw_diff);
-//                gimbal->Update();
-//                break;
+                //                gimbal->TargetRel(pitch_diff, yaw_diff);
+                //                gimbal->Update();
+                //                break;
             default:
                 kill_gimbal();
         }
-
-
 
         control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
         osDelay(GIMBAL_OS_DELAY);
