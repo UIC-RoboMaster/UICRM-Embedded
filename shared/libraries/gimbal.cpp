@@ -136,11 +136,12 @@ namespace control {
 
     void Gimbal::Update() {
         float pt_diff = pitch_motor_->GetThetaDelta(pitch_angle_);
+        pt_diff = wrap<float>(pt_diff, -PI, PI);
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
         float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
-
         float yt_diff = yaw_motor_->GetThetaDelta(yaw_angle_);
+        yt_diff = wrap<float>(yt_diff, -PI, PI);
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
@@ -150,18 +151,16 @@ namespace control {
     }
 
     void Gimbal::UpdateIMU(float pitch, float yaw) {
-        float clipped_pitch = clip<float>(pitch, -data_.pitch_max_, data_.pitch_max_);
-        float clipped_yaw = clip<float>(yaw, -data_.yaw_max_, data_.yaw_max_);
-        pitch = wrapping_clip<float>(clipped_pitch + data_.pitch_offset_,pitch_lower_limit_,pitch_upper_limit_, 0, 2 * PI);
-        yaw = wrapping_clip<float>(clipped_yaw + data_.yaw_offset_,yaw_lower_limit_,yaw_upper_limit_, 0, 2 * PI);
+        pitch = wrapping_clip<float>(pitch + data_.pitch_offset_,pitch_lower_limit_,pitch_upper_limit_, 0, 2 * PI);
+        yaw = wrapping_clip<float>(yaw + data_.yaw_offset_,yaw_lower_limit_,yaw_upper_limit_, 0, 2 * PI);
         float pt_diff = pitch_angle_ - pitch;
-
+        pt_diff = wrap<float>(pt_diff, -PI, PI);
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
         float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
 
         float yt_diff = yaw_angle_ - yaw;
-
+        yt_diff = wrap<float>(yt_diff, -PI, PI);
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
