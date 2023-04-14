@@ -11,6 +11,7 @@
 #include "referee_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"
+#include "user_define.h"
 #include "ui_task.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
@@ -33,7 +34,8 @@ void RM_RTOS_Threads_Init(void) {
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
-    uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
+    if (ENABLE_UI)
+        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
