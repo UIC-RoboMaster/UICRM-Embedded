@@ -28,11 +28,14 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-    // control::MotorCANBase* motors[] = {motor1};
+    control::MotorCANBase* motors[] = {motor1};
     int current = 0;
     while (true) {
         rgb->Display(0xff00ff00);
-        supercap->SetTargetPower(120.0);
+        if(supercap->info.supercap_voltage > 15.0f){
+            supercap->SetTargetPower(120.0);
+        }
+
         osDelay(50);
         set_cursor(0, 0);
         clear_screen();
@@ -56,7 +59,7 @@ void RM_RTOS_Default_Task(const void* args) {
                 motor1->SetOutput(current);
             }
         }
-        // control::MotorCANBase::TransmitOutput(motors, 1);
+        control::MotorCANBase::TransmitOutput(motors, 1);
         osDelay(50);
     }
 }
