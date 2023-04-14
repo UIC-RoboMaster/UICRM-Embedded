@@ -48,11 +48,9 @@ void gimbalTask(void* arg) {
     yaw_curr = imu->INS_angle[0];
     float pitch_target = 0, yaw_target = 0;
     float pitch_diff, yaw_diff;
-    bool last_kill_flag = false;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();
-            last_kill_flag=true;
             osDelay(GIMBAL_OS_DELAY);
             continue;
         }
@@ -90,28 +88,21 @@ void gimbalTask(void* arg) {
 //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
 //            pitch_diff = 0;
 //        }
-        if(last_kill_flag){
-            last_kill_flag=false;
-            gimbal->TargetAbs(0, yaw_motor->GetTheta());
-            gimbal->Update();
-        }
-        else{
-            switch (remote_mode) {
-                case REMOTE_MODE_SPIN:
-                case REMOTE_MODE_MANUAL:
-                    gimbal->TargetRel(pitch_diff, yaw_diff);
-                    gimbal->UpdateIMU(pitch_curr, yaw_curr);
-                    break;
-                case REMOTE_MODE_ADVANCED:
-                    gimbal->TargetRel(pitch_diff, yaw_diff);
-                    gimbal->Update();
-                    break;
 
-                default:
-                    kill_gimbal();
-                    last_kill_flag=true;
-            }
+        switch (remote_mode) {
+            case REMOTE_MODE_SPIN:
+            case REMOTE_MODE_MANUAL:
+            case REMOTE_MODE_ADVANCED:
+                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->UpdateIMU(pitch_curr, yaw_curr);
+                break;
+//                gimbal->TargetRel(pitch_diff, yaw_diff);
+//                gimbal->Update();
+//                break;
+            default:
+                kill_gimbal();
         }
+
 
 
         control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
