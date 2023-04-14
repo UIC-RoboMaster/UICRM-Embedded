@@ -30,6 +30,8 @@ void print_use_usb();
  */
 int32_t print(const char* format, ...);
 
+int32_t printraw(void* data,uint8_t length);
+
 /* escape codes helper functions -- http://www.termsys.demon.co.uk/vtansi.htm
  */
 

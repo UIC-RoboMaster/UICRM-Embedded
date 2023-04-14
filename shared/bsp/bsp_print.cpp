@@ -50,6 +50,17 @@ int32_t print(const char* format, ...) {
 #endif  // #ifdef NDEBUG
 }
 
+int32_t printraw(void* data,uint8_t length)
+{
+    if (print_uart)
+        return print_uart->Write((uint8_t*)data, length);
+    else if (print_usb)
+        return print_usb->Write((uint8_t*)data, length);
+    else
+        return 0;
+}
+
+
 void set_cursor(int row, int col) {
     print("\033[%d;%dH", row, col);
 }
