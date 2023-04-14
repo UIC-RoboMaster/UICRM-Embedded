@@ -104,6 +104,11 @@ namespace control {
 
         pitch_angle_ = data_.pitch_offset_;
         yaw_angle_ = data_.yaw_offset_;
+
+        pitch_lower_limit_ = wrap<float>(data_.pitch_offset_ - data_.pitch_max_, 0, 2 * PI);
+        pitch_upper_limit_ = wrap<float>(data_.pitch_offset_ + data_.pitch_max_, 0, 2 * PI);
+        yaw_lower_limit_ = wrap<float>(data_.yaw_offset_ - data_.yaw_max_, 0, 2 * PI);
+        yaw_upper_limit_ = wrap<float>(data_.yaw_offset_ + data_.yaw_max_, 0, 2 * PI);
     }
 
     Gimbal::~Gimbal() {
@@ -147,20 +152,16 @@ namespace control {
     void Gimbal::UpdateIMU(float pitch, float yaw) {
         float clipped_pitch = clip<float>(pitch, -data_.pitch_max_, data_.pitch_max_);
         float clipped_yaw = clip<float>(yaw, -data_.yaw_max_, data_.yaw_max_);
-        pitch = wrap<float>(clipped_pitch + data_.pitch_offset_, 0, 2 * PI);
-        yaw = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
-        float pt_diff = pitch_motor_->GetThetaDelta(pitch);
-        if(abs(pt_diff)<0.005){
-            pt_diff = 0;
-        }
+        pitch = wrapping_clip<float>(clipped_pitch + data_.pitch_offset_,pitch_lower_limit_,pitch_upper_limit_, 0, 2 * PI);
+        yaw = wrapping_clip<float>(clipped_yaw + data_.yaw_offset_,yaw_lower_limit_,yaw_upper_limit_, 0, 2 * PI);
+        float pt_diff = pitch_angle_ - pitch;
+
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
         float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
 
-        float yt_diff = yaw_motor_->GetThetaDelta(yaw);
-        if(abs(yt_diff)<0.005){
-            yt_diff = 0;
-        }
+        float yt_diff = yaw_angle_ - yaw;
+
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
@@ -172,21 +173,22 @@ namespace control {
     void Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
         float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
         float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
-        pitch_angle_ = wrap<float>(clipped_pitch + data_.pitch_offset_, 0, 2 * PI);
-        yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
+        pitch_angle_ = wrapping_clip<float>(clipped_pitch + data_.pitch_offset_,pitch_lower_limit_,pitch_upper_limit_, 0, 2 * PI);
+        yaw_angle_ = wrapping_clip<float>(clipped_yaw + data_.yaw_offset_,yaw_lower_limit_,yaw_upper_limit_, 0, 2 * PI);
     }
 
-    void Gimbal::TargetAbsYawRelPitch(float rel_pitch, float abs_yaw) {
+    void Gimbal::TargetAbsWOffset(float abs_pitch, float abs_yaw) {
+        float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
         float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
-        pitch_angle_ = pitch_motor_->GetTheta() + rel_pitch;
-        yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
+        pitch_angle_ = wrapping_clip<float>(clipped_pitch, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
+        yaw_angle_ = wrapping_clip<float>(clipped_yaw, yaw_lower_limit_, yaw_upper_limit_, 0, 2 * PI);
     }
 
     void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
-        float clipped_pitch = clip<float>(rel_pitch, -data_.pitch_max_, data_.pitch_max_);
-        float clipped_yaw = clip<float>(rel_yaw, -data_.yaw_max_, data_.yaw_max_);
-        pitch_angle_ = wrap<float>(clipped_pitch + pitch_angle_, 0, 2 * PI);
-        yaw_angle_ = wrap<float>(clipped_yaw + yaw_angle_, 0, 2 * PI);
+        rel_pitch = clip<float>(rel_pitch, -2 * PI, 2 * PI);
+        rel_yaw = clip<float>(rel_yaw, -2 * PI, 2 * PI);
+        pitch_angle_ = wrapping_clip<float>(pitch_angle_ + rel_pitch, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
+        yaw_angle_ = wrapping_clip<float>(yaw_angle_ + rel_yaw, yaw_lower_limit_, yaw_upper_limit_, 0, 2 * PI);
     }
 
     void Gimbal::UpdateOffset(float pitch_offset, float yaw_offset) {
