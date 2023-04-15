@@ -61,26 +61,7 @@ void uiTask(void* arg) {
     UI->CharRefresh(graphMode, followModeStr, sizeof followModeStr);
     osDelay(100);
 
-    // Initialize distance GUI
-    //    char distanceStr[15] = "0.0";
-    //    UI->DistanceGUIInit(&graphDist);
-    //    UI->CharRefresh((uint8_t*)(&referee->graphic_character), graphDist, distanceStr,
-    //                    sizeof distanceStr);
-    //    referee->PrepareUIContent(communication::CHAR_GRAPH);
-    //    frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
-    //    referee_uart->Write(frame.data, frame.length);
-    //    osDelay(UI_OS_DELAY);
 
-    // TODO: add lid UI in the future
-
-    //  // Initialize lid status GUI
-    //  char lidOpenStr[15] = "LID OPENED";
-    //  char lidCloseStr[15] = "LID CLOSED";
-    //  UI->LidGUIInit(&graphLid);
-    //  UI->CharRefresh((uint8_t*)(&referee->graphic_character), graphLid, lidOpenStr, sizeof
-    //  lidOpenStr); referee->PrepareUIContent(communication::CHAR_GRAPH); frame =
-    //  referee->Transmit(communication::STUDENT_INTERACTIVE); referee_uart->Write(frame.data,
-    //  frame.length); osDelay(UI_TASK_DELAY);
 
     // Initialize flywheel status GUI
     char wheelOnStr[15] = "FLYWHEEL ON";
@@ -89,24 +70,21 @@ void uiTask(void* arg) {
     UI->CharRefresh(graphWheel, wheelOffStr, sizeof wheelOffStr);
     osDelay(100);
 
-    float j = 1;
     float relative_angle = 0;
     float pitch_angle = 0;
-//    bool calibration_flag = false;
+    float power_percent = 1;
     while (true) {
-        //     lidar_flag = LIDAR->startMeasure();
 
         // Update chassis GUI
-        // calibration_flag = imu->CaliDone();
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
         pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
         chassisGUI->Update(chassis_vx/chassis_vx_max,chassis_vy/chassis_vy_max,relative_angle);
         osDelay(UI_OS_DELAY);
 
-        // Update supercapacitor GUI
-        UI->CapGUIUpdate(std::abs(arm_sin_f32(j)));
+        power_percent = battery_vol->GetBatteryPercentage();
+        // Update Power GUI
+        UI->CapGUIUpdate(power_percent);
         UI->GraphRefresh(1, graphBar);
-        j += 0.1;
         osDelay(UI_OS_DELAY);
 
         // Update supercapacitor string GUI
