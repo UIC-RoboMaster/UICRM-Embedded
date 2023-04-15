@@ -2,11 +2,11 @@
 
 osThreadId_t refereeTaskHandle;
 
-void CustomUART::RxCompleteCallback() {
+void RefereeUART::RxCompleteCallback() {
     osThreadFlagsSet(refereeTaskHandle, RX_SIGNAL);
 }
 
-CustomUART* referee_uart = nullptr;
+RefereeUART* referee_uart = nullptr;
 communication::Referee* referee = nullptr;
 
 void refereeTask(void* arg) {
@@ -26,7 +26,7 @@ void refereeTask(void* arg) {
 }
 
 void init_referee() {
-    referee_uart = new CustomUART(&huart6);
+    referee_uart = new RefereeUART(&huart6);
     referee_uart->SetupRx(300);
     referee_uart->SetupTx(300);
     referee = new communication::Referee;

@@ -8,6 +8,7 @@
 #include "motor.h"
 #include "public_port.h"
 #include "referee_task.h"
+#include "utils.h"
 #include "remote_task.h"
 extern osThreadId_t chassisTaskHandle;
 const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
@@ -23,3 +24,4 @@ void chassisTask(void* arg);
 void init_chassis();
 void kill_chassis();
 extern control::Chassis* chassis;
+extern float chassis_keyboard_mode_speed;
