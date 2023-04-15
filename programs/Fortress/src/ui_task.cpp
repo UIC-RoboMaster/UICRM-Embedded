@@ -1,16 +1,12 @@
 #include "ui_task.h"
 
-
-
 osThreadId_t uiTaskHandle;
 communication::UserInterface* UI = nullptr;
 void uiTask(void* arg) {
     UNUSED(arg);
 
-
-
     osDelay(3000);
-    while(remote_mode == REMOTE_MODE_KILL) {
+    while (remote_mode == REMOTE_MODE_KILL) {
         osDelay(UI_OS_DELAY);
     }
     UI->SetID(referee->game_robot_status.robot_id);
@@ -36,16 +32,14 @@ void uiTask(void* arg) {
     communication::graphic_data_t graphWheel;
     // Initialize chassis GUI
     UI->ChassisGUIInit(&graphChassis, &graphArrow, &graphGimbal, &graphCali, &graphEmpty2);
-    UI->GraphRefresh(5, graphChassis, graphArrow, graphGimbal,
-                     graphCali, graphEmpty2);
+    UI->GraphRefresh(5, graphChassis, graphArrow, graphGimbal, graphCali, graphEmpty2);
     osDelay(100);
 
     // Initialize crosshair GUI
     UI->CrosshairGUI(&graphCrosshair1, &graphCrosshair2, &graphCrosshair3, &graphCrosshair4,
                      &graphCrosshair5, &graphCrosshair6, &graphCrosshair7);
-    UI->GraphRefresh(7, graphCrosshair1, graphCrosshair2,
-                     graphCrosshair3, graphCrosshair4, graphCrosshair5, graphCrosshair6,
-                     graphCrosshair7);
+    UI->GraphRefresh(7, graphCrosshair1, graphCrosshair2, graphCrosshair3, graphCrosshair4,
+                     graphCrosshair5, graphCrosshair6, graphCrosshair7);
     osDelay(100);
 
     // Initialize supercapacitor GUI
@@ -55,8 +49,7 @@ void uiTask(void* arg) {
 
     // Initialize Supercapacitor string GUI
     UI->CapGUICharInit(&graphPercent);
-    UI->CharRefresh(graphPercent, UI->getPercentStr(),
-                    UI->getPercentLen());
+    UI->CharRefresh(graphPercent, UI->getPercentStr(), UI->getPercentLen());
     osDelay(100);
 
     // Initialize self-diagnosis GUI
@@ -70,21 +63,18 @@ void uiTask(void* arg) {
     // char spinModeStr[15] = "SPIN  MODE";
     uint32_t modeColor = UI_Color_Orange;
     UI->ModeGUIInit(&graphMode);
-    UI->CharRefresh(graphMode, followModeStr,
-                    sizeof followModeStr);
+    UI->CharRefresh(graphMode, followModeStr, sizeof followModeStr);
     osDelay(100);
 
-
-
     // Initialize distance GUI
-//    char distanceStr[15] = "0.0";
-//    UI->DistanceGUIInit(&graphDist);
-//    UI->CharRefresh((uint8_t*)(&referee->graphic_character), graphDist, distanceStr,
-//                    sizeof distanceStr);
-//    referee->PrepareUIContent(communication::CHAR_GRAPH);
-//    frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
-//    referee_uart->Write(frame.data, frame.length);
-//    osDelay(UI_OS_DELAY);
+    //    char distanceStr[15] = "0.0";
+    //    UI->DistanceGUIInit(&graphDist);
+    //    UI->CharRefresh((uint8_t*)(&referee->graphic_character), graphDist, distanceStr,
+    //                    sizeof distanceStr);
+    //    referee->PrepareUIContent(communication::CHAR_GRAPH);
+    //    frame = referee->Transmit(communication::STUDENT_INTERACTIVE);
+    //    referee_uart->Write(frame.data, frame.length);
+    //    osDelay(UI_OS_DELAY);
 
     // TODO: add lid UI in the future
 
@@ -101,7 +91,7 @@ void uiTask(void* arg) {
     char wheelOnStr[15] = "FLYWHEEL ON";
     char wheelOffStr[15] = "FLYWHEEL OFF";
     UI->WheelGUIInit(&graphWheel);
-    UI->CharRefresh(graphWheel, wheelOffStr,sizeof wheelOffStr);
+    UI->CharRefresh(graphWheel, wheelOffStr, sizeof wheelOffStr);
     osDelay(100);
 
     float j = 1;
@@ -114,8 +104,7 @@ void uiTask(void* arg) {
         calibration_flag = imu->CaliDone();
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
         UI->ChassisGUIUpdate(relative_angle, calibration_flag);
-        UI->GraphRefresh(5, graphChassis, graphArrow, graphGimbal,
-                         graphCali, graphEmpty2);
+        UI->GraphRefresh(5, graphChassis, graphArrow, graphGimbal, graphCali, graphEmpty2);
         osDelay(UI_OS_DELAY);
 
         // Update supercapacitor GUI
@@ -126,13 +115,12 @@ void uiTask(void* arg) {
 
         // Update supercapacitor string GUI
         UI->CapGUICharUpdate();
-        UI->CharRefresh(graphPercent, UI->getPercentStr(),
-                        UI->getPercentLen());
+        UI->CharRefresh(graphPercent, UI->getPercentStr(), UI->getPercentLen());
         osDelay(UI_OS_DELAY);
 
         // Update current mode GUI
         char modeStr[30];
-        switch(remote_mode){
+        switch (remote_mode) {
             case REMOTE_MODE_STOP:
                 strcpy(modeStr, "STOP MODE     ");
                 modeColor = UI_Color_Purplish_red;
@@ -153,25 +141,21 @@ void uiTask(void* arg) {
                 strcpy(modeStr, "UNKNOWN MODE   ");
                 modeColor = UI_Color_Purplish_red;
                 break;
-
         }
 
         UI->ModeGuiUpdate(&graphMode, modeColor);
         UI->CharRefresh(graphMode, modeStr, 15);
         osDelay(UI_OS_DELAY);
 
-
-
         // Update wheel status GUI
         char* wheelStr = shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
-        uint32_t wheelColor = shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
+        uint32_t wheelColor =
+            shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
         UI->WheelGUIUpdate(&graphWheel, wheelColor);
         UI->CharRefresh(graphWheel, wheelStr, 15);
         osDelay(UI_OS_DELAY);
 
         // Update self-diagnosis messages
-
-
 
         // clear self-diagnosis messages
         if (dbus->keyboard.bit.C) {
@@ -181,9 +165,8 @@ void uiTask(void* arg) {
             }
         }
     }
-
 }
 
 void init_ui() {
-    UI = new communication::UserInterface(referee_uart,referee);
+    UI = new communication::UserInterface(referee_uart, referee);
 }

@@ -8,8 +8,8 @@
 #include "public_port.h"
 #include "referee_task.h"
 #include "remote_task.h"
-#include "utils.h"
 #include "user_define.h"
+#include "utils.h"
 extern osThreadId_t shootTaskHandle;
 const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .attr_bits = osThreadDetached,

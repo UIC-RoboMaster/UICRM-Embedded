@@ -8,8 +8,8 @@
 #include "motor.h"
 #include "public_port.h"
 #include "referee_task.h"
-#include "utils.h"
 #include "remote_task.h"
+#include "utils.h"
 extern osThreadId_t chassisTaskHandle;
 const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
                                              .attr_bits = osThreadDetached,

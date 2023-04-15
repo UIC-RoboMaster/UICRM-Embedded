@@ -1,7 +1,7 @@
 #pragma once
 
-#include "protocol.h"
 #include "bsp_uart.h"
+#include "protocol.h"
 
 /********************** content ID data********************/
 #define UI_Data_ID_Del 0x100
@@ -74,36 +74,39 @@ namespace communication {
 
     class UserInterface {
       public:
-        UserInterface(bsp::UART* uart,communication::Referee* referee);
+        UserInterface(bsp::UART* uart, communication::Referee* referee);
         bool SetID(int Robot_ID);
         static void LineDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                      uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
-                      uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y);
+                             uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
+                             uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y);
         static void RectangleDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                           uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
-                           uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y);
+                                  uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
+                                  uint32_t start_x, uint32_t start_y, uint32_t end_x,
+                                  uint32_t end_y);
         static void CircleDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                        uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
-                        uint32_t start_x, uint32_t start_y, uint32_t graph_radius);
+                               uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
+                               uint32_t start_x, uint32_t start_y, uint32_t graph_radius);
         static void EllipseDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                         uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
-                         uint32_t start_x, uint32_t start_y, uint32_t x_length, uint32_t y_length);
+                                uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
+                                uint32_t start_x, uint32_t start_y, uint32_t x_length,
+                                uint32_t y_length);
         static void ArcDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                     uint32_t graph_layer, uint32_t graph_color, uint32_t graph_startAngle,
-                     uint32_t graph_endAngle, uint32_t graph_width, uint32_t start_x,
-                     uint32_t start_y, uint32_t x_length, uint32_t y_length);
+                            uint32_t graph_layer, uint32_t graph_color, uint32_t graph_startAngle,
+                            uint32_t graph_endAngle, uint32_t graph_width, uint32_t start_x,
+                            uint32_t start_y, uint32_t x_length, uint32_t y_length);
         static void FloatDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                       uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
-                       uint32_t graph_digit, uint32_t graph_width, uint32_t start_x,
-                       uint32_t start_y, float graph_float);
+                              uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
+                              uint32_t graph_digit, uint32_t graph_width, uint32_t start_x,
+                              uint32_t start_y, float graph_float);
         static void IntDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                     uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
-                     uint32_t graph_width, uint32_t start_x, uint32_t start_y, int graph_int);
+                            uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
+                            uint32_t graph_width, uint32_t start_x, uint32_t start_y,
+                            int graph_int);
         static void CharDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                      uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
-                      uint32_t char_length, uint32_t graph_width, uint32_t start_x,
-                      uint32_t start_y);
-        int WriteData(uint8_t* data_buffer,communication::content graph_content);
+                             uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
+                             uint32_t char_length, uint32_t graph_width, uint32_t start_x,
+                             uint32_t start_y);
+        int WriteData(uint8_t* data_buffer, communication::content graph_content);
         int UIDelete(uint8_t del_operate, uint8_t del_layer);
         int GraphRefresh(int cnt, ...);
         int CharRefresh(graphic_data_t image, char* theString, int len);
@@ -123,7 +126,7 @@ namespace communication {
         void DiagGUIUpdate(int len);
         void DiagGUIClear(UserInterface* UI, Referee* referee, graphic_data_t* graph,
                           int currCount);
-        void AddMessage(graphic_data_t* graph,char* messageStr, int len);
+        void AddMessage(graphic_data_t* graph, char* messageStr, int len);
         void ModeGUIInit(graphic_data_t* modeGraph);
         void ModeGuiUpdate(graphic_data_t* modeGraph, uint32_t color);
         void DistanceGUIInit(graphic_data_t* distanceGraph);
