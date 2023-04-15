@@ -1,5 +1,6 @@
 ### Clion CMake folder
 cmake-build-debug
+cmake-build-release
 build
 
 ### CMake template

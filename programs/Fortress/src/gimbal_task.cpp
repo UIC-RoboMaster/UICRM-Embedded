@@ -44,15 +44,17 @@ void gimbalTask(void* arg) {
     buzzer->SingTone(bsp::BuzzerNote::Silent);
     float pitch_ratio, yaw_ratio;
     float pitch_curr, yaw_curr;
+    pitch_curr = imu->INS_angle[2];
+    yaw_curr = imu->INS_angle[0];
     float pitch_target = 0, yaw_target = 0;
     float pitch_diff, yaw_diff;
-
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);
             continue;
         }
+
         pitch_curr = imu->INS_angle[2];
         yaw_curr = imu->INS_angle[0];
         //    if (dbus->swr == remote::UP) {
@@ -75,25 +77,27 @@ void gimbalTask(void* arg) {
             yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
         }
 
-        pitch_target = clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
-                                   gimbal_param->pitch_max_);
-        yaw_target =
-            wrap<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
+        pitch_target =
+            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
-        pitch_diff = clip<float>(pitch_target - pitch_curr, -PI, PI);
-        yaw_diff = wrap<float>(yaw_target - yaw_curr, -PI, PI);
+        pitch_diff = clip<float>(pitch_target, -PI, PI);
+        yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
-        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
-            pitch_diff = 0;
-        }
+        //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
+        //            pitch_diff = 0;
+        //        }
+
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
-            case REMOTE_MODE_ADVANCED:
             case REMOTE_MODE_MANUAL:
+            case REMOTE_MODE_ADVANCED:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                gimbal->Update();
+                gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
-
+                //                gimbal->TargetRel(pitch_diff, yaw_diff);
+                //                gimbal->Update();
+                //                break;
             default:
                 kill_gimbal();
         }
