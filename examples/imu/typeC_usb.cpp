@@ -69,7 +69,7 @@ void RM_RTOS_Init(void) {
     imu_init.hdma_spi_tx = &hdma_spi1_tx;
     imu_init.Accel_INT_pin_ = INT1_ACCEL_Pin;
     imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
-    imu = new IMU(imu_init, true);
+    imu = new IMU(imu_init, false);
 }
 
 void RM_RTOS_Threads_Init(void) {

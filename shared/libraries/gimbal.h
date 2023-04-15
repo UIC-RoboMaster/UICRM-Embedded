@@ -66,6 +66,8 @@ namespace control {
          */
         void Update();
 
+        void UpdateIMU(float pitch, float yaw);
+
         /**
          * @brief set motors to point to a new orientation
          *
@@ -80,15 +82,15 @@ namespace control {
          * @param new_pitch new pitch angled
          * @param new_yaw   new yaw angled
          */
-        void TargetAbsYawRelPitch(float new_pitch, float new_yaw);
+        void TargetRel(float new_pitch, float new_yaw);
 
         /**
          * @brief set motors to point to a new orientation
          *
-         * @param new_pitch new pitch angled
-         * @param new_yaw   new yaw angled
+         * @param abs_pitch new pitch max angle
+         * @param abs_yaw   new yaw max angle
          */
-        void TargetRel(float new_pitch, float new_yaw);
+        void TargetAbsWOffset(float abs_pitch, float abs_yaw);
 
         /**
          * @brief update the offset of the gimbal
@@ -124,6 +126,12 @@ namespace control {
         // pitch and yaw angle
         float pitch_angle_; /* current gimbal pitch angle */
         float yaw_angle_;   /* current gimbal yaw angle   */
+
+        // pitch and yaw limit
+        float pitch_lower_limit_; /* pitch lower limit */
+        float pitch_upper_limit_; /* pitch upper limit */
+        float yaw_lower_limit_;   /* yaw lower limit   */
+        float yaw_upper_limit_;   /* yaw upper limit   */
 
         // state detectors
         BoolEdgeDetector pitch_detector_; /* pitch pid mode toggle detector */
