@@ -9,10 +9,9 @@
 #include "arm_math.h"
 
 namespace communication {
-    UserInterface::UserInterface(bsp::UART* uart,communication::Referee* referee) : uart_(uart) ,referee_(referee){
-
+    UserInterface::UserInterface(bsp::UART* uart, communication::Referee* referee)
+        : uart_(uart), referee_(referee) {
     }
-
 
     bool UserInterface::SetID(int Robot_ID) {
         switch (Robot_ID) {
@@ -309,13 +308,15 @@ namespace communication {
         image->start_y = start_y;
     }
 
-    int UserInterface::WriteData(uint8_t* data_buffer,communication::content graph_content){
-        switch(graph_content){
+    int UserInterface::WriteData(uint8_t* data_buffer, communication::content graph_content) {
+        switch (graph_content) {
             case SINGLE_GRAPH:
-                memcpy((uint8_t*)(&referee_->graphic_single), data_buffer, sizeof(graphic_single_t));
+                memcpy((uint8_t*)(&referee_->graphic_single), data_buffer,
+                       sizeof(graphic_single_t));
                 break;
             case DOUBLE_GRAPH:
-                memcpy((uint8_t*)(&referee_->graphic_double), data_buffer, sizeof(graphic_double_t));
+                memcpy((uint8_t*)(&referee_->graphic_double), data_buffer,
+                       sizeof(graphic_double_t));
                 break;
             case FIVE_GRAPH:
                 memcpy((uint8_t*)(&referee_->graphic_five), data_buffer, sizeof(graphic_five_t));
@@ -324,10 +325,12 @@ namespace communication {
                 memcpy((uint8_t*)(&referee_->graphic_seven), data_buffer, sizeof(graphic_seven_t));
                 break;
             case CHAR_GRAPH:
-                memcpy((uint8_t*)(&referee_->graphic_character), data_buffer, sizeof(graphic_character_t));
+                memcpy((uint8_t*)(&referee_->graphic_character), data_buffer,
+                       sizeof(graphic_character_t));
                 break;
             case DELETE_GRAPH:
-                memcpy((uint8_t*)(&referee_->graphic_delete), data_buffer, sizeof(graphic_delete_t));
+                memcpy((uint8_t*)(&referee_->graphic_delete), data_buffer,
+                       sizeof(graphic_delete_t));
                 break;
             default:
                 break;
@@ -346,9 +349,9 @@ namespace communication {
         del.operate_type = del_operate;
         del.layer = del_layer;
         return WriteData((uint8_t*)(&del), DELETE_GRAPH);
-//        int length = sizeof(graphic_delete_t);
-//        memcpy(data_buffer, &del, length);
-//        return length;
+        //        int length = sizeof(graphic_delete_t);
+        //        memcpy(data_buffer, &del, length);
+        //        return length;
     }
 
     int UserInterface::GraphRefresh(int cnt, ...) {
@@ -357,7 +360,7 @@ namespace communication {
         UI_header_data_t header;
         header.sender_ID = Robot_ID_;
         header.receiver_ID = Client_ID_;
-//        int length = -1;
+        //        int length = -1;
         communication::content graph_content;
         switch (cnt) {
             case 1: {
@@ -365,10 +368,10 @@ namespace communication {
                 graphic_single_t graph;
                 graph.header = header;
                 graph.graphic_data_struct = va_arg(arg, graphic_data_t);
-//                length = sizeof(graphic_single_t);
+                //                length = sizeof(graphic_single_t);
                 graph_content = SINGLE_GRAPH;
                 return WriteData((uint8_t*)(&graph), graph_content);
-//                memcpy(data_buffer, &graph, length);
+                //                memcpy(data_buffer, &graph, length);
                 break;
             }
             case 2: {
@@ -377,10 +380,10 @@ namespace communication {
                 graph.header = header;
                 for (int i = 0; i < cnt; ++i)
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
-//                length = sizeof(graphic_double_t);
+                //                length = sizeof(graphic_double_t);
                 graph_content = DOUBLE_GRAPH;
                 return WriteData((uint8_t*)(&graph), graph_content);
-//                memcpy(data_buffer, &graph, length);
+                //                memcpy(data_buffer, &graph, length);
                 break;
             }
             case 5: {
@@ -389,10 +392,10 @@ namespace communication {
                 graph.header = header;
                 for (int i = 0; i < cnt; ++i)
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
-//                length = sizeof(graphic_five_t);
+                //                length = sizeof(graphic_five_t);
                 graph_content = FIVE_GRAPH;
                 return WriteData((uint8_t*)(&graph), graph_content);
-//                memcpy(data_buffer, &graph, length);
+                //                memcpy(data_buffer, &graph, length);
                 break;
             }
             case 7: {
@@ -401,21 +404,20 @@ namespace communication {
                 graph.header = header;
                 for (int i = 0; i < cnt; ++i)
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
-//                length = sizeof(graphic_seven_t);
+                //                length = sizeof(graphic_seven_t);
                 graph_content = SEVEN_GRAPH;
                 return WriteData((uint8_t*)(&graph), graph_content);
-//                memcpy(data_buffer, &graph, length);
+                //                memcpy(data_buffer, &graph, length);
                 break;
             }
             default:;
         }
         return -1;
 
-//        return length;
+        //        return length;
     }
 
-    int UserInterface::CharRefresh(graphic_data_t image, char* theString,
-                                   int len) {
+    int UserInterface::CharRefresh(graphic_data_t image, char* theString, int len) {
         graphic_character_t char_graph;
         char_graph.header.data_cmd_id = UI_Data_ID_DrawChar;
         char_graph.header.sender_ID = Robot_ID_;
@@ -426,9 +428,9 @@ namespace communication {
         memset(char_graph.data, 0, sizeof(char_graph.data));
         memcpy(char_graph.data, theString, len);
         return WriteData((uint8_t*)(&char_graph), CHAR_GRAPH);
-//        int length = sizeof(graphic_character_t);
-//        memcpy(data_buffer, &char_graph, length);
-//        return length;
+        //        int length = sizeof(graphic_character_t);
+        //        memcpy(data_buffer, &char_graph, length);
+        //        return length;
     }
 
     void UserInterface::ChassisGUIInit(graphic_data_t* chassis, graphic_data_t* arrow,
@@ -541,7 +543,7 @@ namespace communication {
         CharDraw(diag_, name, UI_Graph_Add, 2, UI_Color_Pink, 10, len, 2, diagStartX_, currY);
     }
 
-    void UserInterface::AddMessage(graphic_data_t* graph,char* messageStr, int len) {
+    void UserInterface::AddMessage(graphic_data_t* graph, char* messageStr, int len) {
         messageCount_++;
         if (messageCount_ > 25)
             return;
@@ -599,6 +601,5 @@ namespace communication {
         CharDraw(wheelGraph, "WG", UI_Graph_Change, 0, color, 15, 30, 2, barStartX_,
                  barStartY_ + 50);
     }
-
 
 }  // namespace communication

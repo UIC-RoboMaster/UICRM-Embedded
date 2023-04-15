@@ -139,13 +139,13 @@ void shootTask(void* arg) {
                 laser->SetOutput(0);
                 break;
             case SHOOT_FRIC_SPEEDUP:
-                ramp_1.SetMax(min(400.0f,ramp_1.GetMax()+25));
-                ramp_2.SetMax(min(400.0f,ramp_2.GetMax()+25));
+                ramp_1.SetMax(min(400.0f, ramp_1.GetMax() + 25));
+                ramp_2.SetMax(min(400.0f, ramp_2.GetMax() + 25));
                 shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
                 break;
             case SHOOT_FRIC_SPEEDDOWN:
-                ramp_1.SetMax(max(200.0f,ramp_1.GetMax()-25));
-                ramp_2.SetMax(max(200.0f,ramp_2.GetMax()-25));
+                ramp_1.SetMax(max(200.0f, ramp_1.GetMax() - 25));
+                ramp_2.SetMax(max(200.0f, ramp_2.GetMax() - 25));
                 shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
                 break;
             default:

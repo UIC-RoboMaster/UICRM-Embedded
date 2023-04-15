@@ -73,10 +73,10 @@ void remoteTask(void* arg) {
             continue;
         }
 
-        if(last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
+        if (last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
             shoot_fric_mode = SHOOT_FRIC_SPEEDUP;
         }
-        if(last_keyboard.bit.B == 1 && keyboard.bit.B == 0) {
+        if (last_keyboard.bit.B == 1 && keyboard.bit.B == 0) {
             shoot_fric_mode = SHOOT_FRIC_SPEEDDOWN;
         }
 
