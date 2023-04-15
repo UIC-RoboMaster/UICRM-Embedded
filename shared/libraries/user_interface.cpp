@@ -433,65 +433,7 @@ namespace communication {
         //        return length;
     }
 
-    void UserInterface::ChassisGUIInit(graphic_data_t* chassis, graphic_data_t* arrow,
-                                       graphic_data_t* gimbal, graphic_data_t* cali,
-                                       graphic_data_t* empty2) {
-        chassis_ = chassis;
-        arrow_ = arrow;
-        gimbal_ = gimbal;
-        cali_ = cali;
-        gimbalLen_ = 90;
-        chassisLen_ = 90;
-        LineDraw(chassis, "c", UI_Graph_Add, 1, UI_Color_Yellow, 60, chassisX_,
-                 chassisY_ - chassisLen_ / 2, chassisX_, chassisY_ + chassisLen_ / 2);
-        LineDraw(arrow, "a", UI_Graph_Add, 1, UI_Color_Yellow, 20, chassisX_ - 7,
-                 chassisY_ + chassisLen_ / 2 - 7, chassisX_ + 7, chassisY_ + chassisLen_ / 2 + 7);
-        LineDraw(gimbal, "g", UI_Graph_Add, 0, UI_Color_White, 7, chassisX_, chassisY_, chassisX_,
-                 chassisY_ + gimbalLen_);
-        CircleDraw(cali, "cal", UI_Graph_Add, 0, UI_Color_Pink, 14, centerX_ + 925, centerY_ + 330,
-                   7);
-        LineDraw(empty2, "e2", UI_Graph_Add, 0, UI_Color_Yellow, 20, centerX_, centerY_ + 60,
-                 centerX_, centerY_ + 60);
-    }
 
-    void UserInterface::ChassisGUIUpdate(float relative, bool flag) {
-        UNUSED(flag);
-        float x_end = chassisX_ - chassisLen_ / 2.0 * arm_sin_f32(relative);
-        float y_end = chassisY_ + chassisLen_ / 2.0 * arm_cos_f32(relative);
-        float x_start = chassisX_ + chassisLen_ / 2.0 * arm_sin_f32(relative);
-        float y_start = chassisY_ - chassisLen_ / 2.0 * arm_cos_f32(relative);
-        int color = flag ? UI_Color_Green : UI_Color_Pink;
-        LineDraw(chassis_, "c", UI_Graph_Change, 1, UI_Color_Yellow, 60, (uint32_t)x_start,
-                 (uint32_t)y_start, (uint32_t)x_end, (uint32_t)y_end);
-        LineDraw(arrow_, "a", UI_Graph_Change, 1, UI_Color_Yellow, 20,
-                 (uint32_t)(x_end + 10 * arm_sin_f32(relative + M_PI / 4)),
-                 (uint32_t)(y_end - 10 * arm_cos_f32(relative + M_PI / 4)),
-                 (uint32_t)(x_end - 10 * arm_sin_f32(relative + M_PI / 4)),
-                 (uint32_t)(y_end + 10 * arm_cos_f32(relative + M_PI / 4)));
-        LineDraw(gimbal_, "g", UI_Graph_Change, 0, UI_Color_White, 7, chassisX_, chassisY_,
-                 chassisX_, chassisY_ + gimbalLen_);
-        CircleDraw(cali_, "cal", UI_Graph_Change, 0, color, 14, centerX_ + 925, centerY_ + 330, 7);
-    }
-
-    void UserInterface::CrosshairGUI(graphic_data_t* crosshair1, graphic_data_t* crosshair2,
-                                     graphic_data_t* crosshair3, graphic_data_t* crosshair4,
-                                     graphic_data_t* crosshair5, graphic_data_t* crosshair6,
-                                     graphic_data_t* crosshair7) {
-        LineDraw(crosshair1, "ch1", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50, centerY_ - 40,
-                 centerX_ + 50, centerY_ - 40);
-        LineDraw(crosshair2, "ch2", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 55,
-                 centerX_ + 30, centerY_ - 55);
-        LineDraw(crosshair3, "ch3", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 60,
-                 centerX_ + 30, centerY_ - 60);
-        LineDraw(crosshair4, "ch4", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50, centerY_ - 70,
-                 centerX_ + 50, centerY_ - 70);
-        LineDraw(crosshair5, "ch5", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 80,
-                 centerX_ + 30, centerY_ - 80);
-        LineDraw(crosshair6, "ch6", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 90,
-                 centerX_ + 30, centerY_ - 90);
-        LineDraw(crosshair7, "ch7", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_, centerY_ - 30,
-                 centerX_, centerY_ - 100);
-    }
 
     void UserInterface::CapGUIInit(graphic_data_t* barFrame, graphic_data_t* bar) {
         bar_ = bar;
@@ -602,4 +544,245 @@ namespace communication {
                  barStartY_ + 50);
     }
 
+    ChassisGUI::ChassisGUI(UserInterface* UI,int16_t chassis_X,int16_t chassis_Y,int16_t speed_center_X,
+                           int16_t speed_center_Y): UI_(UI) {
+        chassis_X_ = chassis_X;
+        chassis_Y_ = chassis_Y;
+        speed_center_X_ = speed_center_X;
+        speed_center_Y_ = speed_center_Y;
+        gimbalLen_ = 90;
+        chassisLen_ = 90;
+        speed_circle_R_ = 100;
+        Init();
+    }
+    void ChassisGUI::Init(){
+        UI_->LineDraw(&chassis_, "c", UI_Graph_Add, 1, UI_Color_Yellow, 60, chassis_X_,
+                      chassis_Y_ - chassisLen_ / 2, chassis_X_, chassis_Y_ + chassisLen_ / 2);
+        UI_->LineDraw(&arrow_, "a", UI_Graph_Add, 1, UI_Color_Yellow, 20, chassis_X_ - 7,
+                      chassis_Y_ + chassisLen_ / 2 - 7, chassis_X_ + 7, chassis_Y_ + chassisLen_ / 2 + 7);
+        UI_->LineDraw(&gimbal_, "g", UI_Graph_Add, 2, UI_Color_White, 7, chassis_X_, chassis_Y_, chassis_X_,
+                      chassis_Y_ + gimbalLen_);
+        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Add, 1, UI_Color_Yellow, 2, speed_center_X_, speed_center_Y_, speed_circle_R_);
+        UI_->CircleDraw(&speed_center_,"sd",UI_Graph_Add,2,UI_Color_Green,10,speed_center_X_,speed_center_Y_,5);
+        UI_->LineDraw(&speed_x_axis_, "sx", UI_Graph_Add, 3, UI_Color_Pink, 2, speed_center_X_ - speed_circle_R_, speed_center_Y_,
+                      speed_center_X_ + speed_circle_R_, speed_center_Y_);
+        UI_->LineDraw(&speed_y_axis_, "sy", UI_Graph_Add, 3, UI_Color_Pink, 2, speed_center_X_, speed_center_Y_ - speed_circle_R_,
+                      speed_center_X_, speed_center_Y_ + speed_circle_R_);
+        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_, speed_y_axis_);
+    }
+
+    void ChassisGUI::Delete(){
+        UI_->LineDraw(&chassis_, "c", UI_Graph_Del, 1, UI_Color_Yellow, 60, chassis_X_,
+                      chassis_Y_ - chassisLen_ / 2, chassis_X_, chassis_Y_ + chassisLen_ / 2);
+        UI_->LineDraw(&arrow_, "a", UI_Graph_Del, 1, UI_Color_Yellow, 20, chassis_X_ - 7,
+                      chassis_Y_ + chassisLen_ / 2 - 7, chassis_X_ + 7, chassis_Y_ + chassisLen_ / 2 + 7);
+        UI_->LineDraw(&gimbal_, "g", UI_Graph_Del, 2, UI_Color_White, 7, chassis_X_, chassis_Y_, chassis_X_,
+                      chassis_Y_ + gimbalLen_);
+        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Del, 1, UI_Color_Yellow, 2, speed_center_X_, speed_center_Y_, speed_circle_R_);
+        UI_->CircleDraw(&speed_center_,"sd",UI_Graph_Del,2,UI_Color_Green,10,speed_center_X_,speed_center_Y_,5);
+        UI_->LineDraw(&speed_x_axis_, "sx", UI_Graph_Del, 3, UI_Color_Pink, 2, speed_center_X_ - speed_circle_R_, speed_center_Y_,
+                      speed_center_X_ + speed_circle_R_, speed_center_Y_);
+        UI_->LineDraw(&speed_y_axis_, "sy", UI_Graph_Del, 3, UI_Color_Pink, 2, speed_center_X_, speed_center_Y_ - speed_circle_R_,
+                      speed_center_X_, speed_center_Y_ + speed_circle_R_);
+        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_, speed_y_axis_);
+    }
+
+    void ChassisGUI::Init2() {
+        UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Add, 2, UI_Color_Green, 10, 2, speed_center_X_+speed_circle_R_+8, speed_center_Y_ - 2, 0);
+        UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Add, 2, UI_Color_Green, 10, 2, speed_center_X_-5, speed_center_Y_ -speed_circle_R_-10, 0);
+        UI_->GraphRefresh(2, speed_x_val_, speed_y_val_);
+    }
+    void ChassisGUI::Delete2() {
+        UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Del, 2, UI_Color_Green, 10, 2, speed_center_X_+speed_circle_R_+8, speed_center_Y_ - 2, 0);
+        UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Del, 2, UI_Color_Green, 10, 2, speed_center_X_-5, speed_center_Y_ -speed_circle_R_-10, 0);
+        UI_->GraphRefresh(2, speed_x_val_, speed_y_val_);
+    }
+
+    void ChassisGUI::Update(float speed_x, float speed_y, float relative) {
+        float x_end = chassis_X_ - chassisLen_ / 2.0 * arm_sin_f32(relative);
+        float y_end = chassis_Y_ + chassisLen_ / 2.0 * arm_cos_f32(relative);
+        float x_start = chassis_X_ + chassisLen_ / 2.0 * arm_sin_f32(relative);
+        float y_start = chassis_Y_ - chassisLen_ / 2.0 * arm_cos_f32(relative);
+        UI_->LineDraw(&chassis_, "c", UI_Graph_Change, 1, UI_Color_Yellow, 60, (uint32_t)x_start,
+                 (uint32_t)y_start, (uint32_t)x_end, (uint32_t)y_end);
+        UI_->LineDraw(&arrow_, "a", UI_Graph_Change, 1, UI_Color_Yellow, 20,
+                 (uint32_t)(x_end + 10 * arm_sin_f32(relative + M_PI / 4)),
+                 (uint32_t)(y_end - 10 * arm_cos_f32(relative + M_PI / 4)),
+                 (uint32_t)(x_end - 10 * arm_sin_f32(relative + M_PI / 4)),
+                 (uint32_t)(y_end + 10 * arm_cos_f32(relative + M_PI / 4)));
+        UI_->CircleDraw(&speed_center_,"sd",UI_Graph_Change,2,UI_Color_Green,10,speed_center_X_+(int16_t)(speed_x*speed_circle_R_),speed_center_Y_+(int16_t)(speed_y*speed_circle_R_),5);
+        UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Change, 2, UI_Color_Green, 10, 2, speed_center_X_+speed_circle_R_+8, speed_center_Y_ - 2, (int32_t)(speed_x*100.0f));
+        UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Change, 2, UI_Color_Green, 10, 2, speed_center_X_-5, speed_center_Y_ -speed_circle_R_-10, (int32_t)(speed_y*100.0f));
+        UI_->GraphRefresh(5, chassis_, arrow_, speed_center_, speed_x_val_, speed_y_val_);
+    }
+
+
+    CrossairGUI::CrossairGUI(UserInterface* UI) : UI_(UI) {
+        centerX_ = 960;
+        centerY_ = 540;
+        Init();
+    }
+
+    void CrossairGUI::Init(){
+        UI_->LineDraw(&crosshair1_, "ch1", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50, centerY_ - 40,
+                 centerX_ + 50, centerY_ - 40);
+        UI_->LineDraw(&crosshair2_, "ch2", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 55,
+                 centerX_ + 30, centerY_ - 55);
+        UI_->LineDraw(&crosshair3_, "ch3", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 60,
+                 centerX_ + 30, centerY_ - 60);
+        UI_->LineDraw(&crosshair4_, "ch4", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50, centerY_ - 70,
+                 centerX_ + 50, centerY_ - 70);
+        UI_->LineDraw(&crosshair5_, "ch5", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 80,
+                 centerX_ + 30, centerY_ - 80);
+        UI_->LineDraw(&crosshair6_, "ch6", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 90,
+                 centerX_ + 30, centerY_ - 90);
+        UI_->LineDraw(&crosshair7_, "ch7", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_, centerY_ - 30,
+                 centerX_, centerY_ - 100);
+        UI_->GraphRefresh(7, crosshair1_, crosshair2_, crosshair3_, crosshair4_, crosshair5_, crosshair6_, crosshair7_);
+    }
+
+    void CrossairGUI::Delete(){
+        UI_->LineDraw(&crosshair1_, "ch1", UI_Graph_Del, 0, UI_Color_Cyan, 2, centerX_ - 50, centerY_ - 40,
+                      centerX_ + 50, centerY_ - 40);
+        UI_->LineDraw(&crosshair2_, "ch2", UI_Graph_Del, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 55,
+                      centerX_ + 30, centerY_ - 55);
+        UI_->LineDraw(&crosshair3_, "ch3", UI_Graph_Del, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 60,
+                      centerX_ + 30, centerY_ - 60);
+        UI_->LineDraw(&crosshair4_, "ch4", UI_Graph_Del, 0, UI_Color_Cyan, 2, centerX_ - 50, centerY_ - 70,
+                      centerX_ + 50, centerY_ - 70);
+        UI_->LineDraw(&crosshair5_, "ch5", UI_Graph_Del, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 80,
+                      centerX_ + 30, centerY_ - 80);
+        UI_->LineDraw(&crosshair6_, "ch6", UI_Graph_Del, 0, UI_Color_Cyan, 2, centerX_ - 30, centerY_ - 90,
+                      centerX_ + 30, centerY_ - 90);
+        UI_->LineDraw(&crosshair7_, "ch7", UI_Graph_Del, 0, UI_Color_Cyan, 2, centerX_, centerY_ - 30,
+                      centerX_, centerY_ - 100);
+        UI_->GraphRefresh(7, crosshair1_, crosshair2_, crosshair3_, crosshair4_, crosshair5_, crosshair6_, crosshair7_);
+    }
+
+    uint8_t Bar::barcount_ = 0;
+
+    Bar::Bar(int16_t barStartX, int16_t barStartY, int16_t barWidth, int16_t barHeight,uint8_t color,uint8_t frame_color, bool isVertical) {
+        barStartX_ = barStartX;
+        barStartY_ = barStartY;
+        barWidth_ = barWidth;
+        barHeight_ = barHeight;
+        isVertical_ = isVertical;
+        color_ = color;
+        frame_color_ = frame_color;
+        barID_ = Bar::barcount_;
+        Bar::barcount_++;
+    }
+
+
+    graphic_data_t Bar::Init() {
+        memset(name_, ' ', 10);
+        snprintf(name_, 10, "b%d", barID_);
+        communication::UserInterface::LineDraw(&bar_, name_, UI_Graph_Add, 0, color_, barHeight_-10, barStartX_+barWidth_/2, barStartY_+5,
+                                                    barStartX_+barWidth_/2, barStartY_ + barHeight_-5);
+        return bar_;
+    }
+
+    void Bar::Delete() {
+        communication::UserInterface::LineDraw(&bar_, name_, UI_Graph_Del, 0, color_, 2, barStartX_+5, barStartY_+5,
+                                               barStartX_+barWidth_-5, barStartY_ + barHeight_-5);
+    }
+
+    graphic_data_t Bar::InitFrame() {
+        memset(name_frame_, ' ', 10);
+        snprintf(name_frame_, 10, "f%d", barID_);
+        communication::UserInterface::RectangleDraw(&barFrame_, name_frame_, UI_Graph_Add, 0, frame_color_, 2, barStartX_, barStartY_,
+                                                    barStartX_+barWidth_, barStartY_ + barHeight_);
+        return barFrame_;
+    }
+
+    void Bar::DeleteFrame() {
+        communication::UserInterface::RectangleDraw(&barFrame_, name_frame_, UI_Graph_Del, 0, frame_color_, 2, barStartX_, barStartY_,
+                                                    barStartX_+barWidth_, barStartY_ + barHeight_);
+    }
+
+    graphic_data_t Bar::Update(float percent) {
+        percent_=percent;
+        if (isVertical_) {
+            communication::UserInterface::LineDraw(&bar_, name_, UI_Graph_Change, 0, color_, barWidth_-10, barStartX_+barWidth_/2, barStartY_+5,
+                                                   barStartX_+barWidth_/2, barStartY_ + 5 + (barHeight_ - 10) * percent_);
+        } else {
+            communication::UserInterface::LineDraw(&bar_, name_, UI_Graph_Change, 0, color_, barHeight_-10, barStartX_+5, barStartY_+barHeight_/2,
+                                                   barStartX_+5 + (barWidth_ - 10) * percent_, barStartY_+barHeight_/2);
+        }
+        return bar_;
+    }
+
+
+    GimbalGUI::GimbalGUI(UserInterface* UI,
+                         int16_t gimbal_speed_center_X,
+                         int16_t gimbal_speed_center_Y,
+                         int16_t gimbal_speed_circle_R,
+                         int16_t pitch_bar_X,
+                         int16_t pitch_bar_Y,
+                         int16_t pitch_bar_height,
+                         int16_t pitch_bar_weight,
+                         float pitch_max) :UI_(UI){
+        gimbal_speed_center_X_ = gimbal_speed_center_X;
+        gimbal_speed_center_Y_ = gimbal_speed_center_Y;
+        gimbal_speed_circle_R_ = gimbal_speed_circle_R;
+        pitch_bar_X_ = pitch_bar_X;
+        pitch_bar_Y_ = pitch_bar_Y;
+        pitch_bar_height_ = pitch_bar_height;
+        pitch_bar_weight_ = pitch_bar_weight;
+        pitch_max_ = pitch_max;
+        pitch_bar_ = new Bar(pitch_bar_X_, pitch_bar_Y_, pitch_bar_weight_, pitch_bar_height_, UI_Color_Green, UI_Color_Pink, true);
+        Init();
+    }
+    void GimbalGUI::Init() {
+        UI_->CircleDraw(&speed_circle_, "gc", UI_Graph_Add, 1, UI_Color_Yellow, 2, gimbal_speed_center_X_, gimbal_speed_center_Y_, gimbal_speed_circle_R_);
+        UI_->CircleDraw(&speed_center_,"gd",UI_Graph_Add,2,UI_Color_Green,10,gimbal_speed_center_X_,gimbal_speed_center_Y_,5);
+        UI_->LineDraw(&speed_x_axis_, "gx", UI_Graph_Add, 3, UI_Color_Pink, 2, gimbal_speed_center_X_ - gimbal_speed_circle_R_, gimbal_speed_center_Y_,
+                      gimbal_speed_center_X_ + gimbal_speed_circle_R_, gimbal_speed_center_Y_);
+        UI_->LineDraw(&speed_y_axis_, "gy", UI_Graph_Add, 3, UI_Color_Pink, 2, gimbal_speed_center_X_, gimbal_speed_center_Y_ - gimbal_speed_circle_R_,
+                      gimbal_speed_center_X_, gimbal_speed_center_Y_ + gimbal_speed_circle_R_);
+        UI_->CircleDraw(&calibration_flag_, "cal", UI_Graph_Add, 0, UI_Color_Pink, 14, 960 + 925, 540 + 330, 7);
+        UI_->IntDraw(&speed_x_val_, "gvx", UI_Graph_Add, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_+gimbal_speed_circle_R_+8, gimbal_speed_center_Y_ - 2, 0);
+        UI_->IntDraw(&speed_y_val_, "gvy", UI_Graph_Add, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_-5, gimbal_speed_center_Y_ -gimbal_speed_circle_R_-10, 0);
+        UI_->GraphRefresh(7, speed_circle_, speed_center_, speed_x_axis_, speed_y_axis_, speed_x_val_, speed_y_val_, calibration_flag_);
+    }
+
+    void GimbalGUI::Delete() {
+        UI_->CircleDraw(&speed_circle_, "gc", UI_Graph_Del, 1, UI_Color_Yellow, 2, gimbal_speed_center_X_, gimbal_speed_center_Y_, gimbal_speed_circle_R_);
+        UI_->CircleDraw(&speed_center_,"gd",UI_Graph_Del,2,UI_Color_Green,10,gimbal_speed_center_X_,gimbal_speed_center_Y_,5);
+        UI_->LineDraw(&speed_x_axis_, "gx", UI_Graph_Del, 3, UI_Color_Pink, 2, gimbal_speed_center_X_ - gimbal_speed_circle_R_, gimbal_speed_center_Y_,
+                      gimbal_speed_center_X_ + gimbal_speed_circle_R_, gimbal_speed_center_Y_);
+        UI_->LineDraw(&speed_y_axis_, "gy", UI_Graph_Del, 3, UI_Color_Pink, 2, gimbal_speed_center_X_, gimbal_speed_center_Y_ - gimbal_speed_circle_R_,
+                      gimbal_speed_center_X_, gimbal_speed_center_Y_ + gimbal_speed_circle_R_);
+        UI_->CircleDraw(&calibration_flag_, "cal", UI_Graph_Del, 0, UI_Color_Pink, 14, 960 + 925, 540 + 330, 7);
+        UI_->IntDraw(&speed_x_val_, "gvx", UI_Graph_Del, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_+gimbal_speed_circle_R_+8, gimbal_speed_center_Y_ - 2, 0);
+        UI_->IntDraw(&speed_y_val_, "gvy", UI_Graph_Del, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_-5, gimbal_speed_center_Y_ -gimbal_speed_circle_R_-10, 0);
+        UI_->GraphRefresh(7, speed_circle_, speed_center_, speed_x_axis_, speed_y_axis_, speed_x_val_, speed_y_val_, calibration_flag_);
+    }
+
+    void GimbalGUI::Init2(){
+        pitch_bar_val_ = pitch_bar_->Init();
+        pitch_bar_frame_ = pitch_bar_->InitFrame();
+        UI_->GraphRefresh(2, pitch_bar_frame_, pitch_bar_val_);
+    }
+    void GimbalGUI::Delete2(){
+        pitch_bar_->Delete();
+        pitch_bar_->DeleteFrame();
+        UI_->GraphRefresh(2, pitch_bar_frame_, pitch_bar_val_);
+    }
+
+    void GimbalGUI::Update(float vpitch, float vyaw, float pitch, float yaw, bool flags) {
+        UNUSED(yaw);
+        if (flags) {
+            UI_->CircleDraw(&calibration_flag_, "cal", UI_Graph_Change, 0, UI_Color_Green, 14, 960 + 925, 540 + 330, 7);
+        }
+        else {
+            UI_->CircleDraw(&calibration_flag_, "cal", UI_Graph_Change, 0, UI_Color_Pink, 14, 960 + 925, 540 + 330, 7);
+        }
+        UI_->CircleDraw(&speed_center_,"gd",UI_Graph_Change,2,UI_Color_Green,10,gimbal_speed_center_X_+(int16_t)(vyaw*gimbal_speed_circle_R_),gimbal_speed_center_Y_+(int16_t)(vpitch*gimbal_speed_circle_R_),5);
+        UI_->IntDraw(&speed_x_val_, "gvx", UI_Graph_Change, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_+gimbal_speed_circle_R_+8, gimbal_speed_center_Y_ - 2, vyaw);
+        UI_->IntDraw(&speed_y_val_, "gvy", UI_Graph_Change, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_-5, gimbal_speed_center_Y_ -gimbal_speed_circle_R_-10, vpitch);
+        float pitch_percent = 1-(pitch + pitch_max_)/(2*pitch_max_);
+        pitch_bar_val_ = pitch_bar_->Update(pitch_percent);
+        UI_->GraphRefresh(5, speed_center_,speed_x_val_,speed_y_val_,calibration_flag_,pitch_bar_val_);
+    }
 }  // namespace communication

@@ -4,8 +4,10 @@ control::MotorCANBase* fl_motor = nullptr;
 control::MotorCANBase* fr_motor = nullptr;
 control::MotorCANBase* bl_motor = nullptr;
 control::MotorCANBase* br_motor = nullptr;
-
 control::Chassis* chassis = nullptr;
+float chassis_vx = 0;
+float chassis_vy = 0;
+float chassis_vz = 0;
 void chassisTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
@@ -106,6 +108,8 @@ void chassisTask(void* arg) {
             offset_yaw -= keyboard_step;
         }
         offset_yaw = clip<float>(offset_yaw, -660, 660);
+        chassis_vx = vx_set_org;
+        chassis_vy = vy_set_org;
         vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
@@ -141,7 +145,7 @@ void chassisTask(void* arg) {
                 // Not Support
                 kill_chassis();
         }
-
+        chassis_vz = vz_set;
         control::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(CHASSIS_OS_DELAY);
     }

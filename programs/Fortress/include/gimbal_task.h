@@ -26,5 +26,6 @@ extern control::Gimbal* gimbal;
 extern control::MotorCANBase* pitch_motor;
 extern control::MotorCANBase* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
+extern float pitch_diff, yaw_diff;
 void init_gimbal();
 void kill_gimbal();

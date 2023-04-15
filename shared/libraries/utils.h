@@ -112,6 +112,23 @@ int sign(T value, T zero) {
     return value < zero ? -1 : (value > zero ? 1 : 0);
 }
 
+template <typename T>
+class EdgeDetector {
+  public:
+    EdgeDetector(T initial);
+    void input(T signal);
+    bool edge();
+    bool posEdge();
+    bool negEdge();
+
+  private:
+    int prev_;
+    bool posEdge_;
+    bool negEdge_;
+};
+
+
+
 class BoolEdgeDetector {
   public:
     BoolEdgeDetector(bool initial);
@@ -140,6 +157,7 @@ class FloatEdgeDetector {
     bool posEdge_;
     bool negEdge_;
 };
+
 class RampSource {
   public:
     RampSource(float initial, float min, float max, float step);
