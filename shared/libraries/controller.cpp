@@ -74,10 +74,10 @@ namespace control {
 
     float ConstrainedPID::ComputeOutput(float error) {
         cumulated_err_ += error;
-        last_err_ = error;
         cumulated_err_ = clip<float>(cumulated_err_, -max_iout_ / ki_, max_iout_ / ki_);
         float out = kp_ * error + ki_ * cumulated_err_ + kd_ * (error - last_err_);
         out = clip<float>(out, -max_out_, max_out_);
+        last_err_ = error;
         return out;
     }
 
