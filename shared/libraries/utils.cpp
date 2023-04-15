@@ -1,5 +1,36 @@
 #include "utils.h"
 
+template <typename T>
+EdgeDetector<T>::EdgeDetector(T initial) {
+    prev_ = initial;
+}
+
+template <typename T>
+void EdgeDetector<T>::input(T signal) {
+    posEdge_ = false;
+    negEdge_ = false;
+    if (prev_ < signal)
+        posEdge_ = true;
+    else if (prev_ > signal)
+        negEdge_ = true;
+    prev_ = signal;
+}
+
+template <typename T>
+bool EdgeDetector<T>::edge() {
+    return posEdge_ || negEdge_;
+}
+
+template <typename T>
+bool EdgeDetector<T>::posEdge() {
+    return posEdge_;
+}
+
+template <typename T>
+bool EdgeDetector<T>::negEdge() {
+    return negEdge_;
+}
+
 BoolEdgeDetector::BoolEdgeDetector(bool initial) {
     prev_ = initial;
 }

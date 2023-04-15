@@ -2,6 +2,9 @@
 
 osThreadId_t uiTaskHandle;
 communication::UserInterface* UI = nullptr;
+communication::ChassisGUI* chassisGUI = nullptr;
+communication::CrossairGUI* crossairGui = nullptr;
+communication::GimbalGUI* gimbalGUI = nullptr;
 void uiTask(void* arg) {
     UNUSED(arg);
 
@@ -12,18 +15,8 @@ void uiTask(void* arg) {
     UI->SetID(referee->game_robot_status.robot_id);
     osDelay(UI_OS_DELAY);
 
-    communication::graphic_data_t graphGimbal;
-    communication::graphic_data_t graphChassis;
-    communication::graphic_data_t graphArrow;
-    communication::graphic_data_t graphCali;
-    communication::graphic_data_t graphEmpty2;
-    communication::graphic_data_t graphCrosshair1;
-    communication::graphic_data_t graphCrosshair2;
-    communication::graphic_data_t graphCrosshair3;
-    communication::graphic_data_t graphCrosshair4;
-    communication::graphic_data_t graphCrosshair5;
-    communication::graphic_data_t graphCrosshair6;
-    communication::graphic_data_t graphCrosshair7;
+
+
     communication::graphic_data_t graphBarFrame;
     communication::graphic_data_t graphBar;
     communication::graphic_data_t graphPercent;
@@ -31,15 +24,12 @@ void uiTask(void* arg) {
     communication::graphic_data_t graphMode;
     communication::graphic_data_t graphWheel;
     // Initialize chassis GUI
-    UI->ChassisGUIInit(&graphChassis, &graphArrow, &graphGimbal, &graphCali, &graphEmpty2);
-    UI->GraphRefresh(5, graphChassis, graphArrow, graphGimbal, graphCali, graphEmpty2);
+    chassisGUI = new communication::ChassisGUI(UI);
     osDelay(100);
-
+    chassisGUI->Init2();
+    osDelay(100);
     // Initialize crosshair GUI
-    UI->CrosshairGUI(&graphCrosshair1, &graphCrosshair2, &graphCrosshair3, &graphCrosshair4,
-                     &graphCrosshair5, &graphCrosshair6, &graphCrosshair7);
-    UI->GraphRefresh(7, graphCrosshair1, graphCrosshair2, graphCrosshair3, graphCrosshair4,
-                     graphCrosshair5, graphCrosshair6, graphCrosshair7);
+    crossairGui = new communication::CrossairGUI(UI);
     osDelay(100);
 
     // Initialize supercapacitor GUI
@@ -51,6 +41,11 @@ void uiTask(void* arg) {
     UI->CapGUICharInit(&graphPercent);
     UI->CharRefresh(graphPercent, UI->getPercentStr(), UI->getPercentLen());
     osDelay(100);
+
+    // Initialize Gimbal GUI
+    gimbalGUI = new communication::GimbalGUI(UI);
+    osDelay(100);
+    gimbalGUI->Init2();
 
     // Initialize self-diagnosis GUI
     char diagStr[29] = "";
@@ -96,15 +91,16 @@ void uiTask(void* arg) {
 
     float j = 1;
     float relative_angle = 0;
-    bool calibration_flag = false;
+    float pitch_angle = 0;
+//    bool calibration_flag = false;
     while (true) {
         //     lidar_flag = LIDAR->startMeasure();
 
         // Update chassis GUI
-        calibration_flag = imu->CaliDone();
+        // calibration_flag = imu->CaliDone();
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-        UI->ChassisGUIUpdate(relative_angle, calibration_flag);
-        UI->GraphRefresh(5, graphChassis, graphArrow, graphGimbal, graphCali, graphEmpty2);
+        pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
+        chassisGUI->Update(chassis_vx/chassis_vx_max,chassis_vy/chassis_vy_max,relative_angle);
         osDelay(UI_OS_DELAY);
 
         // Update supercapacitor GUI
@@ -116,6 +112,10 @@ void uiTask(void* arg) {
         // Update supercapacitor string GUI
         UI->CapGUICharUpdate();
         UI->CharRefresh(graphPercent, UI->getPercentStr(), UI->getPercentLen());
+        osDelay(UI_OS_DELAY);
+
+        // Update Gimbal GUI
+        gimbalGUI->Update(pitch_diff/PI, yaw_diff/PI, pitch_angle, relative_angle,imu->CaliDone());
         osDelay(UI_OS_DELAY);
 
         // Update current mode GUI

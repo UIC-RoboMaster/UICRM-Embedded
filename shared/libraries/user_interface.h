@@ -111,6 +111,7 @@ namespace communication {
         int GraphRefresh(int cnt, ...);
         int CharRefresh(graphic_data_t image, char* theString, int len);
 
+
         void ChassisGUIInit(graphic_data_t* chassis, graphic_data_t* arrow, graphic_data_t* gimbal,
                             graphic_data_t* empty1, graphic_data_t* empty2);
         void ChassisGUIUpdate(float relative, bool flag);
@@ -178,4 +179,115 @@ namespace communication {
         int modeStartY_ = 45;
     };
 
+    class ChassisGUI {
+      public:
+        ChassisGUI(UserInterface* UI, int16_t chassis_X=1300,  int16_t chassis_Y=120, int16_t speed_center_X=200,
+                    int16_t speed_center_Y=780);
+        void Init();
+        void Delete();
+        void Init2();
+        void Delete2();
+        void Update(float speed_x,float speed_y, float relative);
+
+      private:
+        UserInterface* UI_;
+        int16_t chassis_X_;
+        int16_t chassis_Y_;
+        int16_t gimbalLen_;
+        int16_t chassisLen_;
+        int16_t speed_center_X_;
+        int16_t speed_center_Y_;
+        int16_t speed_circle_R_;
+        graphic_data_t chassis_;
+        graphic_data_t arrow_;
+        graphic_data_t gimbal_;
+        graphic_data_t speed_circle_;
+        graphic_data_t speed_center_;
+        graphic_data_t speed_x_axis_;
+        graphic_data_t speed_y_axis_;
+        graphic_data_t speed_x_val_;
+        graphic_data_t speed_y_val_;
+    };
+
+    class CrossairGUI{
+      public:
+        CrossairGUI(UserInterface* UI);
+        void Init();
+        void Delete();
+      private:
+        UserInterface* UI_;
+        graphic_data_t crosshair1_;
+        graphic_data_t crosshair2_;
+        graphic_data_t crosshair3_;
+        graphic_data_t crosshair4_;
+        graphic_data_t crosshair5_;
+        graphic_data_t crosshair6_;
+        graphic_data_t crosshair7_;
+        int16_t centerX_;
+        int16_t centerY_;
+    };
+
+    class Bar{
+        public:
+          Bar(int16_t barStartX=1500, int16_t barStartY=350, int16_t barWidth=200, int16_t barHeight=50,uint8_t color=UI_Color_Orange,uint8_t frame_color=UI_Color_Pink,bool isVertical=false);
+          graphic_data_t Init();
+          void Delete();
+          graphic_data_t InitFrame();
+          void DeleteFrame();
+          graphic_data_t Update(float percent);
+          static uint8_t barcount_;
+        private:
+
+          uint8_t barID_;
+          int16_t barStartX_;
+          int16_t barStartY_;
+          int16_t barWidth_;
+          int16_t barHeight_;
+          bool isVertical_;
+          float percent_;
+          uint8_t color_;
+          uint8_t frame_color_;
+          graphic_data_t barFrame_;
+          graphic_data_t bar_;
+          char name_[10];
+          char name_frame_[10];
+    };
+
+    class GimbalGUI{
+        public:
+          GimbalGUI(UserInterface* UI,
+                    int16_t gimbal_speed_center_X=1620,
+                    int16_t gimbal_speed_center_Y=780,
+                    int16_t gimbal_speed_center_R=100,
+                    int16_t pitch_bar_X = 1800,
+                    int16_t pitch_bar_Y = 440,
+                    int16_t pitch_bar_height = 400,
+                    int16_t pitch_bar_weight = 50,
+                    float pitch_max = 0.4253f);
+          void Init();
+          void Init2();
+          void Delete();
+          void Delete2();
+          void Update(float vpitch, float vyaw,float pitch,float yaw, bool flags);
+        private:
+          UserInterface* UI_;
+          int16_t gimbal_speed_center_X_;
+          int16_t gimbal_speed_center_Y_;
+          int16_t gimbal_speed_circle_R_;
+          int16_t pitch_bar_X_;
+          int16_t pitch_bar_Y_;
+          int16_t pitch_bar_height_;
+          int16_t pitch_bar_weight_;
+          float pitch_max_;
+          graphic_data_t speed_circle_;
+          graphic_data_t speed_center_;
+          graphic_data_t speed_x_axis_;
+          graphic_data_t speed_y_axis_;
+          graphic_data_t speed_x_val_;
+          graphic_data_t speed_y_val_;
+          graphic_data_t calibration_flag_;
+          Bar* pitch_bar_;
+          graphic_data_t pitch_bar_frame_;
+          graphic_data_t pitch_bar_val_;
+    };
 }  // namespace communication

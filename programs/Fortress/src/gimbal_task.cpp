@@ -6,7 +6,7 @@ control::MotorCANBase* pitch_motor = nullptr;
 control::MotorCANBase* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
-
+float pitch_diff, yaw_diff;
 void gimbalTask(void* arg) {
     UNUSED(arg);
 
@@ -47,7 +47,7 @@ void gimbalTask(void* arg) {
     pitch_curr = imu->INS_angle[2];
     yaw_curr = imu->INS_angle[0];
     float pitch_target = 0, yaw_target = 0;
-    float pitch_diff, yaw_diff;
+
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();
