@@ -112,13 +112,7 @@ namespace communication {
         int CharRefresh(graphic_data_t image, char* theString, int len);
 
 
-        void ChassisGUIInit(graphic_data_t* chassis, graphic_data_t* arrow, graphic_data_t* gimbal,
-                            graphic_data_t* empty1, graphic_data_t* empty2);
-        void ChassisGUIUpdate(float relative, bool flag);
-        void CrosshairGUI(graphic_data_t* crosshair1, graphic_data_t* crosshair2,
-                          graphic_data_t* crosshair3, graphic_data_t* crosshair4,
-                          graphic_data_t* crosshair5, graphic_data_t* crosshair6,
-                          graphic_data_t* crosshair7);
+
         void CapGUIInit(graphic_data_t* barFrame, graphic_data_t* bar);
         void CapGUIUpdate(float cap);  // cap 0 - 1
         void CapGUICharInit(graphic_data_t* percent);
@@ -168,7 +162,7 @@ namespace communication {
         int gimbalLen_;
         int chassisLen_;
         int barStartX_ = 1500;
-        int barStartY_ = 350;
+        int barStartY_ = 380;
         char percentStr_[30];
         int percentLen_;
         float cap_;
@@ -231,10 +225,10 @@ namespace communication {
         public:
           Bar(int16_t barStartX=1500, int16_t barStartY=350, int16_t barWidth=200, int16_t barHeight=50,uint8_t color=UI_Color_Orange,uint8_t frame_color=UI_Color_Pink,bool isVertical=false);
           graphic_data_t Init();
-          void Delete();
+          graphic_data_t Delete();
           graphic_data_t InitFrame();
-          void DeleteFrame();
-          graphic_data_t Update(float percent);
+          graphic_data_t DeleteFrame();
+          graphic_data_t Update(float percent, int8_t color=-1);
           static uint8_t barcount_;
         private:
 
@@ -249,8 +243,8 @@ namespace communication {
           uint8_t frame_color_;
           graphic_data_t barFrame_;
           graphic_data_t bar_;
-          char name_[10];
-          char name_frame_[10];
+          char name_[15];
+          char name_frame_[15];
     };
 
     class GimbalGUI{
@@ -262,8 +256,9 @@ namespace communication {
                     int16_t pitch_bar_X = 1800,
                     int16_t pitch_bar_Y = 440,
                     int16_t pitch_bar_height = 400,
-                    int16_t pitch_bar_weight = 50,
+                    int16_t pitch_bar_weight = 30,
                     float pitch_max = 0.4253f);
+          ~GimbalGUI();
           void Init();
           void Init2();
           void Delete();
@@ -289,5 +284,45 @@ namespace communication {
           Bar* pitch_bar_;
           graphic_data_t pitch_bar_frame_;
           graphic_data_t pitch_bar_val_;
+    };
+
+    typedef void (*delay_t)(uint32_t);
+
+    class CapGUI{
+        public:
+          CapGUI(UserInterface* UI,
+                 char* Cap_name,
+                 int16_t Cap_bar_X = 1500,
+                 int16_t Cap_bar_Y = 380,
+                 int16_t Cap_bar_width = 310,
+                 int16_t Cap_bar_height = 20
+                 );
+          ~CapGUI();
+          void Init();
+          void InitName();
+          void Delete();
+          void DeleteName();
+          void UpdateBulk(float percent,graphic_data_t* bar= nullptr,graphic_data_t* cap_percent= nullptr);
+          void Update(float Percent);
+        private:
+          UserInterface* UI_;
+          Bar* cap_bar_;
+          graphic_data_t barFrame_;
+          graphic_data_t bar_;
+          graphic_data_t cap_percent_;
+          char cap_percent_name_[15];
+          graphic_data_t cap_name_;
+          char cap_name_name_[15];
+          graphic_data_t empty_;
+          char empty_name_[15];
+          char* cap_name_str_;
+          delay_t delay_function_;
+          int16_t cap_bar_X_;
+          int16_t cap_bar_Y_;
+          int16_t cap_bar_height_;
+          int16_t cap_bar_width_;
+          int8_t cap_ID_;
+          static uint8_t cap_count_;
+          int8_t name_length_;
     };
 }  // namespace communication

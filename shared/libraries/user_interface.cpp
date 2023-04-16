@@ -7,6 +7,7 @@
 #include <string>
 
 #include "arm_math.h"
+#include "utils.h"
 
 namespace communication {
     UserInterface::UserInterface(bsp::UART* uart, communication::Referee* referee)
@@ -682,9 +683,10 @@ namespace communication {
         return bar_;
     }
 
-    void Bar::Delete() {
+    graphic_data_t Bar::Delete() {
         communication::UserInterface::LineDraw(&bar_, name_, UI_Graph_Del, 0, color_, 2, barStartX_+5, barStartY_+5,
                                                barStartX_+barWidth_-5, barStartY_ + barHeight_-5);
+        return bar_;
     }
 
     graphic_data_t Bar::InitFrame() {
@@ -695,13 +697,16 @@ namespace communication {
         return barFrame_;
     }
 
-    void Bar::DeleteFrame() {
+    graphic_data_t Bar::DeleteFrame() {
         communication::UserInterface::RectangleDraw(&barFrame_, name_frame_, UI_Graph_Del, 0, frame_color_, 2, barStartX_, barStartY_,
                                                     barStartX_+barWidth_, barStartY_ + barHeight_);
+        return barFrame_;
     }
 
-    graphic_data_t Bar::Update(float percent) {
+    graphic_data_t Bar::Update(float percent, int8_t color) {
         percent_=percent;
+        if(color!=-1)
+            color_=color;
         if (isVertical_) {
             communication::UserInterface::LineDraw(&bar_, name_, UI_Graph_Change, 0, color_, barWidth_-10, barStartX_+barWidth_/2, barStartY_+5,
                                                    barStartX_+barWidth_/2, barStartY_ + 5 + (barHeight_ - 10) * percent_);
@@ -732,6 +737,10 @@ namespace communication {
         pitch_max_ = pitch_max;
         pitch_bar_ = new Bar(pitch_bar_X_, pitch_bar_Y_, pitch_bar_weight_, pitch_bar_height_, UI_Color_Green, UI_Color_Pink, true);
         Init();
+    }
+
+    GimbalGUI::~GimbalGUI() {
+        delete pitch_bar_;
     }
     void GimbalGUI::Init() {
         UI_->CircleDraw(&speed_circle_, "gc", UI_Graph_Add, 1, UI_Color_Yellow, 2, gimbal_speed_center_X_, gimbal_speed_center_Y_, gimbal_speed_circle_R_);
@@ -765,13 +774,15 @@ namespace communication {
         UI_->GraphRefresh(2, pitch_bar_frame_, pitch_bar_val_);
     }
     void GimbalGUI::Delete2(){
-        pitch_bar_->Delete();
-        pitch_bar_->DeleteFrame();
+        pitch_bar_val_ = pitch_bar_->Delete();
+        pitch_bar_frame_ = pitch_bar_->DeleteFrame();
         UI_->GraphRefresh(2, pitch_bar_frame_, pitch_bar_val_);
     }
 
     void GimbalGUI::Update(float vpitch, float vyaw, float pitch, float yaw, bool flags) {
         UNUSED(yaw);
+        vpitch = clip<float>(vpitch, -1, 1);
+        vyaw = clip<float>(vyaw, -1, 1);
         if (flags) {
             UI_->CircleDraw(&calibration_flag_, "cal", UI_Graph_Change, 0, UI_Color_Green, 14, 960 + 925, 540 + 330, 7);
         }
@@ -779,10 +790,113 @@ namespace communication {
             UI_->CircleDraw(&calibration_flag_, "cal", UI_Graph_Change, 0, UI_Color_Pink, 14, 960 + 925, 540 + 330, 7);
         }
         UI_->CircleDraw(&speed_center_,"gd",UI_Graph_Change,2,UI_Color_Green,10,gimbal_speed_center_X_+(int16_t)(vyaw*gimbal_speed_circle_R_),gimbal_speed_center_Y_+(int16_t)(vpitch*gimbal_speed_circle_R_),5);
-        UI_->IntDraw(&speed_x_val_, "gvx", UI_Graph_Change, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_+gimbal_speed_circle_R_+8, gimbal_speed_center_Y_ - 2, vyaw);
-        UI_->IntDraw(&speed_y_val_, "gvy", UI_Graph_Change, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_-5, gimbal_speed_center_Y_ -gimbal_speed_circle_R_-10, vpitch);
+        UI_->IntDraw(&speed_x_val_, "gvx", UI_Graph_Change, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_+gimbal_speed_circle_R_+8, gimbal_speed_center_Y_ - 2, (int32_t)(vyaw*100));
+        UI_->IntDraw(&speed_y_val_, "gvy", UI_Graph_Change, 2, UI_Color_Green, 10, 2, gimbal_speed_center_X_-5, gimbal_speed_center_Y_ -gimbal_speed_circle_R_-10, (int32_t)(vpitch*100));
         float pitch_percent = 1-(pitch + pitch_max_)/(2*pitch_max_);
         pitch_bar_val_ = pitch_bar_->Update(pitch_percent);
         UI_->GraphRefresh(5, speed_center_,speed_x_val_,speed_y_val_,calibration_flag_,pitch_bar_val_);
+    }
+
+    uint8_t CapGUI::cap_count_ = 0;
+
+    CapGUI::CapGUI(UserInterface* UI,
+                   char* cap_name,
+                   int16_t cap_bar_X,
+                   int16_t cap_bar_Y,
+                   int16_t cap_bar_width,
+                   int16_t cap_bar_height):UI_(UI),cap_name_str_(cap_name){
+        cap_bar_X_ = cap_bar_X;
+        cap_bar_Y_ = cap_bar_Y;
+        cap_bar_height_ = cap_bar_height;
+        cap_bar_width_ = cap_bar_width;
+        cap_bar_ = new Bar(cap_bar_X_,cap_bar_Y_, cap_bar_width_, cap_bar_height_,UI_Color_Green,UI_Color_Yellow);
+        cap_ID_ = CapGUI::cap_count_;
+        CapGUI::cap_count_++;
+        Init();
+    }
+
+    void CapGUI::Init(){
+
+        name_length_ = strlen(cap_name_str_);
+        bar_ = cap_bar_->Init();
+        barFrame_ = cap_bar_->InitFrame();
+        memset(cap_name_name_, ' ', 15);
+        memset(empty_name_, ' ', 15);
+        memset(cap_percent_name_, ' ', 15);
+        snprintf(cap_name_name_, 15, "V%d", cap_ID_);
+        snprintf(cap_percent_name_, 15, "v%d", cap_ID_);
+        snprintf(empty_name_, 15, "W%d", cap_ID_);
+        UI_->CharDraw(&cap_name_,
+                      cap_name_name_,
+                      UI_Graph_Add,
+                      1,
+                      UI_Color_Yellow, 15, name_length_+5, 2, cap_bar_X_, cap_bar_Y_-10);
+        UI_->IntDraw(&cap_percent_,
+                     cap_percent_name_,
+                     UI_Graph_Add,
+                     3,
+                     UI_Color_Yellow, 15, 2, cap_bar_X_+(name_length_+1)*15, cap_bar_Y_-10, 100);
+
+        UI_->CircleDraw(&empty_,
+                        empty_name_,
+                        UI_Graph_Add,
+                        0,
+                        UI_Color_Green, 0, 0, 0, 0);
+        UI_->GraphRefresh(5, barFrame_, bar_, cap_percent_, cap_name_, empty_);
+    }
+    void CapGUI::Delete(){
+        bar_ = cap_bar_->Delete();
+        barFrame_ = cap_bar_->DeleteFrame();
+        UI_->CharDraw(&cap_name_,
+                      cap_name_name_,
+                      UI_Graph_Del,
+                      1,
+                      UI_Color_Yellow, 15, name_length_+5, 2, cap_bar_X_, cap_bar_Y_-10);
+        UI_->IntDraw(&cap_percent_,
+                     cap_percent_name_,
+                     UI_Graph_Del,
+                     3,
+                     UI_Color_Yellow, 15, 2, cap_bar_X_+(name_length_+1)*15, cap_bar_Y_-10, 100);
+        UI_->CircleDraw(&empty_,
+                        empty_name_,
+                        UI_Graph_Del,
+                        0,
+                        UI_Color_Green, 0, 0, 0, 0);
+        UI_->GraphRefresh(5, barFrame_, bar_, cap_name_, cap_percent_, empty_);
+    }
+    void CapGUI::InitName(){
+        char theRealName[15];
+        snprintf(theRealName, 15, "%s     %%", cap_name_str_);
+        UI_->CharDraw(&cap_name_,
+                      cap_name_name_,
+                      UI_Graph_Change,
+                      1,
+                      UI_Color_Yellow, 15, name_length_+5, 2, cap_bar_X_, cap_bar_Y_-10);
+        UI_->CharRefresh(cap_name_,theRealName,strlen(theRealName));
+    }
+    void CapGUI::DeleteName() {
+
+    }
+    void CapGUI::UpdateBulk(float percent,graphic_data_t* bar,graphic_data_t* cap_percent){
+        percent = clip<float>(percent, 0, 1);
+        if(percent> 0.8)
+            bar_ = cap_bar_->Update(percent,UI_Color_Green);
+        else if(percent> 0.2)
+            bar_ = cap_bar_->Update(percent,UI_Color_Orange);
+        else
+            bar_ = cap_bar_->Update(percent,UI_Color_Pink);
+        UI_->IntDraw(&cap_percent_,
+                     cap_percent_name_,
+                     UI_Graph_Change,
+                     3,
+                     UI_Color_Yellow, 15, 2, cap_bar_X_+(name_length_+1)*15, cap_bar_Y_-10, (int32_t)(100*percent));
+        if(bar != nullptr)
+            *bar = bar_;
+        if(cap_percent != nullptr)
+            *cap_percent = cap_percent_;
+    }
+    void CapGUI::Update(float percent){
+        UpdateBulk(percent);
+        UI_->GraphRefresh(2, bar_, cap_percent_);
     }
 }  // namespace communication

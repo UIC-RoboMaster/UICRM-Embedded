@@ -5,6 +5,7 @@ communication::UserInterface* UI = nullptr;
 communication::ChassisGUI* chassisGUI = nullptr;
 communication::CrossairGUI* crossairGui = nullptr;
 communication::GimbalGUI* gimbalGUI = nullptr;
+communication::CapGUI* batteryGUI = nullptr;
 void uiTask(void* arg) {
     UNUSED(arg);
 
@@ -17,41 +18,44 @@ void uiTask(void* arg) {
 
 
 
-    communication::graphic_data_t graphBarFrame;
-    communication::graphic_data_t graphBar;
-    communication::graphic_data_t graphPercent;
+//    communication::graphic_data_t graphBarFrame;
+//    communication::graphic_data_t graphBar;
+//    communication::graphic_data_t graphPercent;
     communication::graphic_data_t graphDiag;
     communication::graphic_data_t graphMode;
     communication::graphic_data_t graphWheel;
     // Initialize chassis GUI
     chassisGUI = new communication::ChassisGUI(UI);
-    osDelay(100);
+    osDelay(110);
     chassisGUI->Init2();
-    osDelay(100);
+    osDelay(110);
     // Initialize crosshair GUI
     crossairGui = new communication::CrossairGUI(UI);
-    osDelay(100);
+    osDelay(110);
 
     // Initialize supercapacitor GUI
-    UI->CapGUIInit(&graphBarFrame, &graphBar);
-    UI->GraphRefresh(2, graphBarFrame, graphBar);
-    osDelay(100);
-
+//    UI->CapGUIInit(&graphBarFrame, &graphBar);
+//    UI->GraphRefresh(2, graphBarFrame, graphBar);
+    char batteryStr[15] = "BATTERY";
+    batteryGUI = new communication::CapGUI(UI,batteryStr);
+    osDelay(110);
+    batteryGUI->InitName();
+    osDelay(110);
     // Initialize Supercapacitor string GUI
-    UI->CapGUICharInit(&graphPercent);
-    UI->CharRefresh(graphPercent, UI->getPercentStr(), UI->getPercentLen());
-    osDelay(100);
+//    UI->CapGUICharInit(&graphPercent);
+//    UI->CharRefresh(graphPercent, UI->getPercentStr(), UI->getPercentLen());
+    osDelay(110);
 
     // Initialize Gimbal GUI
     gimbalGUI = new communication::GimbalGUI(UI);
-    osDelay(100);
+    osDelay(110);
     gimbalGUI->Init2();
 
     // Initialize self-diagnosis GUI
     char diagStr[29] = "";
     UI->DiagGUIInit(&graphDiag, 29);
     UI->CharRefresh(graphDiag, diagStr, 2);
-    osDelay(100);
+    osDelay(110);
 
     // Initialize current mode GUI
     char followModeStr[15] = "FOLLOW MODE";
@@ -59,7 +63,7 @@ void uiTask(void* arg) {
     uint32_t modeColor = UI_Color_Orange;
     UI->ModeGUIInit(&graphMode);
     UI->CharRefresh(graphMode, followModeStr, sizeof followModeStr);
-    osDelay(100);
+    osDelay(110);
 
 
 
@@ -68,7 +72,7 @@ void uiTask(void* arg) {
     char wheelOffStr[15] = "FLYWHEEL OFF";
     UI->WheelGUIInit(&graphWheel);
     UI->CharRefresh(graphWheel, wheelOffStr, sizeof wheelOffStr);
-    osDelay(100);
+    osDelay(110);
 
     float relative_angle = 0;
     float pitch_angle = 0;
@@ -82,18 +86,12 @@ void uiTask(void* arg) {
         osDelay(UI_OS_DELAY);
 
         power_percent = battery_vol->GetBatteryPercentage();
-        // Update Power GUI
-        UI->CapGUIUpdate(power_percent);
-        UI->GraphRefresh(1, graphBar);
-        osDelay(UI_OS_DELAY);
 
-        // Update supercapacitor string GUI
-        UI->CapGUICharUpdate();
-        UI->CharRefresh(graphPercent, UI->getPercentStr(), UI->getPercentLen());
+        batteryGUI->Update(power_percent);
         osDelay(UI_OS_DELAY);
 
         // Update Gimbal GUI
-        gimbalGUI->Update(pitch_diff/PI, yaw_diff/PI, pitch_angle, relative_angle,imu->CaliDone());
+        gimbalGUI->Update(pitch_diff*200, -yaw_diff*200, pitch_angle, relative_angle,imu->CaliDone());
         osDelay(UI_OS_DELAY);
 
         // Update current mode GUI
