@@ -480,8 +480,8 @@ namespace communication {
 
     void UserInterface::DiagGUIUpdate(int len) {
         int currY = diagStartY_ - messageCount_ * 20;
-        char name[10];
-        snprintf(name, 10, "M%d", messageCount_);
+        char name[15];
+        snprintf(name, 15, "M%d", messageCount_);
         CharDraw(diag_, name, UI_Graph_Add, 2, UI_Color_Pink, 10, len, 2, diagStartX_, currY);
     }
 
@@ -496,8 +496,8 @@ namespace communication {
     void UserInterface::DiagGUIClear(UserInterface* UI, Referee* referee, graphic_data_t* graph,
                                      int currCount) {
         char str[] = " ";
-        char name[10];
-        snprintf(name, 10, "M%d", currCount);
+        char name[15];
+        snprintf(name, 15, "M%d", currCount);
         UI->CharDraw(diag_, name, UI_Graph_Change, 2, UI_Color_Pink, 10, 30, 2, diagStartX_,
                      diagStartY_ - currCount * 20);
         UI->CharRefresh(*graph, str, 1);
@@ -675,8 +675,8 @@ namespace communication {
 
 
     graphic_data_t Bar::Init() {
-        memset(name_, ' ', 10);
-        snprintf(name_, 10, "b%d", barID_);
+        memset(name_, ' ', 15);
+        snprintf(name_, 15, "b%d", barID_);
         communication::UserInterface::LineDraw(&bar_, name_, UI_Graph_Add, 0, color_, barHeight_-10, barStartX_+barWidth_/2, barStartY_+5,
                                                     barStartX_+barWidth_/2, barStartY_ + barHeight_-5);
         return bar_;
@@ -688,8 +688,8 @@ namespace communication {
     }
 
     graphic_data_t Bar::InitFrame() {
-        memset(name_frame_, ' ', 10);
-        snprintf(name_frame_, 10, "f%d", barID_);
+        memset(name_frame_, ' ', 15);
+        snprintf(name_frame_, 15, "f%d", barID_);
         communication::UserInterface::RectangleDraw(&barFrame_, name_frame_, UI_Graph_Add, 0, frame_color_, 2, barStartX_, barStartY_,
                                                     barStartX_+barWidth_, barStartY_ + barHeight_);
         return barFrame_;
