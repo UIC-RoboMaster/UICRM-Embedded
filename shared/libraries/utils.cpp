@@ -57,6 +57,10 @@ bool BoolEdgeDetector::negEdge() {
     return negEdge_;
 }
 
+bool BoolEdgeDetector::get() {
+    return prev_;
+}
+
 FloatEdgeDetector::FloatEdgeDetector(float initial, float threshold) {
     prev_ = initial;
     threshold_ = threshold;
@@ -95,7 +99,13 @@ RampSource::RampSource(float initial, float min, float max, float step) {
 
 float RampSource::Calc(float input) {
     input_ = input;
-    output_ += step_ * input_;
+    float sub_output = output_ - step_ * input_;
+    float add_output = output_ + step_ * input_;
+    if((output_>max_&&sub_output<output_)||(output_<min_&&add_output>output_)){
+        output_ = sub_output;
+        return output_;
+    }
+    output_ = add_output;
     output_ = min(output_, max_);
     output_ = max(output_, min_);
     return output_;

@@ -136,6 +136,7 @@ class BoolEdgeDetector {
     bool edge();
     bool posEdge();
     bool negEdge();
+    bool get();
 
   private:
     bool prev_;

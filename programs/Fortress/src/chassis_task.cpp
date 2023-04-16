@@ -35,21 +35,25 @@ void chassisTask(void* arg) {
         manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
     manual_mode_pid->Reset();
     float manual_mode_pid_output = 0;
-    const float keyboard_step = 60;
+    const float speed_offset = 330;
     remote::keyboard_t keyboard;
     remote::keyboard_t last_keyboard;
-    RemoteMode current_mode = remote_mode;
-    RemoteMode lastmode;
-    int16_t ch0 = 0;
-    int16_t ch1 = 0;
-    //    int16_t ch2 = 0;
-    //    int16_t ch3 = 0;
-    int16_t ch4 = 0;
-    int16_t last_ch0 = 0;
-    int16_t last_ch1 = 0;
-    //    int16_t last_ch2 = 0;
-    //    int16_t last_ch3 = 0;
-    int16_t last_ch4 = 0;
+    RampSource* vx_ramp = new RampSource(0, -chassis_vx_max/2, chassis_vx_max/2,1.0f/(CHASSIS_OS_DELAY*1000));
+    RampSource* vy_ramp = new RampSource(0, -chassis_vy_max/2, chassis_vy_max/2,1.0f/(CHASSIS_OS_DELAY*1000));
+    RampSource* vz_ramp = new RampSource(0, -chassis_vz_max/2, chassis_vz_max/2,1.0f/(CHASSIS_OS_DELAY*1000));
+    BoolEdgeDetector* w_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* s_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* a_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* d_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* shift_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* q_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* e_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* x_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ch0_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ch1_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ch2_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ch3_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
@@ -57,59 +61,78 @@ void chassisTask(void* arg) {
 
             continue;
         }
-        last_keyboard = keyboard;
-        keyboard = dbus->keyboard;
-        lastmode = current_mode;
-        current_mode = remote_mode;
-        last_ch0 = ch0;
-        last_ch1 = ch1;
-        //        last_ch2 = ch2;
-        //        last_ch3 = ch3;
-        last_ch4 = ch4;
-        ch0 = dbus->ch0;
-        ch1 = dbus->ch1;
-        //        ch2 = dbus->ch2;
-        //        ch3 = dbus->ch3;
-        ch4 = dbus->ch4;
+        {
+            last_keyboard = keyboard;
+            keyboard = dbus->keyboard;
+        }
+        {
+            w_edge->input(keyboard.bit.W);
+            s_edge->input(keyboard.bit.S);
+            a_edge->input(keyboard.bit.A);
+            d_edge->input(keyboard.bit.D);
+            shift_edge->input(keyboard.bit.SHIFT);
+            q_edge->input(keyboard.bit.Q);
+            e_edge->input(keyboard.bit.E);
+            x_edge->input(keyboard.bit.X);
+            ch0_edge->input(dbus->ch0!=0);
+            ch1_edge->input(dbus->ch1!=0);
+            ch2_edge->input(dbus->ch2!=0);
+            ch3_edge->input(dbus->ch3!=0);
+            ch4_edge->input(dbus->ch4!=0);
+        }
+
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
-        if (ch0 != 0) {
-            vx_set_org = ch0;
-        } else if ((keyboard.bit.X == 1 && last_keyboard.bit.X == 0) ||
-                   (last_ch0 != 0 && ch0 == 0) || (current_mode != lastmode)) {
+        if (ch0_edge->get()) {
+            vx_set_org = dbus->ch0;
+        } else if (ch0_edge->negEdge() || x_edge->posEdge()) {
             vx_set_org = 0;
-        } else if (keyboard.bit.A == 1 && last_keyboard.bit.A == 0) {
-            vx_set_org -= keyboard_step;
-        } else if (keyboard.bit.D == 1 && last_keyboard.bit.D == 0) {
-            vx_set_org += keyboard_step;
+        } else if (a_edge->get()) {
+            vx_set_org = vx_ramp->Calc(speed_offset);
+        } else if (d_edge->get()) {
+            vx_set_org = vx_ramp->Calc(-speed_offset);
+        } else{
+            if(vx_set_org>0){
+                vx_set_org = vx_ramp->Calc(-speed_offset);
+            }else if(vx_set_org<0){
+                vx_set_org = vx_ramp->Calc(speed_offset);
+            }
         }
-        vx_set_org = clip<float>(vx_set_org, -660, 660);
-        if (ch1 != 0) {
-            vy_set_org = ch1;
-        } else if ((keyboard.bit.X == 1 && last_keyboard.bit.X == 0) ||
-                   (last_ch1 != 0 && ch1 == 0) || (current_mode != lastmode)) {
+        if (ch1_edge->get()) {
+            vy_set_org = dbus->ch1;
+        } else if (ch1_edge->negEdge() || x_edge->posEdge()) {
             vy_set_org = 0;
-        } else if (keyboard.bit.W == 1 && last_keyboard.bit.W == 0) {
-            vy_set_org += keyboard_step;
-        } else if (keyboard.bit.S == 1 && last_keyboard.bit.S == 0) {
-            vy_set_org -= keyboard_step;
+        } else if (w_edge->get()) {
+            vy_set_org = vy_ramp->Calc(speed_offset);
+        } else if (s_edge->get()) {
+            vy_set_org = vy_ramp->Calc(-speed_offset);
+        } else{
+            if(vy_set_org>0){
+                vy_set_org = vy_ramp->Calc(-speed_offset);
+            }else if(vy_set_org<0){
+                vy_set_org = vy_ramp->Calc(speed_offset);
+            }
         }
-        vy_set_org = clip<float>(vy_set_org, -660, 660);
-        if (ch4 != 0) {
-            offset_yaw = ch4;
-        } else if ((keyboard.bit.X == 1 && last_keyboard.bit.X == 0) ||
-                   (last_ch4 != 0 && ch4 == 0) || (current_mode != lastmode)) {
+        if (ch4_edge->get()) {
+            offset_yaw = dbus->ch4;
+        } else if (ch4_edge->negEdge() || x_edge->posEdge()) {
             offset_yaw = 0;
-        } else if (keyboard.bit.Q == 1 && last_keyboard.bit.Q == 0) {
-            offset_yaw += keyboard_step;
-        } else if (keyboard.bit.E == 1 && last_keyboard.bit.E == 0) {
-            offset_yaw -= keyboard_step;
+        } else if (e_edge->get()) {
+            offset_yaw = vz_ramp->Calc(speed_offset);
+        } else if (q_edge->get()) {
+            offset_yaw = vz_ramp->Calc(-speed_offset);
+        } else{
+            if(offset_yaw>0){
+                offset_yaw = vz_ramp->Calc(-speed_offset);
+            }else if(offset_yaw<0){
+                offset_yaw = vz_ramp->Calc(speed_offset);
+            }
         }
-        offset_yaw = clip<float>(offset_yaw, -660, 660);
         chassis_vx = vx_set_org;
         chassis_vy = vy_set_org;
+        chassis_vz = offset_yaw;
         vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
