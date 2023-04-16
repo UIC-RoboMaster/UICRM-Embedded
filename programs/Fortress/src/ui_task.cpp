@@ -6,6 +6,8 @@ communication::ChassisGUI* chassisGUI = nullptr;
 communication::CrossairGUI* crossairGui = nullptr;
 communication::GimbalGUI* gimbalGUI = nullptr;
 communication::CapGUI* batteryGUI = nullptr;
+communication::StringGUI* modeGUI = nullptr;
+communication::StringGUI* wheelGUI = nullptr;
 void uiTask(void* arg) {
     UNUSED(arg);
 
@@ -16,14 +18,8 @@ void uiTask(void* arg) {
     UI->SetID(referee->game_robot_status.robot_id);
     osDelay(UI_OS_DELAY);
 
-
-
-//    communication::graphic_data_t graphBarFrame;
-//    communication::graphic_data_t graphBar;
-//    communication::graphic_data_t graphPercent;
     communication::graphic_data_t graphDiag;
-    communication::graphic_data_t graphMode;
-    communication::graphic_data_t graphWheel;
+
     // Initialize chassis GUI
     chassisGUI = new communication::ChassisGUI(UI);
     osDelay(110);
@@ -34,16 +30,10 @@ void uiTask(void* arg) {
     osDelay(110);
 
     // Initialize supercapacitor GUI
-//    UI->CapGUIInit(&graphBarFrame, &graphBar);
-//    UI->GraphRefresh(2, graphBarFrame, graphBar);
     char batteryStr[15] = "BATTERY";
     batteryGUI = new communication::CapGUI(UI,batteryStr);
     osDelay(110);
     batteryGUI->InitName();
-    osDelay(110);
-    // Initialize Supercapacitor string GUI
-//    UI->CapGUICharInit(&graphPercent);
-//    UI->CharRefresh(graphPercent, UI->getPercentStr(), UI->getPercentLen());
     osDelay(110);
 
     // Initialize Gimbal GUI
@@ -59,19 +49,21 @@ void uiTask(void* arg) {
 
     // Initialize current mode GUI
     char followModeStr[15] = "FOLLOW MODE";
-    // char spinModeStr[15] = "SPIN  MODE";
-    uint32_t modeColor = UI_Color_Orange;
-    UI->ModeGUIInit(&graphMode);
-    UI->CharRefresh(graphMode, followModeStr, sizeof followModeStr);
-    osDelay(110);
-
-
-
+    int8_t modeColor = UI_Color_Orange;
+    modeGUI = new communication::StringGUI(UI, followModeStr, 1230,45,modeColor);
     // Initialize flywheel status GUI
     char wheelOnStr[15] = "FLYWHEEL ON";
     char wheelOffStr[15] = "FLYWHEEL OFF";
-    UI->WheelGUIInit(&graphWheel);
-    UI->CharRefresh(graphWheel, wheelOffStr, sizeof wheelOffStr);
+    wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500,430,UI_Color_Pink);
+    communication::graphic_data_t graphMode;
+    communication::graphic_data_t graphWheel;
+    graphMode = modeGUI->InitBulk();
+    graphWheel = wheelGUI->InitBulk();
+    UI->GraphRefresh(2, graphMode, graphWheel);
+    osDelay(110);
+    modeGUI->InitString();
+    osDelay(110);
+    wheelGUI->InitString();
     osDelay(110);
 
     float relative_angle = 0;
@@ -101,7 +93,7 @@ void uiTask(void* arg) {
                 strcpy(modeStr, "STOP MODE     ");
                 modeColor = UI_Color_Purplish_red;
                 break;
-            case REMOTE_MODE_MANUAL:
+            case REMOTE_MODE_FOLLOW:
                 strcpy(modeStr, "FOLLOW MODE   ");
                 modeColor = UI_Color_Green;
                 break;
@@ -119,16 +111,14 @@ void uiTask(void* arg) {
                 break;
         }
 
-        UI->ModeGuiUpdate(&graphMode, modeColor);
-        UI->CharRefresh(graphMode, modeStr, 15);
+        modeGUI->Update(modeStr, modeColor);
         osDelay(UI_OS_DELAY);
 
         // Update wheel status GUI
         char* wheelStr = shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
         uint32_t wheelColor =
             shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
-        UI->WheelGUIUpdate(&graphWheel, wheelColor);
-        UI->CharRefresh(graphWheel, wheelStr, 15);
+        wheelGUI->Update(wheelStr, wheelColor);
         osDelay(UI_OS_DELAY);
 
         // Update self-diagnosis messages

@@ -113,7 +113,7 @@ void chassisTask(void* arg) {
         vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
-            case REMOTE_MODE_MANUAL:
+            case REMOTE_MODE_FOLLOW:
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(
                     yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
                 chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);

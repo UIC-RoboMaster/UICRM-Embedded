@@ -899,4 +899,92 @@ namespace communication {
         UpdateBulk(percent);
         UI_->GraphRefresh(2, bar_, cap_percent_);
     }
+
+    uint8_t StringGUI::string_count_ = 0;
+
+    StringGUI::StringGUI(
+        communication::UserInterface* UI,
+        char* string_content,
+        int16_t string_X,
+        int16_t string_Y,
+        int8_t color,
+        int16_t string_size,
+        char* string_name) :UI_(UI), string_content_(string_content) {
+        string_X_ = string_X;
+        string_Y_ = string_Y;
+        string_size_ = string_size;
+        color_ = color;
+        string_length_ = strlen(string_content_);
+        if(string_name == nullptr){
+            string_ID_ = StringGUI::string_count_;
+            StringGUI::string_count_++;
+            memset(string_name_, ' ', 15);
+            snprintf(string_name_, 15, "S%d", string_ID_);
+        }
+        else{
+            strcpy(string_name_,string_name);
+        }
+
+    }
+
+    StringGUI::~StringGUI(){
+
+    }
+
+    graphic_data_t StringGUI::InitBulk() {
+        UI_->CharDraw(&string_,
+            string_name_,
+            UI_Graph_Add,
+            4,
+            color_, string_size_, string_length_, 2, string_X_, string_Y_);
+        return string_;
+    }
+
+    void StringGUI::Init() {
+        InitBulk();
+        UI_->CharRefresh(string_, string_content_, string_length_);
+    }
+
+    void StringGUI::InitString(char* string) {
+        if(string != nullptr)
+            string_content_ = string;
+        string_length_ = strlen(string_content_);
+        UI_->CharDraw(&string_,
+            string_name_,
+            UI_Graph_Change,
+            4,
+            color_, string_size_, string_length_, 2, string_X_, string_Y_);
+        UI_->CharRefresh(string_, string_content_, string_length_);
+    }
+
+    graphic_data_t StringGUI::DeleteBulk() {
+        UI_->CharDraw(&string_,
+            string_name_,
+            UI_Graph_Del,
+            4,
+            color_, string_size_, string_length_, 2, string_X_, string_Y_);
+        return string_;
+    }
+
+    void StringGUI::Delete() {
+        DeleteBulk();
+        UI_->GraphRefresh(1, string_);
+    }
+
+    void StringGUI::Update(char* string, int8_t color,int16_t size) {
+        if(string != nullptr)
+            string_content_ = string;
+        if(color != -1)
+            color_ = color;
+        if(size != -1)
+            string_size_ = size;
+        string_length_ = strlen(string_content_);
+        UI_->CharDraw(&string_,
+            string_name_,
+            UI_Graph_Change,
+            4,
+            color_, string_size_, string_length_, 2, string_X_, string_Y_);
+        UI_->CharRefresh(string_, string_content_, string_length_);
+    }
+
 }  // namespace communication

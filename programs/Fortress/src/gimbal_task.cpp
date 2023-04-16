@@ -30,9 +30,9 @@ void gimbalTask(void* arg) {
         ++i;
     }
 
-    buzzer->SingTone(bsp::BuzzerNote::La6M);
+    // buzzer->SingTone(bsp::BuzzerNote::La6M);
+    Buzzer_Sing(SingCaliStart);
     imu->Calibrate();
-
     i = 0;
     while (!imu->DataReady() || !imu->CaliDone()) {
         gimbal->TargetAbs(0, 0);
@@ -41,7 +41,7 @@ void gimbalTask(void* arg) {
         osDelay(1);
         ++i;
     }
-    buzzer->SingTone(bsp::BuzzerNote::Silent);
+    Buzzer_Sing(SingCaliDone);
     float pitch_ratio, yaw_ratio;
     float pitch_curr, yaw_curr;
     pitch_curr = imu->INS_angle[2];
@@ -90,7 +90,7 @@ void gimbalTask(void* arg) {
 
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
-            case REMOTE_MODE_MANUAL:
+            case REMOTE_MODE_FOLLOW:
             case REMOTE_MODE_ADVANCED:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);

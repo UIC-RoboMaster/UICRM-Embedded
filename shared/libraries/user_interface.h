@@ -325,4 +325,36 @@ namespace communication {
           static uint8_t cap_count_;
           int8_t name_length_;
     };
+
+    class StringGUI{
+        public:
+          StringGUI(UserInterface* UI,
+                    char* string_content,
+                    int16_t string_X = 1500,
+                    int16_t string_Y = 380,
+                    int8_t color = UI_Color_Main,
+                    int16_t string_size = 15,
+                    char* string_name = nullptr
+                    );
+          ~StringGUI();
+          graphic_data_t InitBulk();
+          void Init();
+          void InitString(char* string= nullptr);
+          graphic_data_t DeleteBulk();
+          void Delete();
+          void Update(char* string, int8_t color=-1,int16_t size=-1);
+          static uint8_t string_count_;
+        private:
+          UserInterface* UI_;
+          graphic_data_t string_;
+          char string_name_[15];
+          char* string_content_;
+          uint8_t string_length_;
+          int16_t string_X_;
+          int16_t string_Y_;
+          int16_t string_size_;
+          uint8_t string_ID_;
+          int8_t color_;
+
+    };
 }  // namespace communication

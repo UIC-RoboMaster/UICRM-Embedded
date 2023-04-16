@@ -2,7 +2,7 @@
 
 #include "bsp_os.h"
 #include "bsp_print.h"
-#include "buzzer.h"
+#include "buzzer_task.h"
 #include "chassis_task.h"
 #include "cmsis_os.h"
 #include "gimbal_task.h"
@@ -30,6 +30,7 @@ void RM_RTOS_Init(void) {
 
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
+    buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
     refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
@@ -56,7 +57,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             case REMOTE_MODE_KILL:
                 strcpy(s, "KILL");
                 break;
-            case REMOTE_MODE_MANUAL:
+            case REMOTE_MODE_FOLLOW:
                 strcpy(s, "MANUAL");
                 break;
             case REMOTE_MODE_SPIN:
