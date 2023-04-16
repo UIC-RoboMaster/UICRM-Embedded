@@ -202,13 +202,7 @@ void shootTask(void* arg) {
                         shoot_mode = SHOOT_MODE_PREPARED;
                         break;
                     }
-                    //                    else if(shoot_state_key_storage == 1 && shoot_state_key ==
-                    //                    1){
-                    //                        shoot_state_key_storage = 0;
-                    //                        shoot_mode = SHOOT_MODE_PREPARED;
-                    //                    }
-                    load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 6, false);
-                    //                    shoot_mode = SHOOT_MODE_PREPARED;
+                    load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, false);
                     break;
                 case SHOOT_MODE_BURST:
                     // 连发子弹
@@ -293,8 +287,8 @@ void init_shoot() {
 
     control::servo_t servo_data;
     servo_data.motor = steering_motor;
-    servo_data.max_speed = 2 * PI;
-    servo_data.max_acceleration = 8 * PI;
+    servo_data.max_speed = 8 * PI;
+    servo_data.max_acceleration = 16 * PI;
     servo_data.transmission_ratio = M2006P36_RATIO;
     servo_data.omega_pid_param = new float[3]{150, 2, 0.01};
     servo_data.max_iout = 2000;
