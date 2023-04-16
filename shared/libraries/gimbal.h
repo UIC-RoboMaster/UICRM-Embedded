@@ -8,11 +8,6 @@
 namespace control {
 
     /**
-     * @brief gimbal models
-     */
-    typedef enum { GIMBAL_FORTRESS, GIMBAL_SENTRY, GIMBAL_STEERING } gimbal_model_t;
-
-    /**
      * @brief offset, max, and proximity angles of different gimbals
      * @note except for proximity is determined by user, these should be obtained
      * by reading encoder values through uart/gdb
@@ -27,12 +22,23 @@ namespace control {
     } gimbal_data_t;
 
     /**
+     * @brief the pid of gimbal.
+     */
+    typedef struct {
+        ConstrainedPID* pitch_theta_pid;
+        ConstrainedPID* yaw_theta_pid;
+        ConstrainedPID* pitch_omega_pid;
+        ConstrainedPID* yaw_omega_pid;
+    } gimbal_pid_t;
+
+    /**
      * @brief structure used when gimbal instance is initialized
      */
     typedef struct {
         MotorCANBase* pitch_motor; /* pitch motor instance */
         MotorCANBase* yaw_motor;   /* yaw motor instance   */
-        gimbal_model_t model;      /* gimbal model         */
+        gimbal_data_t data;        /* gimbal related constants */
+        gimbal_pid_t pid;
     } gimbal_t;
 
     /**
@@ -59,6 +65,12 @@ namespace control {
          * @return refer to gimbal_data_t
          */
         gimbal_data_t* GetData();
+
+        /**
+         * @brief get gimbal replace
+         * @param pid the new PID of the gimbal
+         */
+        void SetPID(gimbal_pid_t pid);
 
         /**
          * @brief calculate the output of the motors under current configuration
@@ -104,20 +116,11 @@ namespace control {
         // acquired from user
         MotorCANBase* pitch_motor_ = nullptr;
         MotorCANBase* yaw_motor_ = nullptr;
-        gimbal_model_t model_;
 
         // pitch and yaw constants
         gimbal_data_t data_;
 
         // pitch and yaw pid
-        float* pitch_theta_pid_param_ =
-            nullptr; /* pid param that used to control pitch motor when moving  */
-        float* pitch_omega_pid_param_ =
-            nullptr; /* pid param that used to control pitch motor when holding */
-        float* yaw_theta_pid_param_ =
-            nullptr; /* pid param that used to control yaw motor when moving */
-        float* yaw_omega_pid_param_ =
-            nullptr; /* pid param that used to control yaw motor when holding */
         ConstrainedPID* pitch_theta_pid_ = nullptr; /* pitch theta pid */
         ConstrainedPID* pitch_omega_pid_ = nullptr; /* pitch omega pid */
         ConstrainedPID* yaw_theta_pid_ = nullptr;   /* yaw theta pid   */

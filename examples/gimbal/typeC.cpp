@@ -51,6 +51,13 @@ static control::MotorCANBase* yaw_motor = nullptr;
 static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 
+const control::gimbal_data_t gimbal_init_data = {
+    .pitch_offset_ = 4.72515f,
+    .yaw_offset_ = 3.6478f,
+    .pitch_max_ = 0.4253f,
+    .yaw_max_ = PI,
+};
+
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,
@@ -176,9 +183,33 @@ void RM_RTOS_Init(void) {
     pitch_motor = new control::Motor6020(can1, 0x206);
     yaw_motor = new control::Motor6020(can1, 0x205);
     control::gimbal_t gimbal_data;
+    gimbal_data.data = gimbal_init_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;
-    gimbal_data.model = control::GIMBAL_FORTRESS;
+    control::gimbal_pid_t gimbalBasicPID;
+    {
+        float pitch_theta_max_iout = 0;
+        float pitch_theta_max_out = 10;
+        float pitch_omega_max_iout = 10000;
+        float pitch_omega_max_out = 30000;
+        float yaw_theta_max_iout = 0;
+        float yaw_theta_max_out = 10;
+        float yaw_omega_max_iout = 5000;  // 10000
+        float yaw_omega_max_out = 30000;
+        float* pitch_theta_pid_param = new float[3]{15, 0, 0};
+        float* pitch_omega_pid_param = new float[3]{2900, 60, 0};
+        float* yaw_theta_pid_param = new float[3]{26, 0, 0.3};
+        float* yaw_omega_pid_param = new float[3]{3600, 20, 0};
+        gimbalBasicPID.pitch_theta_pid = new control::ConstrainedPID(
+            pitch_theta_pid_param, pitch_theta_max_iout, pitch_theta_max_out);
+        gimbalBasicPID.pitch_omega_pid = new control::ConstrainedPID(
+            pitch_omega_pid_param, pitch_omega_max_iout, pitch_omega_max_out);
+        gimbalBasicPID.yaw_theta_pid =
+            new control::ConstrainedPID(yaw_theta_pid_param, yaw_theta_max_iout, yaw_theta_max_out);
+        gimbalBasicPID.yaw_omega_pid =
+            new control::ConstrainedPID(yaw_omega_pid_param, yaw_omega_max_iout, yaw_omega_max_out);
+    }
+    gimbal_data.pid = gimbalBasicPID;
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
 }
