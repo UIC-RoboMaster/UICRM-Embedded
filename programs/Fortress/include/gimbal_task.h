@@ -4,6 +4,7 @@
 #include "buzzer_notes.h"
 #include "cmsis_os2.h"
 #include "gimbal.h"
+#include "gimbal_data.h"
 #include "imu_task.h"
 #include "main.h"
 #include "motor.h"

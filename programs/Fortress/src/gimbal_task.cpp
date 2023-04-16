@@ -108,12 +108,15 @@ void gimbalTask(void* arg) {
 }
 
 void init_gimbal() {
+    init_gimbalBasicData();
+    init_gimbalSpinData();
     pitch_motor = new control::Motor6020(can2, 0x206);
     yaw_motor = new control::Motor6020(can2, 0x205);
     control::gimbal_t gimbal_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;
-    gimbal_data.model = control::GIMBAL_FORTRESS;
+    gimbal_data.data = gimbal_init_data;
+    gimbal_data.pid = gimbalBasicPID;
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
 }
