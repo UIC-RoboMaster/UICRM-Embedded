@@ -9,6 +9,13 @@ communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
+communication::DiagGUI* diagGUI = nullptr;
+
+void UI_Delay(uint32_t delay) {
+    osDelay(delay);
+}
+
+
 void uiTask(void* arg) {
     UNUSED(arg);
 
@@ -24,7 +31,6 @@ void uiTask(void* arg) {
     communication::graphic_data_t graphEmpty2;
     UI->CircleDraw(&graphEmpty2, "E2", UI_Graph_Del, 0, UI_Color_Green, 0, 0, 0, 0);
 
-    communication::graphic_data_t graphDiag;
 
     // Initialize chassis GUI
     chassisGUI = new communication::ChassisGUI(UI);
@@ -49,9 +55,7 @@ void uiTask(void* arg) {
 
     // Initialize self-diagnosis GUI
     char diagStr[29] = "";
-    UI->DiagGUIInit(&graphDiag, 29);
-    UI->CharRefresh(graphDiag, diagStr, 2);
-    osDelay(110);
+    diagGUI = new communication::DiagGUI(UI);
 
     // Initialize current mode GUI
     char followModeStr[15] = "FOLLOW MODE";
@@ -86,6 +90,17 @@ void uiTask(void* arg) {
     BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
+
+    BoolEdgeDetector* fl_motor_check_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* fr_motor_check_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* bl_motor_check_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* br_motor_check_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* yaw_motor_check_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* pitch_motor_check_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* steer_motor_check_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* dbus_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* imu_cali_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* imu_temp_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
@@ -152,6 +167,58 @@ void uiTask(void* arg) {
         last_fric_mode = shoot_fric_mode;
 
         // Update self-diagnosis messages
+        {
+            fl_motor_check_edge->input(selftest.fl_motor);
+            fr_motor_check_edge->input(selftest.fr_motor);
+            bl_motor_check_edge->input(selftest.bl_motor);
+            br_motor_check_edge->input(selftest.br_motor);
+            yaw_motor_check_edge->input(selftest.yaw_motor);
+            pitch_motor_check_edge->input(selftest.pitch_motor);
+            steer_motor_check_edge->input(selftest.steering_motor);
+            dbus_edge->input(selftest.dbus);
+            imu_cali_edge->input(selftest.imu_cali);
+            imu_temp_edge->input(selftest.imu_temp);
+            if (fl_motor_check_edge->negEdge()) {
+                strcpy(diagStr, "FL MOTOR OFFLINE");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+            if (fr_motor_check_edge->negEdge()) {
+                strcpy(diagStr, "FR MOTOR OFFLINE");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+                if (bl_motor_check_edge->negEdge()) {
+                        strcpy(diagStr, "BL MOTOR OFFLINE");
+                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+                }
+                if (br_motor_check_edge->negEdge()) {
+                        strcpy(diagStr, "BR MOTOR OFFLINE");
+                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+                }
+                if (yaw_motor_check_edge->negEdge()) {
+                        strcpy(diagStr, "YAW MOTOR OFFLINE");
+                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+                }
+                if (pitch_motor_check_edge->negEdge()) {
+                        strcpy(diagStr, "PITCH MOTOR OFFLINE");
+                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+                }
+                if(steer_motor_check_edge->negEdge()) {
+                        strcpy(diagStr, "STEER MOTOR OFFLINE");
+                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+                }
+                if (dbus_edge->negEdge()) {
+                        strcpy(diagStr, "DBUS OFFLINE");
+                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+                }
+                if (imu_cali_edge->posEdge()) {
+                        strcpy(diagStr, "IMU CALIBRATION DONE");
+                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Green);
+                }
+                if (imu_temp_edge->posEdge()) {
+                        strcpy(diagStr, "IMU TEMP NOT SAFE");
+                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+                }
+        }
 
         // clear self-diagnosis messages
         v_edge->input(dbus->keyboard.bit.V);
@@ -175,8 +242,7 @@ void uiTask(void* arg) {
             graphWheel = wheelGUI->DeleteBulk();
             UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
             osDelay(110);
-            //TODO: Diag GUI
-
+            diagGUI->Clear(UI_Delay);
             chassisGUI->Init();
             osDelay(110);
             chassisGUI->Init2();
@@ -202,15 +268,11 @@ void uiTask(void* arg) {
             osDelay(110);
             boostGUI->InitString();
             osDelay(110);
-            //TODO: Diag GUI
             continue;
         }
         c_edge->input(dbus->keyboard.bit.C);
         if (c_edge->posEdge()) {
-            for (int i = 1; i <= UI->getMessageCount(); ++i) {
-                UI->DiagGUIClear(UI, referee, &graphDiag, i);
-                osDelay(UI_OS_DELAY);
-            }
+            diagGUI->Clear(UI_Delay);
         }
     }
 }
