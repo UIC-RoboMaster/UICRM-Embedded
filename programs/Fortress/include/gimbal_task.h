@@ -1,6 +1,7 @@
 #pragma once
 #include "bsp_can.h"
-#include "buzzer.h"
+#include "buzzer_notes.h"
+#include "buzzer_task.h"
 #include "cmsis_os2.h"
 #include "gimbal.h"
 #include "gimbal_data.h"
@@ -27,5 +28,6 @@ extern control::Gimbal* gimbal;
 extern control::MotorCANBase* pitch_motor;
 extern control::MotorCANBase* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
+extern float pitch_diff, yaw_diff;
 void init_gimbal();
 void kill_gimbal();

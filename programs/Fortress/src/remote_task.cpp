@@ -1,9 +1,9 @@
 #include "remote_task.h"
 
 remote::DBUS* dbus = nullptr;
-RemoteMode remote_mode = REMOTE_MODE_MANUAL;
-RemoteMode last_remote_mode = REMOTE_MODE_MANUAL;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_MANUAL, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
+RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
+RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
 const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
@@ -35,6 +35,10 @@ void remoteTask(void* arg) {
     bool is_dbus_offline;
     bool is_robot_dead;
     bool is_shoot_available;
+    BoolEdgeDetector* z_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ctrl_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     while (1) {
         // Update Last State
         last_state_r = state_r;
@@ -48,6 +52,10 @@ void remoteTask(void* arg) {
         mouse = dbus->mouse;
         // Update Timestamp
         last_timestamp = dbus->timestamp;
+        z_edge->input(dbus->keyboard.bit.Z);
+        ctrl_edge->input(dbus->keyboard.bit.CTRL);
+        mouse_left_edge->input(mouse.l);
+        mouse_right_edge->input(mouse.r);
         // Offline Detection && Security Check
         is_dbus_offline = HAL_GetTick() - last_timestamp > 500 || dbus->swr == remote::DOWN;
         // Kill Detection
@@ -72,6 +80,14 @@ void remoteTask(void* arg) {
             osDelay(REMOTE_OS_DELAY);
             continue;
         }
+
+        if (last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
+            shoot_fric_mode = SHOOT_FRIC_SPEEDUP;
+        }
+        if (last_keyboard.bit.B == 1 && keyboard.bit.B == 0) {
+            shoot_fric_mode = SHOOT_FRIC_SPEEDDOWN;
+        }
+
         // remote mode switch
         switch (state_r) {
             case remote::UP:
@@ -80,7 +96,7 @@ void remoteTask(void* arg) {
                 }
                 break;
             case remote::MID:
-                if (keyboard.bit.SHIFT == 1 && last_keyboard.bit.SHIFT == 0) {
+                if (ctrl_edge->posEdge()) {
                     mode_switch = true;
                 }
                 break;
@@ -122,18 +138,18 @@ void remoteTask(void* arg) {
                         case remote::UP:
                             break;
                         case remote::MID:
-                            if (keyboard.bit.CTRL == 1 && last_keyboard.bit.CTRL == 0) {
+                            if (z_edge->posEdge()) {
                                 shoot_fric_switch = true;
                             }
-                            if (mouse.l == 1 && last_mouse.l == 0) {
+                            if (mouse_left_edge->posEdge()) {
                                 shoot_switch = true;
                                 shoot_burst_timestamp = 0;
-                            } else if (mouse.l == 1 && last_mouse.l == 1) {
+                            } else if (mouse_left_edge->get()) {
                                 shoot_burst_timestamp++;
                                 if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
                                     shoot_burst_switch = true;
                                 }
-                            } else if (mouse.l == 0 && last_mouse.l == 1) {
+                            } else if (mouse_left_edge->negEdge()) {
                                 shoot_stop_switch = true;
                             } else {
                                 shoot_stop_switch = true;

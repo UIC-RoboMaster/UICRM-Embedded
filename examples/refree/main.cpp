@@ -20,7 +20,7 @@ const osThreadAttr_t refereeTaskAttribute = {.name = "refereeTask",
                                              .reserved = 0};
 osThreadId_t refereeTaskHandle;
 
-class CustomUART : public bsp::UART {
+class RefereeUART : public bsp::UART {
   public:
     using bsp::UART::UART;
 
@@ -32,7 +32,7 @@ class CustomUART : public bsp::UART {
 };
 
 communication::Referee* referee = nullptr;
-CustomUART* referee_uart = nullptr;
+RefereeUART* referee_uart = nullptr;
 
 void refereeTask(void* arg) {
     UNUSED(arg);
@@ -53,7 +53,7 @@ void refereeTask(void* arg) {
 void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
 
-    referee_uart = new CustomUART(&huart6);
+    referee_uart = new RefereeUART(&huart6);
     referee_uart->SetupRx(300);
     referee_uart->SetupTx(300);
 

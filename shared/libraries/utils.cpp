@@ -1,5 +1,36 @@
 #include "utils.h"
 
+template <typename T>
+EdgeDetector<T>::EdgeDetector(T initial) {
+    prev_ = initial;
+}
+
+template <typename T>
+void EdgeDetector<T>::input(T signal) {
+    posEdge_ = false;
+    negEdge_ = false;
+    if (prev_ < signal)
+        posEdge_ = true;
+    else if (prev_ > signal)
+        negEdge_ = true;
+    prev_ = signal;
+}
+
+template <typename T>
+bool EdgeDetector<T>::edge() {
+    return posEdge_ || negEdge_;
+}
+
+template <typename T>
+bool EdgeDetector<T>::posEdge() {
+    return posEdge_;
+}
+
+template <typename T>
+bool EdgeDetector<T>::negEdge() {
+    return negEdge_;
+}
+
 BoolEdgeDetector::BoolEdgeDetector(bool initial) {
     prev_ = initial;
 }
@@ -24,6 +55,10 @@ bool BoolEdgeDetector::posEdge() {
 
 bool BoolEdgeDetector::negEdge() {
     return negEdge_;
+}
+
+bool BoolEdgeDetector::get() {
+    return prev_;
 }
 
 FloatEdgeDetector::FloatEdgeDetector(float initial, float threshold) {
@@ -64,7 +99,13 @@ RampSource::RampSource(float initial, float min, float max, float step) {
 
 float RampSource::Calc(float input) {
     input_ = input;
-    output_ += step_ * input_;
+    float sub_output = output_ - step_ * input_;
+    float add_output = output_ + step_ * input_;
+    if ((output_ > max_ && sub_output < output_) || (output_ < min_ && add_output > output_)) {
+        output_ = sub_output;
+        return output_;
+    }
+    output_ = add_output;
     output_ = min(output_, max_);
     output_ = max(output_, min_);
     return output_;
@@ -88,4 +129,8 @@ void RampSource::SetMax(float max) {
 
 void RampSource::SetMin(float min) {
     min_ = min;
+}
+
+void RampSource::SetCurrent(float current) {
+    output_ = current;
 }

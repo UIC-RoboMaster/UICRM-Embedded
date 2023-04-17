@@ -12,6 +12,8 @@ namespace bsp {
         void Stop();
         uint32_t Read();
         float GetBatteryVol();
+        static float calcBatteryPercentage(float voltage);
+        float GetBatteryPercentage();
         float voltage_vrefint_proportion = 8.0586080586080586080586080586081e-4f;
 
       private:

@@ -13,5 +13,6 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         src/remote_task.cpp
         src/chassis_task.cpp
         src/referee_task.cpp
-        src/buzzer.cpp
+        src/ui_task.cpp
+        src/buzzer_task.cpp
         INCLUDES include)

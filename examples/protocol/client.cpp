@@ -21,7 +21,7 @@ const osThreadAttr_t clientTaskAttribute = {.name = "clientTask",
                                             .reserved = 0};
 osThreadId_t clientTaskHandle;
 
-class CustomUART : public bsp::UART {
+class RefereeUART : public bsp::UART {
   public:
     using bsp::UART::UART;
 
@@ -33,7 +33,7 @@ class CustomUART : public bsp::UART {
 };
 
 static communication::Host* host = nullptr;
-static CustomUART* host_uart = nullptr;
+static RefereeUART* host_uart = nullptr;
 static display::RGB* led = nullptr;
 
 void clientTask(void* arg) {
@@ -58,7 +58,7 @@ void clientTask(void* arg) {
 void RM_RTOS_Init(void) {
     print_use_uart(&huart6);
 
-    host_uart = new CustomUART(&huart1);
+    host_uart = new RefereeUART(&huart1);
     host_uart->SetupRx(300);
     host_uart->SetupTx(300);
 
