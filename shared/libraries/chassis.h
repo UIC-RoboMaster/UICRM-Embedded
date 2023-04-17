@@ -43,7 +43,7 @@ namespace control {
          * @param chassis structure that used to initialize chassis, refer to type
          * chassis_t
          */
-        Chassis(const chassis_t chassis);
+        Chassis(const chassis_t chassis, float offset = 0);
 
         /**
          * @brief destructor for chassis
@@ -77,6 +77,8 @@ namespace control {
         float* speeds_ = nullptr;
 
         power_limit_t power_limit_info_;
+
+        float chassis_offset_;
     };
 
 }  // namespace control
