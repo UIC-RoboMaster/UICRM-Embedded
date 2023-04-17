@@ -35,6 +35,10 @@ void remoteTask(void* arg) {
     bool is_dbus_offline;
     bool is_robot_dead;
     bool is_shoot_available;
+    BoolEdgeDetector* z_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ctrl_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     while (1) {
         // Update Last State
         last_state_r = state_r;
@@ -48,6 +52,10 @@ void remoteTask(void* arg) {
         mouse = dbus->mouse;
         // Update Timestamp
         last_timestamp = dbus->timestamp;
+        z_edge->input(dbus->keyboard.bit.Z);
+        ctrl_edge->input(dbus->keyboard.bit.CTRL);
+        mouse_left_edge->input(mouse.l);
+        mouse_right_edge->input(mouse.r);
         // Offline Detection && Security Check
         is_dbus_offline = HAL_GetTick() - last_timestamp > 500 || dbus->swr == remote::DOWN;
         // Kill Detection

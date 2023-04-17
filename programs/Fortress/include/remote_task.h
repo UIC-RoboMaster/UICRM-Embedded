@@ -4,6 +4,7 @@
 #include "main.h"
 #include "referee_task.h"
 #include "user_define.h"
+#include "utils.h"
 extern remote::DBUS* dbus;
 /**
  * @brief Dbus Init
