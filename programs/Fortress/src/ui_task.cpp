@@ -83,7 +83,9 @@ void uiTask(void* arg) {
     float power_percent = 1;
     RemoteMode last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
-    BoolEdgeDetector boostEdgeDetector(false);
+    BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
+    BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
@@ -140,8 +142,8 @@ void uiTask(void* arg) {
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }
-        boostEdgeDetector.input(chassis_boost_flag);
-        if (boostEdgeDetector.edge()) {
+        boostEdgeDetector->input(chassis_boost_flag);
+        if (boostEdgeDetector->edge()) {
             char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
             boostGUI->Update(boostStr, UI_Color_Pink);
             osDelay(UI_OS_DELAY);
@@ -152,7 +154,59 @@ void uiTask(void* arg) {
         // Update self-diagnosis messages
 
         // clear self-diagnosis messages
-        if (dbus->keyboard.bit.C) {
+        v_edge->input(dbus->keyboard.bit.V);
+        if (v_edge->posEdge()) {
+            chassisGUI->Delete2();
+            osDelay(110);
+            chassisGUI->Delete();
+            osDelay(110);
+            gimbalGUI->Delete2();
+            osDelay(110);
+            gimbalGUI->Delete();
+            osDelay(110);
+            crossairGui->Delete();
+            osDelay(110);
+            batteryGUI->DeleteName();
+            osDelay(110);
+            batteryGUI->Delete();
+            osDelay(110);
+            graphMode = modeGUI->DeleteBulk();
+            graphBoost = boostGUI->DeleteBulk();
+            graphWheel = wheelGUI->DeleteBulk();
+            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            osDelay(110);
+            //TODO: Diag GUI
+
+            chassisGUI->Init();
+            osDelay(110);
+            chassisGUI->Init2();
+            osDelay(110);
+            gimbalGUI->Init();
+            osDelay(110);
+            gimbalGUI->Init2();
+            osDelay(110);
+            crossairGui->Init();
+            osDelay(110);
+            batteryGUI->Init();
+            osDelay(110);
+            batteryGUI->InitName();
+            osDelay(110);
+            graphMode = modeGUI->InitBulk();
+            graphWheel = wheelGUI->InitBulk();
+            graphBoost = boostGUI->InitBulk();
+            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            osDelay(110);
+            modeGUI->InitString();
+            osDelay(110);
+            wheelGUI->InitString();
+            osDelay(110);
+            boostGUI->InitString();
+            osDelay(110);
+            //TODO: Diag GUI
+            continue;
+        }
+        c_edge->input(dbus->keyboard.bit.C);
+        if (c_edge->posEdge()) {
             for (int i = 1; i <= UI->getMessageCount(); ++i) {
                 UI->DiagGUIClear(UI, referee, &graphDiag, i);
                 osDelay(UI_OS_DELAY);

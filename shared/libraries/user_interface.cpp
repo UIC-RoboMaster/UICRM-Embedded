@@ -635,7 +635,13 @@ namespace communication {
         UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Change, 2, UI_Color_Green, 10, 2,
                      speed_center_X_ - 5, speed_center_Y_ - speed_circle_R_ - 10,
                      (int32_t)(speed_y * 100.0f));
-        UI_->GraphRefresh(5, chassis_, arrow_, speed_center_, speed_x_val_, speed_y_val_);
+        UI_->LineDraw(&gimbal_, "g", UI_Graph_Change, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
+                      chassis_X_, chassis_Y_ + gimbalLen_);
+        // Static element that can be remove
+        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Change, 1, UI_Color_Yellow, 2, speed_center_X_,
+                        speed_center_Y_, speed_circle_R_);
+
+        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_,speed_circle_,speed_center_, speed_x_val_, speed_y_val_);
     }
 
     CrossairGUI::CrossairGUI(UserInterface* UI) : UI_(UI) {
