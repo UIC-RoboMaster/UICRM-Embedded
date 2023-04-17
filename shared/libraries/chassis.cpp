@@ -4,7 +4,7 @@
 
 namespace control {
 
-    Chassis::Chassis(const chassis_t chassis) : pids_() {
+    Chassis::Chassis(const chassis_t chassis,float offset) : pids_() {
         // acquired from user
         model_ = chassis.model;
 
@@ -51,6 +51,7 @@ namespace control {
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
+        chassis_offset_ = offset;
     }
 
     Chassis::~Chassis() {
@@ -88,10 +89,10 @@ namespace control {
                 float move_sum = fabs(x_speed) + fabs(y_speed) + fabs(turn_speed);
                 float scale = move_sum >= MAX_ABS_CURRENT ? MAX_ABS_CURRENT / move_sum : 1;
 
-                speeds_[FourWheel::front_left] = scale * (y_speed + x_speed + turn_speed);
-                speeds_[FourWheel::back_left] = scale * (y_speed - x_speed + turn_speed);
-                speeds_[FourWheel::front_right] = -scale * (y_speed - x_speed - turn_speed);
-                speeds_[FourWheel::back_right] = -scale * (y_speed + x_speed - turn_speed);
+                speeds_[FourWheel::front_left] = scale * (y_speed + x_speed + turn_speed*(1-chassis_offset_)); //2
+                speeds_[FourWheel::back_left] = scale * (y_speed - x_speed + turn_speed*(1+chassis_offset_)); //3
+                speeds_[FourWheel::front_right] = -scale * (y_speed - x_speed - turn_speed*(1-chassis_offset_)); //1
+                speeds_[FourWheel::back_right] = -scale * (y_speed + x_speed - turn_speed*(1+chassis_offset_)); //4
                 break;
             }
             case CHASSIS_ONE_WHEEL: {
