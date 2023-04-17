@@ -20,7 +20,6 @@ void RM_RTOS_Init() {
     can1 = new bsp::CAN(&hcan1, 0x201, true);
     motor1 = new control::Motor2006(can1, 0x201);
 
-
     control::servo_t servo_data;
     servo_data.motor = motor1;
     servo_data.max_speed = 2.5 * PI;

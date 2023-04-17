@@ -323,7 +323,7 @@ namespace control {
         // if holding status toggle, reseting corresponding pid to avoid error
         // building up
         hold_detector_->input(hold_);
-        if (hold_detector_->edge()){
+        if (hold_detector_->edge()) {
             omega_pid_.Reset();
             hold_pid_.Reset();
         }

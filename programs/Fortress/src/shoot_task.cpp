@@ -204,7 +204,7 @@ void shootTask(void* arg) {
                         shoot_mode = SHOOT_MODE_PREPARED;
                         break;
                     }
-                    if(last_shoot_mode!=SHOOT_MODE_SINGLE)
+                    if (last_shoot_mode != SHOOT_MODE_SINGLE)
                         load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, true);
                     else
                         load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, false);
