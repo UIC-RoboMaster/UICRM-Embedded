@@ -73,9 +73,26 @@ namespace control {
     }
 
     float ConstrainedPID::ComputeOutput(float error) {
-        cumulated_err_ += error;
-        cumulated_err_ = clip<float>(cumulated_err_, -max_iout_ / ki_, max_iout_ / ki_);
+        if (ki_ != 0) {
+            cumulated_err_ += error;
+            cumulated_err_ = clip<float>(cumulated_err_, -max_iout_ / ki_, max_iout_ / ki_);
+        } else {
+            cumulated_err_ = 0;
+        }
         float out = kp_ * error + ki_ * cumulated_err_ + kd_ * (error - last_err_);
+        out = clip<float>(out, -max_out_, max_out_);
+        last_err_ = error;
+        return out;
+    }
+
+    float ConstrainedPID::ComputeOutputWithOmega(float error, float omega) {
+        if (ki_ != 0) {
+            cumulated_err_ += error;
+            cumulated_err_ = clip<float>(cumulated_err_, -max_iout_ / ki_, max_iout_ / ki_);
+        } else {
+            cumulated_err_ = 0;
+        }
+        float out = kp_ * error + ki_ * cumulated_err_ + kd_ * omega;
         out = clip<float>(out, -max_out_, max_out_);
         last_err_ = error;
         return out;
@@ -83,6 +100,10 @@ namespace control {
 
     int16_t ConstrainedPID::ComputeConstrainedOutput(float error) {
         return control::ClipMotorRange(ComputeOutput(error));
+    }
+
+    int16_t ConstrainedPID::ComputeConstrainedOutputWithOmega(float error, float omega) {
+        return control::ClipMotorRange(ComputeOutputWithOmega(error, omega));
     }
 
     void ConstrainedPID::Reinit(float kp, float ki, float kd, float max_iout, float max_out) {

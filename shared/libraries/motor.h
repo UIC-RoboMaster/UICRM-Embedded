@@ -309,6 +309,9 @@ namespace control {
         float* omega_pid_param;   /* pid parameter used to control speed of motor   */
         float max_iout;
         float max_out;
+        float* hold_pid_param;
+        float hold_max_iout;
+        float hold_max_out;
     } servo_t;
 
     /**
@@ -490,6 +493,7 @@ namespace control {
 
         // pid controllers
         ConstrainedPID omega_pid_; /* pid for controlling speed of motor */
+        ConstrainedPID hold_pid_;
 
         // edge detectors
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
