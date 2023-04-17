@@ -22,12 +22,15 @@ void RM_RTOS_Init() {
     control::servo_t servo_data;
 
     servo_data.motor = motor1;
-    servo_data.max_speed = 2 * PI;
-    servo_data.max_acceleration = 8 * PI;
+    servo_data.max_speed = 2.5 * PI;
+    servo_data.max_acceleration = 16 * PI;
     servo_data.transmission_ratio = M2006P36_RATIO;
-    servo_data.omega_pid_param = new float[3]{25, 5, 22};
-    servo_data.max_iout = 1000;
+    servo_data.omega_pid_param = new float[3]{6000, 80, 0.3};
+    servo_data.max_iout = 4000;
     servo_data.max_out = 10000;
+    servo_data.hold_pid_param = new float[3]{150, 2, 0.01};
+    servo_data.hold_max_iout = 2000;
+    servo_data.hold_max_out = 10000;
 
     load_servo = new control::ServoMotor(servo_data);
 }
