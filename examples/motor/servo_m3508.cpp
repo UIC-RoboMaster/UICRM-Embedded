@@ -19,15 +19,19 @@ void RM_RTOS_Init() {
     dbus = new remote::DBUS(&huart3);
     can1 = new bsp::CAN(&hcan1, 0x201, true);
     motor1 = new control::Motor2006(can1, 0x201);
-    control::servo_t servo_data;
 
+
+    control::servo_t servo_data;
     servo_data.motor = motor1;
-    servo_data.max_speed = 2 * PI;
-    servo_data.max_acceleration = 8 * PI;
+    servo_data.max_speed = 2.5 * PI;
+    servo_data.max_acceleration = 16 * PI;
     servo_data.transmission_ratio = M3508P19_RATIO;
-    servo_data.omega_pid_param = new float[3]{75, 5, 22};
-    servo_data.max_iout = 3000;
+    servo_data.omega_pid_param = new float[3]{6000, 80, 0.3};
+    servo_data.max_iout = 6000;
     servo_data.max_out = 32768;
+    servo_data.hold_pid_param = new float[3]{150, 10, 0.01};
+    servo_data.hold_max_iout = 3000;
+    servo_data.hold_max_out = 32768;
 
     load_servo = new control::ServoMotor(servo_data);
 }

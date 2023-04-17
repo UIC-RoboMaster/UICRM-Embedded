@@ -50,6 +50,8 @@ void shootTask(void* arg) {
     load_servo->SetTarget(load_servo->GetTheta(), true);
     load_servo->CalcOutput();
 
+    ShootMode last_shoot_mode = SHOOT_MODE_STOP;
+
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             // 死了
@@ -202,11 +204,14 @@ void shootTask(void* arg) {
                         shoot_mode = SHOOT_MODE_PREPARED;
                         break;
                     }
-                    load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, false);
+                    if(last_shoot_mode!=SHOOT_MODE_SINGLE)
+                        load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, true);
+                    else
+                        load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, false);
                     break;
                 case SHOOT_MODE_BURST:
                     // 连发子弹
-                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI, true);
                     shoot_state_key_storage = 0;
                     break;
                 case SHOOT_MODE_STOP:
@@ -216,6 +221,7 @@ void shootTask(void* arg) {
                     break;
             }
         }
+        last_shoot_mode = shoot_mode;
         //        // 启动拔弹电机后的操作
         //        if (shoot_state == 2) {
         //            // 检测是否已装填子弹
@@ -287,12 +293,15 @@ void init_shoot() {
 
     control::servo_t servo_data;
     servo_data.motor = steering_motor;
-    servo_data.max_speed = 8 * PI;
+    servo_data.max_speed = 2.5 * PI;
     servo_data.max_acceleration = 16 * PI;
     servo_data.transmission_ratio = M2006P36_RATIO;
-    servo_data.omega_pid_param = new float[3]{150, 2, 0.01};
-    servo_data.max_iout = 2000;
+    servo_data.omega_pid_param = new float[3]{6000, 80, 0.3};
+    servo_data.max_iout = 4000;
     servo_data.max_out = 10000;
+    servo_data.hold_pid_param = new float[3]{150, 2, 0.01};
+    servo_data.hold_max_iout = 2000;
+    servo_data.hold_max_out = 10000;
 
     load_servo = new control::ServoMotor(servo_data);
     load_servo->SetTarget(load_servo->GetTheta(), true);
