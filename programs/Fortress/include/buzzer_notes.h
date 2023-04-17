@@ -2,54 +2,40 @@
 #include "bsp_buzzer.h"
 using Note = bsp::BuzzerNote;
 const bsp::BuzzerNoteDelayed Mario[] = {
-    {Note::Mi3M, 80}, {Note::Silent, 80},  {Note::Mi3M, 80}, {Note::Silent,
-240}, {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::Do1M, 80}, {Note::Silent,
-80}, {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::So5M, 80}, {Note::Silent,
-560}, {Note::So5L, 80}, {Note::Silent, 0},   {Note::Finish, 0}};
+    {Note::Mi3M, 80}, {Note::Silent, 80},  {Note::Mi3M, 80}, {Note::Silent, 240},
+    {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::Do1M, 80}, {Note::Silent, 80},
+    {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::So5M, 80}, {Note::Silent, 560},
+    {Note::So5L, 80}, {Note::Silent, 0},   {Note::Finish, 0}};
 const bsp::BuzzerNoteDelayed War_Cant_of_Mars[] = {
-        {Note::So5M, 400},   {Note::So5M, 200},  {Note::So5M, 200},
-        {Note::So5M, 400},   {Note::Fa4M, 200},  {Note::Mi3M, 400},
-        {Note::So5M, 200},   {Note::Do1H, 400},  {Note::Re2H, 200},
-        {Note::Mi3H, 400},   {Note::Mi3H, 200},  {Note::Mi3H, 400},
-        {Note::Re2H, 200},   {Note::Do1H, 400},  {Note::Do1H, 400},
-        {Note::Si7M, 200},   {Note::La6M, 400},  {Note::La6M, 200},
-        {Note::La6M, 400},   {Note::Si7M, 200},  {Note::Do1H, 400},
-        {Note::Si7M, 200},   {Note::Do1H, 400},  {Note::La6M, 200},
-        {Note::So5M, 400},   {Note::La6M, 200},  {Note::So5M, 400},
-        {Note::Mi3M, 200},   {Note::So5M, 800},  {Note::So5M, 400},
-        {Note::So5M, 200},   {Note::So5M, 400},  {Note::So5M, 200},
-        {Note::So5M, 400},   {Note::Fa4M, 200},  {Note::Mi3M, 400},
-        {Note::So5M, 200},   {Note::Do1H, 400},  {Note::Re2H, 200},
-        {Note::Mi3H, 400},   {Note::Mi3H, 200},  {Note::Mi3H, 400},
-        {Note::Re2H, 200},   {Note::Do1H, 800},  {Note::Do1H, 800},
-        {Note::Re2H, 800},   {Note::Re2H, 800},  {Note::Do1H, 800},
-        {Note::Si7M, 800},   {Note::Do1H, 1600}, {Note::Silent, 400},
-    {Note::Silent, 400},
-    {Note::So5M, 800},
-    {Note::Fa4M, 400},
-    {Note::Mi3M, 400},
-    {Note::So5M, 200},
-    {Note::Do1H, 400},
-    {Note::Re2H, 200},
-    {Note::Mi3H, 1200},
-    {Note::Do1H, 800},
-        {Note::Silent, 400}, {Note::La6M, 800},   {Note::Si7M, 400},
-        {Note::Do1H, 400},   {Note::Si7M, 200},   {Note::Do1H, 400},
-        {Note::La6M, 200},   {Note::So5M, 1600},  {Note::Mi3M, 800},
-        {Note::Silent, 400}, {Note::So5M, 800},   {Note::Fa4M, 400},
-        {Note::Mi3M, 400},   {Note::So5M, 200},   {Note::Do1H, 400},
-        {Note::Re2H, 200},   {Note::Mi3H, 1600},  {Note::Do1H, 800},
-        {Note::Do1H, 800},   {Note::Re2H, 800},   {Note::Re2H, 800},
-        {Note::Do1H, 800},   {Note::Si7M, 800},   {Note::Do1H, 1600},
-    {Note::Silent, 0},
-    {Note::Finish, 0},
+    {Note::So5M, 400},   {Note::So5M, 200},   {Note::So5M, 200},   {Note::So5M, 400},
+    {Note::Fa4M, 200},   {Note::Mi3M, 400},   {Note::So5M, 200},   {Note::Do1H, 400},
+    {Note::Re2H, 200},   {Note::Mi3H, 400},   {Note::Mi3H, 200},   {Note::Mi3H, 400},
+    {Note::Re2H, 200},   {Note::Do1H, 400},   {Note::Do1H, 400},   {Note::Si7M, 200},
+    {Note::La6M, 400},   {Note::La6M, 200},   {Note::La6M, 400},   {Note::Si7M, 200},
+    {Note::Do1H, 400},   {Note::Si7M, 200},   {Note::Do1H, 400},   {Note::La6M, 200},
+    {Note::So5M, 400},   {Note::La6M, 200},   {Note::So5M, 400},   {Note::Mi3M, 200},
+    {Note::So5M, 800},   {Note::So5M, 400},   {Note::So5M, 200},   {Note::So5M, 400},
+    {Note::So5M, 200},   {Note::So5M, 400},   {Note::Fa4M, 200},   {Note::Mi3M, 400},
+    {Note::So5M, 200},   {Note::Do1H, 400},   {Note::Re2H, 200},   {Note::Mi3H, 400},
+    {Note::Mi3H, 200},   {Note::Mi3H, 400},   {Note::Re2H, 200},   {Note::Do1H, 800},
+    {Note::Do1H, 800},   {Note::Re2H, 800},   {Note::Re2H, 800},   {Note::Do1H, 800},
+    {Note::Si7M, 800},   {Note::Do1H, 1600},  {Note::Silent, 400}, {Note::Silent, 400},
+    {Note::So5M, 800},   {Note::Fa4M, 400},   {Note::Mi3M, 400},   {Note::So5M, 200},
+    {Note::Do1H, 400},   {Note::Re2H, 200},   {Note::Mi3H, 1200},  {Note::Do1H, 800},
+    {Note::Silent, 400}, {Note::La6M, 800},   {Note::Si7M, 400},   {Note::Do1H, 400},
+    {Note::Si7M, 200},   {Note::Do1H, 400},   {Note::La6M, 200},   {Note::So5M, 1600},
+    {Note::Mi3M, 800},   {Note::Silent, 400}, {Note::So5M, 800},   {Note::Fa4M, 400},
+    {Note::Mi3M, 400},   {Note::So5M, 200},   {Note::Do1H, 400},   {Note::Re2H, 200},
+    {Note::Mi3H, 1600},  {Note::Do1H, 800},   {Note::Do1H, 800},   {Note::Re2H, 800},
+    {Note::Re2H, 800},   {Note::Do1H, 800},   {Note::Si7M, 800},   {Note::Do1H, 1600},
+    {Note::Silent, 0},   {Note::Finish, 0},
 };
 
 const bsp::BuzzerNoteDelayed DJI[] = {
     {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
 const bsp::BuzzerNoteDelayed SingCaliStart[] = {
-    {Note::Mi3M, 300}, {Note::Re2M, 300}, {Note::Mi3M, 300}, {Note::Finish, 0}};
+    {Note::Mi3M, 100}, {Note::Re2M, 100}, {Note::Mi3M, 100}, {Note::Finish, 0}};
 
 const bsp::BuzzerNoteDelayed SingCaliDone[] = {
-    {Note::Re2M, 300}, {Note::Mi3M, 300}, {Note::Re2M, 300}, {Note::Finish, 0}};
+    {Note::Re2M, 100}, {Note::Mi3M, 100}, {Note::Re2M, 100}, {Note::Finish, 0}};

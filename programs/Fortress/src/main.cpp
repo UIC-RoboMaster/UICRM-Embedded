@@ -2,6 +2,7 @@
 
 #include "bsp_os.h"
 #include "bsp_print.h"
+#include "buzzer_notes.h"
 #include "buzzer_task.h"
 #include "chassis_task.h"
 #include "cmsis_os.h"
@@ -42,7 +43,8 @@ void RM_RTOS_Threads_Init(void) {
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
-    osDelay(1000);
+    osDelay(3000);
+    Buzzer_Sing(DJI);
     char s[50];
     while (true) {
         set_cursor(0, 0);

@@ -101,7 +101,7 @@ float RampSource::Calc(float input) {
     input_ = input;
     float sub_output = output_ - step_ * input_;
     float add_output = output_ + step_ * input_;
-    if((output_>max_&&sub_output<output_)||(output_<min_&&add_output>output_)){
+    if ((output_ > max_ && sub_output < output_) || (output_ < min_ && add_output > output_)) {
         output_ = sub_output;
         return output_;
     }

@@ -111,8 +111,6 @@ namespace communication {
         int GraphRefresh(int cnt, ...);
         int CharRefresh(graphic_data_t image, char* theString, int len);
 
-
-
         void CapGUIInit(graphic_data_t* barFrame, graphic_data_t* bar);
         void CapGUIUpdate(float cap);  // cap 0 - 1
         void CapGUICharInit(graphic_data_t* percent);
@@ -175,13 +173,13 @@ namespace communication {
 
     class ChassisGUI {
       public:
-        ChassisGUI(UserInterface* UI, int16_t chassis_X=1300,  int16_t chassis_Y=120, int16_t speed_center_X=200,
-                    int16_t speed_center_Y=780);
+        ChassisGUI(UserInterface* UI, int16_t chassis_X = 1300, int16_t chassis_Y = 120,
+                   int16_t speed_center_X = 200, int16_t speed_center_Y = 780);
         void Init();
         void Delete();
         void Init2();
         void Delete2();
-        void Update(float speed_x,float speed_y, float relative);
+        void Update(float speed_x, float speed_y, float relative);
 
       private:
         UserInterface* UI_;
@@ -203,11 +201,12 @@ namespace communication {
         graphic_data_t speed_y_val_;
     };
 
-    class CrossairGUI{
+    class CrossairGUI {
       public:
         CrossairGUI(UserInterface* UI);
         void Init();
         void Delete();
+
       private:
         UserInterface* UI_;
         graphic_data_t crosshair1_;
@@ -221,140 +220,131 @@ namespace communication {
         int16_t centerY_;
     };
 
-    class Bar{
-        public:
-          Bar(int16_t barStartX=1500, int16_t barStartY=350, int16_t barWidth=200, int16_t barHeight=50,uint8_t color=UI_Color_Orange,uint8_t frame_color=UI_Color_Pink,bool isVertical=false);
-          graphic_data_t Init();
-          graphic_data_t Delete();
-          graphic_data_t InitFrame();
-          graphic_data_t DeleteFrame();
-          graphic_data_t Update(float percent, int8_t color=-1);
-          static uint8_t barcount_;
-        private:
+    class Bar {
+      public:
+        Bar(int16_t barStartX = 1500, int16_t barStartY = 350, int16_t barWidth = 200,
+            int16_t barHeight = 50, uint8_t color = UI_Color_Orange,
+            uint8_t frame_color = UI_Color_Pink, bool isVertical = false);
+        graphic_data_t Init();
+        graphic_data_t Delete();
+        graphic_data_t InitFrame();
+        graphic_data_t DeleteFrame();
+        graphic_data_t Update(float percent, int8_t color = -1);
+        static uint8_t barcount_;
 
-          uint8_t barID_;
-          int16_t barStartX_;
-          int16_t barStartY_;
-          int16_t barWidth_;
-          int16_t barHeight_;
-          bool isVertical_;
-          float percent_;
-          uint8_t color_;
-          uint8_t frame_color_;
-          graphic_data_t barFrame_;
-          graphic_data_t bar_;
-          char name_[15];
-          char name_frame_[15];
+      private:
+        uint8_t barID_;
+        int16_t barStartX_;
+        int16_t barStartY_;
+        int16_t barWidth_;
+        int16_t barHeight_;
+        bool isVertical_;
+        float percent_;
+        uint8_t color_;
+        uint8_t frame_color_;
+        graphic_data_t barFrame_;
+        graphic_data_t bar_;
+        char name_[15];
+        char name_frame_[15];
     };
 
-    class GimbalGUI{
-        public:
-          GimbalGUI(UserInterface* UI,
-                    int16_t gimbal_speed_center_X=1620,
-                    int16_t gimbal_speed_center_Y=780,
-                    int16_t gimbal_speed_center_R=100,
-                    int16_t pitch_bar_X = 1800,
-                    int16_t pitch_bar_Y = 440,
-                    int16_t pitch_bar_height = 400,
-                    int16_t pitch_bar_weight = 30,
-                    float pitch_max = 0.4253f);
-          ~GimbalGUI();
-          void Init();
-          void Init2();
-          void Delete();
-          void Delete2();
-          void Update(float vpitch, float vyaw,float pitch,float yaw, bool flags);
-        private:
-          UserInterface* UI_;
-          int16_t gimbal_speed_center_X_;
-          int16_t gimbal_speed_center_Y_;
-          int16_t gimbal_speed_circle_R_;
-          int16_t pitch_bar_X_;
-          int16_t pitch_bar_Y_;
-          int16_t pitch_bar_height_;
-          int16_t pitch_bar_weight_;
-          float pitch_max_;
-          graphic_data_t speed_circle_;
-          graphic_data_t speed_center_;
-          graphic_data_t speed_x_axis_;
-          graphic_data_t speed_y_axis_;
-          graphic_data_t speed_x_val_;
-          graphic_data_t speed_y_val_;
-          graphic_data_t calibration_flag_;
-          Bar* pitch_bar_;
-          graphic_data_t pitch_bar_frame_;
-          graphic_data_t pitch_bar_val_;
+    class GimbalGUI {
+      public:
+        GimbalGUI(UserInterface* UI, int16_t gimbal_speed_center_X = 1620,
+                  int16_t gimbal_speed_center_Y = 780, int16_t gimbal_speed_center_R = 100,
+                  int16_t pitch_bar_X = 1800, int16_t pitch_bar_Y = 440,
+                  int16_t pitch_bar_height = 400, int16_t pitch_bar_weight = 30,
+                  float pitch_max = 0.4253f);
+        ~GimbalGUI();
+        void Init();
+        void Init2();
+        void Delete();
+        void Delete2();
+        void Update(float vpitch, float vyaw, float pitch, float yaw, bool flags);
+
+      private:
+        UserInterface* UI_;
+        int16_t gimbal_speed_center_X_;
+        int16_t gimbal_speed_center_Y_;
+        int16_t gimbal_speed_circle_R_;
+        int16_t pitch_bar_X_;
+        int16_t pitch_bar_Y_;
+        int16_t pitch_bar_height_;
+        int16_t pitch_bar_weight_;
+        float pitch_max_;
+        graphic_data_t speed_circle_;
+        graphic_data_t speed_center_;
+        graphic_data_t speed_x_axis_;
+        graphic_data_t speed_y_axis_;
+        graphic_data_t speed_x_val_;
+        graphic_data_t speed_y_val_;
+        graphic_data_t calibration_flag_;
+        Bar* pitch_bar_;
+        graphic_data_t pitch_bar_frame_;
+        graphic_data_t pitch_bar_val_;
     };
 
     typedef void (*delay_t)(uint32_t);
 
-    class CapGUI{
-        public:
-          CapGUI(UserInterface* UI,
-                 char* Cap_name,
-                 int16_t Cap_bar_X = 1500,
-                 int16_t Cap_bar_Y = 380,
-                 int16_t Cap_bar_width = 310,
-                 int16_t Cap_bar_height = 20
-                 );
-          ~CapGUI();
-          void Init();
-          void InitName();
-          void Delete();
-          void DeleteName();
-          void UpdateBulk(float percent,graphic_data_t* bar= nullptr,graphic_data_t* cap_percent= nullptr);
-          void Update(float Percent);
-        private:
-          UserInterface* UI_;
-          Bar* cap_bar_;
-          graphic_data_t barFrame_;
-          graphic_data_t bar_;
-          graphic_data_t cap_percent_;
-          char cap_percent_name_[15];
-          graphic_data_t cap_name_;
-          char cap_name_name_[15];
-          graphic_data_t empty_;
-          char empty_name_[15];
-          char* cap_name_str_;
-          delay_t delay_function_;
-          int16_t cap_bar_X_;
-          int16_t cap_bar_Y_;
-          int16_t cap_bar_height_;
-          int16_t cap_bar_width_;
-          int8_t cap_ID_;
-          static uint8_t cap_count_;
-          int8_t name_length_;
+    class CapGUI {
+      public:
+        CapGUI(UserInterface* UI, char* Cap_name, int16_t Cap_bar_X = 1500, int16_t Cap_bar_Y = 380,
+               int16_t Cap_bar_width = 310, int16_t Cap_bar_height = 20);
+        ~CapGUI();
+        void Init();
+        void InitName();
+        void Delete();
+        void DeleteName();
+        void UpdateBulk(float percent, graphic_data_t* bar = nullptr,
+                        graphic_data_t* cap_percent = nullptr);
+        void Update(float Percent);
+
+      private:
+        UserInterface* UI_;
+        Bar* cap_bar_;
+        graphic_data_t barFrame_;
+        graphic_data_t bar_;
+        graphic_data_t cap_percent_;
+        char cap_percent_name_[15];
+        graphic_data_t cap_name_;
+        char cap_name_name_[15];
+        graphic_data_t empty_;
+        char empty_name_[15];
+        char* cap_name_str_;
+        delay_t delay_function_;
+        int16_t cap_bar_X_;
+        int16_t cap_bar_Y_;
+        int16_t cap_bar_height_;
+        int16_t cap_bar_width_;
+        int8_t cap_ID_;
+        static uint8_t cap_count_;
+        int8_t name_length_;
     };
 
-    class StringGUI{
-        public:
-          StringGUI(UserInterface* UI,
-                    char* string_content,
-                    int16_t string_X = 1500,
-                    int16_t string_Y = 380,
-                    int8_t color = UI_Color_Main,
-                    int16_t string_size = 15,
-                    char* string_name = nullptr
-                    );
-          ~StringGUI();
-          graphic_data_t InitBulk();
-          void Init();
-          void InitString(char* string= nullptr);
-          graphic_data_t DeleteBulk();
-          void Delete();
-          void Update(char* string, int8_t color=-1,int16_t size=-1);
-          static uint8_t string_count_;
-        private:
-          UserInterface* UI_;
-          graphic_data_t string_;
-          char string_name_[15];
-          char* string_content_;
-          uint8_t string_length_;
-          int16_t string_X_;
-          int16_t string_Y_;
-          int16_t string_size_;
-          uint8_t string_ID_;
-          int8_t color_;
+    class StringGUI {
+      public:
+        StringGUI(UserInterface* UI, char* string_content, int16_t string_X = 1500,
+                  int16_t string_Y = 380, int8_t color = UI_Color_Main, int16_t string_size = 15,
+                  char* string_name = nullptr);
+        ~StringGUI();
+        graphic_data_t InitBulk();
+        void Init();
+        void InitString(char* string = nullptr);
+        graphic_data_t DeleteBulk();
+        void Delete();
+        void Update(char* string, int8_t color = -1, int16_t size = -1);
+        static uint8_t string_count_;
 
+      private:
+        UserInterface* UI_;
+        graphic_data_t string_;
+        char string_name_[15];
+        char* string_content_;
+        uint8_t string_length_;
+        int16_t string_X_;
+        int16_t string_Y_;
+        int16_t string_size_;
+        uint8_t string_ID_;
+        int8_t color_;
     };
 }  // namespace communication

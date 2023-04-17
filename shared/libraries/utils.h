@@ -1,4 +1,5 @@
 #pragma once
+#include "main.h"
 
 /**
  * @brief clip a value to fall into a given range
@@ -115,19 +116,17 @@ int sign(T value, T zero) {
 template <typename T>
 class EdgeDetector {
   public:
-    EdgeDetector(T initial);
+    EdgeDetector<T>(T initial);
     void input(T signal);
     bool edge();
     bool posEdge();
     bool negEdge();
 
   private:
-    int prev_;
+    T prev_;
     bool posEdge_;
     bool negEdge_;
 };
-
-
 
 class BoolEdgeDetector {
   public:
@@ -146,7 +145,7 @@ class BoolEdgeDetector {
 
 class FloatEdgeDetector {
   public:
-    FloatEdgeDetector(float initial, float threshold);
+    FloatEdgeDetector(float initial, float threshold = 0);
     void input(float signal);
     bool edge();
     bool posEdge();
