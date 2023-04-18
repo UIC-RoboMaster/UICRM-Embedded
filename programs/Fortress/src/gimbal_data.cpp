@@ -43,12 +43,12 @@ void init_gimbalSpinData() {
     float* pitch_omega_pid_param = new float[3]{2900, 60, 0};
     float* yaw_theta_pid_param = new float[3]{26, 0, 0.3};
     float* yaw_omega_pid_param = new float[3]{3600, 20, 0};
-    gimbalBasicPID.pitch_theta_pid = new control::ConstrainedPID(
+    gimbalSpinPID.pitch_theta_pid = new control::ConstrainedPID(
         pitch_theta_pid_param, pitch_theta_max_iout, pitch_theta_max_out);
-    gimbalBasicPID.pitch_omega_pid = new control::ConstrainedPID(
+    gimbalSpinPID.pitch_omega_pid = new control::ConstrainedPID(
         pitch_omega_pid_param, pitch_omega_max_iout, pitch_omega_max_out);
-    gimbalBasicPID.yaw_theta_pid =
+    gimbalSpinPID.yaw_theta_pid =
         new control::ConstrainedPID(yaw_theta_pid_param, yaw_theta_max_iout, yaw_theta_max_out);
-    gimbalBasicPID.yaw_omega_pid =
+    gimbalSpinPID.yaw_omega_pid =
         new control::ConstrainedPID(yaw_omega_pid_param, yaw_omega_max_iout, yaw_omega_max_out);
 }
