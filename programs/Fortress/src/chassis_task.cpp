@@ -30,10 +30,10 @@ void chassisTask(void* arg) {
     // float last_speed = 0;
     float sin_yaw, cos_yaw, vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
     float offset_yaw = 0;
-    float spin_speed = 500;
-    float manual_mode_yaw_pid_args[3] = {500, 0, 0};
+    float spin_speed = 350;
+    float manual_mode_yaw_pid_args[3] = {300, 0, 0};
     float manual_mode_yaw_pid_max_iout = 0;
-    float manual_mode_yaw_pid_max_out = 660;
+    float manual_mode_yaw_pid_max_out = 350;
     control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
         manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
     manual_mode_pid->Reset();
