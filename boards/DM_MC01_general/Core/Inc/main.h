@@ -85,7 +85,7 @@ void RM_RTOS_Default_Task(const void *argument);
 #define RS485_DIR2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+#define DM_MC01_GENERAL
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

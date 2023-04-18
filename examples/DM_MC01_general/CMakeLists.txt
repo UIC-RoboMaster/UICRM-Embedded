@@ -1,4 +1,6 @@
 get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 set(BOARD_NAME ${CURRENT_DIR_NAME})
 add_subdirectory(buzzer)
+add_subdirectory(led)
 add_subdirectory(motor)
+add_subdirectory(onboard_temp)
