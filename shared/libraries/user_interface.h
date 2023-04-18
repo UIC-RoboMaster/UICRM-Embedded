@@ -111,7 +111,6 @@ namespace communication {
         int GraphRefresh(int cnt, ...);
         int CharRefresh(graphic_data_t image, char* theString, int len);
 
-
         void DiagGUIInit(graphic_data_t* message, int len);
         void DiagGUIUpdate(int len);
         void DiagGUIClear(UserInterface* UI, Referee* referee, graphic_data_t* graph,
@@ -263,7 +262,6 @@ namespace communication {
         graphic_data_t pitch_bar_val_;
     };
 
-
     typedef void (*delay_t)(uint32_t milli);
 
     class CapGUI {
@@ -328,12 +326,13 @@ namespace communication {
         int8_t color_;
     };
 
-    class DiagGUI{
-        public:
-        DiagGUI(UserInterface* UI,int16_t diag_X = 350, int16_t diag_Y = 850);
+    class DiagGUI {
+      public:
+        DiagGUI(UserInterface* UI, int16_t diag_X = 350, int16_t diag_Y = 850);
         ~DiagGUI();
         void Update(char* String, delay_t delay_function, int8_t color);
         void Clear(delay_t delay_func = [](uint32_t milli) { HAL_Delay(milli); });
+
       private:
         UserInterface* UI_;
         StringGUI* diag_string_[25];

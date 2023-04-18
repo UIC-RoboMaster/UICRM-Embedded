@@ -434,7 +434,6 @@ namespace communication {
         //        return length;
     }
 
-
     void UserInterface::DiagGUIInit(graphic_data_t* message, int len) {
         diag_ = message;
         CharDraw(message, "M0", UI_Graph_Add, 2, UI_Color_Pink, 10, len, 2, diagStartX_,
@@ -562,10 +561,11 @@ namespace communication {
         UI_->LineDraw(&gimbal_, "g", UI_Graph_Change, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
                       chassis_X_, chassis_Y_ + gimbalLen_);
         // Static element that can be remove
-        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Change, 1, UI_Color_Yellow, 2, speed_center_X_,
-                        speed_center_Y_, speed_circle_R_);
+        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Change, 1, UI_Color_Yellow, 2,
+                        speed_center_X_, speed_center_Y_, speed_circle_R_);
 
-        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_,speed_circle_,speed_center_, speed_x_val_, speed_y_val_);
+        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_val_,
+                          speed_y_val_);
     }
 
     CrossairGUI::CrossairGUI(UserInterface* UI) : UI_(UI) {
@@ -923,19 +923,18 @@ namespace communication {
         UI_->CharRefresh(string_, string_content_, string_length_);
     }
 
-
-    DiagGUI::DiagGUI(communication::UserInterface* UI,int16_t diag_X, int16_t diag_Y):UI_(UI) {
+    DiagGUI::DiagGUI(communication::UserInterface* UI, int16_t diag_X, int16_t diag_Y) : UI_(UI) {
         diag_X_ = diag_X;
         diag_Y_ = diag_Y;
         count_ = 0;
-        for(uint8_t i=0;i<25;i++){
+        for (uint8_t i = 0; i < 25; i++) {
             diag_string_[i] = nullptr;
         }
     }
 
     DiagGUI::~DiagGUI() {
-        for(uint8_t i=0;i<25;i++){
-            if(diag_string_[i] != nullptr){
+        for (uint8_t i = 0; i < 25; i++) {
+            if (diag_string_[i] != nullptr) {
                 diag_string_[i]->Delete();
                 delete diag_string_[i];
                 diag_string_[i] = nullptr;
@@ -944,15 +943,15 @@ namespace communication {
     }
 
     void DiagGUI::Update(char* String, delay_t delay_function, int8_t color) {
-        if (count_ >= 25){
+        if (count_ >= 25) {
             return;
         }
         delay_function(100);
-        if(color== -1)
+        if (color == -1)
             color = UI_Color_Main;
         char name[15];
         snprintf(name, 15, "M%d", count_);
-        if(diag_string_[count_] == nullptr) {
+        if (diag_string_[count_] == nullptr) {
             diag_string_[count_] =
                 new StringGUI(UI_, String, diag_X_, diag_Y_ - count_ * 20, color, 10, name);
         }
@@ -960,7 +959,7 @@ namespace communication {
         count_++;
     }
     void DiagGUI::Clear(delay_t delay_func) {
-        for(uint8_t i=0;i<25;i++){
+        for (uint8_t i = 0; i < 25; i++) {
             delay_func(100);
             graphic_data_t temp;
             char name[15];
@@ -973,6 +972,5 @@ namespace communication {
         }
         count_ = 0;
     }
-
 
 }  // namespace communication

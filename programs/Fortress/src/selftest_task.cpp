@@ -7,7 +7,7 @@ selftest_t selftest;
 void selftestTask(void* arg) {
     UNUSED(arg);
     while (true) {
-        //Test Can Motor
+        // Test Can Motor
         fl_motor->connection_flag_ = false;
         fr_motor->connection_flag_ = false;
         bl_motor->connection_flag_ = false;
@@ -15,7 +15,7 @@ void selftestTask(void* arg) {
         yaw_motor->connection_flag_ = false;
         pitch_motor->connection_flag_ = false;
         steering_motor->connection_flag_ = false;
-        //Test DBUS
+        // Test DBUS
         dbus->connection_flag_ = false;
         osDelay(DETECT_OS_DELAY);
         selftest.fl_motor = fl_motor->connection_flag_;
@@ -32,6 +32,5 @@ void selftestTask(void* arg) {
     }
 }
 
-void init_selftest(){
-
+void init_selftest() {
 }

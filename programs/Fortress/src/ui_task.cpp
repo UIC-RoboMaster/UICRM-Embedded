@@ -15,7 +15,6 @@ void UI_Delay(uint32_t delay) {
     osDelay(delay);
 }
 
-
 void uiTask(void* arg) {
     UNUSED(arg);
 
@@ -30,7 +29,6 @@ void uiTask(void* arg) {
     UI->CircleDraw(&graphEmpty1, "E1", UI_Graph_Del, 0, UI_Color_Green, 0, 0, 0, 0);
     communication::graphic_data_t graphEmpty2;
     UI->CircleDraw(&graphEmpty2, "E2", UI_Graph_Del, 0, UI_Color_Green, 0, 0, 0, 0);
-
 
     // Initialize chassis GUI
     chassisGUI = new communication::ChassisGUI(UI);
@@ -186,43 +184,44 @@ void uiTask(void* arg) {
                 strcpy(diagStr, "FR MOTOR OFFLINE     ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
-                if (bl_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "BL MOTOR OFFLINE     ");
-                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-                }
-                if (br_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "BR MOTOR OFFLINE     ");
-                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-                }
-                if (yaw_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "YAW MOTOR OFFLINE    ");
-                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-                }
-                if (pitch_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "PITCH MOTOR OFFLINE  ");
-                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-                }
-                if(steer_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "STEER MOTOR OFFLINE  ");
-                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-                }
-                if (dbus_edge->negEdge()) {
-                        strcpy(diagStr, "DBUS OFFLINE         ");
-                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-                }
-                if (imu_cali_edge->posEdge()) {
-                        strcpy(diagStr, "IMU CALIBRATION DONE");
-                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Green);
-                }
-                if (imu_temp_edge->posEdge()) {
-                        strcpy(diagStr, "IMU TEMP NOT SAFE   ");
-                        diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-                }
+            if (bl_motor_check_edge->negEdge()) {
+                strcpy(diagStr, "BL MOTOR OFFLINE     ");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+            if (br_motor_check_edge->negEdge()) {
+                strcpy(diagStr, "BR MOTOR OFFLINE     ");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+            if (yaw_motor_check_edge->negEdge()) {
+                strcpy(diagStr, "YAW MOTOR OFFLINE    ");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+            if (pitch_motor_check_edge->negEdge()) {
+                strcpy(diagStr, "PITCH MOTOR OFFLINE  ");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+            if (steer_motor_check_edge->negEdge()) {
+                strcpy(diagStr, "STEER MOTOR OFFLINE  ");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+            if (dbus_edge->negEdge()) {
+                strcpy(diagStr, "DBUS OFFLINE         ");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+            if (imu_cali_edge->posEdge()) {
+                strcpy(diagStr, "IMU CALIBRATION DONE");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Green);
+            }
+            if (imu_temp_edge->posEdge()) {
+                strcpy(diagStr, "IMU TEMP NOT SAFE   ");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
         }
 
         // clear self-diagnosis messages
         v_edge->input(dbus->keyboard.bit.V);
         if (v_edge->posEdge()) {
+            osDelay(110);
             chassisGUI->Delete2();
             osDelay(110);
             chassisGUI->Delete();
@@ -243,6 +242,7 @@ void uiTask(void* arg) {
             UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
             osDelay(110);
             diagGUI->Clear(UI_Delay);
+            osDelay(110);
             chassisGUI->Init();
             osDelay(110);
             chassisGUI->Init2();
