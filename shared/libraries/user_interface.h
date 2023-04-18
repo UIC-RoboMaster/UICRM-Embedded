@@ -330,7 +330,7 @@ namespace communication {
 
     class DiagGUI{
         public:
-        explicit DiagGUI(UserInterface* UI,int16_t diag_X = 350, int16_t diag_Y = 910);
+        DiagGUI(UserInterface* UI,int16_t diag_X = 350, int16_t diag_Y = 850);
         ~DiagGUI();
         void Update(char* String, delay_t delay_function, int8_t color);
         void Clear(delay_t delay_func = [](uint32_t milli) { HAL_Delay(milli); });

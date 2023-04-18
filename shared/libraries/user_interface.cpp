@@ -938,6 +938,7 @@ namespace communication {
             if(diag_string_[i] != nullptr){
                 diag_string_[i]->Delete();
                 delete diag_string_[i];
+                diag_string_[i] = nullptr;
             }
         }
     }
@@ -946,26 +947,29 @@ namespace communication {
         if (count_ >= 25){
             return;
         }
+        delay_function(100);
         if(color== -1)
             color = UI_Color_Main;
         char name[15];
         snprintf(name, 15, "M%d", count_);
         if(diag_string_[count_] == nullptr) {
             diag_string_[count_] =
-                new StringGUI(UI_, String, diag_X_, diag_Y_ + count_ * 20, color, 10, name);
+                new StringGUI(UI_, String, diag_X_, diag_Y_ - count_ * 20, color, 10, name);
         }
         diag_string_[count_]->Init();
-        delay_function(100);
-        diag_string_[count_]->InitString();
         count_++;
     }
     void DiagGUI::Clear(delay_t delay_func) {
-        for(uint8_t i=0;i<count_;i++){
-            if(diag_string_[i] == nullptr)
-                continue;
-            diag_string_[i]->Delete();
+        for(uint8_t i=0;i<25;i++){
             delay_func(100);
+            graphic_data_t temp;
+            char name[15];
+            snprintf(name, 15, "M%d", i);
+            UI_->CharDraw(&temp, name, UI_Graph_Del, 4, UI_Color_Main, 10, 1, 2, diag_X_, diag_Y_);
+            UI_->GraphRefresh(1, temp);
+
             delete diag_string_[i];
+            diag_string_[i] = nullptr;
         }
         count_ = 0;
     }

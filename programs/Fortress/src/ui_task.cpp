@@ -179,35 +179,35 @@ void uiTask(void* arg) {
             imu_cali_edge->input(selftest.imu_cali);
             imu_temp_edge->input(selftest.imu_temp);
             if (fl_motor_check_edge->negEdge()) {
-                strcpy(diagStr, "FL MOTOR OFFLINE");
+                strcpy(diagStr, "FL MOTOR OFFLINE     ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
             if (fr_motor_check_edge->negEdge()) {
-                strcpy(diagStr, "FR MOTOR OFFLINE");
+                strcpy(diagStr, "FR MOTOR OFFLINE     ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
                 if (bl_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "BL MOTOR OFFLINE");
+                        strcpy(diagStr, "BL MOTOR OFFLINE     ");
                         diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
                 }
                 if (br_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "BR MOTOR OFFLINE");
+                        strcpy(diagStr, "BR MOTOR OFFLINE     ");
                         diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
                 }
                 if (yaw_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "YAW MOTOR OFFLINE");
+                        strcpy(diagStr, "YAW MOTOR OFFLINE    ");
                         diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
                 }
                 if (pitch_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "PITCH MOTOR OFFLINE");
+                        strcpy(diagStr, "PITCH MOTOR OFFLINE  ");
                         diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
                 }
                 if(steer_motor_check_edge->negEdge()) {
-                        strcpy(diagStr, "STEER MOTOR OFFLINE");
+                        strcpy(diagStr, "STEER MOTOR OFFLINE  ");
                         diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
                 }
                 if (dbus_edge->negEdge()) {
-                        strcpy(diagStr, "DBUS OFFLINE");
+                        strcpy(diagStr, "DBUS OFFLINE         ");
                         diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
                 }
                 if (imu_cali_edge->posEdge()) {
@@ -215,7 +215,7 @@ void uiTask(void* arg) {
                         diagGUI->Update(diagStr, UI_Delay, UI_Color_Green);
                 }
                 if (imu_temp_edge->posEdge()) {
-                        strcpy(diagStr, "IMU TEMP NOT SAFE");
+                        strcpy(diagStr, "IMU TEMP NOT SAFE   ");
                         diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
                 }
         }
