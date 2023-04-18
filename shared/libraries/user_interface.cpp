@@ -434,43 +434,6 @@ namespace communication {
         //        return length;
     }
 
-    void UserInterface::CapGUIInit(graphic_data_t* barFrame, graphic_data_t* bar) {
-        bar_ = bar;
-        int x = barStartX_;
-        int y = barStartY_;
-        RectangleDraw(barFrame, "FM", UI_Graph_Add, 0, UI_Color_Yellow, 2, x, y, x + 310, y + 20);
-        LineDraw(bar, "Bar", UI_Graph_Add, 0, UI_Color_Green, 10, x + 5, y + 10, x + 305, y + 10);
-    }
-
-    void UserInterface::CapGUIUpdate(float cap) {
-        cap_ = cap;
-        float offset = cap * 300;
-        int x = barStartX_;
-        int y = barStartY_;
-        int color;
-        uint32_t x_end = x + (uint32_t)offset;
-        if (cap >= 0 && cap <= 0.3)
-            color = UI_Color_Purplish_red;
-        else if (cap > 0.2 && cap < 0.95)
-            color = UI_Color_Orange;
-        else
-            color = UI_Color_Green;
-        LineDraw(bar_, "Bar", UI_Graph_Change, 0, color, 10, x + 5, y + 10, x_end, y + 10);
-    }
-
-    void UserInterface::CapGUICharInit(graphic_data_t* percent) {
-        percent_ = percent;
-        percentLen_ = snprintf(percentStr_, 30, "%d%%", 100);
-        CharDraw(percent, "PG", UI_Graph_Add, 2, UI_Color_Yellow, 15, percentLen_, 2,
-                 barStartX_ - 56, barStartY_ + 18);
-    }
-
-    void UserInterface::CapGUICharUpdate() {
-        percentLen_ = snprintf(percentStr_, 30, "%d%%", (int)(cap_ * 100));
-        CharDraw(percent_, "PG", UI_Graph_Change, 2, UI_Color_Yellow, 15, percentLen_, 2,
-                 barStartX_ - 56, barStartY_ + 18);
-    }
-
     void UserInterface::DiagGUIInit(graphic_data_t* message, int len) {
         diag_ = message;
         CharDraw(message, "M0", UI_Graph_Add, 2, UI_Color_Pink, 10, len, 2, diagStartX_,
@@ -501,46 +464,6 @@ namespace communication {
                      diagStartY_ - currCount * 20);
         UI->CharRefresh(*graph, str, 1);
         referee->PrepareUIContent(communication::CHAR_GRAPH);
-    }
-
-    void UserInterface::ModeGUIInit(graphic_data_t* modeGraph) {
-        CharDraw(modeGraph, "MG", UI_Graph_Add, 0, UI_Color_Yellow, 15, 30, 2, chassisX_ - 70,
-                 modeStartY_);
-    }
-
-    void UserInterface::ModeGuiUpdate(graphic_data_t* modeGraph, uint32_t color) {
-        CharDraw(modeGraph, "MG", UI_Graph_Change, 0, color, 15, 30, 2, chassisX_ - 70,
-                 modeStartY_);
-    }
-
-    void UserInterface::DistanceGUIInit(graphic_data_t* distanceGraph) {
-        CharDraw(distanceGraph, "DG", UI_Graph_Add, 0, UI_Color_Cyan, 10, 30, 2, centerX_ + 50,
-                 centerY_);
-    }
-
-    void UserInterface::DistanceGUIUpdate(graphic_data_t* distanceGraph, uint32_t color) {
-        CharDraw(distanceGraph, "DG", UI_Graph_Change, 0, color, 10, 30, 2, centerX_ + 50,
-                 centerY_);
-    }
-
-    void UserInterface::LidGUIInit(graphic_data_t* lidGraph) {
-        CharDraw(lidGraph, "LG", UI_Graph_Add, 0, UI_Color_Pink, 15, 30, 2, barStartX_,
-                 barStartY_ + 100);
-    }
-
-    void UserInterface::LidGuiUpdate(graphic_data_t* lidGraph, uint32_t color) {
-        CharDraw(lidGraph, "LG", UI_Graph_Change, 0, color, 15, 30, 2, barStartX_,
-                 barStartY_ + 100);
-    }
-
-    void UserInterface::WheelGUIInit(graphic_data_t* wheelGraph) {
-        CharDraw(wheelGraph, "WG", UI_Graph_Add, 0, UI_Color_Pink, 15, 30, 2, barStartX_,
-                 barStartY_ + 50);
-    }
-
-    void UserInterface::WheelGUIUpdate(graphic_data_t* wheelGraph, uint32_t color) {
-        CharDraw(wheelGraph, "WG", UI_Graph_Change, 0, color, 15, 30, 2, barStartX_,
-                 barStartY_ + 50);
     }
 
     ChassisGUI::ChassisGUI(UserInterface* UI, int16_t chassis_X, int16_t chassis_Y,
@@ -635,7 +558,14 @@ namespace communication {
         UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Change, 2, UI_Color_Green, 10, 2,
                      speed_center_X_ - 5, speed_center_Y_ - speed_circle_R_ - 10,
                      (int32_t)(speed_y * 100.0f));
-        UI_->GraphRefresh(5, chassis_, arrow_, speed_center_, speed_x_val_, speed_y_val_);
+        UI_->LineDraw(&gimbal_, "g", UI_Graph_Change, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
+                      chassis_X_, chassis_Y_ + gimbalLen_);
+        // Static element that can be remove
+        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Change, 1, UI_Color_Yellow, 2,
+                        speed_center_X_, speed_center_Y_, speed_circle_R_);
+
+        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_val_,
+                          speed_y_val_);
     }
 
     CrossairGUI::CrossairGUI(UserInterface* UI) : UI_(UI) {
@@ -646,19 +576,19 @@ namespace communication {
 
     void CrossairGUI::Init() {
         UI_->LineDraw(&crosshair1_, "ch1", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50,
-                      centerY_ - 40, centerX_ + 50, centerY_ - 40);
+                      centerY_ - 90, centerX_ + 50, centerY_ - 90);
         UI_->LineDraw(&crosshair2_, "ch2", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 55, centerX_ + 30, centerY_ - 55);
+                      centerY_ - 120, centerX_ + 30, centerY_ - 120);
         UI_->LineDraw(&crosshair3_, "ch3", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 60, centerX_ + 30, centerY_ - 60);
+                      centerY_ - 540, centerX_ + 30, centerY_ - 540);
         UI_->LineDraw(&crosshair4_, "ch4", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50,
-                      centerY_ - 70, centerX_ + 50, centerY_ - 70);
+                      centerY_ - 540, centerX_ + 50, centerY_ - 540);
         UI_->LineDraw(&crosshair5_, "ch5", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 80, centerX_ + 30, centerY_ - 80);
+                      centerY_ - 540, centerX_ + 30, centerY_ - 540);
         UI_->LineDraw(&crosshair6_, "ch6", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 90, centerX_ + 30, centerY_ - 90);
+                      centerY_ - 540, centerX_ + 30, centerY_ - 540);
         UI_->LineDraw(&crosshair7_, "ch7", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_,
-                      centerY_ - 30, centerX_, centerY_ - 100);
+                      centerY_ - 30, centerX_, centerY_ - 200);
         UI_->GraphRefresh(7, crosshair1_, crosshair2_, crosshair3_, crosshair4_, crosshair5_,
                           crosshair6_, crosshair7_);
     }
@@ -991,6 +921,56 @@ namespace communication {
         UI_->CharDraw(&string_, string_name_, UI_Graph_Change, 4, color_, string_size_,
                       string_length_, 2, string_X_, string_Y_);
         UI_->CharRefresh(string_, string_content_, string_length_);
+    }
+
+    DiagGUI::DiagGUI(communication::UserInterface* UI, int16_t diag_X, int16_t diag_Y) : UI_(UI) {
+        diag_X_ = diag_X;
+        diag_Y_ = diag_Y;
+        count_ = 0;
+        for (uint8_t i = 0; i < 25; i++) {
+            diag_string_[i] = nullptr;
+        }
+    }
+
+    DiagGUI::~DiagGUI() {
+        for (uint8_t i = 0; i < 25; i++) {
+            if (diag_string_[i] != nullptr) {
+                diag_string_[i]->Delete();
+                delete diag_string_[i];
+                diag_string_[i] = nullptr;
+            }
+        }
+    }
+
+    void DiagGUI::Update(char* String, delay_t delay_function, int8_t color) {
+        if (count_ >= 25) {
+            return;
+        }
+        delay_function(100);
+        if (color == -1)
+            color = UI_Color_Main;
+        char name[15];
+        snprintf(name, 15, "M%d", count_);
+        if (diag_string_[count_] == nullptr) {
+            diag_string_[count_] =
+                new StringGUI(UI_, String, diag_X_, diag_Y_ - count_ * 20, color, 10, name);
+        }
+        diag_string_[count_]->Init();
+        count_++;
+    }
+    void DiagGUI::Clear(delay_t delay_func) {
+        for (uint8_t i = 0; i < 25; i++) {
+            delay_func(100);
+            graphic_data_t temp;
+            char name[15];
+            snprintf(name, 15, "M%d", i);
+            UI_->CharDraw(&temp, name, UI_Graph_Del, 4, UI_Color_Main, 10, 1, 2, diag_X_, diag_Y_);
+            UI_->GraphRefresh(1, temp);
+
+            delete diag_string_[i];
+            diag_string_[i] = nullptr;
+        }
+        count_ = 0;
     }
 
 }  // namespace communication

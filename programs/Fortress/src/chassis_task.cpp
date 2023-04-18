@@ -116,6 +116,7 @@ void chassisTask(void* arg) {
             vx_set_org = dbus->ch0;
         } else if (ch0_edge->negEdge() || x_edge->posEdge()) {
             vx_set_org = 0;
+            vx_ramp->SetCurrent(0);
         } else if (d_edge->get()) {
             vx_set_org = vx_ramp->Calc(current_speed_offset);
         } else if (a_edge->get()) {
@@ -131,6 +132,7 @@ void chassisTask(void* arg) {
             vy_set_org = dbus->ch1;
         } else if (ch1_edge->negEdge() || x_edge->posEdge()) {
             vy_set_org = 0;
+            vy_ramp->SetCurrent(0);
         } else if (w_edge->get()) {
             vy_set_org = vy_ramp->Calc(current_speed_offset);
         } else if (s_edge->get()) {
@@ -146,6 +148,7 @@ void chassisTask(void* arg) {
             offset_yaw = dbus->ch4;
         } else if (ch4_edge->negEdge() || x_edge->posEdge()) {
             offset_yaw = 0;
+            vz_ramp->SetCurrent(0);
         } else if (e_edge->get()) {
             offset_yaw = vz_ramp->Calc(current_speed_offset);
         } else if (q_edge->get()) {

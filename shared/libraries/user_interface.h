@@ -111,33 +111,11 @@ namespace communication {
         int GraphRefresh(int cnt, ...);
         int CharRefresh(graphic_data_t image, char* theString, int len);
 
-        void CapGUIInit(graphic_data_t* barFrame, graphic_data_t* bar);
-        void CapGUIUpdate(float cap);  // cap 0 - 1
-        void CapGUICharInit(graphic_data_t* percent);
-        void CapGUICharUpdate();
         void DiagGUIInit(graphic_data_t* message, int len);
         void DiagGUIUpdate(int len);
         void DiagGUIClear(UserInterface* UI, Referee* referee, graphic_data_t* graph,
                           int currCount);
         void AddMessage(graphic_data_t* graph, char* messageStr, int len);
-        void ModeGUIInit(graphic_data_t* modeGraph);
-        void ModeGuiUpdate(graphic_data_t* modeGraph, uint32_t color);
-        void DistanceGUIInit(graphic_data_t* distanceGraph);
-        void DistanceGUIUpdate(graphic_data_t* distanceGraph, uint32_t color);
-        void LidGUIInit(graphic_data_t* lidGraph);
-        void LidGuiUpdate(graphic_data_t* lidGraph, uint32_t color);
-        void WheelGUIInit(graphic_data_t* wheelGraph);
-        void WheelGUIUpdate(graphic_data_t* wheelGraph, uint32_t color);
-
-        char* getPercentStr() {
-            return percentStr_;
-        }
-        int getPercentLen() {
-            return percentLen_;
-        }
-        int getMessageCount() {
-            return messageCount_;
-        }
 
       private:
         bsp::UART* uart_;
@@ -284,7 +262,7 @@ namespace communication {
         graphic_data_t pitch_bar_val_;
     };
 
-    typedef void (*delay_t)(uint32_t);
+    typedef void (*delay_t)(uint32_t milli);
 
     class CapGUI {
       public:
@@ -346,5 +324,20 @@ namespace communication {
         int16_t string_size_;
         uint8_t string_ID_;
         int8_t color_;
+    };
+
+    class DiagGUI {
+      public:
+        DiagGUI(UserInterface* UI, int16_t diag_X = 350, int16_t diag_Y = 850);
+        ~DiagGUI();
+        void Update(char* String, delay_t delay_function, int8_t color);
+        void Clear(delay_t delay_func = [](uint32_t milli) { HAL_Delay(milli); });
+
+      private:
+        UserInterface* UI_;
+        StringGUI* diag_string_[25];
+        int16_t diag_X_;
+        int16_t diag_Y_;
+        int8_t count_;
     };
 }  // namespace communication
