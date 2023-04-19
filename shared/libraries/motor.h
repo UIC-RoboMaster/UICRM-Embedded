@@ -468,7 +468,7 @@ namespace control {
 
         // angle control
         bool hold_; /* true if motor is holding now, otherwise moving now */
-        uint32_t start_time_;
+        uint64_t start_time_;
         float target_angle_; /* desired target angle, range between [0, 2PI] in [rad]
                               */
         float align_angle_;  /* motor angle when a instance of this class is created

@@ -18,6 +18,6 @@ namespace bsp {
      *
      * @return high res tick in [us] (0 if highres clock not set)
      */
-    uint32_t GetHighresTickMicroSec(void);
+    uint64_t GetHighresTickMicroSec(void);
 
 } /* namespace bsp */

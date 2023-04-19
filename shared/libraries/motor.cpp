@@ -335,7 +335,7 @@ namespace control {
         int16_t command;
         float target_diff = (target_angle_ - servo_angle_ - cumulated_angle_) * transmission_ratio_;
         // v = sqrt(2 * a * d)
-        uint32_t current_time = GetHighresTickMicroSec();
+        uint64_t current_time = GetHighresTickMicroSec();
         if (!hold_) {
             float speed_max_start =
                 (current_time - start_time_) / 10e6 * max_acceleration_ * transmission_ratio_;
