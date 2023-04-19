@@ -1,2 +1,3 @@
 add_subdirectory(DJI_Board_TypeC_general)
+add_subdirectory(DJI_Board_TypeA_general)
 add_subdirectory(DM_MC01_general)

@@ -25,3 +25,9 @@ uicrm_add_board_specific_library(DM_MC01_general_shared
     SOURCES ${UICRM_SOURCES}
     INCLUDES ${UICRM_INCLUDES}
     DEPENDS eigen3)
+
+uicrm_add_board_specific_library(DJI_Board_TypeA_general_shared
+        TARGET DJI_Board_TypeA_general
+        SOURCES ${UICRM_SOURCES}
+        INCLUDES ${UICRM_INCLUDES}
+        DEPENDS eigen3)
