@@ -1,6 +1,7 @@
-#include "cmsis_os.h"
 #include "main.h"
+
 #include "bsp_gpio.h"
+#include "cmsis_os.h"
 static bsp::GPIO* led = nullptr;
 
 void RM_RTOS_Init(void) {
