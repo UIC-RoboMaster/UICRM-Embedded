@@ -5,7 +5,8 @@ communication::UserInterface* UI = nullptr;
 communication::ChassisGUI* chassisGUI = nullptr;
 communication::CrossairGUI* crossairGui = nullptr;
 communication::GimbalGUI* gimbalGUI = nullptr;
-communication::CapGUI* batteryGUI = nullptr;
+//communication::CapGUI* batteryGUI = nullptr;
+communication::StringGUI* battGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
@@ -40,10 +41,16 @@ void uiTask(void* arg) {
     osDelay(110);
 
     // Initialize supercapacitor GUI
-    char batteryStr[15] = "BATTERY";
-    batteryGUI = new communication::CapGUI(UI, batteryStr);
+//    char batteryStr[15] = "BATTERY";
+//    batteryGUI = new communication::CapGUI(UI, batteryStr);
+//    osDelay(110);
+//    batteryGUI->InitName();
+//    osDelay(110);
+    char battStr[15] = "BATTERY 0.0v";
+    battGUI = new communication::StringGUI(UI, battStr, 1500, 380, UI_Color_Orange);
+    battGUI->Init();
     osDelay(110);
-    batteryGUI->InitName();
+    battGUI->InitString();
     osDelay(110);
 
     // Initialize Gimbal GUI
@@ -82,7 +89,7 @@ void uiTask(void* arg) {
     boostGUI->InitString();
     float relative_angle = 0;
     float pitch_angle = 0;
-    float power_percent = 1;
+//    float power_percent = 1;
     RemoteMode last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
     BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
@@ -107,9 +114,12 @@ void uiTask(void* arg) {
                            relative_angle);
         osDelay(UI_OS_DELAY);
 
-        power_percent = battery_vol->GetBatteryPercentage();
+//        power_percent = battery_vol->GetBatteryPercentage();
 
-        batteryGUI->Update(power_percent);
+//        batteryGUI->Update(power_percent);
+        float current_vol = battery_vol->GetBatteryVol();
+        snprintf(battStr, 15, "BATTERY %.1fv", current_vol);
+        battGUI->Update(battStr);
         osDelay(UI_OS_DELAY);
 
         // Update Gimbal GUI
@@ -231,10 +241,12 @@ void uiTask(void* arg) {
             gimbalGUI->Delete();
             osDelay(110);
             crossairGui->Delete();
+//            osDelay(110);
+//            batteryGUI->DeleteName();
+//            osDelay(110);
+//            batteryGUI->Delete();
             osDelay(110);
-            batteryGUI->DeleteName();
-            osDelay(110);
-            batteryGUI->Delete();
+            battGUI->Delete();
             osDelay(110);
             graphMode = modeGUI->DeleteBulk();
             graphBoost = boostGUI->DeleteBulk();
@@ -253,9 +265,13 @@ void uiTask(void* arg) {
             osDelay(110);
             crossairGui->Init();
             osDelay(110);
-            batteryGUI->Init();
+//            batteryGUI->Init();
+//            osDelay(110);
+//            batteryGUI->InitName();
+//            osDelay(110);
+            battGUI->Init();
             osDelay(110);
-            batteryGUI->InitName();
+            battGUI->InitString();
             osDelay(110);
             graphMode = modeGUI->InitBulk();
             graphWheel = wheelGUI->InitBulk();
