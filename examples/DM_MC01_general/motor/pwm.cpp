@@ -32,6 +32,9 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
+    bsp::GPIO power_output(Power_5V_EN_GPIO_Port, Power_5V_EN_Pin);
+    osDelay(1000);
+    power_output.High();
 
     int current = 0;
     while (true) {

@@ -25,7 +25,13 @@ namespace bsp {
         return adc_->Read();
     }
     float BatteryVol::GetBatteryVol() {
+#ifdef DJI_BOARD_TYPE_C_GENERAL
         return (float)Read() * voltage_vrefint_proportion * 10.090909090909090909090909090909f;
+#endif
+#ifdef DM_MC01_GENERAL
+        return (float)Read() * voltage_vrefint_proportion * 11.0f;
+#endif
+        return 0.0f;
     }
     float BatteryVol::calcBatteryPercentage(float voltage) {
         float percentage;
