@@ -28,6 +28,9 @@ namespace bsp {
 #ifdef DJI_BOARD_TYPE_C_GENERAL
         return (float)Read() * voltage_vrefint_proportion * 10.090909090909090909090909090909f;
 #endif
+#ifdef DJI_BOARD_TYPE_A_GENERAL
+        return (float)Read() * voltage_vrefint_proportion * 10.090909090909090909090909090909f;
+#endif
 #ifdef DM_MC01_GENERAL
         return (float)Read() * voltage_vrefint_proportion * 11.0f;
 #endif
