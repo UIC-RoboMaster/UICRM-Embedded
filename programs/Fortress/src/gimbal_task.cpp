@@ -90,6 +90,7 @@ void gimbalTask(void* arg) {
 
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
+            case REMOTE_MODE_RANDOMSPIN:
             case REMOTE_MODE_FOLLOW:
             case REMOTE_MODE_ADVANCED:
                 gimbal->TargetRel(pitch_diff, yaw_diff);

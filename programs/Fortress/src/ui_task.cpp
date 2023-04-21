@@ -143,6 +143,10 @@ void uiTask(void* arg) {
                     strcpy(modeStr, "SPIN MODE     ");
                     modeColor = UI_Color_Orange;
                     break;
+                case REMOTE_MODE_RANDOMSPIN:
+                    strcpy(modeStr, "RSPIN MODE    ");
+                    modeColor = UI_Color_Orange;
+                    break;
                 case REMOTE_MODE_ADVANCED:
                     strcpy(modeStr, "ADVANCED MODE ");
                     modeColor = UI_Color_Green;

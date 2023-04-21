@@ -60,6 +60,8 @@ void chassisTask(void* arg) {
     BoolEdgeDetector* ch2_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* ch3_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
+
+    int random_spin_start_time = 0;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
@@ -170,6 +172,22 @@ void chassisTask(void* arg) {
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(
                     yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
                 chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);
+                chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
+                                referee->power_heat_data.chassis_power,
+                                (float)referee->power_heat_data.chassis_power_buffer);
+                break;
+            case REMOTE_MODE_RANDOMSPIN:
+                if(HAL_GetTick() - random_spin_start_time > 3000){
+                    random_spin_start_time = HAL_GetTick();
+                    float random_spin_speed = (float)(rand() % 198)+463;
+                    if(spin_speed > 0) {
+                        spin_speed = random_spin_speed;
+                    } else {
+                        spin_speed = -random_spin_speed;
+                    }
+                }
+                vz_set = spin_speed;
+                chassis->SetSpeed(vx_set, vy_set, vz_set);
                 chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
                                 referee->power_heat_data.chassis_power,
                                 (float)referee->power_heat_data.chassis_power_buffer);
