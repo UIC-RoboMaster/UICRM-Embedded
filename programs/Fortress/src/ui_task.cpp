@@ -11,6 +11,7 @@ communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
+communication::StringGUI* HeatGUI = nullptr;
 
 void UI_Delay(uint32_t delay) {
     osDelay(delay);
@@ -73,20 +74,31 @@ void uiTask(void* arg) {
     char boostModeStr[15] = "BOOST!";
     char boostOffStr[15] = " ";
     boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
+    char HeatOffStr[15] = "     ";
+    char HeatOnStr[15] = " HEAT!";
+    HeatGUI = new communication::StringGUI(UI,HeatOnStr,870,700,UI_Color_Yellow,30);
     communication::graphic_data_t graphMode;
     communication::graphic_data_t graphWheel;
     communication::graphic_data_t graphBoost;
+    communication::graphic_data_t graphHeat;
 
     graphMode = modeGUI->InitBulk();
     graphWheel = wheelGUI->InitBulk();
     graphBoost = boostGUI->InitBulk();
-    UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+    graphHeat = HeatGUI->InitBulk();
+
+    UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphHeat, graphEmpty2);
     osDelay(110);
     modeGUI->InitString();
     osDelay(110);
     wheelGUI->InitString();
     osDelay(110);
     boostGUI->InitString();
+    osDelay(110);
+    HeatGUI->InitString();
+    osDelay(1000);
+    HeatGUI->Update(HeatOffStr);
+    osDelay(100);
     float relative_angle = 0;
     float pitch_angle = 0;
     //    float power_percent = 1;
@@ -106,6 +118,8 @@ void uiTask(void* arg) {
     BoolEdgeDetector* dbus_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* imu_cali_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* imu_temp_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* Heat_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* Heat_extra_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
@@ -177,6 +191,25 @@ void uiTask(void* arg) {
         }
         last_mode = remote_mode;
         last_fric_mode = shoot_fric_mode;
+        bool need_heat_limit = referee->power_heat_data.shooter_id1_17mm_cooling_heat>=referee->game_robot_status.shooter_id1_17mm_cooling_limit-60;
+        bool need_extra_heat_limit = referee->power_heat_data.shooter_id1_17mm_cooling_heat>=referee->game_robot_status.shooter_id1_17mm_cooling_limit-30;
+        Heat_edge->input(need_heat_limit);
+        Heat_extra_edge->input(need_extra_heat_limit);
+        if(Heat_edge->edge() || Heat_extra_edge->edge()){
+            osDelay(60);
+            if(need_extra_heat_limit){
+                HeatGUI->Update(HeatOnStr,UI_Color_Pink);
+            }
+            else if(need_heat_limit){
+                HeatGUI->Update(HeatOnStr,UI_Color_Yellow);
+            }
+            else{
+                HeatGUI->Update(HeatOffStr);
+            }
+            osDelay(UI_OS_DELAY);
+        }
+
+
 
         // Update self-diagnosis messages
         {
@@ -255,7 +288,8 @@ void uiTask(void* arg) {
             graphMode = modeGUI->DeleteBulk();
             graphBoost = boostGUI->DeleteBulk();
             graphWheel = wheelGUI->DeleteBulk();
-            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            graphHeat = HeatGUI->DeleteBulk();
+            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphHeat, graphEmpty2);
             osDelay(110);
             diagGUI->Clear(UI_Delay);
             osDelay(110);
@@ -280,7 +314,10 @@ void uiTask(void* arg) {
             graphMode = modeGUI->InitBulk();
             graphWheel = wheelGUI->InitBulk();
             graphBoost = boostGUI->InitBulk();
-            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+
+            graphHeat = HeatGUI->InitBulk();
+
+            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphHeat, graphEmpty2);
             osDelay(110);
             modeGUI->InitString();
             osDelay(110);

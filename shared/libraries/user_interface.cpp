@@ -569,7 +569,7 @@ namespace communication {
     }
 
     CrossairGUI::CrossairGUI(UserInterface* UI) : UI_(UI) {
-        centerX_ = 960;
+        centerX_ = 960-10;
         centerY_ = 540;
         Init();
     }
@@ -577,10 +577,10 @@ namespace communication {
     void CrossairGUI::Init() {
         UI_->LineDraw(&crosshair1_, "ch1", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50,
                       centerY_ - 90, centerX_ + 50, centerY_ - 90);
-        UI_->LineDraw(&crosshair2_, "ch2", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 120, centerX_ + 30, centerY_ - 120);
-        UI_->LineDraw(&crosshair3_, "ch3", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 540, centerX_ + 30, centerY_ - 540);
+        UI_->LineDraw(&crosshair2_, "ch2", UI_Graph_Add, 0, UI_Color_Yellow, 2, centerX_ - 30,
+                      centerY_ - 95, centerX_ + 30, centerY_ - 95);
+        UI_->LineDraw(&crosshair3_, "ch3", UI_Graph_Add, 0, UI_Color_Pink, 2, centerX_ - 30,
+                      centerY_ - 110, centerX_ + 30, centerY_ - 110);
         UI_->LineDraw(&crosshair4_, "ch4", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50,
                       centerY_ - 540, centerX_ + 50, centerY_ - 540);
         UI_->LineDraw(&crosshair5_, "ch5", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,

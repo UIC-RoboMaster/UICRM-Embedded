@@ -162,6 +162,7 @@ void shootTask(void* arg) {
             // 准备就绪判断
             shoot_fric_mode = SHOOT_FRIC_MODE_PREPARED;
         }
+        bool need_heat_limit = referee->power_heat_data.shooter_id1_17mm_cooling_heat>=referee->game_robot_status.shooter_id1_17mm_cooling_limit-20;
         if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
             shoot_state_key = shoot_key->Read();
             switch (shoot_mode) {
@@ -196,6 +197,13 @@ void shootTask(void* arg) {
                     }
                     break;
                 case SHOOT_MODE_SINGLE:
+                    if(need_heat_limit){
+                        shoot_mode = SHOOT_MODE_PREPARED;
+                        if (!load_servo->Holding()) {
+                            load_servo->SetTarget(load_servo->GetTheta(), true);
+                        }
+                        break;
+                    }
                     // 发射一枚子弹
                     if (shoot_state_key_storage == 0 && shoot_state_key == 0) {
                         shoot_state_key_storage = 1;
@@ -210,6 +218,13 @@ void shootTask(void* arg) {
                         load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, false);
                     break;
                 case SHOOT_MODE_BURST:
+                    if(need_heat_limit){
+                        shoot_mode = SHOOT_MODE_PREPARED;
+                        if (!load_servo->Holding()) {
+                            load_servo->SetTarget(load_servo->GetTheta(), true);
+                        }
+                        break;
+                    }
                     // 连发子弹
                     load_servo->SetTarget(load_servo->GetTarget() + 2 * PI, true);
                     shoot_state_key_storage = 0;
