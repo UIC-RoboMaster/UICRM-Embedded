@@ -29,7 +29,8 @@ void RM_RTOS_Init() {
         .max_speed = 400 * PI,
         .omega_pid_param = pid1_param,
         .is_inverted = false,
-    };control::flywheel_t flywheel2_data = {
+    };
+    control::flywheel_t flywheel2_data = {
         .motor = motor2,
         .max_speed = 400 * PI,
         .omega_pid_param = pid2_param,
@@ -44,7 +45,7 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-    control::MotorCANBase* motors[] = {motor1,motor2};
+    control::MotorCANBase* motors[] = {motor1, motor2};
     float current = 0;
     while (true) {
         set_cursor(0, 0);
