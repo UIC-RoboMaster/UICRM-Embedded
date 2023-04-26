@@ -526,6 +526,7 @@ namespace control {
         motor_ = data.motor;
         max_speed_ = data.max_speed;
         target_speed_ = 0;
+        is_inverted_ = data.is_inverted;
         omega_pid_ = PIDController(data.omega_pid_param);
     }
     void FlyWheelMotor::SetSpeed(float speed) {
