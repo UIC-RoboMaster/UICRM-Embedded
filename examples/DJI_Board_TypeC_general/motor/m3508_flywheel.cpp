@@ -45,7 +45,7 @@ void RM_RTOS_Default_Task(const void* args) {
                 osDelay(30);
             }
             if (current == 0) {
-                current = 200*PI;
+                current = 200 * PI;
                 flywheel->SetSpeed(current);
             } else {
                 current = 0;

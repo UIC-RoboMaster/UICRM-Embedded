@@ -552,12 +552,11 @@ namespace control {
      * @brief structure used when flywheel motor instance is initialized
      */
     typedef struct {
-        MotorCANBase* motor;      /* motor instance to be wrapped as a flywheel      */
-        float max_speed;          /* desired turning speed of motor shaft, in [rad/s]  */
-        float* omega_pid_param;   /* pid parameter used to control speed of motor   */
+        MotorCANBase* motor;    /* motor instance to be wrapped as a flywheel      */
+        float max_speed;        /* desired turning speed of motor shaft, in [rad/s]  */
+        float* omega_pid_param; /* pid parameter used to control speed of motor   */
         bool is_inverted;
     } flywheel_t;
-
 
     /**
      * @brief class for flywheel motor
@@ -627,6 +626,7 @@ namespace control {
          * @param data[]  raw data bytes
          */
         void UpdateData(const uint8_t data[]);
+
       private:
         MotorCANBase* motor_;
         bool is_inverted_;

@@ -529,20 +529,20 @@ namespace control {
         omega_pid_ = PIDController(data.omega_pid_param);
     }
     void FlyWheelMotor::SetSpeed(float speed) {
-        if(is_inverted_){
+        if (is_inverted_) {
             speed = -speed;
         }
         speed = clip<float>(speed, -max_speed_, max_speed_);
         target_speed_ = speed;
     }
     void FlyWheelMotor::CalcOutput() {
-        motor_->SetOutput(omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_speed_)));
+        motor_->SetOutput(
+            omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_speed_)));
     }
     float FlyWheelMotor::GetTarget() const {
-        if(is_inverted_){
+        if (is_inverted_) {
             return -target_speed_;
-        }
-        else {
+        } else {
             return target_speed_;
         }
     }
