@@ -27,3 +27,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m3508
         TARGET ${BOARD_NAME}
         SOURCES servo_m3508.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_m4310_mit
+        TARGET ${BOARD_NAME}
+        SOURCES m4310_mit.cpp)
