@@ -58,7 +58,7 @@ void RM_RTOS_Default_Task(const void* args) {
                 osDelay(30);
             }
             if (current == 0) {
-                current = 200 * PI;
+                current = 200.0f/6*5 * PI;
                 flywheel1->SetSpeed(current);
                 flywheel2->SetSpeed(current);
             } else {
@@ -69,9 +69,9 @@ void RM_RTOS_Default_Task(const void* args) {
         }
         flywheel1->CalcOutput();
         flywheel2->CalcOutput();
+        motor1->PrintData();
+        motor2->PrintData();
         control::MotorCANBase::TransmitOutput(motors, 2);
-        flywheel1->PrintData();
-        flywheel2->PrintData();
         osDelay(1);
     }
 }
