@@ -651,7 +651,6 @@ namespace control {
     }
 
     void Motor4310::UpdateData(const uint8_t data[]) {
-        // TODO need test
         raw_pos_ = data[1] << 8 | data[2];
         raw_vel_ = data[3] << 4 | (data[4] & 0xf0) >> 4;
         raw_torque_ = data[5] | (data[4] & 0x0f) << 8;
@@ -668,9 +667,9 @@ namespace control {
     void Motor4310::PrintData() {
         set_cursor(0, 0);
         clear_screen();
-        print("Position: % .4f \r\n", GetTheta());
-        print("Velocity: % .4f \r\n", GetOmega());
-        print("Torque: % .4f \r\n", GetTorque());
+        print("Position: % .4f ", GetTheta());
+        print("Velocity: % .4f ", GetOmega());
+        print("Torque: % .4f ", GetTorque());
         print("Rotor temp: % .4f \r\n", raw_motorTemp_);
     }
 

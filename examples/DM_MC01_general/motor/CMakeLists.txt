@@ -31,3 +31,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_servo_m3508
 uicrm_add_arm_executable(${PROJECT_NAME}_m4310_mit
         TARGET ${BOARD_NAME}
         SOURCES m4310_mit.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_m4310_posvel
+        TARGET ${BOARD_NAME}
+        SOURCES m4310_posvel.cpp)
