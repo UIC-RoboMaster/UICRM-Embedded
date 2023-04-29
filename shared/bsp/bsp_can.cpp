@@ -105,10 +105,11 @@ namespace bsp {
         HAL_CAN_GetRxMessage(hcan_, CAN_RX_FIFO0, &header, data);
         uint32_t std_id = header.StdId;
         int16_t callback_id;
-        if (callback_map.find(std_id) == callback_map.end())
+        const auto it = callback_map.find(std_id);
+        if (it == callback_map.end())
             return;
         else
-            callback_id = callback_map[std_id];
+            callback_id = it->second;
         // find corresponding callback
         if (callback_id >= 0 && callback_id < MAX_CAN_DEVICES && rx_callbacks_[callback_id])
             rx_callbacks_[callback_id](data, rx_args_[callback_id]);
