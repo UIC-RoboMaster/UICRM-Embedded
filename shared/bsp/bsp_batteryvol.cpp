@@ -3,7 +3,7 @@ namespace bsp {
     BatteryVol::BatteryVol(ADC_HandleTypeDef* hadc, uint32_t channel, uint32_t rank,
                            uint32_t sampling_time) {
         adc_ = new bADC(hadc, channel, rank, sampling_time);
-        adc_vrefint_ = new bADC(&hadc1, ADC_CHANNEL_VREFINT, 1, ADC_SAMPLETIME_3CYCLES);
+        adc_vrefint_ = new bADC(&hadc1, ADC_CHANNEL_VREFINT, 2, ADC_SAMPLETIME_3CYCLES);
         adc_vrefint_->Start();
     }
     void BatteryVol::InitVREF() {
