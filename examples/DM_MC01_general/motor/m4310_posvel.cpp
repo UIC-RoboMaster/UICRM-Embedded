@@ -41,10 +41,10 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetOutput(12.5, 30, 80, 0.5, 5);
+                motor1->SetOutput(motor1->GetTheta()+2*PI, 30);
             } else {
                 current = 0;
-                motor1->SetOutput(-12.5, 30, 80, 0.5, 5);
+                // motor1->SetOutput(-12.5, 30);
             }
         }
         motor1->PrintData();

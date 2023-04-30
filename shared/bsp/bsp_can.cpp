@@ -63,13 +63,14 @@ namespace bsp {
     }
 
     int CAN::RegisterRxCallback(uint32_t std_id, can_rx_callback_t callback, void* args) {
-        if (callback_count >= MAX_CAN_DEVICES)
+        int callback_id = std_id - start_id_;
+
+        if (callback_id < 0 || callback_id >= MAX_CAN_DEVICES)
             return -1;
 
-        rx_args_[callback_count] = args;
-        rx_callbacks_[callback_count] = callback;
-        callback_map[std_id] = callback_count;
-        callback_count++;
+        rx_args_[callback_id] = args;
+        rx_callbacks_[callback_id] = callback;
+
         return 0;
     }
 
@@ -103,13 +104,7 @@ namespace bsp {
         CAN_RxHeaderTypeDef header;
         uint8_t data[MAX_CAN_DATA_SIZE];
         HAL_CAN_GetRxMessage(hcan_, CAN_RX_FIFO0, &header, data);
-        uint32_t std_id = header.StdId;
-        int16_t callback_id;
-        const auto it = callback_map.find(std_id);
-        if (it == callback_map.end())
-            return;
-        else
-            callback_id = it->second;
+        int callback_id = header.StdId - start_id_;
         // find corresponding callback
         if (callback_id >= 0 && callback_id < MAX_CAN_DEVICES && rx_callbacks_[callback_id])
             rx_callbacks_[callback_id](data, rx_args_[callback_id]);

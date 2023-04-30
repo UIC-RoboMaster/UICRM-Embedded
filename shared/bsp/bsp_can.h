@@ -63,8 +63,6 @@ namespace bsp {
         void RxCallback();
 
       private:
-        std::map<uint16_t, uint8_t> callback_map;
-        int16_t callback_count = 0;
         void ConfigureFilter(bool is_master);
 
         CAN_HandleTypeDef* hcan_;
