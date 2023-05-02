@@ -38,6 +38,7 @@
         * Output
         * EVENT_OUT
         * EXTI
+     PC5   ------> USART3_RX
      PB5   ------> S_TIM3_CH2
 */
 void MX_GPIO_Init(void)
