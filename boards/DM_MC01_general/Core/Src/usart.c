@@ -568,7 +568,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
   /* USER CODE END USART2_MspDeInit 1 */
   }
-  /* USER CODE BEGIN 2*/
+/* USER CODE END 4 */
   else if(uartHandle->Instance==USART3)
   {
     /* Peripheral clock disable */
@@ -587,7 +587,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     /* USART3 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USART3_IRQn);
   }
-  /* USER CODE END 2*/
+  /* USER CODE END 4 */
 }
 
 /* USER CODE BEGIN 1 */
