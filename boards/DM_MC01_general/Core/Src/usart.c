@@ -418,10 +418,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_NVIC_SetPriority(USART2_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
-
-  /* USER CODE END USART2_MspInit 1 */
   }
-/* USER CODE BEGIN 3 */
   else if(uartHandle->Instance==USART3)
   {
     /* USART3 clock enable */
@@ -463,8 +460,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     /* USART3 interrupt Init */
     HAL_NVIC_SetPriority(USART3_IRQn, 4, 0);
     HAL_NVIC_EnableIRQ(USART3_IRQn);
+
+  /* USER CODE END USART2_MspInit 1 */
   }
-/* USER CODE END 3 */
 }
 
 void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
@@ -565,10 +563,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     /* USART2 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspDeInit 1 */
-
-  /* USER CODE END USART2_MspDeInit 1 */
   }
-/* USER CODE END 4 */
   else if(uartHandle->Instance==USART3)
   {
     /* Peripheral clock disable */
@@ -586,8 +581,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
     /* USART3 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USART3_IRQn);
+
+  /* USER CODE END USART2_MspDeInit 1 */
   }
-  /* USER CODE END 4 */
+
 }
 
 /* USER CODE BEGIN 1 */
