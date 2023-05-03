@@ -71,6 +71,9 @@ namespace bsp {
         can_rx_callback_t rx_callbacks_[MAX_CAN_DEVICES] = {0};
         void* rx_args_[MAX_CAN_DEVICES] = {NULL};
 
+        std::map<uint16_t, uint8_t> id_to_index_;
+        uint8_t callback_count_ = 0;
+
         static std::map<CAN_HandleTypeDef*, CAN*> ptr_map;
         static CAN* FindInstance(CAN_HandleTypeDef* hcan);
         static bool HandleExists(CAN_HandleTypeDef* hcan);
