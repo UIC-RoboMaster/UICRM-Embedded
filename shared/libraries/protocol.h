@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bsp_error_handler.h"
+#include "dbus.h"
 
 namespace communication {
 
@@ -117,7 +118,7 @@ namespace communication {
      * 0x0301 STUDENT_INTERACTIVE
      * 0x0302 ROBOT_INTERACTIVE [x]
      * 0x0303 ROBOT_COMMAND [x]
-     * 0x0304 ROBOT_COMMAND [x]
+     * 0x0304 REMOTE_CONTROL_DATA
      * 0x0305 CLIENT_MAP_COMMAND [x]
      */
 
@@ -142,6 +143,7 @@ namespace communication {
         RFID_STATUS = 0x0209,
         DART_CLIENT_CMD = 0x020A,
         STUDENT_INTERACTIVE = 0x0301,
+        REMOTE_CONTROL_DATA = 0x304
     } referee_cmd;
 
     /* ===== GAME_STATUS 0x0001 1Hz ===== */
@@ -363,6 +365,12 @@ namespace communication {
         CHAR_GRAPH,
     };
 
+    typedef struct {
+        remote::mouse_t mouse;
+        remote::keyboard_t keyboard;
+        uint16_t reserved;
+    } __packed remote_control_t;
+
     class Referee : public Protocol {
       public:
         game_status_t game_status{};
@@ -389,6 +397,8 @@ namespace communication {
         graphic_five_t graphic_five{};
         graphic_seven_t graphic_seven{};
         graphic_character_t graphic_character{};
+
+        remote_control_t remote_control{};
 
         void PrepareUIContent(content graph_content);
 

@@ -120,6 +120,9 @@ namespace communication {
             case DART_CLIENT_CMD:
                 memcpy(&dart_client_cmd, data, length);
                 break;
+            case REMOTE_CONTROL_DATA:
+                memcpy(&remote_control, data, length);
+                break;
             default:
                 return false;
         }
