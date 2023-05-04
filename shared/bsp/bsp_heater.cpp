@@ -12,7 +12,7 @@ namespace bsp {
         pid_.Reinit(pid_param, heater_I_limit, heater_output_limit);
     }
 
-    Heater::Heater(heater_init_t init) : pwm_(init.htim, init.channel, init.clock_freq, 2000, 0) {
+    Heater::Heater(heater_init_t init) : pwm_(init.htim, init.channel, init.clock_freq, 2000, 0), pid_() {
         temp_ = init.temp;
         pwm_.Start();
         float* pid_param = new float[3]{160, 0.1, 0};
