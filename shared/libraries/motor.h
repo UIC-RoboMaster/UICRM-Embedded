@@ -548,6 +548,136 @@ namespace control {
         bool align_complete_;
     };
 
+    typedef enum {
+        MIT = 0,
+        POS_VEL = 1,
+        VEL = 2,
+    } m4310_mode_t;
+    /**
+     * @brief m4310 motor class
+     */
+    class Motor4310 {
+      public:
+        /** constructor wrapper over MotorCANBase
+         *  CAN frame id for different modes:
+         *      MIT:                  actual CAN id.
+         *      position-velocity:    CAN id + 0x100.
+         *      velocity:             CAN id + 0x200.
+         *  @param can    CAN object
+         *  @param rx_id  Master id
+         *  @param tx_id  CAN id *** NOT the actual CAN id but the id configured in software ***
+         *  @param mode   0: MIT
+         *                1: position-velocity
+         *                2: velocity
+         */
+        Motor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, m4310_mode_t mode);
+
+        /* implements data update callback */
+        void UpdateData(const uint8_t data[]);
+
+        /* enable m4310 */
+        void MotorEnable();
+        /* disable m4310 */
+        void MotorDisable();
+        /* set zero position */
+        void SetZeroPos();
+
+        /**
+         * @brief get motor angle, in [rad]
+         *
+         * @return radian angle
+         */
+        float GetTheta() const;
+        /**
+         * @brief get motor angular velocity, in [rad / s]
+         * @return radian angular velocity
+         */
+        float GetOmega() const;
+
+        /**
+         * @brief get motor torque, in [Nm]
+         * @return motor torque
+         */
+        float GetTorque() const;
+        /**
+         * implements transmit output specifically for 4310
+         * @param motor m4310 motor object
+         * @param mode operation modes:
+         *                0: MIT
+         *                1: position-velocity
+         *                2: velocity
+         */
+        void TransmitOutput();
+
+        /* implements data printout */
+        void PrintData();
+
+        /* set output parameters for m4310 using MIT mode */
+        void SetOutput(float position, float velocity, float kp, float kd, float torque);
+
+        /* set output parameters for m4310 using position-velocity mode */
+        void SetOutput(float position, float velocity);
+
+        /* set output parameters for m4310 using velocity mode */
+        void SetOutput(float velocity);
+
+        /**
+         * @brief Converts a float to an unsigned int, given range and number of bits;
+         *      see m4310 V1.2 document for detail
+         * @param x value to be converted
+         * @param x_min minimum value of the current parameter
+         * @param x_max maximum value of the current parameter
+         * @param bits size in bits
+         * @return value converted from float to unsigned int
+         */
+        static int16_t float_to_uint(float x, float x_min, float x_max, int bits);
+        /**
+         * @brief Converts an unsigned int to a float, given range and number of bits;
+         *      see m4310 V1.2 document for detail
+         * @param x_int value to be converted
+         * @param x_min minimum value of the current parameter
+         * @param x_max maximum value of the current parameter
+         * @param bits size in bits
+         * @return value converted from float to unsigned int
+         */
+        static float uint_to_float(int x_int, float x_min, float x_max, int bits);
+
+        volatile bool connection_flag_ = false;
+
+      private:
+        bsp::CAN* can_;
+        uint16_t rx_id_;
+        uint16_t tx_id_;
+        uint16_t tx_id_actual_;
+
+        volatile m4310_mode_t mode_;     // current motor mode
+        volatile float kp_set_ = 0;      // defined kp value
+        volatile float kd_set_ = 0;      // defined kd value
+        volatile float vel_set_ = 0;     // defined velocity
+        volatile float pos_set_ = 0;     // defined position
+        volatile float torque_set_ = 0;  // defined torque
+
+        volatile int16_t raw_pos_ = 0;        // actual position
+        volatile int16_t raw_vel_ = 0;        // actual velocity
+        volatile int16_t raw_torque_ = 0;     // actual torque
+        volatile int16_t raw_motorTemp_ = 0;  // motor temp
+        volatile int16_t raw_mosTemp_ = 0;    // MOS temp
+        volatile float theta_ = 0;            // actual angular position
+        volatile float omega_ = 0;            // actual angular velocity
+        volatile float torque_ = 0;           // actual torque
+
+        constexpr static float KP_MIN = 0;
+        constexpr static float KP_MAX = 500;
+        constexpr static float KD_MIN = 0;
+        constexpr static float KD_MAX = 5;
+        constexpr static float P_MIN = -12.5;
+        constexpr static float P_MAX = 12.5;
+        constexpr static float V_MIN = -45;
+        constexpr static float V_MAX = 45;
+        constexpr static float T_MIN = -18;
+        constexpr static float T_MAX = 18;
+    };
+
     /**
      * @brief structure used when flywheel motor instance is initialized
      */

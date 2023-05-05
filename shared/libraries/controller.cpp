@@ -57,7 +57,7 @@ namespace control {
     }
 
     ConstrainedPID::ConstrainedPID() {
-        Reinit(0, 0, 0);
+        Reinit(0, 0, 0, 0, 0);
         Reset();
         ChangeMax(0, 0);
     }
