@@ -6,7 +6,7 @@
 #include "can.h"
 
 #define MAX_CAN_DATA_SIZE 8
-#define MAX_CAN_DEVICES 12
+#define MAX_CAN_DEVICES 24
 
 namespace bsp {
 
