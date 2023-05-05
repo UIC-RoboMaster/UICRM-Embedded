@@ -112,7 +112,11 @@ namespace control {
          */
         float ComputeOutput(float error);
 
+        float ComputeOutputWithOmega(float error, float omega);
+
         int16_t ComputeConstrainedOutput(float error);
+
+        int16_t ComputeConstrainedOutputWithOmega(float error, float omega);
 
         /**
          * @brief reinitialize the pid instance using another set of gains, but does

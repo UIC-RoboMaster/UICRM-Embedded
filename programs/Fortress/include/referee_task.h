@@ -17,7 +17,7 @@ const osThreadAttr_t refereeTaskAttribute = {.name = "refereeTask",
                                              .tz_module = 0,
                                              .reserved = 0};
 
-class CustomUART : public bsp::UART {
+class RefereeUART : public bsp::UART {
   public:
     using bsp::UART::UART;
 
@@ -26,7 +26,7 @@ class CustomUART : public bsp::UART {
     void RxCompleteCallback() final;
 };
 
-extern CustomUART* referee_uart;
+extern RefereeUART* referee_uart;
 extern communication::Referee* referee;
 
 void refereeTask(void* arg);

@@ -9,6 +9,8 @@ control::ServoMotor* load_servo = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
+bsp::Laser* laser = nullptr;
+
 void jam_callback(control::ServoMotor* servo, const control::servo_jam_t data) {
     UNUSED(data);
     float servo_target = servo->GetTarget();
@@ -47,6 +49,8 @@ void shootTask(void* arg) {
 
     load_servo->SetTarget(load_servo->GetTheta(), true);
     load_servo->CalcOutput();
+
+    ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
@@ -130,12 +134,25 @@ void shootTask(void* arg) {
             case SHOOT_FRIC_MODE_PREPARING:
             case SHOOT_FRIC_MODE_PREPARED:
                 shoot_flywheel_offset = 200;
+                laser->SetOutput(255);
                 break;
             case SHOOT_FRIC_MODE_STOP:
                 shoot_flywheel_offset = -200;
+                laser->SetOutput(0);
+                break;
+            case SHOOT_FRIC_SPEEDUP:
+                ramp_1.SetMax(min(400.0f, ramp_1.GetMax() + 25));
+                ramp_2.SetMax(min(400.0f, ramp_2.GetMax() + 25));
+                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
+                break;
+            case SHOOT_FRIC_SPEEDDOWN:
+                ramp_1.SetMax(max(200.0f, ramp_1.GetMax() - 25));
+                ramp_2.SetMax(max(200.0f, ramp_2.GetMax() - 25));
+                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
                 break;
             default:
                 shoot_flywheel_offset = -1000;
+                laser->SetOutput(0);
                 break;
         }
         flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
@@ -187,17 +204,14 @@ void shootTask(void* arg) {
                         shoot_mode = SHOOT_MODE_PREPARED;
                         break;
                     }
-                    //                    else if(shoot_state_key_storage == 1 && shoot_state_key ==
-                    //                    1){
-                    //                        shoot_state_key_storage = 0;
-                    //                        shoot_mode = SHOOT_MODE_PREPARED;
-                    //                    }
-                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-                    //                    shoot_mode = SHOOT_MODE_PREPARED;
+                    if (last_shoot_mode != SHOOT_MODE_SINGLE)
+                        load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, true);
+                    else
+                        load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, false);
                     break;
                 case SHOOT_MODE_BURST:
                     // 连发子弹
-                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI, true);
                     shoot_state_key_storage = 0;
                     break;
                 case SHOOT_MODE_STOP:
@@ -207,6 +221,7 @@ void shootTask(void* arg) {
                     break;
             }
         }
+        last_shoot_mode = shoot_mode;
         //        // 启动拔弹电机后的操作
         //        if (shoot_state == 2) {
         //            // 检测是否已装填子弹
@@ -278,18 +293,22 @@ void init_shoot() {
 
     control::servo_t servo_data;
     servo_data.motor = steering_motor;
-    servo_data.max_speed = 8 * PI;
+    servo_data.max_speed = 2.5 * PI;
     servo_data.max_acceleration = 16 * PI;
     servo_data.transmission_ratio = M2006P36_RATIO;
-    servo_data.omega_pid_param = new float[3]{150, 2, 0.01};
-    servo_data.max_iout = 2000;
+    servo_data.omega_pid_param = new float[3]{6000, 80, 0.3};
+    servo_data.max_iout = 4000;
     servo_data.max_out = 10000;
+    servo_data.hold_pid_param = new float[3]{150, 2, 0.01};
+    servo_data.hold_max_iout = 2000;
+    servo_data.hold_max_out = 10000;
 
     load_servo = new control::ServoMotor(servo_data);
     load_servo->SetTarget(load_servo->GetTheta(), true);
     load_servo->RegisterJamCallback(jam_callback, 0.6);
 
     shoot_key = new bsp::GPIO(BUTTON_TRI_GPIO_Port, BUTTON_TRI_Pin);
+    laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
     steering_motor->SetOutput(0);

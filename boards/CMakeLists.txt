@@ -11,3 +11,5 @@ target_link_libraries(board_interface INTERFACE c m)
 
 # board specific interfaces
 add_subdirectory(DJI_Board_TypeC_general)
+add_subdirectory(DM_MC01_general)
+add_subdirectory(DJI_Board_TypeA_general)

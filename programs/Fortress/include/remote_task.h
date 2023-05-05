@@ -4,6 +4,7 @@
 #include "main.h"
 #include "referee_task.h"
 #include "user_define.h"
+#include "utils.h"
 extern remote::DBUS* dbus;
 /**
  * @brief Dbus Init
@@ -14,7 +15,7 @@ enum RemoteMode {
     REMOTE_MODE_PREPARE = -2,
     REMOTE_MODE_KILL = -1,
     REMOTE_MODE_STOP = 0,
-    REMOTE_MODE_MANUAL = 1,
+    REMOTE_MODE_FOLLOW = 1,
     REMOTE_MODE_SPIN = 2,
     REMOTE_MODE_ADVANCED = 3
 };
@@ -23,7 +24,9 @@ enum ShootFricMode {
     SHOOT_FRIC_MODE_DISABLE = -1,
     SHOOT_FRIC_MODE_STOP = 0,
     SHOOT_FRIC_MODE_PREPARING = 1,
-    SHOOT_FRIC_MODE_PREPARED = 2
+    SHOOT_FRIC_MODE_PREPARED = 2,
+    SHOOT_FRIC_SPEEDUP = 3,
+    SHOOT_FRIC_SPEEDDOWN = 4,
 };
 extern ShootFricMode shoot_fric_mode;
 enum ShootMode {

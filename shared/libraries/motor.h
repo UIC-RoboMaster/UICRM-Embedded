@@ -309,6 +309,9 @@ namespace control {
         float* omega_pid_param;   /* pid parameter used to control speed of motor   */
         float max_iout;
         float max_out;
+        float* hold_pid_param;
+        float hold_max_iout;
+        float hold_max_out;
     } servo_t;
 
     /**
@@ -465,7 +468,7 @@ namespace control {
 
         // angle control
         bool hold_; /* true if motor is holding now, otherwise moving now */
-        uint32_t start_time_;
+        uint64_t start_time_;
         float target_angle_; /* desired target angle, range between [0, 2PI] in [rad]
                               */
         float align_angle_;  /* motor angle when a instance of this class is created
@@ -490,6 +493,7 @@ namespace control {
 
         // pid controllers
         ConstrainedPID omega_pid_; /* pid for controlling speed of motor */
+        ConstrainedPID hold_pid_;
 
         // edge detectors
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
@@ -544,4 +548,90 @@ namespace control {
         bool align_complete_;
     };
 
+    /**
+     * @brief structure used when flywheel motor instance is initialized
+     */
+    typedef struct {
+        MotorCANBase* motor;    /* motor instance to be wrapped as a flywheel      */
+        float max_speed;        /* desired turning speed of motor shaft, in [rad/s]  */
+        float* omega_pid_param; /* pid parameter used to control speed of motor   */
+        bool is_inverted;
+    } flywheel_t;
+
+    /**
+     * @brief class for flywheel motor
+     */
+    class FlyWheelMotor {
+      public:
+        /**
+         * @brief constructor for flywheel motor
+         * @param data the data for flywheel
+         */
+        FlyWheelMotor(flywheel_t data);
+        /**
+         * @brief set the speed of flywheel motor
+         * @param speed the target speed of flywheel motor in [rad/s]
+         */
+        void SetSpeed(float speed);
+        /**
+         * @brief calculate the output of flywheel motor
+         */
+        void CalcOutput();
+        /**
+         * @brief get current target for flywheel, in [rad/s]
+         *
+         */
+        float GetTarget() const;
+        /**
+         * @brief print out motor data
+         */
+        void PrintData() const;
+
+        /**
+         * @brief get motor angle, in [rad]
+         *
+         * @return radian angle, range between [0, 2PI]
+         */
+        float GetTheta() const;
+
+        /**
+         * @brief get angle difference (target - actual), in [rad]
+         *
+         * @param target  target angle, in [rad]
+         *
+         * @return angle difference, range between [-PI, PI]
+         */
+        float GetThetaDelta(const float target) const;
+
+        /**
+         * @brief get angular velocity, in [rad / s]
+         *
+         * @return angular velocity
+         */
+        float GetOmega() const;
+
+        /**
+         * @brief get angular velocity difference (target - actual), in [rad / s]
+         *
+         * @param target  target angular velocity, in [rad / s]
+         *
+         * @return difference angular velocity
+         */
+        float GetOmegaDelta(const float target) const;
+
+        /**
+         * @brief update the current theta for the servomotor
+         * @note only used in CAN callback, do not call elsewhere
+         *
+         * @param data[]  raw data bytes
+         */
+        void UpdateData(const uint8_t data[]);
+
+      private:
+        MotorCANBase* motor_;
+        bool is_inverted_;
+        float max_speed_;
+        float target_speed_;
+        PIDController omega_pid_;
+    };
 } /* namespace control */

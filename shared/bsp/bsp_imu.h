@@ -294,7 +294,7 @@ namespace bsp {
         // sensor temperature
         float temp;
         // sensor timestamp
-        uint32_t timestamp = 0;
+        uint64_t timestamp = 0;
 
       private:
         /**

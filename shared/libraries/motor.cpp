@@ -283,6 +283,7 @@ namespace control {
         hold_detector_ = new BoolEdgeDetector(false);
 
         omega_pid_.Reinit(data.omega_pid_param, data.max_iout, data.max_out);
+        hold_pid_.Reinit(data.hold_pid_param, data.hold_max_iout, data.hold_max_out);
 
         // override origianal motor rx callback with servomotor callback
         data.motor->can_->RegisterRxCallback(data.motor->rx_id_, servomotor_callback, this);
@@ -322,8 +323,11 @@ namespace control {
         // if holding status toggle, reseting corresponding pid to avoid error
         // building up
         hold_detector_->input(hold_);
-        if (hold_detector_->edge())
+        if (hold_detector_->edge()) {
             omega_pid_.Reset();
+            hold_pid_.Reset();
+        }
+
         if (hold_detector_->negEdge())
             start_time_ = GetHighresTickMicroSec();
 
@@ -331,7 +335,7 @@ namespace control {
         int16_t command;
         float target_diff = (target_angle_ - servo_angle_ - cumulated_angle_) * transmission_ratio_;
         // v = sqrt(2 * a * d)
-        uint32_t current_time = GetHighresTickMicroSec();
+        uint64_t current_time = GetHighresTickMicroSec();
         if (!hold_) {
             float speed_max_start =
                 (current_time - start_time_) / 10e6 * max_acceleration_ * transmission_ratio_;
@@ -342,7 +346,7 @@ namespace control {
             command = omega_pid_.ComputeConstrainedOutput(
                 motor_->GetOmegaDelta(sign<float>(target_diff, 0) * current_speed));
         } else {
-            command = omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_diff * 50));
+            command = hold_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_diff * 50));
         }
         motor_->SetOutput(command);
 
@@ -516,6 +520,51 @@ namespace control {
 
     void SteeringMotor::Update() {
         servo_->CalcOutput();
+    }
+
+    FlyWheelMotor::FlyWheelMotor(flywheel_t data) {
+        motor_ = data.motor;
+        max_speed_ = data.max_speed;
+        target_speed_ = 0;
+        is_inverted_ = data.is_inverted;
+        omega_pid_ = PIDController(data.omega_pid_param);
+    }
+    void FlyWheelMotor::SetSpeed(float speed) {
+        if (is_inverted_) {
+            speed = -speed;
+        }
+        speed = clip<float>(speed, -max_speed_, max_speed_);
+        target_speed_ = speed;
+    }
+    void FlyWheelMotor::CalcOutput() {
+        motor_->SetOutput(
+            omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_speed_)));
+    }
+    float FlyWheelMotor::GetTarget() const {
+        if (is_inverted_) {
+            return -target_speed_;
+        } else {
+            return target_speed_;
+        }
+    }
+    void FlyWheelMotor::PrintData() const {
+        print("Fly-target: %2.5f ", target_speed_);
+        motor_->PrintData();
+    }
+    void FlyWheelMotor::UpdateData(const uint8_t data[]) {
+        motor_->UpdateData(data);
+    }
+    float FlyWheelMotor::GetTheta() const {
+        return motor_->GetTheta();
+    }
+    float FlyWheelMotor::GetThetaDelta(const float target) const {
+        return motor_->GetThetaDelta(target);
+    }
+    float FlyWheelMotor::GetOmega() const {
+        return motor_->GetOmega();
+    }
+    float FlyWheelMotor::GetOmegaDelta(const float target) const {
+        return motor_->GetOmegaDelta(target);
     }
 
 } /* namespace control */

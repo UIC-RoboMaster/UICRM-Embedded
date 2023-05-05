@@ -1,5 +1,6 @@
 #pragma once
 #include "bsp_gpio.h"
+#include "bsp_laser.h"
 #include "cmsis_os2.h"
 #include "imu_task.h"
 #include "main.h"
@@ -8,6 +9,7 @@
 #include "referee_task.h"
 #include "remote_task.h"
 #include "user_define.h"
+#include "utils.h"
 extern osThreadId_t shootTaskHandle;
 const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .attr_bits = osThreadDetached,

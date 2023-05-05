@@ -2,7 +2,8 @@
 
 #include "bsp_os.h"
 #include "bsp_print.h"
-#include "buzzer.h"
+#include "buzzer_notes.h"
+#include "buzzer_task.h"
 #include "chassis_task.h"
 #include "cmsis_os.h"
 #include "gimbal_task.h"
@@ -10,11 +11,15 @@
 #include "public_port.h"
 #include "referee_task.h"
 #include "remote_task.h"
+#include "selftest_task.h"
 #include "shoot_task.h"
+#include "ui_task.h"
+#include "user_define.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
     print_use_uart(&huart1);
     init_can();
+    init_batt();
     init_imu();
     init_buzzer();
     init_referee();
@@ -22,20 +27,26 @@ void RM_RTOS_Init(void) {
     init_shoot();
     init_gimbal();
     init_chassis();
+    init_ui();
 }
 
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
+    buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
     refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
+    selftestTaskHandle = osThreadNew(selftestTask, nullptr, &selftestTaskAttribute);
+    if (ENABLE_UI)
+        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
-    osDelay(1000);
+    osDelay(3000);
+    Buzzer_Sing(DJI);
     char s[50];
     while (true) {
         set_cursor(0, 0);
@@ -50,7 +61,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             case REMOTE_MODE_KILL:
                 strcpy(s, "KILL");
                 break;
-            case REMOTE_MODE_MANUAL:
+            case REMOTE_MODE_FOLLOW:
                 strcpy(s, "MANUAL");
                 break;
             case REMOTE_MODE_SPIN:
@@ -61,21 +72,21 @@ void RM_RTOS_Default_Task(const void* arg) {
                 break;
         }
         print("Mode:%s\r\n", s);
-        switch (shoot_fric_mode) {
-            case SHOOT_FRIC_MODE_PREPARING:
-                strcpy(s, "PREPARE");
-                break;
-            case SHOOT_FRIC_MODE_STOP:
-                strcpy(s, "STOP");
-                break;
-            case SHOOT_FRIC_MODE_PREPARED:
-                strcpy(s, "PREPARED");
-                break;
-            case SHOOT_FRIC_MODE_DISABLE:
-                strcpy(s, "DISABLE");
-                break;
-        }
-        print("Shoot Fric Mode:%s\r\n", s);
+        //        switch (shoot_fric_mode) {
+        //            case SHOOT_FRIC_MODE_PREPARING:
+        //                strcpy(s, "PREPARE");
+        //                break;
+        //            case SHOOT_FRIC_MODE_STOP:
+        //                strcpy(s, "STOP");
+        //                break;
+        //            case SHOOT_FRIC_MODE_PREPARED:
+        //                strcpy(s, "PREPARED");
+        //                break;
+        //            case SHOOT_FRIC_MODE_DISABLE:
+        //                strcpy(s, "DISABLE");
+        //                break;
+        //        }
+        //        print("Shoot Fric Mode:%s\r\n", s);
         switch (shoot_mode) {
             case SHOOT_MODE_PREPARING:
                 strcpy(s, "PREPARE");

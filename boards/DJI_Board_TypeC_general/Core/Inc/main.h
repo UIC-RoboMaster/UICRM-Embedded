@@ -113,7 +113,7 @@ void RM_RTOS_Default_Task(const void *argument);
 #define CS1_GYRO_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+#define DJI_BOARD_TYPE_C_GENERAL
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

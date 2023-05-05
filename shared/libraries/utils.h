@@ -1,4 +1,5 @@
 #pragma once
+#include "main.h"
 
 /**
  * @brief clip a value to fall into a given range
@@ -34,6 +35,40 @@ template <typename T>
 T wrap(T value, T min, T max) {
     const T range = max - min;
     return value < min ? value + range : (value > max ? value - range : value);
+}
+
+/**
+ * @brief clip a value to fall into a given range; can wrap around domain
+ *
+ * @tparam T        type of the value
+ * @param value     value to the clipped
+ * @param min       clipping range min
+ * @param max       clipping range max
+ * @param range_min domain range min
+ * @param range_max domain range max
+ *
+ * @return clipped value that falls in the range [min, max]
+ *
+ * @note undefined behavior if min > max
+ */
+template <typename T>
+T wrapping_clip(T value, T min, T max, T range_min, T range_max) {
+    value = wrap<T>(value, range_min, range_max);
+    if (max >= min) {
+        return value < min ? min : (value > max ? max : value);
+    } else {
+        // min > max; wrap around
+        T middle = (min + max) / 2;
+        if (value <= max && value >= range_min) {
+            return value;
+        } else if (value >= min && value <= range_max) {
+            return value;
+        } else if (value > max && value < middle) {
+            return max;
+        } else {
+            return min;
+        }
+    }
 }
 
 /**
@@ -78,6 +113,21 @@ int sign(T value, T zero) {
     return value < zero ? -1 : (value > zero ? 1 : 0);
 }
 
+template <typename T>
+class EdgeDetector {
+  public:
+    EdgeDetector<T>(T initial);
+    void input(T signal);
+    bool edge();
+    bool posEdge();
+    bool negEdge();
+
+  private:
+    T prev_;
+    bool posEdge_;
+    bool negEdge_;
+};
+
 class BoolEdgeDetector {
   public:
     BoolEdgeDetector(bool initial);
@@ -85,6 +135,7 @@ class BoolEdgeDetector {
     bool edge();
     bool posEdge();
     bool negEdge();
+    bool get();
 
   private:
     bool prev_;
@@ -94,7 +145,7 @@ class BoolEdgeDetector {
 
 class FloatEdgeDetector {
   public:
-    FloatEdgeDetector(float initial, float threshold);
+    FloatEdgeDetector(float initial, float threshold = 0);
     void input(float signal);
     bool edge();
     bool posEdge();
@@ -106,6 +157,7 @@ class FloatEdgeDetector {
     bool posEdge_;
     bool negEdge_;
 };
+
 class RampSource {
   public:
     RampSource(float initial, float min, float max, float step);
@@ -115,6 +167,7 @@ class RampSource {
     float GetMin();
     void SetMax(float max);
     void SetMin(float min);
+    void SetCurrent(float current);
 
   private:
     float input_;
