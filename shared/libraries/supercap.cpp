@@ -24,7 +24,8 @@ namespace control {
         info.input_current = data16[2] / 100.0f;
         info.target_power = data16[3] / 100.0f;
         connection_flag_ = true;
-        percent_ = (info.supercap_voltage / info.input_voltage) * (info.supercap_voltage / info.input_voltage);
+        percent_ = (info.supercap_voltage / info.input_voltage) *
+                   (info.supercap_voltage / info.input_voltage);
     }
 
     float SuperCap::GetPercent() {

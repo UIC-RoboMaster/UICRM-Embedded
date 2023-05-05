@@ -1,12 +1,13 @@
 #include "main.h"
-#include "cmsis_os2.h"
+
 #include "bsp_can.h"
-#include "supercap.h"
-#include "motor.h"
-#include "bsp_print.h"
 #include "bsp_gpio.h"
+#include "bsp_print.h"
 #include "bsp_uart.h"
+#include "cmsis_os2.h"
+#include "motor.h"
 #include "rgb.h"
+#include "supercap.h"
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
 static bsp::CAN* can1 = NULL;
@@ -17,8 +18,8 @@ void RM_RTOS_Init() {
     print_use_uart(&huart1);
 
     can1 = new bsp::CAN(&hcan1, 0x201, true);
-    supercap = new control::SuperCap(can1, 0x211,0x210);
-    rgb = new display::RGB(&htim5, 3, 2, 1,1000000);
+    supercap = new control::SuperCap(can1, 0x211, 0x210);
+    rgb = new display::RGB(&htim5, 3, 2, 1, 1000000);
     rgb->Display(0xffff0000);
     motor1 = new control::Motor3508(can1, 0x201);
 
@@ -32,7 +33,7 @@ void RM_RTOS_Default_Task(const void* args) {
     int current = 0;
     while (true) {
         rgb->Display(0xff00ff00);
-        if(supercap->info.supercap_voltage > 15.0f){
+        if (supercap->info.supercap_voltage > 15.0f) {
             supercap->SetTargetPower(120.0);
         }
 

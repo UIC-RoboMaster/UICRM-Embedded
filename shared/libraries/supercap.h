@@ -19,6 +19,7 @@ namespace control {
         float GetPercent();
 
         cap_message_t info;
+
       private:
         bsp::CAN* can_;
         uint16_t supercap_rx_id_;
@@ -26,4 +27,4 @@ namespace control {
         float percent_;
     };
 
-}
+}  // namespace control
