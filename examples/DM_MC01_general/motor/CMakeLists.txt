@@ -35,3 +35,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m4310_mit
 uicrm_add_arm_executable(${PROJECT_NAME}_m4310_posvel
         TARGET ${BOARD_NAME}
         SOURCES m4310_posvel.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_m4310_vel
+        TARGET ${BOARD_NAME}
+        SOURCES m4310_vel.cpp)
