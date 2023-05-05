@@ -12,6 +12,10 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m3508
         TARGET ${BOARD_NAME}
         SOURCES m3508.cpp)
 
+uicrm_add_arm_executable(${PROJECT_NAME}_m3508_flywheel
+        TARGET ${BOARD_NAME}
+        SOURCES m3508_flywheel.cpp)
+
 uicrm_add_arm_executable(${PROJECT_NAME}_m2305
         TARGET ${BOARD_NAME}
         SOURCES m2305.cpp)
@@ -19,6 +23,10 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m2305
 uicrm_add_arm_executable(${PROJECT_NAME}_m6020
         TARGET DJI_Board_TypeC_general
         SOURCES m6020.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_m6623
+        TARGET DJI_Board_TypeC_general
+        SOURCES m6623.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
         TARGET DJI_Board_TypeC_general

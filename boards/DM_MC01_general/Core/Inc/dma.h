@@ -43,6 +43,7 @@ void MX_DMA_Init(void);
 /* USER CODE BEGIN Prototypes */
 void RM_DMA_SPI_IRQHandler(SPI_HandleTypeDef* hspi);
 void RM_DMA_I2C_IRQHandler(I2C_HandleTypeDef * hi2c);
+void MX_DMA_USART3_INIT(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

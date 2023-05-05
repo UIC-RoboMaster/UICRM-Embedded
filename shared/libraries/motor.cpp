@@ -700,4 +700,50 @@ namespace control {
     float Motor4310::GetTorque() const {
         return torque_;
     }
+
+    FlyWheelMotor::FlyWheelMotor(flywheel_t data) {
+        motor_ = data.motor;
+        max_speed_ = data.max_speed;
+        target_speed_ = 0;
+        is_inverted_ = data.is_inverted;
+        omega_pid_ = PIDController(data.omega_pid_param);
+    }
+    void FlyWheelMotor::SetSpeed(float speed) {
+        if (is_inverted_) {
+            speed = -speed;
+        }
+        speed = clip<float>(speed, -max_speed_, max_speed_);
+        target_speed_ = speed;
+    }
+    void FlyWheelMotor::CalcOutput() {
+        motor_->SetOutput(
+            omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_speed_)));
+    }
+    float FlyWheelMotor::GetTarget() const {
+        if (is_inverted_) {
+            return -target_speed_;
+        } else {
+            return target_speed_;
+        }
+    }
+    void FlyWheelMotor::PrintData() const {
+        print("Fly-target: %2.5f ", target_speed_);
+        motor_->PrintData();
+    }
+    void FlyWheelMotor::UpdateData(const uint8_t data[]) {
+        motor_->UpdateData(data);
+    }
+    float FlyWheelMotor::GetTheta() const {
+        return motor_->GetTheta();
+    }
+    float FlyWheelMotor::GetThetaDelta(const float target) const {
+        return motor_->GetThetaDelta(target);
+    }
+    float FlyWheelMotor::GetOmega() const {
+        return motor_->GetOmega();
+    }
+    float FlyWheelMotor::GetOmegaDelta(const float target) const {
+        return motor_->GetOmegaDelta(target);
+    }
+
 } /* namespace control */
