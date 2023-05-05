@@ -63,7 +63,7 @@ namespace bsp {
     }
 
     int CAN::RegisterRxCallback(uint32_t std_id, can_rx_callback_t callback, void* args) {
-        //int callback_id = std_id - start_id_;
+        // int callback_id = std_id - start_id_;
 
         if (callback_count_ >= MAX_CAN_DEVICES)
             return -1;
