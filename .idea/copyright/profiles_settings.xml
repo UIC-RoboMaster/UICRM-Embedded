@@ -1,10 +1,14 @@
 <component name="CopyrightManager">
   <settings>
-    <LanguageOptions name="ObjectiveC">
-      <option name="fileTypeOverride" value="3" />
-    </LanguageOptions>
-    <LanguageOptions name="Python">
-      <option name="fileTypeOverride" value="3" />
+    <module2copyright>
+      <element module="需要版权的文件" copyright="UICRM" />
+    </module2copyright>
+    <LanguageOptions name="ObjectiveC" />
+    <LanguageOptions name="Python" />
+    <LanguageOptions name="__TEMPLATE__">
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="box" value="true" />
     </LanguageOptions>
   </settings>
 </component>
