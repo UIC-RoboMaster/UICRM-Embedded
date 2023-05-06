@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="需要版权的文件" pattern="(file[uicrm]:examples/*||file[uicrm]:programs/*||file[uicrm]:shared/*||file:CMakeLists.txt||file[uicrm]:openocd/*||file[uicrm]:cmake/*||file[uicrm]:openocd//*||file[uicrm]:examples//*||file[uicrm]:cmake//*||file[uicrm]:programs//*||file[uicrm]:shared//*||file:boards/CMakeLists.txt||file:boards/DM_MC01_general/CMakeLists.txt||file:boards/DJI_Board_TypeC_general/CMakeLists.txt||file:boards/DJI_Board_TypeA_general/CMakeLists.txt)&amp;&amp;!file[uicrm]:shared/third_party//*||file[uicrm]:.github/*||file[uicrm]:.github//*" />
+</component>

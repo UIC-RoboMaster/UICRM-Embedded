@@ -1,0 +1,7 @@
+<component name="CopyrightManager">
+  <copyright>
+    <option name="allowReplaceRegexp" value="BNU-HKBU UIC RoboMaster" />
+    <option name="notice" value="Copyright (c) &amp;#36;originalComment.match(&quot;Copyright \(c\) (\d+)&quot;, 1, &quot;-&quot;, &quot;&amp;#36;today.year&quot;)&amp;#36;today.year. BNU-HKBU UIC RoboMaster&#10;&#10;This program is free software: you can redistribute it &#10;and/or modify it under the terms of the GNU General &#10;Public License as published by the Free Software &#10;Foundation, either version 3 of the License, or (at &#10;your option) any later version.&#10;&#10;This program is distributed in the hope that it will be &#10;useful, but WITHOUT ANY WARRANTY; without even &#10;the implied warranty of MERCHANTABILITY or FITNESS &#10;FOR A PARTICULAR PURPOSE.  See the GNU General &#10;Public License for more details.&#10;&#10;You should have received a copy of the GNU General &#10;Public License along with this program.  If not, see &#10;&lt;https://www.gnu.org/licenses/&gt;." />
+    <option name="myName" value="UICRM" />
+  </copyright>
+</component>

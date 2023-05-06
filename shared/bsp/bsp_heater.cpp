@@ -1,3 +1,23 @@
+/*###########################################################
+ # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ #                                                          #
+ # This program is free software: you can redistribute it   #
+ # and/or modify it under the terms of the GNU General      #
+ # Public License as published by the Free Software         #
+ # Foundation, either version 3 of the License, or (at      #
+ # your option) any later version.                          #
+ #                                                          #
+ # This program is distributed in the hope that it will be  #
+ # useful, but WITHOUT ANY WARRANTY; without even           #
+ # the implied warranty of MERCHANTABILITY or FITNESS       #
+ # FOR A PARTICULAR PURPOSE.  See the GNU General           #
+ # Public License for more details.                         #
+ #                                                          #
+ # You should have received a copy of the GNU General       #
+ # Public License along with this program.  If not, see     #
+ # <https://www.gnu.org/licenses/>.                         #
+ ###########################################################*/
+
 #include "bsp_heater.h"
 
 namespace bsp {
@@ -12,7 +32,8 @@ namespace bsp {
         pid_.Reinit(pid_param, heater_I_limit, heater_output_limit);
     }
 
-    Heater::Heater(heater_init_t init) : pwm_(init.htim, init.channel, init.clock_freq, 2000, 0) {
+    Heater::Heater(heater_init_t init)
+        : pwm_(init.htim, init.channel, init.clock_freq, 2000, 0), pid_() {
         temp_ = init.temp;
         pwm_.Start();
         float* pid_param = new float[3]{160, 0.1, 0};
