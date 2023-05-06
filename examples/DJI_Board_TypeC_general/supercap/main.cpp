@@ -53,9 +53,9 @@ void RM_RTOS_Default_Task(const void* args) {
     int current = 0;
     while (true) {
         rgb->Display(0xff00ff00);
-//        if (supercap->info.supercap_voltage > 15.0f) {
-            supercap->SetTargetPower(100.0);
-//        }
+        //        if (supercap->info.supercap_voltage > 15.0f) {
+        supercap->SetTargetPower(100.0);
+        //        }
 
         osDelay(50);
         set_cursor(0, 0);
