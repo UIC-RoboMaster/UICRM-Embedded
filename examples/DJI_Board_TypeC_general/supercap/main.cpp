@@ -15,7 +15,7 @@ static control::SuperCap* supercap = NULL;
 static display::RGB* rgb = NULL;
 static control::Motor3508* motor1 = nullptr;
 void RM_RTOS_Init() {
-    print_use_uart(&huart1);
+    print_use_uart(&huart6);
 
     can1 = new bsp::CAN(&hcan1, 0x201, true);
     supercap = new control::SuperCap(can1, 0x211, 0x210);
@@ -33,9 +33,9 @@ void RM_RTOS_Default_Task(const void* args) {
     int current = 0;
     while (true) {
         rgb->Display(0xff00ff00);
-        if (supercap->info.supercap_voltage > 15.0f) {
-            supercap->SetTargetPower(120.0);
-        }
+//        if (supercap->info.supercap_voltage > 15.0f) {
+            supercap->SetTargetPower(100.0);
+//        }
 
         osDelay(50);
         set_cursor(0, 0);
