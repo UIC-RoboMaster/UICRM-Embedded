@@ -25,7 +25,7 @@ function(uicrm_add_arm_executable name)
         PRIVATE ${ARG_DEPENDS} ${ARG_TARGET} ${ARG_TARGET}_shared)
     
     target_include_directories(${name}.elf PRIVATE ${ARG_INCLUDES})
-    target_link_options(${name}.elf PRIVATE -Wl,-Map=${MAP_FILE})
+    target_link_options(${name}.elf PRIVATE -Wl,--print-memory-usage,-Map=${MAP_FILE})
 
     find_program(ARM_SIZE arm-none-eabi-size REQUIRED)
     find_program(ARM_OBJCOPY arm-none-eabi-objcopy REQUIRED)
