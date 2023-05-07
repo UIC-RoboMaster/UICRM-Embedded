@@ -35,10 +35,10 @@ float load_step_angle = 2 * PI / 8;
 void RM_RTOS_Init() {
     bsp::SetHighresClockTimer(&htim5);
     HAL_Delay(200);
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
     dbus = new remote::DBUS(&huart3);
-    can2 = new bsp::CAN(&hcan2, 0x207, false);
-    motor1 = new control::Motor2006(can2, 0x207);
+    can2 = new bsp::CAN(&hcan1, 0x201, true);
+    motor1 = new control::Motor2006(can2, 0x201);
     control::servo_t servo_data;
 
     servo_data.motor = motor1;
@@ -59,26 +59,26 @@ void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     control::MotorCANBase* motors[] = {motor1};
     int last_state = remote::MID;
-    int state = 0;
 
     while (true) {
-        if (dbus->swl == remote::UP) {
-            if (last_state == remote::MID)
-                last_state = remote::UP;
-        } else if (dbus->swl == remote::MID) {
+        if (last_state != dbus->swl && dbus->swl == remote::MID) {
             if (last_state == remote::UP) {
-                last_state = remote::MID;
                 load_servo->SetTarget(load_servo->GetTarget() + load_step_angle);
-                if (state == 0) {
-                    state = 1;
-                } else {
-                    state = 0;
-                }
+            } else if (last_state == remote::DOWN) {
+                load_servo->SetTarget(load_servo->GetTarget() - load_step_angle);
+            }
+        } else {
+            if (dbus->ch3 > 0) {
+                load_servo->SetTarget(load_servo->GetTarget() + load_step_angle);
+            } else if (dbus->ch3 < 0) {
+                load_servo->SetTarget(load_servo->GetTarget() - load_step_angle);
             }
         }
+
         load_servo->CalcOutput();
 
         control::MotorCANBase::TransmitOutput(motors, 1);
+        last_state = dbus->swl;
         osDelay(1);
     }
 }
