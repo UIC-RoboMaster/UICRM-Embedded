@@ -26,7 +26,7 @@ set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -fno-exceptions")
 set(CMAKE_C_FLAGS_DEBUG "-Og -g -DDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -g -DDEBUG")
 
-# Relase flags
+# Release flags
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
