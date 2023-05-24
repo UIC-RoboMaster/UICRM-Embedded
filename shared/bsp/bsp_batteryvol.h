@@ -19,9 +19,11 @@
  ###########################################################*/
 
 #pragma once
+#ifndef NO_ONBOARD_SENSOR
 #include "adc.h"
 #include "bsp_adc.h"
 #include "main.h"
+
 namespace bsp {
     class BatteryVol {
       public:
@@ -41,3 +43,4 @@ namespace bsp {
         bADC* adc_vrefint_;
     };
 }  // namespace bsp
+#endif

@@ -17,7 +17,7 @@
  # Public License along with this program.  If not, see     #
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
-
+#ifndef NO_IMU
 #include "bsp_imu.h"
 
 #include <cmath>
@@ -27,6 +27,8 @@
 #include "bsp_mpu6500_reg.h"
 #include "bsp_os.h"
 #include "dma.h"
+
+
 
 #define MPU6500_DELAY 55  // SPI delay
 // configured with initialization sequences
@@ -911,3 +913,5 @@ namespace bsp {
 void RM_DMA_IRQHandler(SPI_HandleTypeDef* hspi) {
     bsp::DMACallbackWrapper(hspi);
 }
+
+#endif

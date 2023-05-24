@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-
+#ifndef NO_IMU
 #include "bsp_pwm.h"
 #include "controller.h"
 
@@ -45,3 +45,4 @@ namespace bsp {
     };
 
 }  // namespace bsp
+#endif

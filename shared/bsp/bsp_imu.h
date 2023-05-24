@@ -20,6 +20,7 @@
  ###########################################################*/
 
 #pragma once
+#ifndef NO_IMU
 
 #include <map>
 
@@ -592,3 +593,4 @@ namespace bsp {
     };
 
 } /* namespace bsp */
+#endif
