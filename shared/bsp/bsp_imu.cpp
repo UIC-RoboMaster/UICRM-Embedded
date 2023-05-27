@@ -28,8 +28,6 @@
 #include "bsp_os.h"
 #include "dma.h"
 
-
-
 #define MPU6500_DELAY 55  // SPI delay
 // configured with initialization sequences
 #define MPU6500_ACC_FACTOR 4096.0f
