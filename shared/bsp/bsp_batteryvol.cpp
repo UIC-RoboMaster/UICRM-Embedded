@@ -18,7 +18,9 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#ifndef NO_ONBOARD_SENSOR
 #include "bsp_batteryvol.h"
+
 namespace bsp {
     BatteryVol::BatteryVol(ADC_HandleTypeDef* hadc, uint32_t channel, uint32_t rank,
                            uint32_t sampling_time) {
@@ -81,3 +83,4 @@ namespace bsp {
         return calcBatteryPercentage(GetBatteryVol());
     }
 }  // namespace bsp
+#endif

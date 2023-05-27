@@ -169,7 +169,7 @@ namespace display {
          */
         void WriteByte(uint8_t dat, uint8_t cmd);
 
-        void Cat(unsigned char graph[128][8]);
+        void Cat(const unsigned char graph[128][8]);
 
         unsigned long CatCount_ = 0;
 

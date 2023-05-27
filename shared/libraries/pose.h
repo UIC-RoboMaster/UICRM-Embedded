@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #pragma once
+#ifndef NO_IMU
 
 #include "bsp_imu.h"
 
@@ -121,3 +122,4 @@ namespace control {
     };  // class Pose end
 
 } /* namespace control */
+#endif

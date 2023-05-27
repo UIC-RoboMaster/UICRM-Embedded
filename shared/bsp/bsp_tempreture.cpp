@@ -18,6 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#ifndef NO_ONBOARD_SENSOR
 #include "bsp_tempreture.h"
 namespace bsp {
     Tempreture::Tempreture(bsp::BatteryVol* battery_vol) {
@@ -37,3 +38,4 @@ namespace bsp {
         return ((float)Read() * voltage_vrefint_proportion - 0.76f) * 400.0f + 25.0f;
     }
 }  // namespace bsp
+#endif

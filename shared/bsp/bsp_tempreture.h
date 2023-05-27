@@ -19,10 +19,12 @@
  ###########################################################*/
 
 #pragma once
+#ifndef NO_ONBOARD_SENSOR
 #include "adc.h"
 #include "bsp_adc.h"
 #include "bsp_batteryvol.h"
 #include "main.h"
+
 namespace bsp {
     class Tempreture {
       public:
@@ -37,3 +39,4 @@ namespace bsp {
         float voltage_vrefint_proportion;
     };
 }  // namespace bsp
+#endif

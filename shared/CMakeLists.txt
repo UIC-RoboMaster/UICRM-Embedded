@@ -31,3 +31,9 @@ uicrm_add_board_specific_library(DJI_Board_TypeA_general_shared
         SOURCES ${UICRM_SOURCES}
         INCLUDES ${UICRM_INCLUDES}
         DEPENDS eigen3)
+
+uicrm_add_board_specific_library(F103_Nano_general_shared
+        TARGET F103_Nano_general
+        SOURCES ${UICRM_SOURCES}
+        INCLUDES ${UICRM_INCLUDES}
+        DEPENDS eigen3)

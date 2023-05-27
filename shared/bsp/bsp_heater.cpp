@@ -17,7 +17,7 @@
  # Public License along with this program.  If not, see     #
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
-
+#ifndef NO_IMU
 #include "bsp_heater.h"
 
 namespace bsp {
@@ -53,3 +53,4 @@ namespace bsp {
         return output;
     }
 }  // namespace bsp
+#endif

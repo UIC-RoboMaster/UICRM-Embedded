@@ -17,7 +17,7 @@
  # Public License along with this program.  If not, see     #
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
-
+#ifndef NO_IMU
 #include "bsp_imu.h"
 
 #include <cmath>
@@ -911,3 +911,5 @@ namespace bsp {
 void RM_DMA_IRQHandler(SPI_HandleTypeDef* hspi) {
     bsp::DMACallbackWrapper(hspi);
 }
+
+#endif

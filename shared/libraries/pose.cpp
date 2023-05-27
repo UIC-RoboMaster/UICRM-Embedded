@@ -18,6 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#ifndef NO_IMU
 #include "pose.h"
 
 #include <cmath>
@@ -153,3 +154,4 @@ namespace control {
     }
 
 }  // namespace control
+#endif
