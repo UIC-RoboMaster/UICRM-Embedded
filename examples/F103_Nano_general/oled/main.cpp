@@ -39,11 +39,11 @@ void RM_RTOS_Default_Task(const void* arg) {
     OLED->ShowRMLOGO();
     osDelay(2000);
 
-//    OLED->ShowIlliniRMLOGO();
-//    osDelay(2000);
+    OLED->ShowIlliniRMLOGO();
+    osDelay(2000);
 
     while (true) {
-//        OLED->DrawCat();
+        OLED->DrawCat();
         osDelay(1);
     }
 }

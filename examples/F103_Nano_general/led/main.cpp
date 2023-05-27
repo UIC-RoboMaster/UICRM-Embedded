@@ -26,7 +26,7 @@ static bsp::GPIO* led = nullptr;
 
 void RM_RTOS_Init(void) {
     led = new bsp::GPIO(LED_GPIO_Port, LED_Pin);
-    HAL_Delay(3000);
+    // HAL_Delay(3000);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
