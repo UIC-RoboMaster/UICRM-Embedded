@@ -24,15 +24,15 @@
 #include "main.h"
 #include "motor.h"
 
-bsp::CAN* can2 = NULL;
+bsp::CAN* can1 = NULL;
 control::MotorCANBase* motor1 = NULL;
 // control::MotorCANBase* motor2 = NULL;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
 
-    can2 = new bsp::CAN(&hcan2, 0x205, false);
-    motor1 = new control::Motor6020(can2, 0x205);
+    can1 = new bsp::CAN(&hcan1, 0x205, false);
+    motor1 = new control::Motor6020(can1, 0x205);
     // motor2 = new control::Motor6020(can2, 0x206);
 }
 

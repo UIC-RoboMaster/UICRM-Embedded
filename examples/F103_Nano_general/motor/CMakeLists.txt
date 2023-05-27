@@ -21,17 +21,17 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m2305
         SOURCES m2305.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_m6020
-        TARGET DJI_Board_TypeC_general
+        TARGET ${BOARD_NAME}
         SOURCES m6020.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_m6623
-        TARGET DJI_Board_TypeC_general
+        TARGET ${BOARD_NAME}
         SOURCES m6623.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
-        TARGET DJI_Board_TypeC_general
+        TARGET ${BOARD_NAME}
         SOURCES servo_m2006.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m3508
-        TARGET DJI_Board_TypeC_general
+        TARGET ${BOARD_NAME}
         SOURCES servo_m3508.cpp)

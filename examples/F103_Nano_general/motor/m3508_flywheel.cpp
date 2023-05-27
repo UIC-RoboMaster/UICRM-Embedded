@@ -37,7 +37,7 @@ static control::FlyWheelMotor* flywheel1 = nullptr;
 static control::FlyWheelMotor* flywheel2 = nullptr;
 
 void RM_RTOS_Init() {
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan1, 0x201, true);
     motor1 = new control::Motor3508(can1, 0x201);
     motor2 = new control::Motor3508(can1, 0x202);

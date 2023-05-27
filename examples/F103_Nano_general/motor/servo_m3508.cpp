@@ -33,10 +33,10 @@ remote::DBUS* dbus = nullptr;
 float load_step_angle = 2 * PI / 8;
 
 void RM_RTOS_Init() {
-    bsp::SetHighresClockTimer(&htim5);
+    bsp::SetHighresClockTimer(&htim1);
     HAL_Delay(200);
-    print_use_uart(&huart6);
-    dbus = new remote::DBUS(&huart3);
+    print_use_uart(&huart1);
+    dbus = new remote::DBUS(&huart2);
     can1 = new bsp::CAN(&hcan1, 0x201, true);
     motor1 = new control::Motor2006(can1, 0x201);
 

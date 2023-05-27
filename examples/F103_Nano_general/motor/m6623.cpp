@@ -31,7 +31,7 @@ static bsp::CAN* can1 = nullptr;
 static control::MotorCANBase* motor = nullptr;
 
 void RM_RTOS_Init() {
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
 
     can1 = new bsp::CAN(&hcan1, 0x201);
     motor = new control::Motor6623(can1, 0x205);

@@ -38,7 +38,7 @@ control::MotorPWMBase* motor1;
 control::MotorPWMBase* motor2;
 
 void RM_RTOS_Init() {
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
     motor1 = new control::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
                                        MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
     motor2 = new control::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
