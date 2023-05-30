@@ -693,10 +693,10 @@ namespace control {
         print("Rotor temp: % .4f \r\n", raw_motorTemp_);
     }
 
-    int16_t Motor4310::float_to_uint(float x, float x_min, float x_max, int bits) {
+    uint16_t Motor4310::float_to_uint(float x, float x_min, float x_max, int bits) {
         float span = x_max - x_min;
         float offset = x_min;
-        return (int16_t)((x - offset) * ((float)((1 << bits) - 1)) / span);
+        return (uint16_t)((x - offset) * ((float)((1 << bits) - 1)) / span);
     }
 
     float Motor4310::uint_to_float(int x_int, float x_min, float x_max, int bits)

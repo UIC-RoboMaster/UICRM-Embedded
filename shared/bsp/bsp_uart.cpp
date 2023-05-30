@@ -138,7 +138,7 @@ namespace bsp {
             delete[] tx_read_;
     }
 
-    void UART::SetupRx(uint32_t rx_buffer_size) {
+    void UART::SetupRx(uint32_t rx_buffer_size,bool dma) {
         /* uart rx already setup */
         if (rx_size_ || rx_data_[0] || rx_data_[1])
             return;
@@ -147,15 +147,22 @@ namespace bsp {
         rx_data_[0] = new uint8_t[rx_buffer_size];
         rx_data_[1] = new uint8_t[rx_buffer_size];
 
-        /* enable uart rx dma transfer in back ground */
-        UartStartDmaNoInt(huart_, rx_data_[0], rx_data_[1], rx_size_);
+        rx_dma_ = dma;
+
+        if(rx_dma_){
+            /* enable uart rx dma transfer in back ground */
+            UartStartDmaNoInt(huart_, rx_data_[0], rx_data_[1], rx_size_);
+        }else{
+            HAL_UART_RegisterCallback(huart_, HAL_UART_RX_COMPLETE_CB_ID, RxCompleteCallbackWrapper);
+            HAL_UART_Receive_IT(huart_, rx_data_[0], rx_size_);
+        }
 
         /* UART IDLE Interrupt can notify application of data reception ASAP */
         __HAL_UART_CLEAR_FLAG(huart_, UART_FLAG_IDLE);
         __HAL_UART_ENABLE_IT(huart_, UART_IT_IDLE);
     }
 
-    void UART::SetupTx(uint32_t tx_buffer_size) {
+    void UART::SetupTx(uint32_t tx_buffer_size, bool dma) {
         /* uart tx already setup */
         if (tx_size_ || tx_write_ || tx_read_)
             return;
@@ -166,6 +173,7 @@ namespace bsp {
         tx_read_ = new uint8_t[tx_buffer_size];
 
         HAL_UART_RegisterCallback(huart_, HAL_UART_TX_COMPLETE_CB_ID, TxCompleteCallbackWrapper);
+        tx_dma_ = dma;
     }
 
     template <bool FromISR>
@@ -174,6 +182,11 @@ namespace bsp {
             return -1;
         /* capture pending bytes and perform hardware buffer switch */
         int32_t length;
+        if(!rx_dma_){
+            // dma not supported
+
+        }
+
 
         // enter critical session
         UBaseType_t isrflags;
@@ -217,6 +230,10 @@ namespace bsp {
 
     template <bool FromISR>
     int32_t UART::Write(const uint8_t* data, uint32_t length) {
+        if(!tx_dma_){
+            HAL_UART_Transmit(huart_, (uint8_t*)data, length, 1000);
+            return length;
+        }
         // enter critical session
         UBaseType_t isrflags;
         if (FromISR) {

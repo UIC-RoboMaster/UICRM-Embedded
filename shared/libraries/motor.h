@@ -650,7 +650,7 @@ namespace control {
          * @param bits size in bits
          * @return value converted from float to unsigned int
          */
-        static int16_t float_to_uint(float x, float x_min, float x_max, int bits);
+        static uint16_t float_to_uint(float x, float x_min, float x_max, int bits);
         /**
          * @brief Converts an unsigned int to a float, given range and number of bits;
          *      see m4310 V1.2 document for detail

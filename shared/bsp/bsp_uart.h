@@ -48,7 +48,7 @@ namespace bsp {
          * @param rx_buffer_size  receive buffer size (all data that has not been
          * read out is queued into this buffer)
          */
-        void SetupRx(uint32_t rx_buffer_size);
+        void SetupRx(uint32_t rx_buffer_size, bool dma = true);
 
         /**
          * @brief set up non blocking transmission functionality
@@ -56,7 +56,7 @@ namespace bsp {
          * @param tx_buffer_size  transmission buffer size (burst transmission calls
          * will be queued into this buffer)
          */
-        void SetupTx(uint32_t tx_buffer_size);
+        void SetupTx(uint32_t tx_buffer_size, bool dma = true);
 
         /**
          * @brief read out the pending received data
@@ -110,6 +110,8 @@ namespace bsp {
         uint32_t tx_pending_;
         uint8_t* tx_write_;
         uint8_t* tx_read_;
+        bool tx_dma_=true;
+        bool rx_dma_=true;
 
       private:
         friend void RxCompleteCallbackWrapper(UART_HandleTypeDef* huart);
