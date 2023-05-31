@@ -4,8 +4,6 @@ osThreadId_t refereeTaskHandle;
 
 osThreadId_t refereercTaskHandle;
 
-
-
 void RefereeUART::RxCompleteCallback() {
     osThreadFlagsSet(*refereeTaskHandle_, RX_SIGNAL);
 }
@@ -57,5 +55,4 @@ void init_referee() {
     refereerc_uart->SetupRx(300);
     refereerc_uart->SetupTx(300);
     refereerc = new communication::Referee;
-
 }

@@ -1,10 +1,9 @@
-#include "main.h"
-
 #include "bsp_print.h"
 #include "bsp_uart.h"
 #include "cmsis_os.h"
-#include "protocol.h"
 #include "dbus.h"
+#include "main.h"
+#include "protocol.h"
 
 #define RX_SIGNAL (1 << 0)
 
@@ -120,11 +119,11 @@ void RM_RTOS_Default_Task(const void* argument) {
         set_cursor(0, 0);
         clear_screen();
         //        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
-        //        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
-        //        print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
-        //        print("Chassis Power Limit: %d\r\n", referee->game_robot_status.chassis_power_limit);
-        //        print("\r\n");
-        //        print("Shooter Cooling Heat: %hu\r\n",
+        //        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current /
+        //        1000.0); print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
+        //        print("Chassis Power Limit: %d\r\n",
+        //        referee->game_robot_status.chassis_power_limit); print("\r\n"); print("Shooter
+        //        Cooling Heat: %hu\r\n",
         //              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         //        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         //        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
@@ -134,16 +133,16 @@ void RM_RTOS_Default_Task(const void* argument) {
         //        print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_17mm);
         remote::keyboard_t keyboard = referee->remote_control.keyboard;
         remote::mouse_t mouse = referee->remote_control.mouse;
-        print("W: %d A: %d S: %d D: %d\r\n"
+        print(
+            "W: %d A: %d S: %d D: %d\r\n"
             "Q: %d E: %d R: %d F: %d G: %d\r\n"
             "Z: %d X: %d C: %d V: %d B: %d\r\n"
             "SHIFT: %d CTRL: %d\r\n"
             "Mouse: x: %d y: %d z: %d l: %d r: %d\r\n",
-            keyboard.bit.W, keyboard.bit.A, keyboard.bit.S, keyboard.bit.D,
-            keyboard.bit.Q, keyboard.bit.E, keyboard.bit.R, keyboard.bit.F, keyboard.bit.G,
-            keyboard.bit.Z, keyboard.bit.X, keyboard.bit.C, keyboard.bit.V, keyboard.bit.B,
-            keyboard.bit.SHIFT, keyboard.bit.CTRL,
-            mouse.x, mouse.y, mouse.z, mouse.l, mouse.r);
+            keyboard.bit.W, keyboard.bit.A, keyboard.bit.S, keyboard.bit.D, keyboard.bit.Q,
+            keyboard.bit.E, keyboard.bit.R, keyboard.bit.F, keyboard.bit.G, keyboard.bit.Z,
+            keyboard.bit.X, keyboard.bit.C, keyboard.bit.V, keyboard.bit.B, keyboard.bit.SHIFT,
+            keyboard.bit.CTRL, mouse.x, mouse.y, mouse.z, mouse.l, mouse.r);
         osDelay(1);
     }
 }

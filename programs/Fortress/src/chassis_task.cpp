@@ -69,15 +69,14 @@ void chassisTask(void* arg) {
         }
         {
             last_keyboard = keyboard;
-            if(selftest.dbus) {
+            if (selftest.dbus) {
                 keyboard = dbus->keyboard;
                 ch0_edge->input(dbus->ch0 != 0);
                 ch1_edge->input(dbus->ch1 != 0);
                 ch2_edge->input(dbus->ch2 != 0);
                 ch3_edge->input(dbus->ch3 != 0);
                 ch4_edge->input(dbus->ch4 != 0);
-            }
-            else if(selftest.refereerc){
+            } else if (selftest.refereerc) {
                 keyboard = refereerc->remote_control.keyboard;
                 ch0_edge->input(false);
                 ch1_edge->input(false);
@@ -85,7 +84,6 @@ void chassisTask(void* arg) {
                 ch3_edge->input(false);
                 ch4_edge->input(false);
             }
-
         }
         {
             w_edge->input(keyboard.bit.W);

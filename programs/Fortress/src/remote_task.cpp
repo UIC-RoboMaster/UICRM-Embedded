@@ -47,7 +47,8 @@ void remoteTask(void* arg) {
         is_dbus_offline = (!selftest.dbus && !selftest.refereerc) || dbus->swr == remote::DOWN;
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available = referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+        is_shoot_available =
+            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
@@ -74,13 +75,12 @@ void remoteTask(void* arg) {
         last_keyboard = keyboard;
         last_mouse = mouse;
         // Update State
-        if(selftest.dbus){
+        if (selftest.dbus) {
             state_r = dbus->swr;
             state_l = dbus->swl;
             keyboard = dbus->keyboard;
             mouse = dbus->mouse;
-        }
-        else if(selftest.refereerc){
+        } else if (selftest.refereerc) {
             state_r = remote::MID;
             state_l = remote::MID;
             keyboard = refereerc->remote_control.keyboard;

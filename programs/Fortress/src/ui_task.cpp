@@ -219,10 +219,9 @@ void uiTask(void* arg) {
         }
 
         // clear self-diagnosis messages
-        if(selftest.dbus){
+        if (selftest.dbus) {
             v_edge->input(dbus->keyboard.bit.V);
-        }
-        else{
+        } else {
             v_edge->input(refereerc->remote_control.keyboard.bit.V);
         }
 
@@ -276,10 +275,9 @@ void uiTask(void* arg) {
             osDelay(110);
             continue;
         }
-        if(selftest.dbus){
+        if (selftest.dbus) {
             c_edge->input(dbus->keyboard.bit.C);
-        }
-        else{
+        } else {
             c_edge->input(refereerc->remote_control.keyboard.bit.C);
         }
         if (c_edge->posEdge()) {
