@@ -36,8 +36,7 @@ void init_dbus() {
 osThreadId_t remoteTaskHandle;
 void remoteTask(void* arg) {
     UNUSED(arg);
-    osDelay(500);
-    unsigned int last_timestamp = dbus->timestamp;
+    osDelay(1000);
     bool mode_switch = false;
     bool shoot_fric_switch = false;
     bool shoot_switch = false;
@@ -52,6 +51,10 @@ void remoteTask(void* arg) {
     remote::switch_t state_l = remote::MID;
     remote::keyboard_t keyboard;
     remote::mouse_t mouse;
+    memset(&keyboard, 0, sizeof(keyboard));
+    memset(&mouse, 0, sizeof(mouse));
+    memset(&last_keyboard, 0, sizeof(last_keyboard));
+    memset(&last_mouse, 0, sizeof(last_mouse));
     bool is_dbus_offline;
     bool is_robot_dead;
     bool is_shoot_available;
@@ -60,27 +63,12 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     while (1) {
-        // Update Last State
-        last_state_r = state_r;
-        last_state_l = state_l;
-        last_keyboard = keyboard;
-        last_mouse = mouse;
-        // Update State
-        state_r = dbus->swr;
-        state_l = dbus->swl;
-        keyboard = dbus->keyboard;
-        mouse = dbus->mouse;
-        // Update Timestamp
-        last_timestamp = dbus->timestamp;
-        z_edge->input(dbus->keyboard.bit.Z);
-        ctrl_edge->input(dbus->keyboard.bit.CTRL);
-        mouse_left_edge->input(mouse.l);
-        mouse_right_edge->input(mouse.r);
         // Offline Detection && Security Check
-        is_dbus_offline = HAL_GetTick() - last_timestamp > 500 || dbus->swr == remote::DOWN;
+        is_dbus_offline = (!selftest.dbus && !selftest.refereerc) || dbus->swr == remote::DOWN;
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available = referee->bullet_remaining.bullet_remaining_num_17mm > 0;
+        is_shoot_available =
+            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
@@ -101,6 +89,30 @@ void remoteTask(void* arg) {
             continue;
         }
 
+        // Update Last State
+        last_state_r = state_r;
+        last_state_l = state_l;
+        last_keyboard = keyboard;
+        last_mouse = mouse;
+        // Update State
+        if (selftest.dbus) {
+            state_r = dbus->swr;
+            state_l = dbus->swl;
+            keyboard = dbus->keyboard;
+            mouse = dbus->mouse;
+        } else if (selftest.refereerc) {
+            state_r = remote::MID;
+            state_l = remote::MID;
+            keyboard = refereerc->remote_control.keyboard;
+            mouse = refereerc->remote_control.mouse;
+        }
+
+        // Update Timestamp
+        z_edge->input(keyboard.bit.Z);
+        ctrl_edge->input(keyboard.bit.CTRL);
+        mouse_left_edge->input(mouse.l);
+        mouse_right_edge->input(mouse.r);
+
         if (last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
             shoot_fric_mode = SHOOT_FRIC_SPEEDUP;
         }
@@ -111,7 +123,7 @@ void remoteTask(void* arg) {
         // remote mode switch
         switch (state_r) {
             case remote::UP:
-                if (last_state_r == remote::MID) {
+                if (last_state_r == remote::MID && selftest.dbus) {
                     mode_switch = true;
                 }
                 break;
@@ -135,15 +147,15 @@ void remoteTask(void* arg) {
         if (is_shoot_available == true || SHOOT_REFEREE == 0) {
             switch (state_l) {
                 case remote::UP:
-                    if (last_state_l == remote::MID) {
+                    if (last_state_l == remote::MID && selftest.dbus) {
                         shoot_fric_switch = true;
                     }
                     break;
                 case remote::DOWN:
-                    if (last_state_l == remote::MID) {
+                    if (last_state_l == remote::MID && selftest.dbus) {
                         shoot_switch = true;
                         shoot_burst_timestamp = 0;
-                    } else if (last_state_l == remote::DOWN) {
+                    } else if (last_state_l == remote::DOWN && selftest.dbus) {
                         shoot_burst_timestamp++;
                         if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
                             shoot_burst_switch = true;

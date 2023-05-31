@@ -30,6 +30,7 @@
 #include "motor.h"
 #include "public_port.h"
 #include "remote_task.h"
+#include "selftest_task.h"
 #include "shoot_task.h"
 #include "user_define.h"
 extern osThreadId_t gimbalTaskHandle;

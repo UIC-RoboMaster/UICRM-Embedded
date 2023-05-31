@@ -89,7 +89,21 @@ void chassisTask(void* arg) {
         }
         {
             last_keyboard = keyboard;
-            keyboard = dbus->keyboard;
+            if (selftest.dbus) {
+                keyboard = dbus->keyboard;
+                ch0_edge->input(dbus->ch0 != 0);
+                ch1_edge->input(dbus->ch1 != 0);
+                ch2_edge->input(dbus->ch2 != 0);
+                ch3_edge->input(dbus->ch3 != 0);
+                ch4_edge->input(dbus->ch4 != 0);
+            } else if (selftest.refereerc) {
+                keyboard = refereerc->remote_control.keyboard;
+                ch0_edge->input(false);
+                ch1_edge->input(false);
+                ch2_edge->input(false);
+                ch3_edge->input(false);
+                ch4_edge->input(false);
+            }
         }
         {
             w_edge->input(keyboard.bit.W);
@@ -100,11 +114,6 @@ void chassisTask(void* arg) {
             q_edge->input(keyboard.bit.Q);
             e_edge->input(keyboard.bit.E);
             x_edge->input(keyboard.bit.X);
-            ch0_edge->input(dbus->ch0 != 0);
-            ch1_edge->input(dbus->ch1 != 0);
-            ch2_edge->input(dbus->ch2 != 0);
-            ch3_edge->input(dbus->ch3 != 0);
-            ch4_edge->input(dbus->ch4 != 0);
         }
 
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);

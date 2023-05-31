@@ -239,7 +239,12 @@ void uiTask(void* arg) {
         }
 
         // clear self-diagnosis messages
-        v_edge->input(dbus->keyboard.bit.V);
+        if (selftest.dbus) {
+            v_edge->input(dbus->keyboard.bit.V);
+        } else {
+            v_edge->input(refereerc->remote_control.keyboard.bit.V);
+        }
+
         if (v_edge->posEdge()) {
             osDelay(110);
             chassisGUI->Delete2();
@@ -290,7 +295,11 @@ void uiTask(void* arg) {
             osDelay(110);
             continue;
         }
-        c_edge->input(dbus->keyboard.bit.C);
+        if (selftest.dbus) {
+            c_edge->input(dbus->keyboard.bit.C);
+        } else {
+            c_edge->input(refereerc->remote_control.keyboard.bit.C);
+        }
         if (c_edge->posEdge()) {
             diagGUI->Clear(UI_Delay);
         }

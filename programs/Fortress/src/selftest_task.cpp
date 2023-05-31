@@ -26,6 +26,7 @@ selftest_t selftest;
 
 void selftestTask(void* arg) {
     UNUSED(arg);
+    uint8_t i = 0;
     while (true) {
         // Test Can Motor
         fl_motor->connection_flag_ = false;
@@ -37,6 +38,10 @@ void selftestTask(void* arg) {
         steering_motor->connection_flag_ = false;
         // Test DBUS
         dbus->connection_flag_ = false;
+        // Test Referee
+        referee->connection_flag_ = false;
+        if (i == 0)
+            refereerc->connection_flag_ = false;
         osDelay(DETECT_OS_DELAY);
         selftest.fl_motor = fl_motor->connection_flag_;
         selftest.fr_motor = fr_motor->connection_flag_;
@@ -46,9 +51,16 @@ void selftestTask(void* arg) {
         selftest.pitch_motor = pitch_motor->connection_flag_;
         selftest.steering_motor = steering_motor->connection_flag_;
         selftest.dbus = dbus->connection_flag_;
+        selftest.referee = referee->connection_flag_;
+        if (i == 2)
+            selftest.refereerc = refereerc->connection_flag_;
         selftest.imu_cali = imu->CaliDone();
         selftest.imu_temp = imu->Temp > 43.0f && imu->Temp < 50.0f;
         osDelay(DETECT_OS_DELAY);
+        i++;
+        if (i == 3) {
+            i = 0;
+        }
     }
 }
 
