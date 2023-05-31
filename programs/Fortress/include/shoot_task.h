@@ -8,6 +8,7 @@
 #include "public_port.h"
 #include "referee_task.h"
 #include "remote_task.h"
+#include "selftest_task.h"
 #include "user_define.h"
 #include "utils.h"
 extern osThreadId_t shootTaskHandle;

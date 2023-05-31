@@ -17,7 +17,7 @@
 #include "user_define.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
-    print_use_uart(&huart1);
+    print_use_usb();
     init_can();
     init_batt();
     init_imu();
@@ -34,6 +34,7 @@ void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
     refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
+    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
