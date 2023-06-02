@@ -192,7 +192,7 @@ namespace bsp {
             length = rx_size_ - huart_->RxXferCount;
             rx_index_ = 1 - rx_index_;
             HAL_UART_Receive_IT(huart_, rx_data_[rx_index_], rx_size_);
-            *data = rx_data_[1-rx_index_];
+            *data = rx_data_[1 - rx_index_];
             return length;
         }
 
