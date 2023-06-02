@@ -15,6 +15,7 @@ target_compile_definitions(${PROJECT_NAME}_interface INTERFACE ${MCU_LINE}
         ARM_MATH_CM3
         NO_IMU
         NO_ONBOARD_SENSOR
+        NO_USB
         )
 target_compile_options(${PROJECT_NAME}_interface INTERFACE ${MCU_OPTIONS})
 target_link_options(${PROJECT_NAME}_interface INTERFACE

@@ -18,6 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#ifndef NO_USB
 #include "bsp_usb.h"
 
 #include "bsp_error_handler.h"
@@ -157,3 +158,4 @@ void RM_USB_TxCplt_Callback() {
 void RM_USB_RxCplt_Callback(uint8_t* data, uint32_t length) {
     bsp::RxCompleteCallbackWrapper(data, length);
 }
+#endif

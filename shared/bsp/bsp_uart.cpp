@@ -149,6 +149,7 @@ namespace bsp {
 
         rx_dma_ = dma;
 
+        //TODO: Rx No DMA is currently not supported
         if(rx_dma_){
             /* enable uart rx dma transfer in back ground */
             UartStartDmaNoInt(huart_, rx_data_[0], rx_data_[1], rx_size_);
@@ -182,9 +183,16 @@ namespace bsp {
             return -1;
         /* capture pending bytes and perform hardware buffer switch */
         int32_t length;
+        //TODO: Rx No DMA is currently not supported
         if(!rx_dma_){
             // dma not supported
-
+            __HAL_UART_DISABLE_IT(huart_, UART_IT_IDLE);
+            __HAL_UART_DISABLE_IT(huart_, UART_IT_RXNE);
+            length = rx_size_ - huart_->RxXferCount;
+            rx_index_ = 1 - rx_index_;
+            HAL_UART_Receive_IT(huart_, rx_data_[rx_index_], rx_size_);
+            *data = rx_data_[rx_index_];
+            return length;
         }
 
 

@@ -32,7 +32,7 @@ static bsp::CAN* can1 = nullptr;
 static control::Motor3508* motor1 = nullptr;
 
 void RM_RTOS_Init() {
-    print_use_uart(&huart1);
+    print_use_uart(&huart2, false);
     can1 = new bsp::CAN(&hcan1, 0x201, true);
     motor1 = new control::Motor3508(can1, 0x201);
     // Snail need to be run at idle throttle for some

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#ifndef NO_USB
 #include "main.h"
 #include "usbd_cdc.h"
 #include "usbd_cdc_if.h"
@@ -140,3 +141,4 @@ namespace bsp {
     };
 
 } /* namespace bsp */
+#endif

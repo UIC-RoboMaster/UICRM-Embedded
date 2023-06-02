@@ -18,52 +18,45 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
+#include <cstring>
 
-#include <cinttypes>
+#include "bsp_gpio.h"
+#include "bsp_uart.h"
+#include "cmsis_os.h"
+#include "main.h"
+#include "protocol.h"
+#include "rgb.h"
 
-#include "usart.h"
+static communication::Host* host = nullptr;
+static bsp::UART* client = nullptr;
+static bsp::GPIO* led = nullptr;
 
-/**
- * @brief use a uart port for debug print
- *
- * @param huart HAL uart handle
- */
-void print_use_uart(UART_HandleTypeDef* huart,bool dma=true);
+void RM_RTOS_Init(void) {
+    client = new bsp::UART(&huart1);
+    client->SetupTx(300);
+    client->SetupRx(300);
 
-#ifndef NO_USB
-/**
- * @brief use USB virtual com port for debug print
- */
-void print_use_usb();
-#endif
+    host = new communication::Host;
 
-/**
- * @brief print debug message via USB-OTG-FS
- *
- * @param format  formatted string
- * @param ...     same argument lists as in printf
- *
- * @return  number of bytes printed
- *
- * @note    this function requires sufficient stack allocation
- * @note    maximum print length is 32
- * @note    will perform no-op in NDEBUG mode
- */
-int32_t print(const char* format, ...);
+    led = new bsp::GPIO(LED_GPIO_Port, LED_Pin);
+    led->High();
+}
 
-/* escape codes helper functions -- http://www.termsys.demon.co.uk/vtansi.htm
- */
+void RM_RTOS_Default_Task(const void* argument) {
+    UNUSED(argument);
+    communication::package_t frame;
+    communication::pack_t message[3] = {
+        {"Sazabi Gundam!"}, {"Sinanju Gundam!"}, {"Kshatriya Gundam!"}};
 
-/**
- * @brief set the cursor with escape codes
- *
- * @param row row of the cursor
- * @param col column of the cursor
- */
-void set_cursor(int row, int col);
-
-/**
- * @brief clear uart screen
- */
-void clear_screen(void);
+    while (true) {
+        for (int i = 0; i < 3; ++i) {
+            memcpy(&host->pack, message + i, sizeof(communication::pack_t));
+            frame = host->Transmit(communication::PACK);
+            client->Write(frame.data, frame.length);
+            led->Low();
+            osDelay(200);
+            led->High();
+            osDelay(300);
+        }
+    }
+}
