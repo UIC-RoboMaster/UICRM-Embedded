@@ -76,11 +76,11 @@ void clientTask(void* arg) {
 }
 
 void RM_RTOS_Init(void) {
-    print_use_uart(&huart1);
+    print_use_uart(&huart2, false);
 
-    host_uart = new RefereeUART(&huart2);
-    host_uart->SetupRx(300, false);
-    host_uart->SetupTx(300, false);
+    host_uart = new RefereeUART(&huart1);
+    host_uart->SetupRx(300);
+    host_uart->SetupTx(300);
 
     host = new communication::Host;
 
