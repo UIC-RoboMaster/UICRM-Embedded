@@ -138,7 +138,7 @@ namespace bsp {
             delete[] tx_read_;
     }
 
-    void UART::SetupRx(uint32_t rx_buffer_size,bool dma) {
+    void UART::SetupRx(uint32_t rx_buffer_size, bool dma) {
         /* uart rx already setup */
         if (rx_size_ || rx_data_[0] || rx_data_[1])
             return;
@@ -149,12 +149,13 @@ namespace bsp {
 
         rx_dma_ = dma;
 
-        //TODO: Rx No DMA is currently not supported
-        if(rx_dma_){
+        // TODO: Rx No DMA is currently not supported
+        if (rx_dma_) {
             /* enable uart rx dma transfer in back ground */
             UartStartDmaNoInt(huart_, rx_data_[0], rx_data_[1], rx_size_);
-        }else{
-            HAL_UART_RegisterCallback(huart_, HAL_UART_RX_COMPLETE_CB_ID, RxCompleteCallbackWrapper);
+        } else {
+            HAL_UART_RegisterCallback(huart_, HAL_UART_RX_COMPLETE_CB_ID,
+                                      RxCompleteCallbackWrapper);
             HAL_UART_Receive_IT(huart_, rx_data_[0], rx_size_);
         }
 
@@ -183,8 +184,8 @@ namespace bsp {
             return -1;
         /* capture pending bytes and perform hardware buffer switch */
         int32_t length;
-        //TODO: Rx No DMA is currently not supported
-        if(!rx_dma_){
+        // TODO: Rx No DMA is currently not supported
+        if (!rx_dma_) {
             // dma not supported
             __HAL_UART_DISABLE_IT(huart_, UART_IT_IDLE);
             __HAL_UART_DISABLE_IT(huart_, UART_IT_RXNE);
@@ -194,7 +195,6 @@ namespace bsp {
             *data = rx_data_[rx_index_];
             return length;
         }
-
 
         // enter critical session
         UBaseType_t isrflags;
@@ -238,7 +238,7 @@ namespace bsp {
 
     template <bool FromISR>
     int32_t UART::Write(const uint8_t* data, uint32_t length) {
-        if(!tx_dma_){
+        if (!tx_dma_) {
             HAL_UART_Transmit(huart_, (uint8_t*)data, length, 1000);
             return length;
         }

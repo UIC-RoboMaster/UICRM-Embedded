@@ -110,8 +110,8 @@ namespace bsp {
         uint32_t tx_pending_;
         uint8_t* tx_write_;
         uint8_t* tx_read_;
-        bool tx_dma_=true;
-        bool rx_dma_=true;
+        bool tx_dma_ = true;
+        bool rx_dma_ = true;
 
       private:
         friend void RxCompleteCallbackWrapper(UART_HandleTypeDef* huart);

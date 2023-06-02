@@ -33,12 +33,12 @@ static bsp::VirtualUSB* print_usb = NULL;
 #endif
 static char print_buffer[MAX_PRINT_LEN];
 
-void print_use_uart(UART_HandleTypeDef* huart,bool dma) {
+void print_use_uart(UART_HandleTypeDef* huart, bool dma) {
     if (print_uart)
         delete print_uart;
 
     print_uart = new bsp::UART(huart);
-    print_uart->SetupTx(MAX_PRINT_LEN * 2,dma);  // burst transfer size up to 2x max buffer size
+    print_uart->SetupTx(MAX_PRINT_LEN * 2, dma);  // burst transfer size up to 2x max buffer size
 #ifndef NO_USB
     print_usb = NULL;
 #endif
@@ -59,7 +59,7 @@ int32_t print(const char* format, ...) {
     UNUSED(format);
     UNUSED(print_buffer);
     return 0;
-#else   // == #ifdef DEBUG
+#else  // == #ifdef DEBUG
     va_list args;
     int length;
 

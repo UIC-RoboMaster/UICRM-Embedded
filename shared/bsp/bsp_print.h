@@ -29,7 +29,7 @@
  *
  * @param huart HAL uart handle
  */
-void print_use_uart(UART_HandleTypeDef* huart,bool dma=true);
+void print_use_uart(UART_HandleTypeDef* huart, bool dma = true);
 
 #ifndef NO_USB
 /**
