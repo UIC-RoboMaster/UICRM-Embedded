@@ -4,7 +4,7 @@ project(${CURRENT_DIR_NAME} C ASM)
 
 set(MCU_LINE STM32F103xB)
 set(MCU_ARCH cortex-m3)
-set(MCU_LINKER_SCRIPT STM32F103C8TX_FLASH.ld)
+set(MCU_LINKER_SCRIPT STM32F103CBTX_FLASH.ld)
 set(MCU_OPTIONS -mcpu=${MCU_ARCH} -mthumb -mthumb-interwork)
 
 ######################################################
