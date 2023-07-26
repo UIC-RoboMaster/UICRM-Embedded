@@ -156,6 +156,6 @@ void RM_RTOS_Default_Task(const void* arg) {
         // yaw_motor->PrintData();
         // pitch_motor->PrintData();
 
-        osDelay(75);
+        osDelay(50);
     }
 }
