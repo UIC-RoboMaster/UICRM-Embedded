@@ -70,6 +70,9 @@ void RM_RTOS_Default_Task(const void* args) {
             led->Display(aRGB);
             osDelay(1);
         }
+
+
+
         ++i;
         i = i % 3;
     }
