@@ -1,4 +1,6 @@
 add_subdirectory(base)
-add_subdirectory(bsp_general)
+add_subdirectory(platform)
+add_subdirectory(algorithm)
+add_subdirectory(drivers)
 add_subdirectory(components)
 add_subdirectory(third_party)

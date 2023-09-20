@@ -27,7 +27,7 @@
 
 using namespace bsp;
 
-namespace control {
+namespace driver {
 
 
 
@@ -722,7 +722,7 @@ namespace control {
         max_speed_ = data.max_speed;
         target_speed_ = 0;
         is_inverted_ = data.is_inverted;
-        omega_pid_ = PIDController(data.omega_pid_param);
+        omega_pid_ = control::PIDController(data.omega_pid_param);
     }
     void FlyWheelMotor::SetSpeed(float speed) {
         if (is_inverted_) {

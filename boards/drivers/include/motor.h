@@ -22,10 +22,10 @@
 
 #include "bsp_can.h"
 #include "bsp_pwm.h"
-#include "controller.h"
+#include "pid.h"
 #include "utils.h"
 
-namespace control {
+namespace driver {
 
 
 
@@ -510,8 +510,8 @@ namespace control {
         int16_t* detect_buf_;         /* circular buffer         */
 
         // pid controllers
-        ConstrainedPID omega_pid_; /* pid for controlling speed of motor */
-        ConstrainedPID hold_pid_;
+        control::ConstrainedPID omega_pid_; /* pid for controlling speed of motor */
+        control::ConstrainedPID hold_pid_;
 
         // edge detectors
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
@@ -780,6 +780,6 @@ namespace control {
         bool is_inverted_;
         float max_speed_;
         float target_speed_;
-        PIDController omega_pid_;
+        control::PIDController omega_pid_;
     };
 } /* namespace control */

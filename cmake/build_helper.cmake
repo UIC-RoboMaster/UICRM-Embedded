@@ -22,7 +22,7 @@ function(uicrm_add_arm_executable name)
 
     add_executable(${name}.elf ${ARG_SOURCES})
     target_link_libraries(${name}.elf
-        PRIVATE ${ARG_DEPENDS} ${ARG_TARGET} ${ARG_TARGET}_platform ${ARG_TARGET}_components)
+        PRIVATE ${ARG_DEPENDS} ${ARG_TARGET} ${ARG_TARGET}_platform ${ARG_TARGET}_algorithm ${ARG_TARGET}_drivers ${ARG_TARGET}_components)
     
     target_include_directories(${name}.elf PRIVATE ${ARG_INCLUDES})
     target_link_options(${name}.elf PRIVATE -Wl,--print-memory-usage,-Map=${MAP_FILE})

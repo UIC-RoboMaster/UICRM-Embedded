@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "controller.h"
+#include "pid.h"
 #include "motor.h"
 #include "power_limit.h"
 
@@ -37,7 +37,7 @@ namespace control {
      * @brief structure used when chassis instance is initialized
      */
     typedef struct {
-        MotorCANBase** motors; /* motor instances of all chassis motors */
+        driver::MotorCANBase** motors; /* motor instances of all chassis motors */
         chassis_model_t model; /* chassis model                         */
     } chassis_t;
 
@@ -88,7 +88,7 @@ namespace control {
 
       private:
         // acquired from user
-        MotorCANBase** motors_ = nullptr;
+        driver::MotorCANBase** motors_ = nullptr;
         chassis_model_t model_;
 
         // pids and current speeds for each motor on the chassis

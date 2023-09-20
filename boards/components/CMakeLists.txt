@@ -8,5 +8,5 @@ uicrm_add_board_specific_library(DJI_Board_TypeC_general_components
         TARGET DJI_Board_TypeC_general
         SOURCES ${COMPONENTS_SOURCES}
         INCLUDES ${COMPONENTS_INCLUDES}
-        DEPENDS DJI_Board_TypeC_general_platform)
+        DEPENDS DJI_Board_TypeC_general_drivers DJI_Board_TypeC_general_algorithm DJI_Board_TypeC_general_platform)
 target_include_directories(DJI_Board_TypeC_general_components PUBLIC ${COMPONENTS_INCLUDES})
