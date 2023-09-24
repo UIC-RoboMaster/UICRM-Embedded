@@ -199,12 +199,11 @@ void chassisTask(void* arg) {
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(
                     yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
                 chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);
-//                chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
-//                                referee->power_heat_data.chassis_power,
-//                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->Update(false, 30,
-                                20,
-                                (float)100);
+                //                chassis->Update(true,
+                //                (float)referee->game_robot_status.chassis_power_limit,
+                //                                referee->power_heat_data.chassis_power,
+                //                                (float)referee->power_heat_data.chassis_power_buffer);
+                chassis->Update(false, 30, 20, (float)100);
                 break;
             case REMOTE_MODE_SPIN:
 
@@ -215,22 +214,20 @@ void chassisTask(void* arg) {
                 }
                 vz_set = spin_speed;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
-//                chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
-//                                referee->power_heat_data.chassis_power,
-//                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->Update(false, 30,
-                                20,
-                                (float)100);
+                //                chassis->Update(true,
+                //                (float)referee->game_robot_status.chassis_power_limit,
+                //                                referee->power_heat_data.chassis_power,
+                //                                (float)referee->power_heat_data.chassis_power_buffer);
+                chassis->Update(false, 30, 20, (float)100);
                 break;
             case REMOTE_MODE_ADVANCED:
                 vz_set = offset_yaw;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
-//                chassis->Update(true, (float)referee->game_robot_status.chassis_power_limit,
-//                                referee->power_heat_data.chassis_power,
-//                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->Update(false, 30,
-                                20,
-                                (float)100);
+                //                chassis->Update(true,
+                //                (float)referee->game_robot_status.chassis_power_limit,
+                //                                referee->power_heat_data.chassis_power,
+                //                                (float)referee->power_heat_data.chassis_power_buffer);
+                chassis->Update(false, 30, 20, (float)100);
                 break;
             default:
                 // Not Support
