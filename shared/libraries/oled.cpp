@@ -1964,7 +1964,13 @@ namespace display {
         else
             cmd_data[0] = 0x40;
         cmd_data[1] = dat;
-        HAL_I2C_Master_Transmit(hi2c_, OLED_i2c_addr_, cmd_data, 2, 10);
+        while(HAL_I2C_Master_Transmit_DMA(hi2c_, OLED_i2c_addr_, cmd_data, 2)!=HAL_OK){
+            if(HAL_I2C_GetError(hi2c_)!=HAL_I2C_ERROR_AF){
+                Error_Handler();
+            }
+        }
+        while(HAL_I2C_GetState(hi2c_)!=HAL_I2C_STATE_READY){
+        }
     }
 
     void OLED::Init() {

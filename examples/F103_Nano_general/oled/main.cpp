@@ -29,7 +29,8 @@ static display::OLED* OLED = nullptr;
 
 void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
-    OLED = new display::OLED(&hi2c2, 0x3C);
+    HAL_Delay(1000);
+    OLED = new display::OLED(&hi2c1, 0x3C);
     HAL_Delay(1000);
 }
 
