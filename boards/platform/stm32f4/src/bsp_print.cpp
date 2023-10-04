@@ -18,12 +18,15 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+
+#include "printf.h"  // third party tiny-printf implemnetations
+
 #include "bsp_print.h"
 
 #include "bsp_uart.h"
 #include "bsp_usb.h"
 #include "main.h"
-#include "printf.h"  // third party tiny-printf implemnetations
+
 
 #define MAX_PRINT_LEN 256
 

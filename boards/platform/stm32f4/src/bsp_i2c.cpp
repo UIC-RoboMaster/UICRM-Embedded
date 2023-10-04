@@ -77,8 +77,8 @@ namespace bsp {
         HAL_I2C_RegisterCallback(hi2c_, HAL_I2C_MASTER_RX_COMPLETE_CB_ID, I2CRxCallback);
     }
 
-    bool I2C::isReady(uint16_t id) {
-        return HAL_I2C_IsDeviceReady(hi2c_, id, 1, 10) == HAL_OK;
+    bool I2C::isReady(uint16_t id, uint32_t timeout) {
+        return HAL_I2C_IsDeviceReady(hi2c_, id, 1, timeout) == HAL_OK;
     }
 
     int I2C::RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback, void* args) {

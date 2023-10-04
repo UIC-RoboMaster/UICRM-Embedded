@@ -58,7 +58,7 @@ namespace bsp {
          *
          * @return true if ready, otherwise false
          */
-        bool isReady(uint16_t id);
+        bool isReady(uint16_t id, uint32_t timeout=50);
 
         /**
          * @brief register callback function for a specific ID on this I2C line
