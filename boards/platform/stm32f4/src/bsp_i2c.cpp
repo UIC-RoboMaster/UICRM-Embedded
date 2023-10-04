@@ -77,9 +77,13 @@ namespace bsp {
         HAL_I2C_RegisterCallback(hi2c_, HAL_I2C_MASTER_RX_COMPLETE_CB_ID, I2CRxCallback);
     }
 
+    bool I2C::isReady(uint16_t id) {
+        return HAL_I2C_IsDeviceReady(hi2c_, id, 1, 10) == HAL_OK;
+    }
+
     int I2C::RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback, void* args) {
         // int callback_id = std_id - start_id_;
-
+        // todo: Rx Callback
         if (callback_count_ >= MAX_I2C_DEVICES)
             return -1;
 
@@ -93,6 +97,13 @@ namespace bsp {
 
     int I2C::Transmit(uint16_t id, const uint8_t data[], uint16_t length) {
         if(HAL_I2C_Master_Transmit(hi2c_, id, const_cast<uint8_t*>(data), length, 20)!= HAL_OK){
+            return -1;
+        }
+        return length;
+    }
+
+    int I2C::Receive(uint16_t id, uint8_t* data, uint16_t length) {
+        if(HAL_I2C_Master_Receive(hi2c_, id, const_cast<uint8_t*>(data), length, 50)!= HAL_OK){
             return -1;
         }
         return length;

@@ -50,6 +50,16 @@ namespace bsp {
             return hi2c_ == hi2c;
         }
 
+
+        /**
+         * @brief check the device is ready.
+         *
+         * @param id  device address
+         *
+         * @return true if ready, otherwise false
+         */
+        bool isReady(uint16_t id);
+
         /**
          * @brief register callback function for a specific ID on this I2C line
          *
@@ -71,6 +81,17 @@ namespace bsp {
          * @return  number of bytes transmitted, -1 if failed
          */
         int Transmit(uint16_t id, const uint8_t data[], uint16_t length);
+
+        /**
+         * @brief receive I2C messages
+         *
+         * @param id      device address
+         * @param data[]  data bytes
+         * @param length  length of data
+         *
+         * @return  number of bytes transmitted, -1 if failed
+         */
+        int Receive(uint16_t id, uint8_t* data, uint16_t length);
 
 
         /**
