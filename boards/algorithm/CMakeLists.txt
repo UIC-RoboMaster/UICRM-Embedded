@@ -7,5 +7,19 @@ uicrm_add_board_specific_library(DJI_Board_TypeC_general_algorithm
         TARGET DJI_Board_TypeC_general
         SOURCES ${ALGORITHM_SOURCES}
         INCLUDES ${ALGORITHM_INCLUDES}
-        DEPENDS DJI_Board_TypeC_general_platform crc_check)
+        DEPENDS DJI_Board_TypeC_general_platform)
 target_include_directories(DJI_Board_TypeC_general_algorithm PUBLIC ${ALGORITHM_INCLUDES})
+
+uicrm_add_board_specific_library(DJI_Board_TypeA_general_algorithm
+        TARGET DJI_Board_TypeA_general
+        SOURCES ${ALGORITHM_SOURCES}
+        INCLUDES ${ALGORITHM_INCLUDES}
+        DEPENDS DJI_Board_TypeA_general_platform)
+target_include_directories(DJI_Board_TypeA_general_algorithm PUBLIC ${ALGORITHM_INCLUDES})
+
+uicrm_add_board_specific_library(DM_MC01_general_algorithm
+        TARGET DM_MC01_general
+        SOURCES ${ALGORITHM_SOURCES}
+        INCLUDES ${ALGORITHM_INCLUDES}
+        DEPENDS DM_MC01_general_platform)
+target_include_directories(DM_MC01_general_algorithm PUBLIC ${ALGORITHM_INCLUDES})
