@@ -74,7 +74,7 @@ namespace bsp {
         is_dma_ = is_dma;
         // save can instance as global pointer
         ptr_map[hi2c] = this;
-        HAL_I2C_RegisterCallback(hi2c_, HAL_I2C_MASTER_RX_COMPLETE_CB_ID, I2CRxCallback);
+        // HAL_I2C_RegisterCallback(hi2c_, HAL_I2C_MASTER_RX_COMPLETE_CB_ID, I2CRxCallback);
     }
 
     bool I2C::isReady(uint16_t id, uint32_t timeout) {

@@ -908,7 +908,7 @@ namespace bsp {
 
 } /* namespace bsp */
 
-void RM_DMA_SPI_IRQHandler(SPI_HandleTypeDef* hspi) {
+void RM_DMA_IMU_IRQHandler(SPI_HandleTypeDef* hspi) {
     bsp::DMACallbackWrapper(hspi);
 }
 
