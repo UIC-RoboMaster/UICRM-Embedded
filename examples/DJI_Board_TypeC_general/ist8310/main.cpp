@@ -24,7 +24,8 @@
 #include "bsp_print.h"
 #include "bsp_uart.h"
 #include "cmsis_os.h"
-#include "ist8310.h"
+
+#include "IST8310.h"
 
 static bsp::I2C* i2c3 = nullptr;
 static imu::IST8310* ist8310 = nullptr;
