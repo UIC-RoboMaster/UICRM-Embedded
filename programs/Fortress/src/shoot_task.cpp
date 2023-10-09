@@ -29,7 +29,6 @@ driver::ServoMotor* load_servo = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
-
 void jam_callback(driver::ServoMotor* servo, const driver::servo_jam_t data) {
     UNUSED(data);
     float servo_target = servo->GetTarget();

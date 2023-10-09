@@ -19,8 +19,8 @@
  ###########################################################*/
 
 #pragma once
-#include "pid.h"
 #include "gimbal.h"
+#include "pid.h"
 
 // basic information of gimbal
 const control::gimbal_data_t gimbal_init_data = {

@@ -19,14 +19,15 @@
  ###########################################################*/
 
 #include "main.h"
+
 #include "bsp_i2c.h"
 #include "bsp_print.h"
 #include "bsp_uart.h"
 #include "cmsis_os.h"
 #include "oled.h"
+#include "oled_fonts/cat.h"
 #include "oled_fonts/navigator.h"
 #include "oled_fonts/robomaster.h"
-#include "oled_fonts/cat.h"
 
 static display::OLED* OLED = nullptr;
 static bsp::I2C* i2c1 = nullptr;

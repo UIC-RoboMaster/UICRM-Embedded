@@ -18,8 +18,8 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_imu.h"
 #include "bsp_i2c.h"
+#include "bsp_imu.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "i2c.h"
