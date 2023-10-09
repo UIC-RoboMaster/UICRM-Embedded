@@ -243,6 +243,15 @@
 #define BMI088_GYRO_RX_BUF_DATA_OFFSET 1
 #define BMI088_ACCEL_RX_BUF_DATA_OFFSET 2
 
+#define BMI088_SPI_DMA_GYRO_LENGHT 8
+#define BMI088_SPI_DMA_ACCEL_LENGHT 9
+#define BMI088_SPI_DMA_ACCEL_TEMP_LENGHT 4
+
+#define BMI088_IMU_DR_SHFITS 0
+#define BMI088_IMU_SPI_SHFITS 1
+#define BMI088_IMU_UPDATE_SHFITS 2
+#define BMI088_IMU_NOTIFY_SHFITS 3
+
 namespace imu{
     typedef struct {
         uint8_t status;
@@ -296,6 +305,25 @@ namespace imu{
         void accel_read_over(uint8_t* rx_buf, float accel[3], float* time);
         void gyro_read_over(uint8_t* rx_buf, float gyro[3]);
 
+        volatile uint8_t gyro_update_flag = 0;
+        volatile uint8_t accel_update_flag = 0;
+        volatile uint8_t accel_temp_update_flag = 0;
+        volatile uint8_t mag_update_flag = 0;
+        volatile uint8_t imu_start_dma_flag = 0;
+
+        uint8_t gyro_dma_rx_buf[BMI088_SPI_DMA_GYRO_LENGHT];
+        uint8_t gyro_dma_tx_buf[BMI088_SPI_DMA_GYRO_LENGHT] = {0x82, 0xFF, 0xFF, 0xFF,
+                                                               0xFF, 0xFF, 0xFF, 0xFF};
+
+        uint8_t accel_dma_rx_buf[BMI088_SPI_DMA_ACCEL_LENGHT];
+        uint8_t accel_dma_tx_buf[BMI088_SPI_DMA_ACCEL_LENGHT] = {0x92, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                 0xFF, 0xFF, 0xFF, 0xFF};
+
+        uint8_t accel_temp_dma_rx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT];
+        uint8_t accel_temp_dma_tx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT] = {0xA2, 0xFF, 0xFF, 0xFF};
+
+        void imu_cmd_spi_dma();
+        void dma_callback();
       private:
         bsp::SPI* spi_;
         bsp::GPIO* CS_ACCEL_;
@@ -327,21 +355,21 @@ namespace imu{
         void BMI088_gyro_read_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len);
     };
 
-//    class BMI088_Accel_INT : public bsp::GPIT {
-//      public:
-//        BMI088_Accel_INT(uint16_t INT_pin, BMI088* imu);
-//
-//      private:
-//        BMI088* imu_;
-//        void IntCallback() final;
-//    };
-//
-//    class BMI088_Gyro_INT : public bsp::GPIT {
-//      public:
-//        BMI088_Gyro_INT(uint16_t INT_pin, BMI088* imu);
-//
-//      private:
-//        BMI088* imu_;
-//        void IntCallback() final;
-//    };
+    class BMI088_Accel_INT : public bsp::GPIT {
+      public:
+        BMI088_Accel_INT(uint16_t INT_pin, BMI088* imu);
+
+      private:
+        BMI088* imu_;
+        void IntCallback() final;
+    };
+
+    class BMI088_Gyro_INT : public bsp::GPIT {
+      public:
+        BMI088_Gyro_INT(uint16_t INT_pin, BMI088* imu);
+
+      private:
+        BMI088* imu_;
+        void IntCallback() final;
+    };
 }
