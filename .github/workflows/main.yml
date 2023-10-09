@@ -23,9 +23,9 @@ jobs:
     - name: download ARM toolchain
       if: steps.cache-arm.outputs.cache-hit != 'true'
       run: |
-        wget -O ~/gcc-arm-none-eabi.tar.bz2 https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
+        wget -O ~/gcc-arm-none-eabi.tar.xz https://developer.arm.com/-/media/Files/downloads/gnu/12.3.rel1/binrel/arm-gnu-toolchain-12.3.rel1-aarch64-arm-none-eabi.tar.xz
         mkdir ~/arm-toolchain-v10-3
-        tar -xjf ~/gcc-arm-none-eabi.tar.bz2 --directory ~/arm-toolchain-v10-3 --strip-components=1
+        tar -xjf ~/gcc-arm-none-eabi.tar.xz --directory ~/arm-toolchain-v10-3 --strip-components=1
     - name: add system path
       run: echo "~/arm-toolchain-v10-3/bin" >> $GITHUB_PATH  # set envrionment variable
     - name: cmake
