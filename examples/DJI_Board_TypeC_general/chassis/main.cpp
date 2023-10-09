@@ -26,23 +26,24 @@
 #include "dbus.h"
 
 bsp::CAN* can = nullptr;
-control::MotorCANBase* fl_motor = nullptr;
-control::MotorCANBase* fr_motor = nullptr;
-control::MotorCANBase* bl_motor = nullptr;
-control::MotorCANBase* br_motor = nullptr;
+driver::MotorCANBase* fl_motor = nullptr;
+driver::MotorCANBase* fr_motor = nullptr;
+driver::MotorCANBase* bl_motor = nullptr;
+driver::MotorCANBase* br_motor = nullptr;
 
 control::Chassis* chassis = nullptr;
 remote::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init() {
+    HAL_Delay(200);
     print_use_uart(&huart1);
     can = new bsp::CAN(&hcan1, 0x201, true);
-    fl_motor = new control::Motor3508(can, 0x202);
-    fr_motor = new control::Motor3508(can, 0x201);
-    bl_motor = new control::Motor3508(can, 0x203);
-    br_motor = new control::Motor3508(can, 0x204);
+    fl_motor = new driver::Motor3508(can, 0x202);
+    fr_motor = new driver::Motor3508(can, 0x201);
+    bl_motor = new driver::Motor3508(can, 0x203);
+    br_motor = new driver::Motor3508(can, 0x204);
 
-    control::MotorCANBase* motors[control::FourWheel::motor_num];
+    driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;
@@ -54,6 +55,7 @@ void RM_RTOS_Init() {
     chassis = new control::Chassis(chassis_data);
 
     dbus = new remote::DBUS(&huart3);
+    HAL_Delay(300);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
@@ -61,7 +63,7 @@ void RM_RTOS_Default_Task(const void* args) {
 
     osDelay(500);  // DBUS initialization needs time
 
-    control::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
+    driver::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
 
     while (true) {
         chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
@@ -72,7 +74,7 @@ void RM_RTOS_Default_Task(const void* args) {
         }
 
         chassis->Update(false, 30, 20, 60);
-        control::MotorCANBase::TransmitOutput(motors, 4);
+        driver ::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(10);
     }
 }

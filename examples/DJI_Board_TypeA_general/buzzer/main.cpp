@@ -20,10 +20,10 @@
 
 #include "main.h"
 
-#include "bsp_buzzer.h"
+#include "buzzer.h"
 #include "tim.h"
 
-using Note = bsp::BuzzerNote;
+using Note = driver::BuzzerNote;
 /*
 static bsp::BuzzerNoteDelayed Mario[] = {
     {Note::Mi3M, 80}, {Note::Silent, 80},  {Note::Mi3M, 80}, {Note::Silent,
@@ -70,11 +70,11 @@ static bsp::BuzzerNoteDelayed War_Cant_of_Mars[] = {
     {Note::Finish, 0},
 };
 */
-static bsp::BuzzerNoteDelayed DJI[] = {
+static driver::BuzzerNoteDelayed DJI[] = {
     {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
 void RM_RTOS_Init(void) {
-    bsp::Buzzer buzzer(&htim12, 1, 1000000);
+    driver::Buzzer buzzer(&htim12, 1, 1000000);
     buzzer.SingSong(DJI);
     // buzzer.SingSong(War_Cant_of_Mars);
 }

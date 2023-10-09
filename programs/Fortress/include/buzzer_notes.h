@@ -19,14 +19,14 @@
  ###########################################################*/
 
 #pragma once
-#include "bsp_buzzer.h"
-using Note = bsp::BuzzerNote;
-const bsp::BuzzerNoteDelayed Mario[] = {
+#include "buzzer.h"
+using Note = driver::BuzzerNote;
+const driver::BuzzerNoteDelayed Mario[] = {
     {Note::Mi3M, 80}, {Note::Silent, 80},  {Note::Mi3M, 80}, {Note::Silent, 240},
     {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::Do1M, 80}, {Note::Silent, 80},
     {Note::Mi3M, 80}, {Note::Silent, 240}, {Note::So5M, 80}, {Note::Silent, 560},
     {Note::So5L, 80}, {Note::Silent, 0},   {Note::Finish, 0}};
-const bsp::BuzzerNoteDelayed War_Cant_of_Mars[] = {
+const driver::BuzzerNoteDelayed War_Cant_of_Mars[] = {
     {Note::So5M, 400},   {Note::So5M, 200},   {Note::So5M, 200},   {Note::So5M, 400},
     {Note::Fa4M, 200},   {Note::Mi3M, 400},   {Note::So5M, 200},   {Note::Do1H, 400},
     {Note::Re2H, 200},   {Note::Mi3H, 400},   {Note::Mi3H, 200},   {Note::Mi3H, 400},
@@ -51,11 +51,11 @@ const bsp::BuzzerNoteDelayed War_Cant_of_Mars[] = {
     {Note::Silent, 0},   {Note::Finish, 0},
 };
 
-const bsp::BuzzerNoteDelayed DJI[] = {
+const driver::BuzzerNoteDelayed DJI[] = {
     {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
-const bsp::BuzzerNoteDelayed SingCaliStart[] = {
+const driver::BuzzerNoteDelayed SingCaliStart[] = {
     {Note::Mi3M, 100}, {Note::Re2M, 100}, {Note::Mi3M, 100}, {Note::Finish, 0}};
 
-const bsp::BuzzerNoteDelayed SingCaliDone[] = {
+const driver::BuzzerNoteDelayed SingCaliDone[] = {
     {Note::Re2M, 100}, {Note::Mi3M, 100}, {Note::Re2M, 100}, {Note::Finish, 0}};

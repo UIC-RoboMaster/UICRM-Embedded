@@ -20,18 +20,16 @@
 
 #include "shoot_task.h"
 
-static control::MotorPWMBase* flywheel_left = nullptr;
-static control::MotorPWMBase* flywheel_right = nullptr;
+static driver::MotorPWMBase* flywheel_left = nullptr;
+static driver::MotorPWMBase* flywheel_right = nullptr;
 
-control::MotorCANBase* steering_motor = nullptr;
+driver::MotorCANBase* steering_motor = nullptr;
 
-control::ServoMotor* load_servo = nullptr;
+driver::ServoMotor* load_servo = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
-bsp::Laser* laser = nullptr;
-
-void jam_callback(control::ServoMotor* servo, const control::servo_jam_t data) {
+void jam_callback(driver::ServoMotor* servo, const driver::servo_jam_t data) {
     UNUSED(data);
     float servo_target = servo->GetTarget();
     if (servo_target > servo->GetTheta()) {
@@ -154,11 +152,11 @@ void shootTask(void* arg) {
             case SHOOT_FRIC_MODE_PREPARING:
             case SHOOT_FRIC_MODE_PREPARED:
                 shoot_flywheel_offset = 200;
-                laser->SetOutput(255);
+                // laser->SetOutput(255);
                 break;
             case SHOOT_FRIC_MODE_STOP:
                 shoot_flywheel_offset = -200;
-                laser->SetOutput(0);
+                // laser->SetOutput(0);
                 break;
             case SHOOT_FRIC_SPEEDUP:
                 ramp_1.SetMax(min(400.0f, ramp_1.GetMax() + 25));
@@ -172,7 +170,7 @@ void shootTask(void* arg) {
                 break;
             default:
                 shoot_flywheel_offset = -1000;
-                laser->SetOutput(0);
+                // laser->SetOutput(0);
                 break;
         }
         flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
@@ -304,14 +302,14 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new control::MotorPWMBase(&htim1, 1, 1000000, 500, 1080);
-    flywheel_right = new control::MotorPWMBase(&htim1, 2, 1000000, 500, 1080);
+    flywheel_left = new driver::MotorPWMBase(&htim1, 1, 1000000, 500, 1080);
+    flywheel_right = new driver::MotorPWMBase(&htim1, 2, 1000000, 500, 1080);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
 
-    steering_motor = new control::Motor2006(can2, 0x207);
+    steering_motor = new driver::Motor2006(can2, 0x207);
 
-    control::servo_t servo_data;
+    driver::servo_t servo_data;
     servo_data.motor = steering_motor;
     servo_data.max_speed = 2.5 * PI;
     servo_data.max_acceleration = 16 * PI;
@@ -323,12 +321,12 @@ void init_shoot() {
     servo_data.hold_max_iout = 2000;
     servo_data.hold_max_out = 10000;
 
-    load_servo = new control::ServoMotor(servo_data);
+    load_servo = new driver::ServoMotor(servo_data);
     load_servo->SetTarget(load_servo->GetTheta(), true);
     load_servo->RegisterJamCallback(jam_callback, 0.6);
 
     shoot_key = new bsp::GPIO(BUTTON_TRI_GPIO_Port, BUTTON_TRI_Pin);
-    laser = new bsp::Laser(&htim3, 3, 1000000);
+    // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
     steering_motor->SetOutput(0);

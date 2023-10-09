@@ -20,30 +20,36 @@
 
 #include "main.h"
 
+#include "bsp_i2c.h"
 #include "bsp_print.h"
 #include "bsp_uart.h"
 #include "cmsis_os.h"
 #include "oled.h"
+#include "oled_fonts/cat.h"
+#include "oled_fonts/navigator.h"
+#include "oled_fonts/robomaster.h"
 
 static display::OLED* OLED = nullptr;
+static bsp::I2C* i2c1 = nullptr;
 
 void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
-    OLED = new display::OLED(&hi2c2, 0x3C);
+    HAL_Delay(1000);
+    i2c1 = new bsp::I2C(&hi2c1);
+    OLED = new display::OLED(i2c1, 0x78);
     HAL_Delay(1000);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
 
-    OLED->ShowRMLOGO();
+    OLED->ShowPic(display::RM_Logo);
     osDelay(2000);
 
-    OLED->ShowIlliniRMLOGO();
+    OLED->ShowPic(display::Navigator_Logo);
     osDelay(2000);
 
     while (true) {
-        OLED->DrawCat();
         osDelay(1);
     }
 }

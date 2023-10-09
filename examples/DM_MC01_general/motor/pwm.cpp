@@ -34,15 +34,15 @@
 #define MOTOR_OUT_FREQ 500
 #define SNAIL_IDLE_THROTTLE 1080
 
-control::MotorPWMBase* motor1;
-control::MotorPWMBase* motor2;
+driver::MotorPWMBase* motor1;
+driver::MotorPWMBase* motor2;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart4);
-    motor1 = new control::MotorPWMBase(&htim8, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
-                                       MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
-    motor2 = new control::MotorPWMBase(&htim8, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
-                                       MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
+    motor1 = new driver::MotorPWMBase(&htim8, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+                                      MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
+    motor2 = new driver::MotorPWMBase(&htim8, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+                                      MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
     motor1->SetOutput(0);
     motor2->SetOutput(0);
     // Snail need to be run at idle throttle for some

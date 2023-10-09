@@ -18,6 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "bsp_i2c.h"
 #include "bsp_imu.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
@@ -51,7 +52,6 @@ class IMU : public bsp::IMU_typeC {
 };
 
 static IMU* imu = nullptr;
-
 void imuTask(void* arg) {
     UNUSED(arg);
 
@@ -62,11 +62,13 @@ void imuTask(void* arg) {
         }
     }
 }
+static bsp::I2C* i2c = nullptr;
 static display::OLED* oled = nullptr;
 char buffer[200];
 void RM_RTOS_Init(void) {
     print_use_uart(&huart6);
-    oled = new display::OLED(&hi2c2, 0x3C);
+    i2c = new bsp::I2C(&hi2c2);
+    oled = new display::OLED(i2c, 0x78);
     bsp::IST8310_init_t IST8310_init;
     IST8310_init.hi2c = &hi2c3;
     IST8310_init.int_pin = DRDY_IST8310_Pin;

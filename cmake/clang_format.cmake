@@ -25,13 +25,13 @@ if (CLANG_FORMAT_EXE)
         message(STATUS "Current system is windows, clang-format should be proccess in dictionary.")
         # format code in place
         add_custom_target(format
-            COMMAND python3 ${RUN_CLANG_FORMAT} --clang-format-executable ${CLANG_FORMAT_EXE} -i -r ${CMAKE_SOURCE_DIR}
+            COMMAND python ${RUN_CLANG_FORMAT} --clang-format-executable ${CLANG_FORMAT_EXE} -i -r ${CMAKE_SOURCE_DIR}
             DEPENDS ${RUN_CLANG_FORMAT} 
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
         # check for format violations
         add_custom_target(check-format
-            COMMAND python3 ${RUN_CLANG_FORMAT} --clang-format-executable ${CLANG_FORMAT_EXE} -r ${CMAKE_SOURCE_DIR}
+            COMMAND python ${RUN_CLANG_FORMAT} --clang-format-executable ${CLANG_FORMAT_EXE} -r ${CMAKE_SOURCE_DIR}
             DEPENDS ${RUN_CLANG_FORMAT} 
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     else()

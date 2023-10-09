@@ -66,8 +66,8 @@ void imuTask(void* arg) {
     }
 }
 
-static control::MotorCANBase* pitch_motor = nullptr;
-static control::MotorCANBase* yaw_motor = nullptr;
+static driver::MotorCANBase* pitch_motor = nullptr;
+static driver::MotorCANBase* yaw_motor = nullptr;
 static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 
@@ -92,7 +92,7 @@ osThreadId_t gimbalTaskHandle;
 void gimbalTask(void* arg) {
     UNUSED(arg);
 
-    control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
+    driver::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
 
     print("Wait for beginning signal...\r\n");
     while (true) {
@@ -106,7 +106,7 @@ void gimbalTask(void* arg) {
     while (i < 2000 || !imu->DataReady()) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        control::MotorCANBase::TransmitOutput(gimbal_motors, 2);
+        driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
         ++i;
     }
@@ -118,7 +118,7 @@ void gimbalTask(void* arg) {
     while (!imu->DataReady() || !imu->CaliDone()) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        control::MotorCANBase::TransmitOutput(gimbal_motors, 2);
+        driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
         ++i;
     }
@@ -162,7 +162,7 @@ void gimbalTask(void* arg) {
         gimbal->TargetRel(pitch_diff, yaw_diff);
 
         gimbal->Update();
-        control::MotorCANBase::TransmitOutput(gimbal_motors, 2);
+        driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
     }
 }
@@ -200,8 +200,8 @@ void RM_RTOS_Init(void) {
     imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
     imu = new IMU(imu_init, false);
 
-    pitch_motor = new control::Motor6020(can1, 0x206);
-    yaw_motor = new control::Motor6020(can1, 0x205);
+    pitch_motor = new driver::Motor6020(can1, 0x206);
+    yaw_motor = new driver::Motor6020(can1, 0x205);
     control::gimbal_t gimbal_data;
     gimbal_data.data = gimbal_init_data;
     gimbal_data.pitch_motor = pitch_motor;
@@ -240,7 +240,7 @@ void RM_RTOS_Threads_Init(void) {
 }
 
 void KillAll() {
-    control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
+    driver::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
 
     RM_EXPECT_TRUE(false, "Operation killed\r\n");
     while (true) {
@@ -249,7 +249,7 @@ void KillAll() {
         }
         pitch_motor->SetOutput(0);
         yaw_motor->SetOutput(0);
-        control::MotorCANBase::TransmitOutput(gimbal_motors, 2);
+        driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(10);
     }
 }

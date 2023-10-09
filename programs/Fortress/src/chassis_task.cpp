@@ -20,10 +20,10 @@
 
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
-control::MotorCANBase* fl_motor = nullptr;
-control::MotorCANBase* fr_motor = nullptr;
-control::MotorCANBase* bl_motor = nullptr;
-control::MotorCANBase* br_motor = nullptr;
+driver::MotorCANBase* fl_motor = nullptr;
+driver::MotorCANBase* fr_motor = nullptr;
+driver::MotorCANBase* bl_motor = nullptr;
+driver::MotorCANBase* br_motor = nullptr;
 control::Chassis* chassis = nullptr;
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -34,7 +34,7 @@ const float speed_offset_boost = 1320;
 void chassisTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
-    control::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
+    driver::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
 
     while (remote_mode == REMOTE_MODE_KILL) {
         kill_chassis();
@@ -234,18 +234,18 @@ void chassisTask(void* arg) {
                 kill_chassis();
         }
         chassis_vz = vz_set;
-        control::MotorCANBase::TransmitOutput(motors, 4);
+        driver::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(CHASSIS_OS_DELAY);
     }
 }
 
 void init_chassis() {
-    fl_motor = new control::Motor3508(can1, 0x202);
-    fr_motor = new control::Motor3508(can1, 0x201);
-    bl_motor = new control::Motor3508(can1, 0x203);
-    br_motor = new control::Motor3508(can1, 0x204);
+    fl_motor = new driver::Motor3508(can1, 0x202);
+    fr_motor = new driver::Motor3508(can1, 0x201);
+    bl_motor = new driver::Motor3508(can1, 0x203);
+    br_motor = new driver::Motor3508(can1, 0x204);
 
-    control::MotorCANBase* motors[control::FourWheel::motor_num];
+    driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;
@@ -257,10 +257,10 @@ void init_chassis() {
     chassis = new control::Chassis(chassis_data, 0.04);
 }
 void kill_chassis() {
-    control::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
+    driver::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
     fl_motor->SetOutput(0);
     fr_motor->SetOutput(0);
     bl_motor->SetOutput(0);
     br_motor->SetOutput(0);
-    control::MotorCANBase::TransmitOutput(motors, 4);
+    driver::MotorCANBase::TransmitOutput(motors, 4);
 }

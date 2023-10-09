@@ -28,18 +28,18 @@
 #define KEY_GPIO_PIN GPIO_PIN_2
 
 static bsp::CAN* can1 = nullptr;
-static control::MotorCANBase* motor = nullptr;
+static driver::MotorCANBase* motor = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
 
     can1 = new bsp::CAN(&hcan1, 0x201);
-    motor = new control::Motor6623(can1, 0x205);
+    motor = new driver::Motor6623(can1, 0x205);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
-    control::MotorCANBase* motors[] = {motor};
+    driver::MotorCANBase* motors[] = {motor};
 
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
     while (true) {
@@ -48,7 +48,7 @@ void RM_RTOS_Default_Task(const void* args) {
             motor->SetOutput(3000);
         else
             motor->SetOutput(0);
-        control::MotorCANBase::TransmitOutput(motors, 1);
+        driver::MotorCANBase::TransmitOutput(motors, 1);
         motor->PrintData();
         osDelay(100);
     }

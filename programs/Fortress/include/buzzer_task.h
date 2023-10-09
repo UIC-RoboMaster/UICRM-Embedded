@@ -19,13 +19,13 @@
  ###########################################################*/
 
 #pragma once
-#include "bsp_buzzer.h"
+#include "buzzer.h"
 #include "cmsis_os2.h"
 #include "main.h"
 
 #define BUZZER_SIGNAL (1 << 0)
 
-extern bsp::Buzzer* buzzer;
+extern driver::Buzzer* buzzer;
 
 extern osThreadId_t buzzerTaskHandle;
 const osThreadAttr_t buzzerTaskAttribute = {.name = "buzzerTask",
@@ -37,6 +37,6 @@ const osThreadAttr_t buzzerTaskAttribute = {.name = "buzzerTask",
                                             .priority = (osPriority_t)osPriorityBelowNormal,
                                             .tz_module = 0,
                                             .reserved = 0};
-bool Buzzer_Sing(const bsp::BuzzerNoteDelayed* song);
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song);
 void buzzerTask(void* arg);
 void init_buzzer();

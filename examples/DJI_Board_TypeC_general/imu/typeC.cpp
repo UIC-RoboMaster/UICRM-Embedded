@@ -62,7 +62,7 @@ void imuTask(void* arg) {
 }
 
 void RM_RTOS_Init(void) {
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
 
     bsp::IST8310_init_t IST8310_init;
     IST8310_init.hi2c = &hi2c3;
