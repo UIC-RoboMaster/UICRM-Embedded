@@ -10,6 +10,5 @@ project(uicrm)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 add_subdirectory(boards)
-# add_subdirectory(shared)
-# add_subdirectory(programs)
+add_subdirectory(programs)
 add_subdirectory(examples)

@@ -24,3 +24,10 @@ uicrm_add_board_specific_library(DM_MC01_general_components
         INCLUDES ${COMPONENTS_INCLUDES}
         DEPENDS DM_MC01_general_drivers DM_MC01_general_algorithm DM_MC01_general_platform)
 target_include_directories(DM_MC01_general_components PUBLIC ${COMPONENTS_INCLUDES})
+
+uicrm_add_board_specific_library(F103_Nano_general_components
+        TARGET F103_Nano_general
+        SOURCES ${COMPONENTS_SOURCES}
+        INCLUDES ${COMPONENTS_INCLUDES}
+        DEPENDS F103_Nano_general_drivers F103_Nano_general_algorithm F103_Nano_general_platform)
+target_include_directories(F103_Nano_general_components PUBLIC ${COMPONENTS_INCLUDES})

@@ -58,3 +58,19 @@ uicrm_add_board_specific_library(DM_MC01_general_drivers
         ${DM_MC01_Drivers_INCLUDES}
         DEPENDS DM_MC01_general_platform DM_MC01_general_algorithm)
 target_include_directories(DM_MC01_general_drivers PUBLIC ${DM_MC01_Drivers_INCLUDES})
+
+file(GLOB_RECURSE F103_Nano_Specific_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/F103_Nano/src/*.*)
+set(F103_Nano_Drivers_SOURCES
+        ${DRIVER_SOURCES}
+        ${F103_Nano_Specific_SOURCES})
+set(F103_Nano_Drivers_INCLUDES
+        ${DRIVER_INCLUDES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/F103_Nano/include)
+uicrm_add_board_specific_library(F103_Nano_general_drivers
+        TARGET F103_Nano_general
+        SOURCES
+        ${F103_Nano_Drivers_SOURCES}
+        INCLUDES
+        ${F103_Nano_Drivers_INCLUDES}
+        DEPENDS F103_Nano_general_platform F103_Nano_general_algorithm)
+target_include_directories(F103_Nano_general_drivers PUBLIC ${F103_Nano_Drivers_INCLUDES})

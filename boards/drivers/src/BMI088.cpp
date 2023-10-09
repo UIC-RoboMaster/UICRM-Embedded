@@ -294,54 +294,56 @@ namespace imu {
     }
 
     void BMI088::imu_cmd_spi_dma() {
-        UBaseType_t uxSavedInterruptStatus;
-        uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
-
-        if ((gyro_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
-            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-            !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
-            !(accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
-            gyro_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
-            gyro_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
-            CS_GYRO_->Low();
-
-
-            spi_->TransimiReceive(gyro_dma_tx_buf, gyro_dma_rx_buf,
-                           BMI088_SPI_DMA_GYRO_LENGHT);
-            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
-            return;
-        }
-
-        if ((accel_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
-            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-            !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
-            !(accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
-            accel_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
-            accel_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
-
-            CS_ACCEL_->Low();
-            spi_->TransimiReceive(accel_dma_tx_buf, accel_dma_rx_buf,
-                           BMI088_SPI_DMA_ACCEL_LENGHT);
-            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
-            return;
-        }
-        if ((accel_temp_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
-            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-            !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
-            !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
-            accel_temp_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
-            accel_temp_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
-
-            CS_ACCEL_->Low();
-            spi_->TransimiReceive(accel_temp_dma_tx_buf, accel_temp_dma_rx_buf,
-                           BMI088_SPI_DMA_ACCEL_TEMP_LENGHT);
-            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
-            return;
-        }
-        taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+//        if(spi_->IsDMA()){
+//        UBaseType_t uxSavedInterruptStatus;
+//        uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+//
+//        if ((gyro_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
+//            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
+//            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
+//            !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
+//            !(accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
+//            gyro_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
+//            gyro_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
+//            CS_GYRO_->Low();
+//
+//
+//            spi_->TransimiReceive(gyro_dma_tx_buf, gyro_dma_rx_buf,
+//                           BMI088_SPI_DMA_GYRO_LENGHT);
+//            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+//            return;
+//        }
+//
+//        if ((accel_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
+//            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
+//            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
+//            !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
+//            !(accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
+//            accel_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
+//            accel_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
+//
+//            CS_ACCEL_->Low();
+//            spi_->TransimiReceive(accel_dma_tx_buf, accel_dma_rx_buf,
+//                           BMI088_SPI_DMA_ACCEL_LENGHT);
+//            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+//            return;
+//        }
+//        if ((accel_temp_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
+//            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
+//            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
+//            !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
+//            !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
+//            accel_temp_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
+//            accel_temp_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
+//
+//            CS_ACCEL_->Low();
+//            spi_->TransimiReceive(accel_temp_dma_tx_buf, accel_temp_dma_rx_buf,
+//                           BMI088_SPI_DMA_ACCEL_TEMP_LENGHT);
+//            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+//            return;
+//        }
+//        taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+//        }
     }
 
     void BMI088::dma_callback() {
