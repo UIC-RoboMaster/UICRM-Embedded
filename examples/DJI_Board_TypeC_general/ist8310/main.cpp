@@ -25,7 +25,9 @@
 #include "bsp_uart.h"
 #include "cmsis_os.h"
 
+// clang-format off
 #include "IST8310.h"
+// clang-format on
 
 static bsp::I2C* i2c3 = nullptr;
 static imu::IST8310* ist8310 = nullptr;
