@@ -29,12 +29,12 @@
 
 // Refer to typeA datasheet for channel detail
 static bsp::CAN* can1 = nullptr;
-static control::Motor4310* motor1 = nullptr;
+static driver::Motor4310* motor1 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart5);
     can1 = new bsp::CAN(&hcan1, 0x01, true);
-    motor1 = new control::Motor4310(can1, 0x30, 0x31, control::MIT);
+    motor1 = new driver::Motor4310(can1, 0x30, 0x31, driver::MIT);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);

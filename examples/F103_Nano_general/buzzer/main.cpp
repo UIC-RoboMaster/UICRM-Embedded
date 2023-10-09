@@ -20,10 +20,10 @@
 
 #include "main.h"
 
-#include "bsp_buzzer.h"
+#include "buzzer.h"
 #include "tim.h"
 
-using Note = bsp::BuzzerNote;
+using Note = driver::BuzzerNote;
 
 // static bsp::BuzzerNoteDelayed Mario[] = {
 //     {Note::Mi3M, 80}, {Note::Silent, 80},  {Note::Mi3M, 80}, {Note::Silent, 240},
@@ -56,10 +56,10 @@ using Note = bsp::BuzzerNote;
 //     {Note::Silent, 0},   {Note::Finish, 0},
 // };
 
-static bsp::BuzzerNoteDelayed DJI[] = {
+static driver::BuzzerNoteDelayed DJI[] = {
     {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
-static bsp::BuzzerNoteDelayed Laohu[] = {
+static driver::BuzzerNoteDelayed Laohu[] = {
     {Note::Do1M, 500},  {Note::Re2M, 500},   {Note::Mi3M, 500}, {Note::Do1M, 450},
     {Note::Silent, 50}, {Note::Do1M, 500},   {Note::Re2M, 500}, {Note::Mi3M, 500},
     {Note::Do1M, 450},  {Note::Silent, 50},  {Note::Mi3M, 500}, {Note::Fa4M, 500},
@@ -72,7 +72,7 @@ static bsp::BuzzerNoteDelayed Laohu[] = {
     {Note::Do1M, 500},  {Note::Silent, 500}, {Note::Finish, 0}};
 
 void RM_RTOS_Init(void) {
-    bsp::Buzzer buzzer(&htim1, 1, 1000000);
+    driver::Buzzer buzzer(&htim1, 1, 1000000);
     buzzer.SingSong(DJI);
     HAL_Delay(500);
     buzzer.SingSong(Laohu);

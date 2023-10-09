@@ -354,7 +354,6 @@ namespace bsp {
         float mag[3];
     } IST8310_real_data_t;
 
-
     class IST8310 : public GPIT {
       public:
         IST8310(IST8310_init_t init);
@@ -380,6 +379,5 @@ namespace bsp {
         GPIO_TypeDef* rst_group_;
         uint16_t rst_pin_;
     };
-
 
 } /* namespace bsp */

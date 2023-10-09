@@ -27,8 +27,8 @@
 #include "motor.h"
 
 bsp::CAN* can2 = NULL;
-control::MotorCANBase* motor1 = NULL;
-control::ServoMotor* load_servo = NULL;
+driver::MotorCANBase* motor1 = NULL;
+driver::ServoMotor* load_servo = NULL;
 remote::DBUS* dbus = nullptr;
 float load_step_angle = 2 * PI / 8;
 
@@ -38,8 +38,8 @@ void RM_RTOS_Init() {
     print_use_uart(&huart4);
     dbus = new remote::DBUS(&huart3);
     can2 = new bsp::CAN(&hcan2, 0x207, false);
-    motor1 = new control::Motor2006(can2, 0x207);
-    control::servo_t servo_data;
+    motor1 = new driver::Motor2006(can2, 0x207);
+    driver::servo_t servo_data;
 
     servo_data.motor = motor1;
     servo_data.max_speed = 2.5 * PI;
@@ -52,12 +52,12 @@ void RM_RTOS_Init() {
     servo_data.hold_max_iout = 2000;
     servo_data.hold_max_out = 10000;
 
-    load_servo = new control::ServoMotor(servo_data);
+    load_servo = new driver::ServoMotor(servo_data);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
-    control::MotorCANBase* motors[] = {motor1};
+    driver::MotorCANBase* motors[] = {motor1};
     int last_state = remote::MID;
     int state = 0;
 
@@ -78,7 +78,7 @@ void RM_RTOS_Default_Task(const void* args) {
         }
         load_servo->CalcOutput();
 
-        control::MotorCANBase::TransmitOutput(motors, 1);
+        driver::MotorCANBase::TransmitOutput(motors, 1);
         osDelay(1);
     }
 }

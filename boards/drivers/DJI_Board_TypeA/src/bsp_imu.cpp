@@ -255,7 +255,7 @@ namespace bsp {
     }
 
     void IST8310::IntCallback() {
-            ist8310_read_mag(mag);
+        ist8310_read_mag(mag);
     }
 
     void IST8310::ist8310_RST_H() {
@@ -284,4 +284,4 @@ namespace bsp {
         HAL_I2C_Mem_Write(hi2c_, IST8310_IIC_ADDRESS << 1, reg, I2C_MEMADD_SIZE_8BIT, data, len,
                           10);
     }
-}
+}  // namespace bsp

@@ -1,4 +1,4 @@
-boards/*
+boards/base/*
 shared/third_party/*
 build/*
 cmake-build-debug/*

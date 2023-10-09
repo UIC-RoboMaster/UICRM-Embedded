@@ -20,8 +20,9 @@
 
 #pragma once
 
-#include "main.h"
 #include <math.h>
+
+#include "main.h"
 
 namespace control {
 

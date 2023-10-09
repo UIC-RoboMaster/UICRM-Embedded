@@ -47,4 +47,4 @@ namespace driver {
         pwm_.SetPulseWidth(0);
     }
 
-} /* namespace bsp */
+}  // namespace driver

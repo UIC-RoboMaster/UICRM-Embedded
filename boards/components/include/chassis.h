@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include "pid.h"
 #include "motor.h"
+#include "pid.h"
 #include "power_limit.h"
 
 #define MAX_WHEEL_NUM 8
@@ -38,7 +38,7 @@ namespace control {
      */
     typedef struct {
         driver::MotorCANBase** motors; /* motor instances of all chassis motors */
-        chassis_model_t model; /* chassis model                         */
+        chassis_model_t model;         /* chassis model                         */
     } chassis_t;
 
     /**

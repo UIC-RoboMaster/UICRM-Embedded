@@ -98,4 +98,4 @@ namespace driver {
         bsp::PWM pwm_;
     };
 
-} /* namespace bsp */
+}  // namespace driver

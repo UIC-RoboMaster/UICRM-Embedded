@@ -21,8 +21,8 @@
 #pragma once
 
 #include "can.h"
-#include "pid.h"
 #include "motor.h"
+#include "pid.h"
 #include "utils.h"
 
 namespace control {
@@ -57,7 +57,7 @@ namespace control {
     typedef struct {
         driver::MotorCANBase* pitch_motor; /* pitch motor instance */
         driver::MotorCANBase* yaw_motor;   /* yaw motor instance   */
-        gimbal_data_t data;        /* gimbal related constants */
+        gimbal_data_t data;                /* gimbal related constants */
         gimbal_pid_t pid;
     } gimbal_t;
 

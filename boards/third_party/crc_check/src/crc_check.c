@@ -75,26 +75,28 @@ const uint16_t wCRC_Table[256] = {
  * @return            CRC checksum
  */
 static uint8_t get_crc8_check_sum(const uint8_t* pchMessage, uint16_t dwLength, uint8_t ucCRC8) {
-  uint8_t ucIndex;
-  while (dwLength--) {
-    ucIndex = ucCRC8 ^ (*pchMessage++);
-    ucCRC8 = CRC8_TAB[ucIndex];
-  }
-  return (ucCRC8);
+    uint8_t ucIndex;
+    while (dwLength--) {
+        ucIndex = ucCRC8 ^ (*pchMessage++);
+        ucCRC8 = CRC8_TAB[ucIndex];
+    }
+    return (ucCRC8);
 }
 
 uint8_t verify_crc8_check_sum(const uint8_t* pchMessage, uint16_t dwLength) {
-  uint8_t ucExpected = 0;
-  if ((pchMessage == 0) || (dwLength <= 2)) return 0;
-  ucExpected = get_crc8_check_sum(pchMessage, dwLength - 1, CRC8_INIT);
-  return (ucExpected == pchMessage[dwLength - 1]);
+    uint8_t ucExpected = 0;
+    if ((pchMessage == 0) || (dwLength <= 2))
+        return 0;
+    ucExpected = get_crc8_check_sum(pchMessage, dwLength - 1, CRC8_INIT);
+    return (ucExpected == pchMessage[dwLength - 1]);
 }
 
 void append_crc8_check_sum(uint8_t* pchMessage, uint16_t dwLength) {
-  uint8_t ucCRC = 0;
-  if ((pchMessage == 0) || (dwLength <= 2)) return;
-  ucCRC = get_crc8_check_sum((uint8_t*)pchMessage, dwLength - 1, CRC8_INIT);
-  pchMessage[dwLength - 1] = ucCRC;
+    uint8_t ucCRC = 0;
+    if ((pchMessage == 0) || (dwLength <= 2))
+        return;
+    ucCRC = get_crc8_check_sum((uint8_t*)pchMessage, dwLength - 1, CRC8_INIT);
+    pchMessage[dwLength - 1] = ucCRC;
 }
 
 /**
@@ -106,33 +108,34 @@ void append_crc8_check_sum(uint8_t* pchMessage, uint16_t dwLength) {
  * @return            CRC checksum
  */
 uint16_t get_crc16_check_sum(const uint8_t* pchMessage, uint32_t dwLength, uint16_t wCRC) {
-  uint8_t chData;
-  if (pchMessage == NULL) {
-    return 0xFFFF;
-  }
-  while (dwLength--) {
-    chData = *pchMessage++;
-    (wCRC) = ((uint16_t)(wCRC) >> 8) ^ wCRC_Table[((uint16_t)(wCRC) ^ (uint16_t)(chData)) & 0x00ff];
-  }
-  return wCRC;
+    uint8_t chData;
+    if (pchMessage == NULL) {
+        return 0xFFFF;
+    }
+    while (dwLength--) {
+        chData = *pchMessage++;
+        (wCRC) =
+            ((uint16_t)(wCRC) >> 8) ^ wCRC_Table[((uint16_t)(wCRC) ^ (uint16_t)(chData)) & 0x00ff];
+    }
+    return wCRC;
 }
 
 uint8_t verify_crc16_check_sum(const uint8_t* pchMessage, uint32_t dwLength) {
-  uint16_t wExpected = 0;
-  if ((pchMessage == NULL) || (dwLength <= 2)) {
-    return 0;
-  }
-  wExpected = get_crc16_check_sum(pchMessage, dwLength - 2, CRC_INIT);
-  return ((wExpected & 0xff) == pchMessage[dwLength - 2] &&
-          ((wExpected >> 8) & 0xff) == pchMessage[dwLength - 1]);
+    uint16_t wExpected = 0;
+    if ((pchMessage == NULL) || (dwLength <= 2)) {
+        return 0;
+    }
+    wExpected = get_crc16_check_sum(pchMessage, dwLength - 2, CRC_INIT);
+    return ((wExpected & 0xff) == pchMessage[dwLength - 2] &&
+            ((wExpected >> 8) & 0xff) == pchMessage[dwLength - 1]);
 }
 
 void append_crc16_check_sum(uint8_t* pchMessage, uint32_t dwLength) {
-  uint16_t wCRC = 0;
-  if ((pchMessage == NULL) || (dwLength <= 2)) {
-    return;
-  }
-  wCRC = get_crc16_check_sum((uint8_t*)pchMessage, dwLength - 2, CRC_INIT);
-  pchMessage[dwLength - 2] = (uint8_t)(wCRC & 0x00ff);
-  pchMessage[dwLength - 1] = (uint8_t)((wCRC >> 8) & 0x00ff);
+    uint16_t wCRC = 0;
+    if ((pchMessage == NULL) || (dwLength <= 2)) {
+        return;
+    }
+    wCRC = get_crc16_check_sum((uint8_t*)pchMessage, dwLength - 2, CRC_INIT);
+    pchMessage[dwLength - 2] = (uint8_t)(wCRC & 0x00ff);
+    pchMessage[dwLength - 1] = (uint8_t)((wCRC >> 8) & 0x00ff);
 }

@@ -20,10 +20,10 @@
 
 #pragma once
 #include "main.h"
-namespace display{
-    typedef struct{
+namespace display {
+    typedef struct {
         const uint8_t data[128][8];
         const uint16_t width;
         const uint16_t height;
-    }picture_t;
-}
+    } picture_t;
+}  // namespace display

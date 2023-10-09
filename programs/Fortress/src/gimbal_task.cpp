@@ -22,15 +22,15 @@
 
 osThreadId_t gimbalTaskHandle;
 
-control::MotorCANBase* pitch_motor = nullptr;
-control::MotorCANBase* yaw_motor = nullptr;
+driver::MotorCANBase* pitch_motor = nullptr;
+driver::MotorCANBase* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
 void gimbalTask(void* arg) {
     UNUSED(arg);
 
-    control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor, steering_motor};
+    driver::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor, steering_motor};
     osDelay(1500);
     while (remote_mode == REMOTE_MODE_KILL) {
         kill_gimbal();
@@ -45,7 +45,7 @@ void gimbalTask(void* arg) {
 
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
+        driver::MotorCANBase::TransmitOutput(gimbal_motors, 3);
         osDelay(GIMBAL_OS_DELAY);
         ++i;
     }
@@ -57,7 +57,7 @@ void gimbalTask(void* arg) {
     while (!imu->DataReady() || !imu->CaliDone()) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
+        driver::MotorCANBase::TransmitOutput(gimbal_motors, 3);
         osDelay(1);
         ++i;
     }
@@ -130,7 +130,7 @@ void gimbalTask(void* arg) {
                 kill_gimbal();
         }
 
-        control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
+        driver::MotorCANBase::TransmitOutput(gimbal_motors, 3);
         osDelay(GIMBAL_OS_DELAY);
     }
 }
@@ -138,8 +138,8 @@ void gimbalTask(void* arg) {
 void init_gimbal() {
     init_gimbalBasicData();
     init_gimbalSpinData();
-    pitch_motor = new control::Motor6020(can2, 0x206);
-    yaw_motor = new control::Motor6020(can2, 0x205);
+    pitch_motor = new driver::Motor6020(can2, 0x206);
+    yaw_motor = new driver::Motor6020(can2, 0x205);
     control::gimbal_t gimbal_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;
@@ -149,9 +149,9 @@ void init_gimbal() {
     gimbal_param = gimbal->GetData();
 }
 void kill_gimbal() {
-    control::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor, steering_motor};
+    driver::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor, steering_motor};
     yaw_motor->SetOutput(0);
     pitch_motor->SetOutput(0);
     // steering_motor->SetOutput(0);
-    control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
+    driver::MotorCANBase::TransmitOutput(gimbal_motors, 3);
 }

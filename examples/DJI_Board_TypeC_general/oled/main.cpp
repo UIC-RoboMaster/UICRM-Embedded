@@ -25,10 +25,9 @@
 #include "bsp_uart.h"
 #include "cmsis_os.h"
 #include "oled.h"
-
-#include "oled_fonts/robomaster.h"
-#include "oled_fonts/navigator.h"
 #include "oled_fonts/cat.h"
+#include "oled_fonts/navigator.h"
+#include "oled_fonts/robomaster.h"
 
 static bsp::I2C* i2c2 = nullptr;
 static display::OLED* OLED = nullptr;
@@ -48,11 +47,11 @@ void RM_RTOS_Default_Task(const void* arg) {
     OLED->ShowPic(display::Navigator_Logo);
     osDelay(5000);
 
-    uint8_t i=0;
+    uint8_t i = 0;
     while (true) {
         OLED->ShowPic(display::cat[i]);
         osDelay(1);
         i++;
-        i=i%12;
+        i = i % 12;
     }
 }

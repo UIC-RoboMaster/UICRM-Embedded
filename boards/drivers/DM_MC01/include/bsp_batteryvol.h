@@ -19,20 +19,28 @@
  ###########################################################*/
 
 #pragma once
-#include "pid.h"
-#include "gimbal.h"
+#ifndef NO_ONBOARD_SENSOR
+#include "adc.h"
+#include "bsp_adc.h"
+#include "main.h"
 
-// basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = 4.72515f,
-    .yaw_offset_ = 3.6478f,
-    .pitch_max_ = 0.4253f,
-    .yaw_max_ = PI,
-};
-// basic information of gimbal
-extern control::gimbal_pid_t gimbalBasicPID;
-void init_gimbalBasicData();
+namespace bsp {
+    class BatteryVol {
+      public:
+        BatteryVol(ADC_HandleTypeDef* hadc, uint32_t channel, uint32_t rank,
+                   uint32_t sampling_time);
+        void InitVREF();
+        void Start();
+        void Stop();
+        uint32_t Read();
+        float GetBatteryVol();
+        static float calcBatteryPercentage(float voltage);
+        float GetBatteryPercentage();
+        float voltage_vrefint_proportion = 8.0586080586080586080586080586081e-4f;
 
-// Spin PID of gimbal
-extern control::gimbal_pid_t gimbalSpinPID;
-void init_gimbalSpinData();
+      private:
+        bADC* adc_;
+        bADC* adc_vrefint_;
+    };
+}  // namespace bsp
+#endif

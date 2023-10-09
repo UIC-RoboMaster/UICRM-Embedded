@@ -29,8 +29,6 @@ using namespace bsp;
 
 namespace driver {
 
-
-
     /**
      * @brief standard can motor callback, used to update motor data
      *
@@ -762,4 +760,4 @@ namespace driver {
         return motor_->GetOmegaDelta(target);
     }
 
-} /* namespace control */
+}  // namespace driver

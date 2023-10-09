@@ -19,9 +19,7 @@
 ###########################################################*/
 #include "bsp_spi.h"
 
-namespace bsp{
-
-
+namespace bsp {
 
     /* get initialized uart_t instance given its hspi handle struct */
     SPI* SPI::FindInstance(SPI_HandleTypeDef* hspi) {
@@ -33,22 +31,21 @@ namespace bsp{
         return it->second;
     }
     SPI::SPI(SPI_HandleTypeDef* hspi) {
-        hspi_=hspi;
+        hspi_ = hspi;
         hdma_spi_tx_ = hspi_->hdmatx;
         hdma_spi_rx_ = hspi_->hdmarx;
-        bufsize_=0;
-        txbuf_= nullptr;
-        rxbuf_= nullptr;
+        bufsize_ = 0;
+        txbuf_ = nullptr;
+        rxbuf_ = nullptr;
     }
     SPI::~SPI() {
-
     }
     void SPI::Setup(uint32_t buffer_size, bool dma) {
-        dma_=dma;
-        bufsize_=buffer_size;
+        dma_ = dma;
+        bufsize_ = buffer_size;
     }
     void SPI::Init() {
-        if(dma_ && hdma_spi_tx_!= nullptr&& hdma_spi_rx_!= nullptr){
+        if (dma_ && hdma_spi_tx_ != nullptr && hdma_spi_rx_ != nullptr) {
             SET_BIT(hspi_->Instance->CR2, SPI_CR2_TXDMAEN);
             SET_BIT(hspi_->Instance->CR2, SPI_CR2_RXDMAEN);
 
@@ -85,14 +82,12 @@ namespace bsp{
             hdma_spi_tx_->Instance->M0AR = (uint32_t)(txbuf_);
             // data length
             __HAL_DMA_SET_COUNTER(hdma_spi_tx_, bufsize_);
-        }
-        else{
+        } else {
             HAL_SPI_Init(hspi_);
         }
-
     }
     uint32_t SPI::TransimiReceive(uint8_t* tx_data, uint8_t* rx_data, uint32_t length) {
-        if(dma_) {
+        if (dma_) {
             // disable DMA
             __HAL_DMA_DISABLE(hdma_spi_rx_);
             __HAL_DMA_DISABLE(hdma_spi_tx_);
@@ -123,7 +118,7 @@ namespace bsp{
             // enable DMA
             __HAL_DMA_ENABLE(hdma_spi_rx_);
             __HAL_DMA_ENABLE(hdma_spi_tx_);
-        }else{
+        } else {
             HAL_SPI_TransmitReceive_IT(hspi_, tx_data, rx_data, length);
         }
         return length;
@@ -133,7 +128,7 @@ namespace bsp{
         return HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY;
     }
     void SPI::RegisterCallback(spi_rx_callback_t callback) {
-        callback_=callback;
+        callback_ = callback;
     }
     void SPI::CallbackWrapper(SPI_HandleTypeDef* hspi) {
         SPI* instance = FindInstance(hspi);
@@ -145,7 +140,7 @@ namespace bsp{
     bool SPI::IsDMA() {
         return dma_;
     }
-}
+}  // namespace bsp
 
 void RM_DMA_SPI_IRQHandler(SPI_HandleTypeDef* hspi) {
     bsp::SPI::CallbackWrapper(hspi);

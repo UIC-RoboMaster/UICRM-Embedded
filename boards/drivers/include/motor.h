@@ -27,8 +27,6 @@
 
 namespace driver {
 
-
-
     /**
      * @brief base class for motor representation
      */
@@ -782,4 +780,4 @@ namespace driver {
         float target_speed_;
         control::PIDController omega_pid_;
     };
-} /* namespace control */
+}  // namespace driver

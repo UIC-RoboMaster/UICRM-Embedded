@@ -20,11 +20,10 @@
 
 #pragma once
 
-#include "bsp_spi.h"
-#include "bsp_gpio.h"
 #include "bsp_error_handler.h"
+#include "bsp_gpio.h"
+#include "bsp_spi.h"
 #include "cmsis_os.h"
-
 
 #define BMI088_ACC_CHIP_ID 0x00  // the register is  " Who am I "
 #define BMI088_ACC_CHIP_ID_VALUE 0x1E
@@ -252,7 +251,7 @@
 #define BMI088_IMU_UPDATE_SHFITS 2
 #define BMI088_IMU_NOTIFY_SHFITS 3
 
-namespace imu{
+namespace imu {
     typedef struct {
         uint8_t status;
         int16_t accel[3];
@@ -295,10 +294,10 @@ namespace imu{
         bsp::GPIO* CS_GYRO;
     } BMI088_init_t;
 
-    class BMI088{
+    class BMI088 {
       public:
         BMI088(BMI088_init_t init);
-        BMI088(bsp::SPI* spi, bsp::GPIO* CS_ACCEL,bsp::GPIO* CS_GYRO);
+        BMI088(bsp::SPI* spi, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO);
         bool IsReady();
         void Read(float gyro[3], float accel[3], float* temperate);
         void temperature_read_over(uint8_t* rx_buf, float* temperate);
@@ -324,6 +323,7 @@ namespace imu{
 
         void imu_cmd_spi_dma();
         void dma_callback();
+
       private:
         bsp::SPI* spi_;
         bsp::GPIO* CS_ACCEL_;
@@ -372,4 +372,4 @@ namespace imu{
         BMI088* imu_;
         void IntCallback() final;
     };
-}
+}  // namespace imu

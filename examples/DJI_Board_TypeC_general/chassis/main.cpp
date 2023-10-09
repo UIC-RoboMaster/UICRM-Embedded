@@ -74,8 +74,7 @@ void RM_RTOS_Default_Task(const void* args) {
         }
 
         chassis->Update(false, 30, 20, 60);
-        driver
-              ::MotorCANBase::TransmitOutput(motors, 4);
+        driver ::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(10);
     }
 }

@@ -38,7 +38,7 @@ namespace bsp {
          *
          * @param hi2c     HAL can handle
          */
-        I2C(I2C_HandleTypeDef* hi2c,bool is_master = true, bool is_dma = false);
+        I2C(I2C_HandleTypeDef* hi2c, bool is_master = true, bool is_dma = false);
         /**
          * @brief check if it is associated with a given CAN handle
          *
@@ -50,7 +50,6 @@ namespace bsp {
             return hi2c_ == hi2c;
         }
 
-
         /**
          * @brief check the device is ready.
          *
@@ -58,7 +57,7 @@ namespace bsp {
          *
          * @return true if ready, otherwise false
          */
-        bool isReady(uint16_t id, uint32_t timeout=50);
+        bool isReady(uint16_t id, uint32_t timeout = 50);
 
         /**
          * @brief register callback function for a specific ID on this I2C line
@@ -92,7 +91,6 @@ namespace bsp {
          * @return  number of bytes transmitted, -1 if failed
          */
         int Receive(uint16_t id, uint8_t* data, uint16_t length);
-
 
         /**
          * @brief read I2C memory register
@@ -146,11 +144,9 @@ namespace bsp {
         static I2C* FindInstance(I2C_HandleTypeDef* hi2c);
 
       private:
-
         I2C_HandleTypeDef* hi2c_;
         bool is_master_;
         bool is_dma_;
-
 
         i2c_rx_callback_t rx_callbacks_[MAX_I2C_DEVICES] = {0};
         void* rx_args_[MAX_I2C_DEVICES] = {NULL};

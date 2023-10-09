@@ -67,9 +67,7 @@ namespace bsp {
         i2c->RxCallback();
     }
 
-    I2C::I2C(I2C_HandleTypeDef* hi2c, bool is_master, bool is_dma)
-        : hi2c_(hi2c) {
-
+    I2C::I2C(I2C_HandleTypeDef* hi2c, bool is_master, bool is_dma) : hi2c_(hi2c) {
         is_master_ = is_master;
         is_dma_ = is_dma;
         // save can instance as global pointer
@@ -96,55 +94,53 @@ namespace bsp {
     }
 
     int I2C::Transmit(uint16_t id, const uint8_t data[], uint16_t length) {
-        if(HAL_I2C_Master_Transmit(hi2c_, id, const_cast<uint8_t*>(data), length, 20)!= HAL_OK){
+        if (HAL_I2C_Master_Transmit(hi2c_, id, const_cast<uint8_t*>(data), length, 20) != HAL_OK) {
             return -1;
         }
         return length;
     }
 
     int I2C::Receive(uint16_t id, uint8_t* data, uint16_t length) {
-        if(HAL_I2C_Master_Receive(hi2c_, id, const_cast<uint8_t*>(data), length, 50)!= HAL_OK){
+        if (HAL_I2C_Master_Receive(hi2c_, id, const_cast<uint8_t*>(data), length, 50) != HAL_OK) {
             return -1;
         }
         return length;
     }
 
-    int I2C::MemoryRead(uint16_t id, uint16_t reg, uint8_t* data, uint16_t length){
-        if(HAL_I2C_Mem_Read(hi2c_, id, reg, I2C_MEMADD_SIZE_8BIT, data, length, 20) != HAL_OK){
+    int I2C::MemoryRead(uint16_t id, uint16_t reg, uint8_t* data, uint16_t length) {
+        if (HAL_I2C_Mem_Read(hi2c_, id, reg, I2C_MEMADD_SIZE_8BIT, data, length, 20) != HAL_OK) {
             return -1;
         }
         return length;
     }
 
-    int I2C::MemoryRead(uint16_t id, uint16_t reg, uint16_t* data, uint16_t length){
-        uint8_t *pData;
+    int I2C::MemoryRead(uint16_t id, uint16_t reg, uint16_t* data, uint16_t length) {
+        uint8_t* pData;
         pData = (uint8_t*)data;
-        if(HAL_I2C_Mem_Read(hi2c_, id, reg, I2C_MEMADD_SIZE_16BIT, pData, length, 20) != HAL_OK){
+        if (HAL_I2C_Mem_Read(hi2c_, id, reg, I2C_MEMADD_SIZE_16BIT, pData, length, 20) != HAL_OK) {
             return -1;
         }
         return length;
     }
 
-    int I2C::MemoryWrite(uint16_t id, uint16_t reg, uint8_t* data, uint16_t length){
-        if(HAL_I2C_Mem_Write(hi2c_, id, reg, I2C_MEMADD_SIZE_8BIT, data, length, 20) != HAL_OK){
+    int I2C::MemoryWrite(uint16_t id, uint16_t reg, uint8_t* data, uint16_t length) {
+        if (HAL_I2C_Mem_Write(hi2c_, id, reg, I2C_MEMADD_SIZE_8BIT, data, length, 20) != HAL_OK) {
             return -1;
         }
         return length;
     }
 
     int I2C::MemoryWrite(uint16_t id, uint16_t reg, uint16_t* data, uint16_t length) {
-        uint8_t *pData;
+        uint8_t* pData;
         pData = (uint8_t*)data;
-        if(HAL_I2C_Mem_Write(hi2c_, id, reg, I2C_MEMADD_SIZE_16BIT, pData, length, 20) != HAL_OK){
+        if (HAL_I2C_Mem_Write(hi2c_, id, reg, I2C_MEMADD_SIZE_16BIT, pData, length, 20) != HAL_OK) {
             return -1;
         }
         return length;
     }
 
-
-
     void I2C::RxCallback() {
-        //TODO: I2C Rx callback
+        // TODO: I2C Rx callback
         uint8_t data[MAX_I2C_DATA_SIZE];
         memcpy(data, rx_data_, MAX_I2C_DATA_SIZE);
 
@@ -159,7 +155,5 @@ namespace bsp {
 
         HAL_I2C_Master_Receive_DMA(hi2c_, 0x00, rx_data_, MAX_I2C_DATA_SIZE);
     }
-
-
 
 } /* namespace bsp */

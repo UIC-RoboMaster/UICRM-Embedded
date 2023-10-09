@@ -20,26 +20,24 @@
 
 #include "IST8310.h"
 
-namespace imu{
+namespace imu {
     IST8310::IST8310(IST8310_init_t init) : GPIT(init.int_pin) {
         i2c_ = init.i2c;
         rst_group_ = init.rst_group;
         rst_pin_ = init.rst_pin;
-        RM_ASSERT_TRUE(Init()==IST8310_NO_ERROR,"IST8310 init error");
-
+        RM_ASSERT_TRUE(Init() == IST8310_NO_ERROR, "IST8310 init error");
     }
 
-    IST8310::IST8310(bsp::I2C* i2c, uint16_t int_pin, GPIO_TypeDef* rst_group,
-                     uint16_t rst_pin)
+    IST8310::IST8310(bsp::I2C* i2c, uint16_t int_pin, GPIO_TypeDef* rst_group, uint16_t rst_pin)
         : GPIT(int_pin) {
         i2c_ = i2c;
         rst_group_ = rst_group;
         rst_pin_ = rst_pin;
-        RM_ASSERT_TRUE(Init()==IST8310_NO_ERROR,"IST8310 init error");
+        RM_ASSERT_TRUE(Init() == IST8310_NO_ERROR, "IST8310 init error");
     }
 
     bool IST8310::IsReady() {
-        return i2c_->isReady(IST8310_IIC_ADDRESS << 1,100);
+        return i2c_->isReady(IST8310_IIC_ADDRESS << 1, 100);
     }
 
     void IST8310::RegisterCallback(imu::ist8310_callback_t callback) {
@@ -105,10 +103,8 @@ namespace imu{
     }
 
     void IST8310::IntCallback() {
-
         ist8310_read_mag(mag);
         callback_(mag);
-
     }
 
     void IST8310::ist8310_RST_H() {
@@ -136,4 +132,4 @@ namespace imu{
     void IST8310::ist8310_IIC_write_muli_reg(uint8_t reg, uint8_t* data, uint8_t len) {
         i2c_->MemoryWrite(IST8310_IIC_ADDRESS << 1, reg, data, len);
     }
-}
+}  // namespace imu

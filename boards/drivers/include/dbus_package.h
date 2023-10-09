@@ -52,4 +52,4 @@ namespace remote {
             uint16_t B : 1;
         } __packed bit;
     } __packed keyboard_t;
-}
+}  // namespace remote

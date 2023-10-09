@@ -19,10 +19,10 @@
 ###########################################################*/
 
 #pragma once
-#include "main.h"
-#include "bsp_i2c.h"
 #include "bsp_gpio.h"
+#include "bsp_i2c.h"
 #include "imu_info.h"
+#include "main.h"
 
 #define IST8310_WHO_AM_I 0x00        // ist8310 "who am I "
 #define IST8310_WHO_AM_I_VALUE 0x10  // device ID
@@ -46,7 +46,7 @@ static const uint8_t ist8310_write_reg_data_error[IST8310_WRITE_REG_NUM][3] = {
 
 #define IST8310_IIC_ADDRESS 0x0E  // the I2C address of IST8310
 
-namespace imu{
+namespace imu {
     typedef struct {
         bsp::I2C* i2c;
         uint16_t int_pin;
@@ -61,12 +61,10 @@ namespace imu{
 
     typedef void (*ist8310_callback_t)(float mag[3]);
 
-
     class IST8310 : public bsp::GPIT {
       public:
         IST8310(IST8310_init_t init);
-        IST8310(bsp::I2C* i2c, uint16_t int_pin, GPIO_TypeDef* rst_group,
-                uint16_t rst_pin);
+        IST8310(bsp::I2C* i2c, uint16_t int_pin, GPIO_TypeDef* rst_group, uint16_t rst_pin);
         bool IsReady();
         void RegisterCallback(ist8310_callback_t callback);
         void ist8310_read_over(uint8_t* status_buf, IST8310_real_data_t* ist8310_real_data);
@@ -76,7 +74,6 @@ namespace imu{
         uint8_t Init();
         void ist8310_read_mag(float mag_[3]);
         void IntCallback() final;
-
 
         void ist8310_RST_H();
         void ist8310_RST_L();
@@ -89,6 +86,6 @@ namespace imu{
         GPIO_TypeDef* rst_group_;
         uint16_t rst_pin_;
 
-        ist8310_callback_t callback_ = [](float mag_tmp[3]) {UNUSED(mag_tmp);};
+        ist8310_callback_t callback_ = [](float mag_tmp[3]) { UNUSED(mag_tmp); };
     };
-}
+}  // namespace imu
