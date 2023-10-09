@@ -35,16 +35,16 @@ function(uicrm_add_arm_executable name)
         COMMAND ${ARM_OBJCOPY} -Obinary $<TARGET_FILE:${name}.elf> ${BIN_FILE}
         COMMENT "Building ${HEX_FILE}\nBuilding ${BIN_FILE}")
 
-    add_custom_target(flash-${name}
-        COMMAND st-flash --reset write ${BIN_FILE} 0x8000000
-        DEPENDS ${name}.elf)
+#    add_custom_target(flash-${name}
+#        COMMAND st-flash --reset write ${BIN_FILE} 0x8000000
+#        DEPENDS ${name}.elf)
 
-    if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-        find_program(ARM_GDB arm-none-eabi-gdb REQUIRED)
-        add_custom_target(debug-${name}
-            COMMAND ${ARM_GDB} $<TARGET_FILE:${name}.elf>
-            DEPENDS ${name}.elf)
-    endif()
+#    if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+#        find_program(ARM_GDB arm-none-eabi-gdb REQUIRED)
+#        add_custom_target(debug-${name}
+#            COMMAND ${ARM_GDB} $<TARGET_FILE:${name}.elf>
+#            DEPENDS ${name}.elf)
+#    endif()
 endfunction(uicrm_add_arm_executable)
 
 ## uicrm_add_board_specific_library(<name>
