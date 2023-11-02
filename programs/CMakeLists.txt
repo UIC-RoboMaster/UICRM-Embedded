@@ -1,1 +1,2 @@
 add_subdirectory(Fortress)
+add_subdirectory(Sequen4e)
