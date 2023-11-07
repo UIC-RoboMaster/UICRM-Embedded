@@ -190,7 +190,9 @@ Follow the steps below to debug an executable
 
 ## Docs to call objects.
 
-Install `doxygen` and run `make doc` in the `build/` directory.
+First Install `doxygen` , add `doxygen` to path.
+
+Then run `make doc` in the `build/` directory.
 Or choose the target `doc` in CLion and click the `Build` button.
 
 Then open `docs/html/index.html` in your browser to view the generated docs.
