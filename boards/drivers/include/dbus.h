@@ -31,8 +31,22 @@ namespace remote {
         MID = 3,
     } switch_t;
 
+    /**
+     * @brief DBUS 遥控器接收类
+     * @note 用于DJI DR16接收机
+     */
+     /**
+      * @brief DBUS remote receiver class
+      * @note used for DJI DR16 receiver
+      */
     class DBUS : public bsp::UART {
       public:
+        /**
+         * @brief 构造函数
+         * @note 和uart类似，dbus需要时间进行初始化
+         *
+         * @param huart uart实例
+         */
         /**
          * @brief intialize DBUS the same way as a generic UART peripheral
          * @note like uart, dbus needs time to initialize
@@ -45,20 +59,63 @@ namespace remote {
         void RxCompleteCallback() override final;
 
         // rocker channel information
-        int16_t ch0;  // S1*             *S2
-        int16_t ch1;  //   C3-^       ^-C1
-        int16_t ch2;  // C2-<   >+ -<   >+C0
-        int16_t ch3;  //     +v       v+
+        /**
+         * @note 遥控器的样式
+         *
+         * @note the style of the remote
+         *
+         * C4(
+         * SWL*           *SWR
+         *   C3-^       ^-C1
+         * C2-<   >+ -<   >+C0
+         *     +v       v+
+         *
+         */
+        /**
+         * @brief 获取右摇杆的x轴值
+         */
+        int16_t ch0;
+        /**
+         * @brief 获取右摇杆的y轴值
+         */
+        int16_t ch1;
+        /**
+         * @brief 获取左摇杆的x轴值
+         */
+        int16_t ch2;
+        /**
+         * @brief 获取左摇杆的y轴值
+         */
+        int16_t ch3;
+
         // left and right switch information
+        /**
+         * @brief 获取左拨杆的状态
+         */
         switch_t swl;
+        /**
+         * @brief 获取右拨杆的状态
+         */
         switch_t swr;
         // left track wheel
+        /**
+         * @brief 获取左波轮的x轴值
+         */
         int16_t ch4;
         // mouse movement and button information
+        /**
+         * @brief 获取鼠标的数据，仅限于DT7连接上电脑之后
+         */
         mouse_t mouse;
         // keyboard key information
+        /**
+         * @brief 获取键盘的数据，仅限于DT7连接上电脑之后
+         */
         keyboard_t keyboard;
         // timestamp of the update interrupt
+        /**
+         * @brief 获取更新中断的时间戳
+         */
         uint32_t timestamp;
 
         volatile bool connection_flag_ = false;

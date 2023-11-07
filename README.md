@@ -187,3 +187,12 @@ Follow the steps below to debug an executable
    source code).
 5. Debug just like any regular `gdb` debugger: use commands like `continue`,
    `run`, `break`, `watch`, `next`, `step` the same way you will expect.
+
+## Docs to call objects.
+
+First Install `doxygen` , add `doxygen` to path.
+
+Then run `make doc` in the `build/` directory.
+Or choose the target `doc` in CLion and click the `Build` button.
+
+Then open `docs/html/index.html` in your browser to view the generated docs.
