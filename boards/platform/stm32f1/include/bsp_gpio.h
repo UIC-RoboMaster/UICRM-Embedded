@@ -20,15 +20,6 @@
 
 #pragma once
 
-/**
- * @note List of GPIOs that can be used on board now
- *    K1: Input,   K2: Output
- *    L1: Input,   L2: Output
- *    M1: Input,   M2: Output
- *    P1: Input,   P2: Output
- *    Q1: Input,   Q2: Output
- */
-
 #include "bsp_error_handler.h"
 #include "main.h"
 
@@ -39,6 +30,12 @@ namespace bsp {
     class GPIO {
       public:
         /**
+         * @brief 构造函数，用于通用GPIO（非中断）
+         *
+         * @param group GPIO组
+         * @param pin   GPIO引脚号
+         */
+        /**
          * @brief constructor for generic GPIO (non interrupt)
          *
          * @param group GPIO group
@@ -47,20 +44,34 @@ namespace bsp {
         GPIO(GPIO_TypeDef* group, uint16_t pin);
 
         /**
+         * @brief 设置高电平输出
+         */
+        /**
          * @brief Set high output
          */
         void High();
 
+        /**
+         * @brief 设置低电平输出
+         */
         /**
          * @brief Set low output
          */
         void Low();
 
         /**
+         * @brief 翻转GPIO输出
+         */
+        /**
          * @brief Toggle GPIO output
          */
         void Toggle();
 
+        /**
+         * @brief 读取GPIO输入
+         *
+         * @return 1为高电平，0为低电平
+         */
         /**
          * @brief Read GPIO input
          *
@@ -77,6 +88,11 @@ namespace bsp {
     class GPIT {
       public:
         /**
+         * @brief 构造函数，用于通用中断引脚
+         *
+         * @param pin 中断引脚号（EXTIx中的x）
+         */
+        /**
          * @brief Contructor for general purpose interrupt pins
          *
          * @param pin interrupt pin number (x in EXTIx)
@@ -84,10 +100,18 @@ namespace bsp {
         GPIT(uint16_t pin);
 
         /**
+          * @brief 虚拟中断回调函数，需要在子类中实现。
+         */
+        /**
          * @brief Callback back when interrupt happens
          */
         virtual void IntCallback() = 0;
 
+        /**
+         * @brief 全局中断回调函数
+         *
+         * @param pin 中断引脚号
+         */
         /**
          * @brief wrapper for global interrupt handler
          *

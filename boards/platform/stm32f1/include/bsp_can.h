@@ -30,18 +30,36 @@
 
 namespace bsp {
 
-    /* can callback function pointer */
+    /**
+     * @brief CAN接收回调函数
+     */
+    /**
+     * @brief callback function for can rx
+     */
     typedef void (*can_rx_callback_t)(const uint8_t data[], void* args);
 
     class CAN {
       public:
         /**
+         * @brief bsp CAN实例构造函数
+         *
+         * @param hcan     HAL can 句柄
+         * @param start_id rx的最小stdid，当前已经弃用
+         * @param is_master 是否为主控端，此项在hcan为hcan1的时候需要设置为true，其他时候设置为false。
+         */
+        /**
          * @brief constructor for bsp CAN instance
          *
          * @param hcan     HAL can handle
-         * @param start_id lowest possible stdid for rx
+         * @param start_id lowest possible stdid for rx, deprecated
+         * @param is_master whether this is the master node, set to true if hcan is hcan1, otherwise false
          */
         CAN(CAN_HandleTypeDef* hcan, uint32_t start_id, bool is_master = true);
+        /**
+         * @brief 检查是否与给定的CAN句柄相关联
+         *
+         * @return 如果关联则返回true，否则返回false
+         */
         /**
          * @brief check if it is associated with a given CAN handle
          *
@@ -54,6 +72,15 @@ namespace bsp {
         }
 
         /**
+         * @brief 注册CAN接收回调函数
+         *
+         * @param std_id    需要注册的rx id
+         * @param callback  回调函数
+         * @param args      传入回调函数的参数
+         *
+         * @return 如果注册成功返回0，否则返回-1
+         */
+        /**
          * @brief register callback function for a specific ID on this CAN line
          *
          * @param std_id    rx id
@@ -65,6 +92,15 @@ namespace bsp {
         int RegisterRxCallback(uint32_t std_id, can_rx_callback_t callback, void* args = NULL);
 
         /**
+         * @brief 发送CAN数据
+         *
+         * @param id      tx id
+         * @param data[]  数据
+         * @param length  数据长度，必须在(0, 8]之间
+         *
+         * @return  返回发送的字节数，如果发送失败返回-1
+         */
+        /**
          * @brief transmit can messages
          *
          * @param id      tx id
@@ -75,6 +111,11 @@ namespace bsp {
          */
         int Transmit(uint16_t id, const uint8_t data[], uint32_t length);
 
+        /**
+         * @brief CAN的接收回调
+         *
+         * @note 该函数不应该被用户调用
+         */
         /**
          * @brief callback wrapper called from IRQ context
          *

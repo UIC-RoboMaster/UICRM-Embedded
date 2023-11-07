@@ -29,6 +29,11 @@ namespace bsp {
     class UART {
       public:
         /**
+         * @brief 构造函数，用于通用UART
+         *
+         * @param huart HAL uart 句柄
+         */
+        /**
          * @brief constructor for uart instance
          *
          * @param huart pointer to a HAL uart handle
@@ -36,11 +41,19 @@ namespace bsp {
         explicit UART(UART_HandleTypeDef* huart);
 
         /**
+         * @brief 析构函数（释放 tx / rx 相关的缓存内存）
+         */
+        /**
          * @brief destructor (potentially deallocate buffer memories associated with
          * tx / rx)
          */
         virtual ~UART();
 
+        /**
+         * @brief 设置接收回调函数与缓存
+         *
+         * @param rx_buffer_size 接收缓存大小（未读取的数据会被缓存到此缓存中）
+         */
         /**
          * @brief set up uart receiver in the background optionally registering a
          * callback
@@ -51,13 +64,28 @@ namespace bsp {
         void SetupRx(uint32_t rx_buffer_size, bool dma = true);
 
         /**
+         * @brief 设置非阻塞发送功能
+         *
+         * @param tx_buffer_size  发送缓存大小（发送调用会被缓存到此缓存中）
+         * @param dma 是否使用DMA
+         */
+        /**
          * @brief set up non blocking transmission functionality
          *
          * @param tx_buffer_size  transmission buffer size (burst transmission calls
          * will be queued into this buffer)
+         * @param dma whether to use DMA
          */
         void SetupTx(uint32_t tx_buffer_size, bool dma = true);
 
+        /**
+         * @brief 读取接收到的数据
+         * @tparam FromISR  设置为 true 以在中断处理程序中调用
+         * @param data  指向数组地址的指针，该数组地址被设置为接收缓冲区地址
+         * @return 读取的字节数，失败返回-1
+         *
+         * @note 为了最佳性能，不会复制内存，因此对此方法的第二次调用将使前一次调用产生的缓冲区无效
+         */
         /**
          * @brief read out the pending received data
          *
@@ -73,6 +101,18 @@ namespace bsp {
         template <bool FromISR = false>
         int32_t Read(uint8_t** data);
 
+        /**
+         * @brief 写数据到串口
+         *
+         * @tparam FromISR  设置为 true 以在中断处理程序中调用
+         * @param data  指向要传输的数据缓冲区的指针
+         * @param length  要传输的数据的长度
+         * @return 写入的字节数
+         *
+         * @note 多次调用此函数可能会导致 tx 缓冲区填满，因此请记住检查实际传输的字节数的返回值
+         *      以避免数据丢失
+         *
+         */
         /**
          * @brief write data to uart without blocking
          *
@@ -91,10 +131,15 @@ namespace bsp {
 
       protected:
         /**
+         * @brief 串口发送完成回调函数
+         */
+        /**
          * @brief Transmission complete call back.
          */
         void TxCompleteCallback();
-
+        /**
+         * @brief 串口接收完成回调函数
+         */
         /**
          * @brief Reception complete call back.
          */
