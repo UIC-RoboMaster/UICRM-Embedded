@@ -24,6 +24,14 @@
 
 namespace driver {
 
+    /**
+     * @brief 蜂鸣器的音符
+     * @note 一共有三个八度
+     */
+    /**
+     * @brief buzzer notes
+     * @note there are three octaves in total
+     */
     enum class BuzzerNote {
         Do1L = 262,  ///*261.63Hz*/    3822us
         Re2L = 294,  ///*293.66Hz*/    3405us
@@ -53,15 +61,45 @@ namespace driver {
         Finish = -1,
     };
 
+    /**
+     * @brief 延迟的音符
+     * @note 用于播放音乐
+     * @note 数组可以编曲
+     */
+     /**
+      * @brief delayed buzzer notes
+      * @note used for playing music
+      * @note array can be used to compose music
+      */
     struct BuzzerNoteDelayed {
         BuzzerNote note;
         uint32_t delay;
     };
 
+    /**
+     * @brief 蜂鸣器的延迟函数类型
+     * @param milli 延迟的毫秒数
+     */
     typedef void (*buzzer_delay_t)(uint32_t milli);
 
+    /**
+     * @brief 蜂鸣器
+     * @note 用于播放音乐
+     * @note 有三个八度哦
+     */
+     /**
+      * @brief buzzer
+      * @note used for playing music
+      * @note there are three octaves
+      */
     class Buzzer {
       public:
+        /**
+         * @brief 蜂鸣器实例构造函数
+         * @param htim       hal定时器句柄
+         * @param channel    定时器通道，可选[1, 2, 3, 4]
+         * @param clock_freq 定时器时钟频率
+         */
         /**
          * @brief constructor for a buzzer instance
          *
@@ -73,12 +111,24 @@ namespace driver {
         Buzzer(TIM_HandleTypeDef* htim, uint32_t channel, uint32_t clock_freq);
 
         /**
+         * @brief 唱一个音符
+         * @param note 音符
+         */
+        /**
          * @brief sing a single tone indefinitely long
          *
          * @param note  note frequency to sing
          */
         void SingTone(const BuzzerNote& note);
 
+        /**
+         * @brief 唱一首曲子
+         *
+         * @param notes      延迟音符数组，可以编曲
+         * @param delay_func 延迟函数，可以自定义
+         *                  默认为HAL_Delay实现
+         * @note 在RTOS内需要使用RTOS的延迟函数
+         */
         /**
          * @brief sing a sequence of delayed notes
          *
@@ -91,6 +141,14 @@ namespace driver {
             const BuzzerNoteDelayed* notes,
             buzzer_delay_t delay_func = [](uint32_t milli) { HAL_Delay(milli); });
 
+        /**
+         * @brief 停止唱歌
+         * @note 会停止当前的唱歌
+         */
+         /**
+          * @brief stop singing
+          * @note will stop the current singing
+          */
         void Off();
 
       private:
