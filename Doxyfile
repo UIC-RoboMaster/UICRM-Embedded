@@ -874,7 +874,8 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ./boards/platform ./boards/algorithm ./boards/drivers ./boards/components
+INPUT                  = ./boards/platform/stm32f4 ./boards/algorithm ./boards/drivers ./boards/components
+# STM32F1 is ignored because it is similar to STM32F4
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
