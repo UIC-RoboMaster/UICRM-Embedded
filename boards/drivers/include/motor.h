@@ -28,7 +28,10 @@
 namespace driver {
 
     /**
-     * @brief base class for motor representation
+     * @brief DJI通用电机的标准接口
+     */
+    /**
+     * @brief Basic Interface for DJI Motor
      */
     class MotorBase {
       public:
@@ -46,10 +49,19 @@ namespace driver {
     };
 
     /**
-     * @brief base class for CAN motor representation
+     * @brief 带有CAN通信的DJI通用电机的标准接口
+     */
+    /**
+     * @brief Basic Interface for DJI Motor with CAN communication
      */
     class MotorCANBase : public MotorBase {
       public:
+        /**
+         * @brief 基础构造函数
+         *
+         * @param can    CAN对象
+         * @param rx_id  电机使用的CAN接收ID，参考电机的说明书
+         */
         /**
          * @brief base constructor
          *
@@ -59,6 +71,12 @@ namespace driver {
         MotorCANBase(bsp::CAN* can, uint16_t rx_id);
 
         /**
+         * @brief 更新电机的反馈数据
+         * @note 仅在CAN回调函数中使用，不要在其他地方调用
+         *
+         * @param data[]  原始数据
+         */
+        /**
          * @brief update motor feedback data
          * @note only used in CAN callback, do not call elsewhere
          *
@@ -67,23 +85,34 @@ namespace driver {
         virtual void UpdateData(const uint8_t data[]) = 0;
 
         /**
+         * @brief 打印电机数据
+         */
+        /**
          * @brief print out motor data
          */
         virtual void PrintData() const = 0;
 
         /**
-         * @brief get motor angle, in [rad]
-         *
          * @brief 获得电机的角度，格式为[rad]
+         *
+         * @return 电机的弧度角度，范围为[0, 2PI]
+         */
+        /**
+         * @brief get motor angle, in [rad]
          *
          * @return radian angle, range between [0, 2PI]
          */
         virtual float GetTheta() const;
 
         /**
-         * @brief get angle difference (target - actual), in [rad]
+         * @brief 获得电机的角度与目标角度的角度差，格式为[rad]
          *
-         * @brief 获得电机的角度差，格式为[rad]
+         * @param target 目标角度，格式为[rad]
+         *
+         * @return 与目标角度的弧度角度差，范围为[-PI, PI]
+         */
+        /**
+         * @brief get angle difference (target - actual), in [rad]
          *
          * @param target  target angle, in [rad]
          *
@@ -92,18 +121,26 @@ namespace driver {
         virtual float GetThetaDelta(const float target) const;
 
         /**
-         * @brief get angular velocity, in [rad / s]
-         *
          * @brief 获得电机的角速度，格式为[rad / s]
+         *
+         * @return 电机的角速度
+         */
+        /**
+         * @brief get angular velocity, in [rad / s]
          *
          * @return angular velocity
          */
         virtual float GetOmega() const;
 
         /**
-         * @brief get angular velocity difference (target - actual), in [rad / s]
+         * @brief 获得电机的角速度与目标角速度的角速度差，格式为[rad / s]
          *
-         * @brief 获得电机的角速度差，格式为[rad / s]
+         * @param target 目标角速度，格式为[rad / s]
+         *
+         * @return 与目标角速度的角速度差
+         */
+        /**
+         * @brief get angular velocity difference (target - actual), in [rad / s]
          *
          * @param target  target angular velocity, in [rad / s]
          *
@@ -116,6 +153,11 @@ namespace driver {
         virtual uint16_t GetTemp() const;
 
         /**
+         * @brief 发送CAN消息以设置电机输出
+         * @param motors[]    CAN电机指针数组
+         * @param num_motors  要发送的电机数量
+         */
+        /**
          * @brief transmit CAN message for setting motor outputs
          *
          * @param motors[]    array of CAN motor pointers
@@ -123,6 +165,9 @@ namespace driver {
          */
         static void TransmitOutput(MotorCANBase* motors[], uint8_t num_motors);
 
+        /**
+         * @brief 设置ServoMotor为MotorCANBase的友元，因为它们需要使用MotorCANBase的许多私有参数。
+         */
         /**
          * @brief set ServoMotor as friend of MotorCANBase since they need to use
          *        many of the private parameters of MotorCANBase.
@@ -141,6 +186,9 @@ namespace driver {
         uint16_t tx_id_;
     };
 
+    /**
+     * @brief DJI 2006电机的标准类
+     */
     /**
      * @brief DJI 2006 motor class
      */
@@ -161,6 +209,9 @@ namespace driver {
         volatile int16_t raw_current_get_ = 0;
     };
 
+    /**
+     * @brief DJI 3508电机的标准类
+     */
     /**
      * @brief DJI 3508 motor class
      */
@@ -185,6 +236,9 @@ namespace driver {
     };
 
     /**
+     * @brief DJI 6020电机的标准类
+     */
+    /**
      * @brief DJI 6020 motor class
      */
     class Motor6020 : public MotorCANBase {
@@ -207,6 +261,9 @@ namespace driver {
         volatile uint8_t raw_temperature_ = 0;
     };
 
+    /**
+     * @brief DJI 6623电机的标准类
+     */
     /**
      * @brief DJI 6623 motor class
      */
@@ -232,10 +289,25 @@ namespace driver {
     };
 
     /**
-     * @brief PWM motor base class
+     * @brief PWM电机的标准类，用于一帧为20ms的通用PWM的电机与伺服
+     */
+    /**
+     * @brief PWM motor base class, used for general PWM motor and servomotor with
+     *       20ms frame
      */
     class MotorPWMBase : public MotorBase {
       public:
+        /**
+         * @brief 基础构造函数
+         *
+         * @param htim           HAL定时器句柄
+         * @param channel        HAL定时器通道，取值范围为[0, 4)
+         * @param clock_freq     定时器的时钟频率，单位为[Hz]
+         * @param output_freq    期望的输出频率，单位为[Hz]
+         * @param idle_throttle  空闲时的脉宽，单位为[us]
+         *
+         * @note M3508的idle_throttle约为1500，snail的idle_throttle约为1100
+         */
         /**
          * @brief constructor
          *
@@ -252,6 +324,11 @@ namespace driver {
                      uint32_t output_freq, uint32_t idle_throttle);
 
         /**
+         * @brief 设置输出
+         *
+         * @param val 与idle_throttle的偏移量，单位为[us]
+         */
+        /**
          * @brief set and transmit output
          *
          * @param val offset value with respect to the idle throttle pulse width, in
@@ -265,6 +342,9 @@ namespace driver {
     };
 
     /**
+     * @brief DJI snail 2305电机的标准类
+     */
+    /**
      * @brief DJI snail 2305 motor class
      */
     class Motor2305 : public MotorPWMBase {
@@ -274,9 +354,22 @@ namespace driver {
     };
 
     /**
+     * @brief 伺服电机旋转模式，用于DJI的CAN协议电机
+     *
+     * @note 旋转方向是相对于用户面向电机的方向而言的，具体旋转方向取决于电机的类型
+     *
+     * @enum SERVO_CLOCKWISE      电机顺时针旋转
+     * @enum SERVO_NEAREST        电机停止转动，锁定状态
+     * @enum SERVO_ANTICLOCKWISE  电机逆时针旋转
+     */
+    /**
      * @brief servomotor turning mode
      * @note the turning direction is determined as if user is facing the motor,
      * may subject to change depending on motor type
+     *
+     * @enum SERVO_CLOCKWISE      motor turn clockwisely
+     * @enum SERVO_NEAREST        motor stop turning, hold state
+     * @enum SERVO_ANTICLOCKWISE  motor turn anticlockwisely
      */
     typedef enum {
         SERVO_CLOCKWISE = -1,   /* Servomotor always turn clockwisely */
@@ -285,9 +378,22 @@ namespace driver {
     } servo_mode_t;
 
     /**
+     * @brief 伺服电机旋转的状态，用于DJI的CAN协议电机
+     *
+     * @note 旋转方向是相对于用户面向电机的方向而言的，具体旋转方向取决于电机的类型
+     *
+     * @enum TURNING_CLOCKWISE      电机顺时针旋转
+     * @enum INPUT_REJECT           电机拒绝当前的输入
+     * @enum TURNING_ANTICLOCKWISE  电机逆时针旋转
+     */
+    /**
      * @brief servomotor status
      * @note the turning direction is determined as if user is facing the motor,
      * may subject to change depending on motor type
+     *
+     * @enum TURNING_CLOCKWISE      motor turn clockwisely
+     * @enum INPUT_REJECT           motor reject current target input
+     * @enum TURNING_ANTICLOCKWISE  motor turn anticlockwisely
      */
     typedef enum {
         TURNING_CLOCKWISE = -1,   /* Servomotor is turning clockwisely         */
@@ -295,6 +401,9 @@ namespace driver {
         TURNING_ANTICLOCKWISE = 1 /* Servomotor is turning anticlockwisely     */
     } servo_status_t;
 
+    /**
+     * @brief DJI减速电机的减速比例，具体数值请参考电机说明书
+     */
 /**
  * @brief transmission ratios of DJI motors, reference to motor manuals for
  * more details
@@ -309,11 +418,18 @@ namespace driver {
 
     class ServoMotor;  // declare first for jam_callback_t to have correct param
                        // type
+
+    /**
+     * @brief 堵转回调函数模板
+     */
     /**
      * @brief jam callback template
      */
     typedef void (*jam_callback_t)(ServoMotor* servo, const servo_jam_t data);
 
+    /**
+     * @brief 伺服电机的初始化结构体
+     */
     /**
      * @brief structure used when servomotor instance is initialized
      */
@@ -331,6 +447,12 @@ namespace driver {
     } servo_t;
 
     /**
+     * @brief 伺服电机的包装类，用于精确控制电机的角度，可以用于带有外部减速箱的电机
+     *
+     * @note 这是一个计算类，它计算电机的输出以达到目标角度，但它不直接控制电机转动
+     *
+     */
+    /**
      * @brief wrapper class for motor to enable the motor shaft angle to be
      * precisely controlled with possible external gearbox present
      * @note this is a calculation class that calculate the motor output for
@@ -338,6 +460,15 @@ namespace driver {
      */
     class ServoMotor {
       public:
+        /**
+         * @brief 基础构造函数
+         *
+         * @param servo         初始化结构体，参考servo_t
+         * @param proximity_in  电机进入保持状态的临界角度差
+         * @param proximity_out 电机退出保持状态的临界角度差
+         *
+         * @note proximity_out应该大于proximity_in
+         */
         /**
          * @brief base constructor
          *
@@ -353,6 +484,16 @@ namespace driver {
                    float proximity_out = 0.15);
 
         /**
+         * @brief 设置电机的目标角度，如果上一个目标角度没有达到，那么这个函数将不会有任何效果
+         *
+         * @note 如果电机没有进入保持状态，那么这个函数将不会有任何效果，除非override为true
+         *
+         * @param target   电机的目标角度，单位为[rad]
+         * @param override 如果为true，那么无论电机是否进入保持状态，都会覆盖当前的目标角度
+         *
+         * @return 电机的当前旋转模式
+         */
+        /**
          * @brief set next target for servomotor, will have no effect if last set
          * target has not been achieved
          * @note if motor is not holding, call to this function will have no effect
@@ -366,6 +507,13 @@ namespace driver {
         servo_status_t SetTarget(const float target, bool override = false);
 
         /**
+         * @brief 设置电机的最大旋转速度
+         *
+         * @note 应该始终为正数，负数将被忽略
+         *
+         * @param max_speed 电机的最大旋转速度，单位为[rad/s]
+         */
+        /**
          * @brief set turning speed of motor when moving
          *
          * @note should always be positive, negative inputs will be ignored
@@ -375,15 +523,27 @@ namespace driver {
         void SetMaxSpeed(const float max_speed);
 
         /**
+         * @brief 设置电机的最大旋转加速度
+         *
+         * @note 应该始终为正数，负数将被忽略
+         *
+         * @param max_acceleration 电机的最大旋转加速度，单位为[rad/s^2]
+         */
+        /**
          * @brief set acceleration of motor when moving
          *
          * @note should always be positive, negative inputs will be ignored
          *
          * @param max_acceleration speed of desired motor shaft turning speed, in
-         * [rad/s]
+         * [rad/s^2]
          */
         void SetMaxAcceleration(const float max_acceleration);
 
+        /**
+         * @brief 通过当前配置，计算电机的实际输出值
+         *
+         * @note 这个函数不会直接控制电机，它只会计算电机的输出值
+         */
         /**
          * @brief calculate the output of the motors under current configuration
          * @note this function will not command the motor, it only calculate the
@@ -391,6 +551,12 @@ namespace driver {
          */
         void CalcOutput();
 
+        /**
+         * @brief 检测电机是否进入锁定状态
+         *
+         * @return true  电机进入锁定状态
+         * @return false 电机没有进入锁定状态
+         */
         /**
          * @brief if the motor is holding
          *
@@ -400,12 +566,31 @@ namespace driver {
         bool Holding() const;
 
         /**
+         * @brief 获取电机当前的目标角度，单位为[rad]
+         *
+         * @return 电机当前的目标角度，范围为[0, 2PI]
+         */
+        /**
          * @brief get current servomotor target, in [rad]
          *
          * @return current target angle, range between [0, 2PI]
          */
         float GetTarget() const;
 
+        /**
+         * @brief 注册电机的堵转回调函数
+         *
+         * @note
+         * 堵转检测使用一个移动窗口，它使用一个大小为detect_period的循环缓冲区来存储历史输入，并计算输入的滚动平均值。
+         *      每当输入的平均值大于effect_threshold *
+         * 32768（电机可以接受的最大命令）时，堵转回调函数将被触发一次。
+         *      回调函数只会在滚动平均值从低到高越过阈值时触发一次。
+         *      对于标准的堵转回调函数，请参考示例motor_m3508_antijam
+         *
+         *      @param callback         要注册的回调函数
+         *      @param effort_threshold 电机被判定为堵转的阈值，范围为(0, 1)
+         *      @param detect_period    检测窗口长度
+         */
         /**
          * @brief register a callback function that would be called if motor is
          * jammed
@@ -427,10 +612,18 @@ namespace driver {
                                  uint8_t detect_period = 50);
 
         /**
+         * @brief 打印电机数据
+         */
+        /**
          * @brief print out motor data
          */
         void PrintData() const;
 
+        /**
+         * @brief 获取电机的角度，单位为[rad]
+         *
+         * @return 电机的弧度角度，范围为[0, 2PI]
+         */
         /**
          * @brief get motor angle, in [rad]
          *
@@ -438,6 +631,13 @@ namespace driver {
          */
         float GetTheta() const;
 
+        /**
+         * @brief 获取电机的角度与目标角度的角度差，单位为[rad]
+         *
+         * @param target 目标角度，单位为[rad]
+         *
+         * @return 与目标角度的弧度角度差，范围为[-PI, PI]
+         */
         /**
          * @brief get angle difference (target - actual), in [rad]
          *
@@ -448,12 +648,24 @@ namespace driver {
         float GetThetaDelta(const float target) const;
 
         /**
+         * @brief 获取电机的角速度，单位为[rad / s]
+         *
+         * @return 电机的角速度
+         */
+        /**
          * @brief get angular velocity, in [rad / s]
          *
          * @return angular velocity
          */
         float GetOmega() const;
 
+        /**
+         * @brief 获取电机的角速度与目标角速度的角速度差，单位为[rad / s]
+         *
+         * @param target 目标角速度，单位为[rad / s]
+         *
+         * @return 与目标角速度的角速度差
+         */
         /**
          * @brief get angular velocity difference (target - actual), in [rad / s]
          *
