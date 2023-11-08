@@ -23,11 +23,57 @@
 
 namespace bsp {
 
+    /**
+     * @brief ADC模拟量输入管理类
+     * @details 用于读取ADC模拟量输入
+     * @note    仅支持单通道单次采样
+     * @note    由于名称ADC被占用，因此使用bADC
+     */
+    /**
+     * @brief ADC analog input management class
+     * @details Used to read ADC analog input
+     * @note    Only single channel single sampling is supported
+     * @note    Since the name ADC is occupied, bADC is used
+     */
     class bADC {
       public:
+        /**
+         * @brief 构造函数
+         * @param hadc hadc句柄
+         * @param channel 通道
+         * @param rank 通道序号
+         * @param sampling_time 采样时间
+         */
+        /**
+         * @brief constructor
+         * @param hadc hadc handle
+         * @param channel ADC Channel
+         * @param rank channel rank
+         * @param sampling_time sampling time
+         */
         bADC(ADC_HandleTypeDef* hadc, uint32_t channel, uint32_t rank, uint32_t sampling_time);
+        /**
+         * @brief 准备采样数据
+         */
+        /**
+         * @brief prepare sampling data
+         */
         void Start();
+        /**
+         * @brief 停止采样
+         */
+        /**
+         * @brief stop sampling
+         */
         void Stop();
+        /**
+         * @brief 读取采样数据
+         * @return 采样数据
+         */
+        /**
+         * @brief read sampling data
+         * @return sampling data
+         */
         uint32_t Read();
 
       private:

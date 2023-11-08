@@ -35,10 +35,10 @@ namespace remote {
      * @brief DBUS 遥控器接收类
      * @note 用于DJI DR16接收机
      */
-     /**
-      * @brief DBUS remote receiver class
-      * @note used for DJI DR16 receiver
-      */
+    /**
+     * @brief DBUS remote receiver class
+     * @note used for DJI DR16 receiver
+     */
     class DBUS : public bsp::UART {
       public:
         /**

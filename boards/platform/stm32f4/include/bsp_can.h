@@ -38,6 +38,14 @@ namespace bsp {
      */
     typedef void (*can_rx_callback_t)(const uint8_t data[], void* args);
 
+    /**
+     * @brief CAN管理类
+     * @details 用于CAN的收发
+     */
+    /**
+     * @brief CAN manager
+     * @details used for CAN send and receive
+     */
     class CAN {
       public:
         /**
@@ -45,14 +53,16 @@ namespace bsp {
          *
          * @param hcan     HAL can 句柄
          * @param start_id rx的最小stdid，当前已经弃用
-         * @param is_master 是否为主控端，此项在hcan为hcan1的时候需要设置为true，其他时候设置为false。
+         * @param is_master
+         * 是否为主控端，此项在hcan为hcan1的时候需要设置为true，其他时候设置为false。
          */
         /**
          * @brief constructor for bsp CAN instance
          *
          * @param hcan     HAL can handle
          * @param start_id lowest possible stdid for rx, deprecated
-         * @param is_master whether this is the master node, set to true if hcan is hcan1, otherwise false
+         * @param is_master whether this is the master node, set to true if hcan is hcan1, otherwise
+         * false
          */
         CAN(CAN_HandleTypeDef* hcan, uint32_t start_id, bool is_master = true);
         /**

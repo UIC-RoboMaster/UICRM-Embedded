@@ -100,7 +100,7 @@ namespace bsp {
         GPIT(uint16_t pin);
 
         /**
-          * @brief 虚拟中断回调函数，需要在子类中实现。
+         * @brief 虚拟中断回调函数，需要在子类中实现。
          */
         /**
          * @brief Callback back when interrupt happens

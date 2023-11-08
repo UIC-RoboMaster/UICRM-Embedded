@@ -24,8 +24,25 @@
 
 namespace bsp {
 
+    /**
+     * @brief PWM信号输出管理类
+     * @details 用于输出PWM信号
+     */
+    /**
+     * @brief PWM output manager
+     * @details used to output PWM signal
+     */
     class PWM {
       public:
+        /**
+         * @brief 构造函数
+         *
+         * @param htim         HAL定时器句柄
+         * @param channel      定时器通道，可选[1,2,3,4]
+         * @param clock_freq   定时器时钟频率，单位为Hz
+         * @param output_freq  输出频率，单位为Hz
+         * @param pulse_width  输出脉宽，单位为us
+         */
         /**
          * @brief constructor for a pwm output manager
          *
@@ -40,15 +57,26 @@ namespace bsp {
             uint32_t pulse_width);
 
         /**
+         * @brief 启动PWM信号输出
+         */
+        /**
          * @brief start pwm output signal generation
          */
         void Start();
 
         /**
+         * @brief 停止PWM信号输出
+         */
+        /**
          * @brief stop pwm output signal generation
          */
         void Stop();
 
+        /**
+         * @brief 设置新的PWM输出频率
+         *
+         * @param output_freq   新的PWM输出频率，单位为Hz
+         */
         /**
          * @brief set a new pwm output frequency
          *
@@ -56,6 +84,11 @@ namespace bsp {
          */
         void SetFrequency(uint32_t output_freq);
 
+        /**
+         * @brief 设置新的PWM输出脉宽
+         *
+         * @param pulse_width   新的PWM输出脉宽，单位为us
+         */
         /**
          * @brief set a new pwm output pulse width
          *

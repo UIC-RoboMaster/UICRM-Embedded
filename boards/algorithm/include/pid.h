@@ -165,17 +165,17 @@ namespace control {
     /**
      * @brief 带有积分输出限制的PID控制器
      */
-     /**
-      * @brief PID controller with integral output constraint
-      */
+    /**
+     * @brief PID controller with integral output constraint
+     */
     class ConstrainedPID {
       public:
         /**
          * @brief PID控制器默认构造函数
          */
-         /**
-          * @brief PID controller default constructor
-          */
+        /**
+         * @brief PID controller default constructor
+         */
         ConstrainedPID();
         /**
          * @brief PID控制器构造函数
@@ -235,12 +235,12 @@ namespace control {
          * @param omega 系统的微分值
          * @return 可以将误差驱动到0的输出值
          */
-         /**
-          * @brief compute output base on current error and accurate derivative
-          * @param error error of the system, i.e. (target - actual)
-          * @param omega derivative of the system
-          * @return output value that could potentially drive the error to 0
-          */
+        /**
+         * @brief compute output base on current error and accurate derivative
+         * @param error error of the system, i.e. (target - actual)
+         * @param omega derivative of the system
+         * @return output value that could potentially drive the error to 0
+         */
         float ComputeOutputWithOmega(float error, float omega);
 
         /**
@@ -248,17 +248,18 @@ namespace control {
          * @param error 系统的误差，即（目标值 - 实际值）
          * @return 可以将误差驱动到0的输出值，被限制在-30000到30000之间
          */
-         /**
-          * @brief compute output base on current error but constraint to range of
-          * The DJI motor
-          * @param error error of the system, i.e. (target - actual)
-          * @return output value that could potentially drive the error to 0,
-          *        floored at -30000, ceiled at 30000
-          */
+        /**
+         * @brief compute output base on current error but constraint to range of
+         * The DJI motor
+         * @param error error of the system, i.e. (target - actual)
+         * @return output value that could potentially drive the error to 0,
+         *        floored at -30000, ceiled at 30000
+         */
         int16_t ComputeConstrainedOutput(float error);
 
         /**
-         * @brief 根据当前误差计算输出，但输出值被限制在DJI电机的范围内（适用于DJI电机输出），并且其他传感器已经给出准确微分值
+         * @brief
+         * 根据当前误差计算输出，但输出值被限制在DJI电机的范围内（适用于DJI电机输出），并且其他传感器已经给出准确微分值
          * @param error 系统的误差，即（目标值 - 实际值）
          * @param omega 系统的微分值
          * @return 可以将误差驱动到0的输出值，被限制在-30000到30000之间
@@ -320,11 +321,11 @@ namespace control {
          * @param max_iout 积分输出限制
          * @param max_out 输出限制
          */
-         /**
-          * @brief change the output constraint of the controller
-          * @param max_iout integral output constraint
-          * @param max_out output constraint
-          */
+        /**
+         * @brief change the output constraint of the controller
+         * @param max_iout integral output constraint
+         * @param max_out output constraint
+         */
         void ChangeMax(float max_iout, float max_out);
 
         float kp_;

@@ -66,11 +66,11 @@ namespace driver {
      * @note 用于播放音乐
      * @note 数组可以编曲
      */
-     /**
-      * @brief delayed buzzer notes
-      * @note used for playing music
-      * @note array can be used to compose music
-      */
+    /**
+     * @brief delayed buzzer notes
+     * @note used for playing music
+     * @note array can be used to compose music
+     */
     struct BuzzerNoteDelayed {
         BuzzerNote note;
         uint32_t delay;
@@ -87,11 +87,11 @@ namespace driver {
      * @note 用于播放音乐
      * @note 有三个八度哦
      */
-     /**
-      * @brief buzzer
-      * @note used for playing music
-      * @note there are three octaves
-      */
+    /**
+     * @brief buzzer
+     * @note used for playing music
+     * @note there are three octaves
+     */
     class Buzzer {
       public:
         /**
@@ -145,10 +145,10 @@ namespace driver {
          * @brief 停止唱歌
          * @note 会停止当前的唱歌
          */
-         /**
-          * @brief stop singing
-          * @note will stop the current singing
-          */
+        /**
+         * @brief stop singing
+         * @note will stop the current singing
+         */
         void Off();
 
       private:
