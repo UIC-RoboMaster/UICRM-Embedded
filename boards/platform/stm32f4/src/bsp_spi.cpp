@@ -18,6 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 #include "bsp_spi.h"
+#include "bsp_error_handler.h"
 
 namespace bsp {
 
@@ -30,98 +31,72 @@ namespace bsp {
 
         return it->second;
     }
-    SPI::SPI(SPI_HandleTypeDef* hspi) {
-        hspi_ = hspi;
-        hdma_spi_tx_ = hspi_->hdmatx;
-        hdma_spi_rx_ = hspi_->hdmarx;
-        bufsize_ = 0;
-        txbuf_ = nullptr;
-        rxbuf_ = nullptr;
+    SPI::SPI(spi_init_t init) {
+        hspi_ = init.hspi;
+        mode_ = init.mode;
+        ptr_map[hspi_] = this;
+        switch (mode_) {
+            case SPI_MODE_BLOCKED:
+                break;
+            case SPI_MODE_INTURRUPT:
+            case SPI_MODE_DMA:
+                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_RX_COMPLETE_CB_ID, CallbackWrapper);
+                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_TX_RX_COMPLETE_CB_ID, CallbackWrapper);
+        }
     }
     SPI::~SPI() {
+        ptr_map.erase(hspi_);
     }
-    void SPI::Setup(uint32_t buffer_size, bool dma) {
-        dma_ = dma;
-        bufsize_ = buffer_size;
-    }
-    void SPI::Init() {
-        if (dma_ && hdma_spi_tx_ != nullptr && hdma_spi_rx_ != nullptr) {
-            SET_BIT(hspi_->Instance->CR2, SPI_CR2_TXDMAEN);
-            SET_BIT(hspi_->Instance->CR2, SPI_CR2_RXDMAEN);
 
-            __HAL_SPI_ENABLE(hspi_);
-
-            // disable DMA
-            __HAL_DMA_DISABLE(hdma_spi_rx_);
-
-            while (hdma_spi_rx_->Instance->CR & DMA_SxCR_EN) {
-                __HAL_DMA_DISABLE(hdma_spi_rx_);
-            }
-
-            __HAL_DMA_CLEAR_FLAG(hdma_spi_rx_, DMA_LISR_TCIF2);
-
-            hdma_spi_rx_->Instance->PAR = (uint32_t) & (SPI1->DR);
-            // memory buffer 1
-            hdma_spi_rx_->Instance->M0AR = (uint32_t)(rxbuf_);
-            // data length
-            __HAL_DMA_SET_COUNTER(hdma_spi_rx_, bufsize_);
-
-            __HAL_DMA_ENABLE_IT(hdma_spi_rx_, DMA_IT_TC);
-
-            // disable DMA
-            __HAL_DMA_DISABLE(hdma_spi_tx_);
-
-            while (hdma_spi_tx_->Instance->CR & DMA_SxCR_EN) {
-                __HAL_DMA_DISABLE(hdma_spi_tx_);
-            }
-
-            __HAL_DMA_CLEAR_FLAG(hdma_spi_tx_, DMA_LISR_TCIF3);
-
-            hdma_spi_tx_->Instance->PAR = (uint32_t) & (SPI1->DR);
-            // memory buffer 1
-            hdma_spi_tx_->Instance->M0AR = (uint32_t)(txbuf_);
-            // data length
-            __HAL_DMA_SET_COUNTER(hdma_spi_tx_, bufsize_);
-        } else {
-            HAL_SPI_Init(hspi_);
+    void SPI::TransmitReceive(uint8_t* tx_data, uint8_t* rx_data, uint32_t length) {
+        rx_size_ = length;
+        rx_buffer_ = rx_data;
+        switch(mode_){
+            case SPI_MODE_BLOCKED:
+                HAL_SPI_TransmitReceive(hspi_, tx_data, rx_data, length, 1000);
+                callback_(this);
+                break;
+            case SPI_MODE_INTURRUPT:
+                HAL_SPI_TransmitReceive_IT(hspi_, tx_data, rx_data, length);
+                break;
+            case SPI_MODE_DMA:
+                HAL_SPI_TransmitReceive_DMA(hspi_, tx_data, rx_data, length);
+                break;
+            default:
+                RM_ASSERT_TRUE(false, "Invalid SPI mode");
         }
     }
-    uint32_t SPI::TransimiReceive(uint8_t* tx_data, uint8_t* rx_data, uint32_t length) {
-        if (dma_) {
-            // disable DMA
-            __HAL_DMA_DISABLE(hdma_spi_rx_);
-            __HAL_DMA_DISABLE(hdma_spi_tx_);
-            while (hdma_spi_rx_->Instance->CR & DMA_SxCR_EN) {
-                __HAL_DMA_DISABLE(hdma_spi_rx_);
-            }
-            while (hdma_spi_tx_->Instance->CR & DMA_SxCR_EN) {
-                __HAL_DMA_DISABLE(hdma_spi_tx_);
-            }
-            // clear flag
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmarx, __HAL_DMA_GET_TC_FLAG_INDEX(hspi_->hdmarx));
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmarx, __HAL_DMA_GET_HT_FLAG_INDEX(hspi_->hdmarx));
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmarx, __HAL_DMA_GET_TE_FLAG_INDEX(hspi_->hdmarx));
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmarx, __HAL_DMA_GET_DME_FLAG_INDEX(hspi_->hdmarx));
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmarx, __HAL_DMA_GET_FE_FLAG_INDEX(hspi_->hdmarx));
-
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmatx, __HAL_DMA_GET_TC_FLAG_INDEX(hspi_->hdmatx));
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmatx, __HAL_DMA_GET_HT_FLAG_INDEX(hspi_->hdmatx));
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmatx, __HAL_DMA_GET_TE_FLAG_INDEX(hspi_->hdmatx));
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmatx, __HAL_DMA_GET_DME_FLAG_INDEX(hspi_->hdmatx));
-            __HAL_DMA_CLEAR_FLAG(hspi_->hdmatx, __HAL_DMA_GET_FE_FLAG_INDEX(hspi_->hdmatx));
-            // set memory address
-            hdma_spi_rx_->Instance->M0AR = (uint32_t)rx_data;
-            hdma_spi_tx_->Instance->M0AR = (uint32_t)tx_data;
-            // set data length
-            __HAL_DMA_SET_COUNTER(hdma_spi_rx_, length);
-            __HAL_DMA_SET_COUNTER(hdma_spi_tx_, length);
-            // enable DMA
-            __HAL_DMA_ENABLE(hdma_spi_rx_);
-            __HAL_DMA_ENABLE(hdma_spi_tx_);
-        } else {
-            HAL_SPI_TransmitReceive_IT(hspi_, tx_data, rx_data, length);
+    void SPI::Transmit(uint8_t* tx_data, uint32_t length) {
+        switch(mode_){
+        case SPI_MODE_BLOCKED:
+                HAL_SPI_Transmit(hspi_, tx_data, length, 1000);
+                break;
+        case SPI_MODE_INTURRUPT:
+                HAL_SPI_Transmit_IT(hspi_, tx_data, length);
+                break;
+        case SPI_MODE_DMA:
+                HAL_SPI_Transmit_DMA(hspi_, tx_data, length);
+                break;
+        default:
+                RM_ASSERT_TRUE(false, "Invalid SPI mode");
         }
-        return length;
+    }
+    void SPI::Receive(uint8_t* rx_data, uint32_t length) {
+        rx_size_ = length;
+        rx_buffer_ = rx_data;
+        switch(mode_){
+        case SPI_MODE_BLOCKED:
+                HAL_SPI_Receive(hspi_, rx_data, length, 1000);
+                break;
+        case SPI_MODE_INTURRUPT:
+                HAL_SPI_Receive_IT(hspi_, rx_data, length);
+                break;
+        case SPI_MODE_DMA:
+                HAL_SPI_Receive_DMA(hspi_, rx_data, length);
+                break;
+        default:
+                RM_ASSERT_TRUE(false, "Invalid SPI mode");
+        }
     }
 
     bool SPI::IsBusy() {
@@ -135,13 +110,53 @@ namespace bsp {
         if (instance == nullptr) {
             return;
         }
-        instance->callback_();
+        instance->callback_(instance);
     }
     bool SPI::IsDMA() {
-        return dma_;
+        return mode_ == SPI_MODE_DMA;
     }
+
+    SPIMaster::SPIMaster(spi_master_init_t init) {
+        spi_ = init.spi;
+        cs_ = init.cs;
+    }
+
+        SPIMaster::~SPIMaster() {
+
+        }
+
+        spi_master_status_e SPIMaster::Transmit(uint8_t* tx_data, uint32_t length) {
+            if (spi_->IsBusy()) {
+                return SPI_MASTER_STATUS_BUSY;
+            }
+            cs_->Low();
+            spi_->Transmit(tx_data, length);
+            return SPI_MASTER_STATUS_OK;
+        }
+
+        spi_master_status_e SPIMaster::Receive(uint8_t* rx_data, uint32_t length) {
+            if (spi_->IsBusy()) {
+                return SPI_MASTER_STATUS_BUSY;
+            }
+            cs_->Low();
+            spi_->Receive(rx_data, length);
+            return SPI_MASTER_STATUS_OK;
+        }
+
+        spi_master_status_e SPIMaster::TransmitReceive(uint8_t* tx_data, uint8_t* rx_data, uint32_t length) {
+            if (spi_->IsBusy()) {
+                return SPI_MASTER_STATUS_BUSY;
+            }
+            cs_->Low();
+            spi_->TransmitReceive(tx_data, rx_data, length);
+            return SPI_MASTER_STATUS_OK;
+        }
+
+        void SPIMaster::RegisterCallback(spi_master_rx_callback_t callback) {
+            callback_=callback;
+        }
 }  // namespace bsp
 
-void RM_DMA_SPI_IRQHandler(SPI_HandleTypeDef* hspi) {
+void RM_SPI_IRQHandler(SPI_HandleTypeDef* hspi) {
     bsp::SPI::CallbackWrapper(hspi);
 }
