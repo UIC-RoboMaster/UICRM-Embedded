@@ -36,11 +36,11 @@ namespace display {
      *
      * @note 3条PWM通道，使用同一个定时器
      */
-     /**
-      * @brief RGB LED
-      *
-      * @note 3 PWM channels, using the same timer
-      */
+    /**
+     * @brief RGB LED
+     *
+     * @note 3 PWM channels, using the same timer
+     */
     class RGB {
       public:
         /**

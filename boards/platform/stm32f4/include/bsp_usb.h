@@ -27,8 +27,16 @@
 
 namespace bsp {
 
+    /**
+     * @brief USB虚拟串口类
+     * @details 用于USB虚拟串口的数据收发
+     */
     class VirtualUSB {
       public:
+        /**
+         * @brief 构造函数
+         *
+         */
         /**
          * @brief constructor for usb instance
          *
@@ -38,11 +46,20 @@ namespace bsp {
         explicit VirtualUSB();
 
         /**
+         * @brief 析构函数
+         * @details 可能会释放tx/rx相关的buffer内存
+         */
+        /**
          * @brief destructor (potentially deallocate buffer memories associated with
          * tx / rx)
          */
         virtual ~VirtualUSB();
 
+        /**
+         * @brief 初始化非阻塞USB串口传输
+         *
+         * @param tx_buffer_size 传输缓冲区大小（burst传输调用将被排队到此缓冲区）
+         */
         /**
          * @brief set up usb non blocking transmission
          *
@@ -52,6 +69,12 @@ namespace bsp {
         void SetupTx(uint32_t tx_buffer_size);
 
         /**
+         * @brief 初始化USB接收器
+         *
+         * @param rx_buffer_size
+         * 接收缓冲区大小（所有未读取的数据都将排队到此缓冲区，如果没有注册回调）
+         */
+        /**
          * @brief set up usb receiver
          *
          * @param rx_buffer_size  receive buffer size (all data that has not been
@@ -59,6 +82,15 @@ namespace bsp {
          */
         void SetupRx(uint32_t rx_buffer_size);
 
+        /**
+         * @brief 读取USB接收到的数据
+         *
+         * @param data  指向接收缓冲区地址的数组地址的引用
+         *
+         * @return 读取的字节数
+         *
+         * @note 为了最佳性能，不会复制内存，因此对此方法的第二次调用将使前一次调用产生的缓冲区无效
+         */
         /**
          * @brief read out the pending received data
          *
@@ -72,6 +104,17 @@ namespace bsp {
          */
         uint32_t Read(uint8_t** data);
 
+        /**
+         * @brief 非阻塞发送数据到USB
+         *
+         * @param data  指向要传输的数据缓冲区的指针
+         * @param length  要传输的数据的长度
+         *
+         * @return 写入的字节数
+         *
+         * @note
+         * 对此函数的多个burst调用可能会导致tx缓冲区填满，因此请记住检查返回值以获取实际传输的字节数
+         */
         /**
          * @brief write data to usb without blocking
          *
@@ -88,10 +131,16 @@ namespace bsp {
 
       protected:
         /**
+         * @brief 传输完成回调函数
+         */
+        /**
          * @brief Transmission complete callback function
          */
         void TxCompleteCallback();
 
+        /**
+         * @brief 接收完成回调函数
+         */
         /**
          * @brief Reception complete call back
          *
@@ -100,6 +149,14 @@ namespace bsp {
          */
         virtual void RxCompleteCallback();
 
+        /**
+         * @brief 队列接收到的数据（如果未使用回调）
+         *
+         * @param data  指向接收到的数据缓冲区的指针
+         * @param length  接收到的数据长度
+         *
+         * @return 实际写入缓冲区的字节数
+         */
         /**
          * @brief Queue up received data if callback is not used
          *
@@ -112,6 +169,10 @@ namespace bsp {
 
       public:
         /**
+         * @brief USB传输完成回调函数
+         *
+         */
+        /**
          * @brief Wrapper function of transmission complete callback
          *
          * @param data    pointer to the data buffer received
@@ -119,6 +180,12 @@ namespace bsp {
          */
         friend void TxCompleteCallbackWrapper();
 
+        /**
+         * @brief USB接收完成回调函数
+         *
+         * @param data    指向接收到的数据缓冲区的指针
+         * @param length  接收到的数据长度
+         */
         /**
          * @brief Wrapper function of reception complete callback
          *

@@ -27,6 +27,14 @@
 
 namespace bsp {
 
+    /**
+     * @brief GPIO管理类
+     * @details 用于GPIO的输入输出
+     */
+    /**
+     * @brief GPIO manager
+     * @details used for GPIO input and output
+     */
     class GPIO {
       public:
         /**
@@ -85,6 +93,14 @@ namespace bsp {
         uint8_t state_;
     };
 
+    /**
+     * @brief 通用中断引脚管理类
+     * @details 用于通用中断引脚的管理
+     */
+    /**
+     * @brief General purpose interrupt pin manager
+     * @details used for general purpose interrupt pin management
+     */
     class GPIT {
       public:
         /**
@@ -100,7 +116,7 @@ namespace bsp {
         GPIT(uint16_t pin);
 
         /**
-          * @brief 虚拟中断回调函数，需要在子类中实现。
+         * @brief 虚拟中断回调函数，需要在子类中实现。
          */
         /**
          * @brief Callback back when interrupt happens

@@ -799,15 +799,16 @@ namespace driver {
      * @enum POS_VEL              电机的输出参数为位置和速度，电机的输出为位置和速度控制
      * @enum VEL                  电机的输出参数为速度，电机的输出为速度控制
      */
-     /**
-      * @brief operation mode of DM m4310 motor
-      *
-      * @note operation mode of motor determines the output parameters of motor
-      *
-      * @enum MIT                  output parameters are angle and torque, only for experienced users
-      * @enum POS_VEL              output parameters are position and velocity, output is position and velocity control
-      * @enum VEL                  output parameters are velocity, output is velocity control
-      */
+    /**
+     * @brief operation mode of DM m4310 motor
+     *
+     * @note operation mode of motor determines the output parameters of motor
+     *
+     * @enum MIT                  output parameters are angle and torque, only for experienced users
+     * @enum POS_VEL              output parameters are position and velocity, output is position
+     * and velocity control
+     * @enum VEL                  output parameters are velocity, output is velocity control
+     */
     typedef enum {
         MIT = 0,
         POS_VEL = 1,
@@ -822,7 +823,8 @@ namespace driver {
     /**
      * @brief DM m4310 motor class
      *
-     * @note DM motor uses CAN communication, but the CAN protocol is different from DJI's, so it needs to be implemented separately
+     * @note DM motor uses CAN communication, but the CAN protocol is different from DJI's, so it
+     * needs to be implemented separately
      */
     class Motor4310 {
       public:
@@ -858,28 +860,28 @@ namespace driver {
          *
          * @param data 原始数据
          */
-         /**
-          * @brief update the current theta for the motor
-          *
-          * @note only used in CAN callback, do not call elsewhere
-          *
-          * @param data raw data bytes
-          */
+        /**
+         * @brief update the current theta for the motor
+         *
+         * @note only used in CAN callback, do not call elsewhere
+         *
+         * @param data raw data bytes
+         */
         void UpdateData(const uint8_t data[]);
 
         /**
          * @brief 使能4310
          */
-         /**
-          * @brief enable 4310
-          */
+        /**
+         * @brief enable 4310
+         */
         void MotorEnable();
         /**
          * @brief 失能4310
          */
-         /**
-          * @brief disable 4310
-          */
+        /**
+         * @brief disable 4310
+         */
         void MotorDisable();
         /**
          * @brief 更新电机的零点
@@ -931,16 +933,17 @@ namespace driver {
         /**
          * @brief transmit data to motor
          *
-         * @note since a 4310 motor needs to use a separate CAN id, this function is not static, directly called by the object
+         * @note since a 4310 motor needs to use a separate CAN id, this function is not static,
+         * directly called by the object
          */
         void TransmitOutput();
 
         /**
          * @brief 打印电机数据
          */
-         /**
-          * @brief print out motor data
-          */
+        /**
+         * @brief print out motor data
+         */
         void PrintData();
 
         /**
@@ -952,15 +955,16 @@ namespace driver {
          * @param kd 电机的kd值，仅在MIT模式下有效
          * @param torque 电机的扭矩，仅在MIT模式下有效
          */
-         /**
-          * @brief set output parameters for m4310
-          * @note this function is recommended for MIT mode, use other overloaded functions for other modes
-          * @param position motor angle, in [rad]
-          * @param velocity motor angular velocity, in [rad / s]
-          * @param kp kp value of motor, only valid in MIT mode
-          * @param kd kd value of motor, only valid in MIT mode
-          * @param torque motor torque, only valid in MIT mode
-          */
+        /**
+         * @brief set output parameters for m4310
+         * @note this function is recommended for MIT mode, use other overloaded functions for other
+         * modes
+         * @param position motor angle, in [rad]
+         * @param velocity motor angular velocity, in [rad / s]
+         * @param kp kp value of motor, only valid in MIT mode
+         * @param kd kd value of motor, only valid in MIT mode
+         * @param torque motor torque, only valid in MIT mode
+         */
         void SetOutput(float position, float velocity, float kp, float kd, float torque);
 
         /**
@@ -969,12 +973,13 @@ namespace driver {
          * @param position 电机的角度，单位为[rad]
          * @param velocity 电机的角速度，单位为[rad / s]
          */
-         /**
-          * @brief set output parameters for m4310 using position-velocity mode
-          * @note this function is recommended for position-velocity mode, use other overloaded functions for other modes
-          * @param position motor angle, in [rad]
-          * @param velocity motor angular velocity, in [rad / s]
-          */
+        /**
+         * @brief set output parameters for m4310 using position-velocity mode
+         * @note this function is recommended for position-velocity mode, use other overloaded
+         * functions for other modes
+         * @param position motor angle, in [rad]
+         * @param velocity motor angular velocity, in [rad / s]
+         */
         void SetOutput(float position, float velocity);
 
         /**
@@ -982,11 +987,12 @@ namespace driver {
          * @note 本调用方式推荐用于纯速度模式下，其他模式下请使用其他重载函数
          * @param velocity 电机的角速度，单位为[rad / s]
          */
-         /**
-          * @brief set output parameters for m4310 using velocity mode
-          * @note this function is recommended for velocity mode, use other overloaded functions for other modes
-          * @param velocity motor angular velocity, in [rad / s]
-          */
+        /**
+         * @brief set output parameters for m4310 using velocity mode
+         * @note this function is recommended for velocity mode, use other overloaded functions for
+         * other modes
+         * @param velocity motor angular velocity, in [rad / s]
+         */
         void SetOutput(float velocity);
 
         /**
@@ -1090,8 +1096,9 @@ namespace driver {
     /**
      * @brief class for flywheel motor
      *
-     * @note flywheel motor is a special class that uses PID controller to control the angular velocity of motor, making the velocity reach the target and constant
-     * usually used to control the speed of friction wheel
+     * @note flywheel motor is a special class that uses PID controller to control the angular
+     * velocity of motor, making the velocity reach the target and constant usually used to control
+     * the speed of friction wheel
      */
     class FlyWheelMotor {
       public:

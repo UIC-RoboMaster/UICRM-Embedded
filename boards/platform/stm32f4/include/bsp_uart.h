@@ -26,6 +26,14 @@
 
 namespace bsp {
 
+    /**
+     * @brief 串口管理类
+     * @details 用于串口的收发
+     */
+    /**
+     * @brief UART manager
+     * @details used for UART send and receive
+     */
     class UART {
       public:
         /**

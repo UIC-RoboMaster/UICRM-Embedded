@@ -18,9 +18,17 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
+#include "main.h"
 
-#define GRAVITY_ACC 9.8f
-#define DEG2RAD(x) ((x) / 180 * M_PI)
+#include "cmsis_os2.h"
+#include "fatfs.h"
 
-#define MAG_SEN 0.3f  // raw int16 data change to uT unit.
+void RM_RTOS_Init(void) {
+}
+
+void RM_RTOS_Default_Task(const void* args) {
+    UNUSED(args);
+    while (true) {
+        osDelay(1000);
+    }
+}
