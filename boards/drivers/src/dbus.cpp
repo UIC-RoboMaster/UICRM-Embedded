@@ -29,7 +29,6 @@
 #define RC_ROCKER_MID 1024
 #define RC_ROCKER_ZERO_DRIFT 10  // Range of possible drift around initial position
 // Range of possible drift around min or max position
-#define RC_ROCKER_MIN_MAX_DRIFT (RC_ROCKER_MAX - RC_ROCKER_MID + 10)
 
 namespace remote {
 
