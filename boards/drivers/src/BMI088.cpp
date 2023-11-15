@@ -20,18 +20,25 @@
 
 #include "BMI088.h"
 
+#include <string.h>
+
 namespace imu {
     BMI088::BMI088(BMI088_init_t init) {
-        spi_ = init.spi;
-        CS_ACCEL_ = init.CS_ACCEL;
-        CS_GYRO_ = init.CS_GYRO;
+        spi_master_ = init.spi_master;
+        spi_device_accel_ = spi_master_->NewDevice(init.CS_ACCEL);
+        spi_device_gyro_ = spi_master_->NewDevice(init.CS_GYRO);
+        gpit_accel_ = init.INT_ACCEL;
+        gpit_gyro_ = init.INT_GYRO;
         Init();
     }
 
-    BMI088::BMI088(bsp::SPI* spi, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO) {
-        spi_ = spi;
-        CS_ACCEL_ = CS_ACCEL;
-        CS_GYRO_ = CS_GYRO;
+    BMI088::BMI088(bsp::SPIMaster* spi_master, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO, bsp::GPIT* INT_ACCEL,
+                   bsp::GPIT* INT_GYRO) {
+        spi_master_ = spi_master;
+        spi_device_accel_ = spi_master_->NewDevice(CS_ACCEL);
+        spi_device_gyro_ = spi_master_->NewDevice(CS_GYRO);
+        gpit_accel_ = INT_ACCEL;
+        gpit_gyro_ = INT_GYRO;
         Init();
     }
 
@@ -39,84 +46,65 @@ namespace imu {
         return true;
     }
 
-    void BMI088::BMI088_ACCEL_NS_L() {
-        CS_ACCEL_->Low();
-    }
 
-    void BMI088::BMI088_ACCEL_NS_H() {
-        CS_ACCEL_->High();
-    }
 
-    void BMI088::BMI088_GYRO_NS_L() {
-        CS_GYRO_->Low();
-    }
-
-    void BMI088::BMI088_GYRO_NS_H() {
-        CS_GYRO_->High();
-    }
-
-    uint8_t BMI088::BMI088_read_write_byte(uint8_t tx_data) {
-        uint8_t rx_data;
-        spi_->TransimiReceive(&tx_data, &rx_data, 1);
-        return rx_data;
-    }
-
-    void BMI088::BMI088_write_single_reg(uint8_t reg, uint8_t data) {
-        BMI088_read_write_byte(reg);
-        BMI088_read_write_byte(data);
-    }
-
-    void BMI088::BMI088_read_single_reg(uint8_t reg, uint8_t* data) {
-        BMI088_read_write_byte(reg | 0x80);
-        *data = BMI088_read_write_byte(0x55);
-    }
-
-    void BMI088::BMI088_read_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len) {
-        BMI088_read_write_byte(reg | 0x80);
-        while (len != 0) {
-            *buf = BMI088_read_write_byte(0x55);
-            buf++;
-            len--;
-        }
-    }
 
     void BMI088::BMI088_accel_write_single_reg(uint8_t reg, uint8_t data) {
-        BMI088_ACCEL_NS_L();
-        BMI088_write_single_reg(reg, data);
-        BMI088_ACCEL_NS_H();
+        spi_device_accel_->PrepareTransmit();
+        spi_master_->Transmit(spi_device_accel_, &reg, 1);
+        spi_master_->Transmit(spi_device_accel_, &data, 1);
+        spi_device_accel_->FinishTransmit();
     }
 
     void BMI088::BMI088_accel_read_single_reg(uint8_t reg, uint8_t* data) {
-        BMI088_ACCEL_NS_L();
-        BMI088_read_write_byte(reg | 0x80);
-        BMI088_read_write_byte(0x55);
-        *data = BMI088_read_write_byte(0x55);
-        BMI088_ACCEL_NS_H();
+        spi_device_accel_->PrepareTransmit();
+        reg = reg | 0x80;
+        spi_master_->Transmit(spi_device_accel_,&reg,1);
+        reg = 0x55;
+        spi_master_->Transmit(spi_device_accel_,&reg,1);
+        spi_master_->TransmitReceive(spi_device_accel_, &reg, data, 1);
+        spi_device_accel_->FinishTransmit();
     }
 
     void BMI088::BMI088_accel_read_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len) {
-        BMI088_ACCEL_NS_L();
-        BMI088_read_write_byte(reg | 0x80);
-        BMI088_read_muli_reg(reg, buf, len);
-        BMI088_ACCEL_NS_H();
+        spi_device_accel_->PrepareTransmit();
+        reg = reg | 0x80;
+        spi_master_->Transmit(spi_device_accel_,&reg,1);
+        spi_master_->Transmit(spi_device_accel_,&reg,1);
+        uint8_t* reg_buf = new uint8_t[len];
+        memset(reg_buf,0x55,len);
+        spi_master_->TransmitReceive(spi_device_accel_, reg_buf, buf, len);
+        delete[] reg_buf;
+        spi_device_accel_->FinishTransmit();
     }
 
     void BMI088::BMI088_gyro_write_single_reg(uint8_t reg, uint8_t data) {
-        BMI088_GYRO_NS_L();
-        BMI088_write_single_reg(reg, data);
-        BMI088_GYRO_NS_H();
+        spi_device_gyro_->PrepareTransmit();
+        spi_master_->Transmit(spi_device_gyro_, &reg, 1);
+        spi_master_->Transmit(spi_device_gyro_, &data, 1);
+        spi_device_gyro_->FinishTransmit();
     }
 
     void BMI088::BMI088_gyro_read_single_reg(uint8_t reg, uint8_t* data) {
-        BMI088_GYRO_NS_L();
-        BMI088_read_single_reg(reg, data);
-        BMI088_GYRO_NS_H();
+        spi_device_gyro_->PrepareTransmit();
+        reg = reg | 0x80;
+        spi_master_->Transmit(spi_device_gyro_,&reg,1);
+        reg = 0x55;
+        spi_master_->Transmit(spi_device_gyro_,&reg,1);
+        spi_master_->TransmitReceive(spi_device_gyro_, &reg, data, 1);
+        spi_device_gyro_->FinishTransmit();
     }
 
     void BMI088::BMI088_gyro_read_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len) {
-        BMI088_GYRO_NS_L();
-        BMI088_read_muli_reg(reg, buf, len);
-        BMI088_GYRO_NS_H();
+        spi_device_gyro_->PrepareTransmit();
+        reg = reg | 0x80;
+        spi_master_->Transmit(spi_device_gyro_,&reg,1);
+        spi_master_->Transmit(spi_device_gyro_,&reg,1);
+        uint8_t* reg_buf = new uint8_t[len];
+        memset(reg_buf,0x55,len);
+        spi_master_->TransmitReceive(spi_device_gyro_, reg_buf, buf, len);
+        delete[] reg_buf;
+        spi_device_gyro_->FinishTransmit();
     }
 
     static float BMI088_ACCEL_SEN = BMI088_ACCEL_3G_SEN;
@@ -147,10 +135,22 @@ namespace imu {
     uint8_t BMI088::Init() {
         uint8_t error = BMI088_NO_ERROR;
 
+        gpit_accel_->RegisterCallback(BMI088::AccelCallbackWrapper);
+        gpit_gyro_->RegisterCallback(BMI088::GyroCallbackWrapper);
+
+        spi_master_->SetMode(bsp::SPI_MODE_BLOCKED);
+        spi_master_->SetAutoCS(false);
         error |= bmi088_accel_init();
         error |= bmi088_gyro_init();
 
-        spi_->hspi_->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+        // spi_->hspi_->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+        spi_device_accel_->RegisterCallback(BMI088::AccelSPICallbackWrapper);
+        spi_device_gyro_->RegisterCallback(BMI088::GyroSPICallbackWrapper);
+        if(dma_){
+            spi_master_->SetMode(bsp::SPI_MODE_DMA);
+        }else{
+            spi_master_->SetMode(bsp::SPI_MODE_INTURRUPT);
+        }
 
         return error;
     }
@@ -293,80 +293,101 @@ namespace imu {
         gyro[2] = bmi088_raw_temp * BMI088_GYRO_SEN;
     }
 
-    void BMI088::imu_cmd_spi_dma() {
-        //        if(spi_->IsDMA()){
-        //        UBaseType_t uxSavedInterruptStatus;
-        //        uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
-        //
-        //        if ((gyro_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
-        //            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-        //            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-        //            !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
-        //            !(accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
-        //            gyro_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
-        //            gyro_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
-        //            CS_GYRO_->Low();
-        //
-        //
-        //            spi_->TransimiReceive(gyro_dma_tx_buf, gyro_dma_rx_buf,
-        //                           BMI088_SPI_DMA_GYRO_LENGHT);
-        //            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
-        //            return;
-        //        }
-        //
-        //        if ((accel_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
-        //            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-        //            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-        //            !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
-        //            !(accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
-        //            accel_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
-        //            accel_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
-        //
-        //            CS_ACCEL_->Low();
-        //            spi_->TransimiReceive(accel_dma_tx_buf, accel_dma_rx_buf,
-        //                           BMI088_SPI_DMA_ACCEL_LENGHT);
-        //            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
-        //            return;
-        //        }
-        //        if ((accel_temp_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
-        //            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-        //            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-        //            !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
-        //            !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
-        //            accel_temp_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
-        //            accel_temp_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
-        //
-        //            CS_ACCEL_->Low();
-        //            spi_->TransimiReceive(accel_temp_dma_tx_buf, accel_temp_dma_rx_buf,
-        //                           BMI088_SPI_DMA_ACCEL_TEMP_LENGHT);
-        //            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
-        //            return;
-        //        }
-        //        taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
-        //        }
+    void BMI088::imu_cmd_spi() {
+                UBaseType_t uxSavedInterruptStatus;
+                uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+
+                if ((gyro_update_flag & (1 << BMI088_IMU_DR_SHFITS)) && !spi_master_->IsBusy() &&
+                    !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
+                    !(accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
+                    gyro_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
+                    gyro_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
+                    spi_device_gyro_->PrepareTransmit();
+                    spi_master_->TransmitReceive(spi_device_gyro_,gyro_dma_tx_buf, gyro_dma_rx_buf,
+                                   BMI088_SPI_DMA_GYRO_LENGHT);
+                    taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+                    return;
+                }
+
+                if ((accel_update_flag & (1 << BMI088_IMU_DR_SHFITS)) && !spi_master_->IsBusy() &&
+                    !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
+                    !(accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
+                    accel_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
+                    accel_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
+
+                    spi_device_accel_->PrepareTransmit();
+                    spi_master_->TransmitReceive(spi_device_accel_,accel_dma_tx_buf, accel_dma_rx_buf,
+                                   BMI088_SPI_DMA_ACCEL_LENGHT);
+                    taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+                    return;
+                }
+                if ((accel_temp_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
+                    !spi_master_->IsBusy() &&
+                    !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
+                    !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
+                    accel_temp_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
+                    accel_temp_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
+
+                    spi_device_accel_->PrepareTransmit();
+                    spi_master_->TransmitReceive(spi_device_accel_,accel_temp_dma_tx_buf, accel_temp_dma_rx_buf,
+                                   BMI088_SPI_DMA_ACCEL_TEMP_LENGHT);
+                    taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+                    return;
+                }
+                taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
     }
 
-    void BMI088::dma_callback() {
+
+
+    void BMI088::AccelSPICallbackWrapper() {
+                if (instance_->accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
+                    instance_->accel_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
+                    instance_->accel_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
+                    instance_->spi_device_accel_->FinishTransmit();
+                }
+                // temperature read over
+                if (instance_->accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
+                    instance_->accel_temp_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
+                    instance_->accel_temp_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
+                    instance_->spi_device_accel_->FinishTransmit();
+                }
+
     }
 
-    BMI088_Accel_INT::BMI088_Accel_INT(uint16_t INT_pin, BMI088* imu) : GPIT(INT_pin) {
-        imu_ = imu;
+
+    void BMI088::GyroSPICallbackWrapper() {
+                if (instance_->gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
+                    instance_->gyro_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
+                    instance_->gyro_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
+                    instance_->spi_device_gyro_->FinishTransmit();
+                }
+
+                if (instance_->gyro_update_flag & (1 << BMI088_IMU_UPDATE_SHFITS)) {
+                    instance_->gyro_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
+                    instance_->gyro_update_flag |= (1 << BMI088_IMU_NOTIFY_SHFITS);
+                    instance_->RxCompleteCallback();
+                }
+    }
+    void BMI088::GyroCallbackWrapper() {
+        instance_->gyro_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
+        if (instance_->imu_start_dma_flag)
+            instance_->imu_cmd_spi();
+    }
+    void BMI088::AccelCallbackWrapper() {
+        instance_->accel_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
+        instance_->accel_temp_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
+        if (instance_->imu_start_dma_flag)
+            instance_->imu_cmd_spi();
+    }
+    void BMI088::RegisterCallback(BMI088_callback_t callback) {
+        callback_ = callback;
     }
 
-    void BMI088_Accel_INT::IntCallback() {
-        imu_->accel_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
-        imu_->accel_temp_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
-        if (imu_->imu_start_dma_flag)
-            imu_->imu_cmd_spi_dma();
+    void BMI088::RxCompleteCallback() {
+        callback_();
+    }
+    void BMI088::SetDMA(bool dma) {
+        dma_=dma;
     }
 
-    BMI088_Gyro_INT::BMI088_Gyro_INT(uint16_t INT_pin, BMI088* imu) : GPIT(INT_pin) {
-        imu_ = imu;
-    }
-
-    void BMI088_Gyro_INT::IntCallback() {
-        imu_->gyro_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
-        if (imu_->imu_start_dma_flag)
-            imu_->imu_cmd_spi_dma();
-    }
 }  // namespace imu

@@ -24,6 +24,8 @@
 #include "spi.h"
 #include "bsp_gpio.h"
 
+#define SPI_MAX_DEVICE 6
+
 namespace bsp {
 
     class SPI;
@@ -87,6 +89,13 @@ namespace bsp {
         */
        bool IsBusy();
 
+
+       /**
+        * @brief Set the SPI Mode
+        * @param mode the mode to be set
+        */
+        void SetMode(spi_mode_e mode);
+
        /**
         * @brief register a callback function to be called when the spi receives data
         * @param callback
@@ -112,11 +121,30 @@ namespace bsp {
        static SPI* FindInstance(SPI_HandleTypeDef* hspi);
    };
 
-   typedef void (*spi_master_rx_callback_t)();
+   typedef void (*spi_device_rx_callback_t)();
 
    typedef struct {
        SPI* spi;
        GPIO* cs;
+   } spi_device_init_t;
+
+   class SPIDevice{
+     public:
+       SPIDevice(spi_device_init_t init);
+       void RegisterCallback(spi_device_rx_callback_t callback);
+       void PrepareTransmit();
+       void FinishTransmit();
+       bool IsTransmitting();
+       void CallbackWrapper();
+       SPI* GetSPI() { return spi_; }
+     private:
+       SPI* spi_;
+       GPIO* cs_;
+       spi_device_rx_callback_t callback_ = []() {};
+   };
+
+   typedef struct {
+       SPI* spi;
    } spi_master_init_t;
 
    enum spi_master_status_e {
@@ -129,14 +157,22 @@ namespace bsp {
      public:
         explicit SPIMaster(spi_master_init_t init);
         virtual ~SPIMaster();
-        spi_master_status_e Transmit(uint8_t* tx_data, uint32_t length);
-        spi_master_status_e Receive(uint8_t* rx_data, uint32_t length);
-        spi_master_status_e TransmitReceive(uint8_t* tx_data, uint8_t* rx_data, uint32_t length);
-        void RegisterCallback(spi_master_rx_callback_t callback);
+        SPIDevice* NewDevice(GPIO* cs);
+        void AddDevice(SPIDevice* device);
+        bool IsBusy();
+        spi_master_status_e Transmit(SPIDevice* device, uint8_t* tx_data, uint32_t length);
+        spi_master_status_e Receive(SPIDevice* device, uint8_t* rx_data, uint32_t length);
+        spi_master_status_e TransmitReceive(SPIDevice* device, uint8_t* tx_data, uint8_t* rx_data, uint32_t length);
+        void SetMode(spi_mode_e mode);
+        void SetAutoCS(bool auto_cs);
         static void CallbackWrapper(SPI* spi);
+        void CallbackWrapper();
      private:
         SPI* spi_;
-        GPIO* cs_;
-        spi_master_rx_callback_t callback_ = []() {};
+        SPIDevice* device_[SPI_MAX_DEVICE]={NULL};
+        uint8_t device_count_ = 0;
+        bool auto_cs_ = true;
+        static std::map<SPI*, SPIMaster*> ptr_map;
+        static SPIMaster* FindInstance(SPI* spi);
    };
 }  // namespace bsp

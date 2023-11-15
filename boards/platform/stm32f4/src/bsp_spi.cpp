@@ -115,46 +115,124 @@ namespace bsp {
     bool SPI::IsDMA() {
         return mode_ == SPI_MODE_DMA;
     }
+    void SPI::SetMode(spi_mode_e mode) {
+        mode_ = mode;
+    }
+
+    SPIDevice::SPIDevice(spi_device_init_t init):spi_(init.spi),cs_(init.cs) {
+
+    }
+    void SPIDevice::RegisterCallback(spi_device_rx_callback_t callback) {
+        callback_ = callback;
+    }
+    void SPIDevice::PrepareTransmit() {
+        cs_->Low();
+    }
+    void SPIDevice::FinishTransmit() {
+        cs_->High();
+    }
+    bool SPIDevice::IsTransmitting() {
+        return cs_->Read()==0;
+    }
+    void SPIDevice::CallbackWrapper() {
+        callback_();
+    }
 
     SPIMaster::SPIMaster(spi_master_init_t init) {
         spi_ = init.spi;
-        cs_ = init.cs;
+        spi_->RegisterCallback(CallbackWrapper);
     }
 
         SPIMaster::~SPIMaster() {
 
         }
 
-        spi_master_status_e SPIMaster::Transmit(uint8_t* tx_data, uint32_t length) {
+        spi_master_status_e SPIMaster::Transmit(SPIDevice* device,uint8_t* tx_data, uint32_t length) {
             if (spi_->IsBusy()) {
                 return SPI_MASTER_STATUS_BUSY;
             }
-            cs_->Low();
+            if(auto_cs_){
+                device->PrepareTransmit();
+            }
             spi_->Transmit(tx_data, length);
             return SPI_MASTER_STATUS_OK;
         }
 
-        spi_master_status_e SPIMaster::Receive(uint8_t* rx_data, uint32_t length) {
+        spi_master_status_e SPIMaster::Receive(SPIDevice* device,uint8_t* rx_data, uint32_t length) {
             if (spi_->IsBusy()) {
                 return SPI_MASTER_STATUS_BUSY;
             }
-            cs_->Low();
+            if(auto_cs_){
+                device->PrepareTransmit();
+            }
             spi_->Receive(rx_data, length);
             return SPI_MASTER_STATUS_OK;
         }
 
-        spi_master_status_e SPIMaster::TransmitReceive(uint8_t* tx_data, uint8_t* rx_data, uint32_t length) {
+        spi_master_status_e SPIMaster::TransmitReceive(SPIDevice* device,uint8_t* tx_data, uint8_t* rx_data, uint32_t length) {
             if (spi_->IsBusy()) {
                 return SPI_MASTER_STATUS_BUSY;
             }
-            cs_->Low();
+            if(auto_cs_){
+                device->PrepareTransmit();
+            }
             spi_->TransmitReceive(tx_data, rx_data, length);
             return SPI_MASTER_STATUS_OK;
         }
 
-        void SPIMaster::RegisterCallback(spi_master_rx_callback_t callback) {
-            callback_=callback;
+        SPIDevice* SPIMaster::NewDevice(GPIO* cs) {
+            if(device_count_>=SPI_MAX_DEVICE){
+                RM_ASSERT_TRUE(false, "Too many SPI devices");
+            }
+            spi_device_init_t init;
+            init.spi = spi_;
+            init.cs = cs;
+            device_[device_count_++] = new SPIDevice(init);
+            return device_[device_count_-1];
         }
+
+        void SPIMaster::AddDevice(SPIDevice* device) {
+            if(device_count_>=SPI_MAX_DEVICE){
+                RM_ASSERT_TRUE(false, "Too many SPI devices");
+            }
+            device_[device_count_++] = device;
+        }
+
+        void SPIMaster::CallbackWrapper(SPI* spi) {
+            SPIMaster* instance = FindInstance(spi);
+            if (instance == nullptr) {
+                    return;
+            }
+            instance->CallbackWrapper();
+        }
+        SPIMaster* SPIMaster::FindInstance(SPI* spi) {
+            const auto it = ptr_map.find(spi);
+            if (it == ptr_map.end()) {
+                return nullptr;
+            }
+
+            return it->second;
+        }
+        void SPIMaster::CallbackWrapper() {
+            for(int i=0;i<device_count_;i++){
+                if(device_[i]->IsTransmitting()){
+                    if(auto_cs_){
+                        device_[i]->FinishTransmit();
+                    }
+                    device_[i]->CallbackWrapper();
+                }
+            }
+        }
+        void SPIMaster::SetMode(spi_mode_e mode) {
+            spi_->SetMode(mode);
+        }
+        void SPIMaster::SetAutoCS(bool auto_cs) {
+            auto_cs_ = auto_cs;
+        }
+        bool SPIMaster::IsBusy() {
+            return spi_->IsBusy();
+        }
+
 }  // namespace bsp
 
 void RM_SPI_IRQHandler(SPI_HandleTypeDef* hspi) {
