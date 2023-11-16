@@ -23,23 +23,28 @@
 #include <string.h>
 
 namespace imu {
+
+    BMI088* BMI088::instance_ = nullptr;
+
     BMI088::BMI088(BMI088_init_t init) {
+        instance_=this;
         spi_master_ = init.spi_master;
         spi_device_accel_ = spi_master_->NewDevice(init.CS_ACCEL);
         spi_device_gyro_ = spi_master_->NewDevice(init.CS_GYRO);
         gpit_accel_ = init.INT_ACCEL;
         gpit_gyro_ = init.INT_GYRO;
-        Init();
+        // Init();
     }
 
     BMI088::BMI088(bsp::SPIMaster* spi_master, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO, bsp::GPIT* INT_ACCEL,
                    bsp::GPIT* INT_GYRO) {
+        instance_=this;
         spi_master_ = spi_master;
         spi_device_accel_ = spi_master_->NewDevice(CS_ACCEL);
         spi_device_gyro_ = spi_master_->NewDevice(CS_GYRO);
         gpit_accel_ = INT_ACCEL;
         gpit_gyro_ = INT_GYRO;
-        Init();
+        // Init();
     }
 
     bool BMI088::IsReady() {
@@ -143,6 +148,10 @@ namespace imu {
         error |= bmi088_accel_init();
         error |= bmi088_gyro_init();
 
+        if(error!=BMI088_NO_ERROR){
+            RM_ASSERT_TRUE(false,"BMI088 init error");
+        }
+
         // spi_->hspi_->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
         spi_device_accel_->RegisterCallback(BMI088::AccelSPICallbackWrapper);
         spi_device_gyro_->RegisterCallback(BMI088::GyroSPICallbackWrapper);
@@ -229,36 +238,53 @@ namespace imu {
         return false;
     }
 
-    void BMI088::Read(float* gyro, float* accel, float* temperate) {
-        uint8_t buf[8] = {0, 0, 0, 0, 0, 0};
-        int16_t bmi088_raw_temp;
-
-        BMI088_accel_read_muli_reg(BMI088_ACCEL_XOUT_L, buf, 6);
-
-        bmi088_raw_temp = (int16_t)((buf[1]) << 8) | buf[0];
-        accel[0] = bmi088_raw_temp * BMI088_ACCEL_SEN;
-        bmi088_raw_temp = (int16_t)((buf[3]) << 8) | buf[2];
-        accel[1] = bmi088_raw_temp * BMI088_ACCEL_SEN;
-        bmi088_raw_temp = (int16_t)((buf[5]) << 8) | buf[4];
-        accel[2] = bmi088_raw_temp * BMI088_ACCEL_SEN;
-
-        BMI088_gyro_read_muli_reg(BMI088_GYRO_CHIP_ID, buf, 8);
-        if (buf[0] == BMI088_GYRO_CHIP_ID_VALUE) {
-            bmi088_raw_temp = (int16_t)((buf[3]) << 8) | buf[2];
-            gyro[0] = bmi088_raw_temp * BMI088_GYRO_SEN;
-            bmi088_raw_temp = (int16_t)((buf[5]) << 8) | buf[4];
-            gyro[1] = bmi088_raw_temp * BMI088_GYRO_SEN;
-            bmi088_raw_temp = (int16_t)((buf[7]) << 8) | buf[6];
-            gyro[2] = bmi088_raw_temp * BMI088_GYRO_SEN;
+    void BMI088::Read() {
+        if (gyro_update_flag & (1 << BMI088_IMU_NOTIFY_SHFITS)) {
+            gyro_update_flag &= ~(1 << BMI088_IMU_NOTIFY_SHFITS);
+            gyro_read_over(gyro_dma_rx_buf + BMI088_GYRO_RX_BUF_DATA_OFFSET,
+                                   gyro_);
         }
-        BMI088_accel_read_muli_reg(BMI088_TEMP_M, buf, 2);
 
-        bmi088_raw_temp = (int16_t)((buf[0] << 3) | (buf[1] >> 5));
+        if (accel_update_flag & (1 << BMI088_IMU_UPDATE_SHFITS)) {
+            accel_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
+            accel_read_over(accel_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
+                                    accel_, &time_);
+        }
 
-        if (bmi088_raw_temp > 1023)
-            bmi088_raw_temp -= 2048;
-
-        *temperate = bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET;
+        if (accel_temp_update_flag & (1 << BMI088_IMU_UPDATE_SHFITS)) {
+            accel_temp_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
+            temperature_read_over(accel_temp_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
+                                          &temperate_);
+        }
+//        uint8_t buf[8] = {0, 0, 0, 0, 0, 0};
+//        int16_t bmi088_raw_temp;
+//
+//        BMI088_accel_read_muli_reg(BMI088_ACCEL_XOUT_L, buf, 6);
+//
+//        bmi088_raw_temp = (int16_t)((buf[1]) << 8) | buf[0];
+//        accel[0] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+//        bmi088_raw_temp = (int16_t)((buf[3]) << 8) | buf[2];
+//        accel[1] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+//        bmi088_raw_temp = (int16_t)((buf[5]) << 8) | buf[4];
+//        accel[2] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+//
+//        BMI088_gyro_read_muli_reg(BMI088_GYRO_CHIP_ID, buf, 8);
+//        if (buf[0] == BMI088_GYRO_CHIP_ID_VALUE) {
+//            bmi088_raw_temp = (int16_t)((buf[3]) << 8) | buf[2];
+//            gyro[0] = bmi088_raw_temp * BMI088_GYRO_SEN;
+//            bmi088_raw_temp = (int16_t)((buf[5]) << 8) | buf[4];
+//            gyro[1] = bmi088_raw_temp * BMI088_GYRO_SEN;
+//            bmi088_raw_temp = (int16_t)((buf[7]) << 8) | buf[6];
+//            gyro[2] = bmi088_raw_temp * BMI088_GYRO_SEN;
+//        }
+//        BMI088_accel_read_muli_reg(BMI088_TEMP_M, buf, 2);
+//
+//        bmi088_raw_temp = (int16_t)((buf[0] << 3) | (buf[1] >> 5));
+//
+//        if (bmi088_raw_temp > 1023)
+//            bmi088_raw_temp -= 2048;
+//
+//        *temperate = bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET;
     }
 
     void BMI088::temperature_read_over(uint8_t* rx_buf, float* temperate) {
@@ -340,6 +366,7 @@ namespace imu {
 
 
     void BMI088::AccelSPICallbackWrapper() {
+                if(instance_== nullptr)return;
                 if (instance_->accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
                     instance_->accel_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
                     instance_->accel_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
@@ -356,6 +383,7 @@ namespace imu {
 
 
     void BMI088::GyroSPICallbackWrapper() {
+                if(instance_== nullptr)return;
                 if (instance_->gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
                     instance_->gyro_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
                     instance_->gyro_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
@@ -369,11 +397,13 @@ namespace imu {
                 }
     }
     void BMI088::GyroCallbackWrapper() {
+                if(instance_== nullptr)return;
         instance_->gyro_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
         if (instance_->imu_start_dma_flag)
             instance_->imu_cmd_spi();
     }
     void BMI088::AccelCallbackWrapper() {
+                if(instance_== nullptr)return;
         instance_->accel_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
         instance_->accel_temp_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
         if (instance_->imu_start_dma_flag)

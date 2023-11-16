@@ -20,7 +20,13 @@
 #include "bsp_spi.h"
 #include "bsp_error_handler.h"
 
+void RM_SPI_IRQHandler(SPI_HandleTypeDef* hspi) {
+    bsp::SPI::CallbackWrapper(hspi);
+}
+
 namespace bsp {
+
+    std::map<SPI_HandleTypeDef*, SPI*> SPI::ptr_map;
 
     /* get initialized uart_t instance given its hspi handle struct */
     SPI* SPI::FindInstance(SPI_HandleTypeDef* hspi) {
@@ -40,9 +46,11 @@ namespace bsp {
                 break;
             case SPI_MODE_INTURRUPT:
             case SPI_MODE_DMA:
-                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_RX_COMPLETE_CB_ID, CallbackWrapper);
-                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_TX_RX_COMPLETE_CB_ID, CallbackWrapper);
+                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_TX_COMPLETE_CB_ID, RM_SPI_IRQHandler);
+                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_RX_COMPLETE_CB_ID, RM_SPI_IRQHandler);
+                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_TX_RX_COMPLETE_CB_ID, RM_SPI_IRQHandler);
         }
+
     }
     SPI::~SPI() {
         ptr_map.erase(hspi_);
@@ -117,6 +125,19 @@ namespace bsp {
     }
     void SPI::SetMode(spi_mode_e mode) {
         mode_ = mode;
+        switch (mode_) {
+            case SPI_MODE_BLOCKED:
+                HAL_SPI_UnRegisterCallback(hspi_, HAL_SPI_TX_COMPLETE_CB_ID);
+                HAL_SPI_UnRegisterCallback(hspi_, HAL_SPI_RX_COMPLETE_CB_ID);
+                HAL_SPI_UnRegisterCallback(hspi_, HAL_SPI_TX_RX_COMPLETE_CB_ID);
+                break;
+            case SPI_MODE_INTURRUPT:
+            case SPI_MODE_DMA:
+                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_TX_COMPLETE_CB_ID, RM_SPI_IRQHandler);
+                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_RX_COMPLETE_CB_ID, RM_SPI_IRQHandler);
+                HAL_SPI_RegisterCallback(hspi_, HAL_SPI_TX_RX_COMPLETE_CB_ID, RM_SPI_IRQHandler);
+                break;
+        }
     }
 
     SPIDevice::SPIDevice(spi_device_init_t init):spi_(init.spi),cs_(init.cs) {
@@ -137,6 +158,8 @@ namespace bsp {
     void SPIDevice::CallbackWrapper() {
         callback_();
     }
+
+    std::map<SPI*, SPIMaster*> SPIMaster::ptr_map;
 
     SPIMaster::SPIMaster(spi_master_init_t init) {
         spi_ = init.spi;
@@ -235,6 +258,3 @@ namespace bsp {
 
 }  // namespace bsp
 
-void RM_SPI_IRQHandler(SPI_HandleTypeDef* hspi) {
-    bsp::SPI::CallbackWrapper(hspi);
-}

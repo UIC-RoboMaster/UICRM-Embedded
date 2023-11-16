@@ -305,7 +305,8 @@ namespace imu {
         void RegisterCallback(BMI088_callback_t callback);
         void SetDMA(bool dma);
         bool IsReady();
-        void Read(float gyro[3], float accel[3], float* temperate);
+        uint8_t Init();
+        void Read();
         void temperature_read_over(uint8_t* rx_buf, float* temperate);
         void accel_read_over(uint8_t* rx_buf, float accel[3], float* time);
         void gyro_read_over(uint8_t* rx_buf, float gyro[3]);
@@ -329,8 +330,12 @@ namespace imu {
         uint8_t accel_temp_dma_rx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT];
         uint8_t accel_temp_dma_tx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT] = {0xA2, 0xFF, 0xFF, 0xFF};
 
-        void imu_cmd_spi();
-        void dma_callback();
+
+        float gyro_[3];
+        float accel_[3];
+        float temperate_;
+        float time_;
+
 
       private:
         bsp::SPIMaster* spi_master_;
@@ -355,7 +360,7 @@ namespace imu {
 
         static void GyroSPICallbackWrapper();
 
-        uint8_t Init();
+
 
         bool bmi088_accel_init();
         bool bmi088_gyro_init();
@@ -368,6 +373,8 @@ namespace imu {
         void BMI088_gyro_write_single_reg(uint8_t reg, uint8_t data);
         void BMI088_gyro_read_single_reg(uint8_t reg, uint8_t* data);
         void BMI088_gyro_read_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len);
+
+        void imu_cmd_spi();
     };
 
 }  // namespace imu
