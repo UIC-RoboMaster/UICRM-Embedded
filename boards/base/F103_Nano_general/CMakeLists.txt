@@ -16,6 +16,7 @@ target_compile_definitions(${PROJECT_NAME}_interface INTERFACE ${MCU_LINE}
         NO_IMU
         NO_ONBOARD_SENSOR
         NO_USB
+        F103_Nano
         )
 target_compile_options(${PROJECT_NAME}_interface INTERFACE ${MCU_OPTIONS})
 target_link_options(${PROJECT_NAME}_interface INTERFACE

@@ -21,6 +21,11 @@
 #include "BMI088.h"
 
 #include <string.h>
+#ifdef F103_Nano
+#include "task.h"
+// F103 use Older version of FreeRTOS, Must include task.h to enable some RTOS features.
+// this method will be rewrite in future version.
+#endif
 
 namespace imu {
 
