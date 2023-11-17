@@ -184,7 +184,7 @@ namespace imu {
         return error;
     }
 
-    bool BMI088::bmi088_accel_init() {
+    uint8_t BMI088::bmi088_accel_init() {
         uint8_t res = 0;
         uint8_t write_reg_num;
 
@@ -207,7 +207,7 @@ namespace imu {
 
         // check the "who am I"
         if (res != BMI088_ACC_CHIP_ID_VALUE)
-            return false;
+            return BMI088_SELF_TEST_ACCEL_ERROR;
 
         // set accel sonsor config and check
         for (write_reg_num = 0; write_reg_num < BMI088_WRITE_ACCEL_REG_NUM; ++write_reg_num) {
@@ -219,10 +219,10 @@ namespace imu {
             if (res != write_BMI088_accel_reg_data_error[write_reg_num][1])
                 return write_BMI088_accel_reg_data_error[write_reg_num][2];
         }
-        return false;
+        return BMI088_NO_ERROR;
     }
 
-    bool BMI088::bmi088_gyro_init() {
+    uint8_t BMI088::bmi088_gyro_init() {
         uint8_t write_reg_num;
         uint8_t res = 0;
 
@@ -244,7 +244,7 @@ namespace imu {
 
         // check the "who am I"
         if (res != BMI088_GYRO_CHIP_ID_VALUE)
-            return false;
+            return BMI088_SELF_TEST_GYRO_ERROR;
 
         // set gyro sonsor config and check
         for (write_reg_num = 0; write_reg_num < BMI088_WRITE_GYRO_REG_NUM; ++write_reg_num) {
@@ -257,7 +257,7 @@ namespace imu {
                 return write_BMI088_gyro_reg_data_error[write_reg_num][2];
         }
 
-        return false;
+        return BMI088_NO_ERROR;
     }
 
     void BMI088::Read(float* gyro, float* accel, float* temperate) {

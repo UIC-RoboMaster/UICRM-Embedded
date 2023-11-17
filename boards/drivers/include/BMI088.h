@@ -252,20 +252,6 @@
 #define BMI088_IMU_NOTIFY_SHFITS 3
 
 namespace imu {
-    typedef struct {
-        uint8_t status;
-        int16_t accel[3];
-        int16_t temp;
-        int16_t gyro[3];
-    } __packed BMI088_raw_data_t;
-
-    typedef struct {
-        uint8_t status;
-        float accel[3];
-        float temp;
-        float gyro[3];
-        float time;
-    } BMI088_real_data_t;
 
     enum {
         BMI088_NO_ERROR = 0x00,
@@ -363,8 +349,8 @@ namespace imu {
 
 
 
-        bool bmi088_accel_init();
-        bool bmi088_gyro_init();
+        uint8_t bmi088_accel_init();
+        uint8_t bmi088_gyro_init();
 
 
         void BMI088_accel_write_single_reg(uint8_t reg, uint8_t data);

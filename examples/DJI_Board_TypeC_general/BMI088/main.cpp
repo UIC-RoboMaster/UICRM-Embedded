@@ -20,13 +20,13 @@
 
 #include "main.h"
 
-#include "bsp_gpio.h"
-#include "bsp_spi.h"
 #include "BMI088.h"
+#include "bsp_gpio.h"
 #include "bsp_print.h"
+#include "bsp_spi.h"
 
-static bsp::SPI* spi1= nullptr;
-static bsp::SPIMaster* spi1_master= nullptr;
+static bsp::SPI* spi1 = nullptr;
+static bsp::SPIMaster* spi1_master = nullptr;
 static imu::BMI088* bmi088 = nullptr;
 static bsp::GPIO* bmi088_accel_cs = nullptr;
 static bsp::GPIO* bmi088_gyro_cs = nullptr;
@@ -57,22 +57,21 @@ void RM_RTOS_Init(void) {
     };
     bmi088 = new imu::BMI088(bmi088Init);
     bmi088->SetDMA(true);
-    while(bmi088->Init());
-
-
+    while (bmi088->Init())
+        ;
 }
 
 void RM_RTOS_Default_Task(const void* arguments) {
     UNUSED(arguments);
-    while(true){
+    while (true) {
         clear_screen();
-        set_cursor(0,0);
-        print("Accel: x: %.2f y: %.2f z: %.2f\r\n"
+        set_cursor(0, 0);
+        print(
+            "Accel: x: %.2f y: %.2f z: %.2f\r\n"
             "Gyro: x: %.2f y:%.2f z: %.2f"
             "Tempreture: %.2f",
-            bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2],
-            bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2],
-            bmi088->temperature_);
+            bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2], bmi088->gyro_[0],
+            bmi088->gyro_[1], bmi088->gyro_[2], bmi088->temperature_);
         osDelay(30);
     }
 }
