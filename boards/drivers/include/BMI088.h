@@ -306,7 +306,8 @@ namespace imu {
         void SetDMA(bool dma);
         bool IsReady();
         uint8_t Init();
-        void Read();
+        void Read(float* gyro, float* accel, float* temperate);
+        void Read_IT();
         void temperature_read_over(uint8_t* rx_buf, float* temperate);
         void accel_read_over(uint8_t* rx_buf, float accel[3], float* time);
         void gyro_read_over(uint8_t* rx_buf, float gyro[3]);
@@ -333,7 +334,7 @@ namespace imu {
 
         float gyro_[3];
         float accel_[3];
-        float temperate_;
+        float temperature_;
         float time_;
 
 

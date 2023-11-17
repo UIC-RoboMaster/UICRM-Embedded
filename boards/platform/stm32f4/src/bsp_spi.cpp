@@ -164,6 +164,7 @@ namespace bsp {
     SPIMaster::SPIMaster(spi_master_init_t init) {
         spi_ = init.spi;
         spi_->RegisterCallback(CallbackWrapper);
+        ptr_map[spi_] = this;
     }
 
         SPIMaster::~SPIMaster() {
