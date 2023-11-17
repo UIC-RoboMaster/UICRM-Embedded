@@ -864,12 +864,13 @@ namespace bsp {
     }
 
     void DMACallbackWrapper(SPI_HandleTypeDef* hspi) {
+        IMU_typeC* imu = IMU_typeC::FindInstance(hspi);
+        if (!imu)
+            return;
         if (__HAL_DMA_GET_FLAG(hspi->hdmarx, __HAL_DMA_GET_TC_FLAG_INDEX(hspi->hdmarx)) != RESET) {
             __HAL_DMA_CLEAR_FLAG(hspi->hdmarx, __HAL_DMA_GET_TC_FLAG_INDEX(hspi->hdmarx));
 
-            IMU_typeC* imu = IMU_typeC::FindInstance(hspi);
-            if (!imu)
-                return;
+
 
             // gyro read over
             if (imu->gyro_update_flag & (1 << IMU_SPI_SHFITS)) {

@@ -65,7 +65,6 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Default_Task(const void* arguments) {
     UNUSED(arguments);
     while(true){
-        bmi088->Read_IT();
         clear_screen();
         set_cursor(0,0);
         print("Accel: x: %.2f y: %.2f z: %.2f\r\n"

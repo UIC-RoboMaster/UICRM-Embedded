@@ -404,6 +404,7 @@ namespace imu {
                     instance_->accel_temp_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
                     instance_->spi_device_accel_->FinishTransmit();
                 }
+                instance_->imu_cmd_spi();
 
     }
 
@@ -415,10 +416,12 @@ namespace imu {
                     instance_->gyro_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
                     instance_->spi_device_gyro_->FinishTransmit();
                 }
+                instance_->imu_cmd_spi();
 
                 if (instance_->gyro_update_flag & (1 << BMI088_IMU_UPDATE_SHFITS)) {
                     instance_->gyro_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
                     instance_->gyro_update_flag |= (1 << BMI088_IMU_NOTIFY_SHFITS);
+                    instance_->Read_IT();
                     instance_->RxCompleteCallback();
                 }
     }
