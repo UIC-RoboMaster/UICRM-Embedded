@@ -27,6 +27,11 @@
 
 namespace control {
 
+
+    /**
+     * @brief 不同云台的电机偏移角度、最大角度、最小角度
+     * @note 除了最小角度由用户决定，其他都应该通过读取编码器值通过uart/gdb获取
+     */
     /**
      * @brief offset, max, and proximity angles of different gimbals
      * @note except for proximity is determined by user, these should be obtained
@@ -42,6 +47,9 @@ namespace control {
     } gimbal_data_t;
 
     /**
+     * @brief 云台PID参数
+     */
+    /**
      * @brief the pid of gimbal.
      */
     typedef struct {
@@ -51,6 +59,9 @@ namespace control {
         ConstrainedPID* yaw_omega_pid;
     } gimbal_pid_t;
 
+    /**
+     * @brief 标准云台结构体
+     */
     /**
      * @brief structure used when gimbal instance is initialized
      */
@@ -62,10 +73,19 @@ namespace control {
     } gimbal_t;
 
     /**
+     * @brief 云台类
+     * @details 用于控制云台，标准云台类的实现是控制两个6020电机
+     */
+    /**
      * @brief wrapper class for gimbal
      */
     class Gimbal {
       public:
+        /**
+         * @brief 构造函数
+         *
+         * @param gimbal 用于初始化云台的结构体，参考gimbal_t
+         */
         /**
          * @brief constructor for gimbal
          *
@@ -75,10 +95,18 @@ namespace control {
         Gimbal(gimbal_t gimbal);
 
         /**
+         * @brief 析构函数
+         */
+        /**
          * @brief destructor for gimbal
          */
         ~Gimbal();
 
+        /**
+         * @brief 获取云台相关常量
+         *
+         * @return 参考gimbal_data_t
+         */
         /**
          * @brief get gimbal related constants
          *
@@ -87,19 +115,42 @@ namespace control {
         gimbal_data_t* GetData();
 
         /**
-         * @brief get gimbal replace
+         * @brief 更新云台的PID参数
+         * @param pid 新的PID参数
+         */
+        /**
+         * @brief update the pid of the gimbal
          * @param pid the new PID of the gimbal
          */
         void SetPID(gimbal_pid_t pid);
 
+        /**
+         * @brief 计算当前云台的输出
+         * @note 不会立即控制电机
+         */
         /**
          * @brief calculate the output of the motors under current configuration
          * @note does not command the motor immediately
          */
         void Update();
 
+        /**
+         * @brief 基于当前传感器数据更新云台的输出
+         * @param pitch 陀螺仪测量的pitch角度，范围为[-pi, pi]
+         * @param yaw 陀螺仪测量的yaw角度，范围为[-pi, pi]
+         */
+         /**
+          * @brief update the output of the motors based on current sensor data
+          * @param pitch pitch angle measured by gyroscope, range is [-pi, pi]
+          * @param yaw yaw angle measured by gyroscope, range is [-pi, pi]
+          */
         void UpdateIMU(float pitch, float yaw);
 
+        /**
+         * @brief 将云台指向新的方向，是绝对于车身零点的角度
+         * @param new_pitch 新的pitch角度
+         * @param new_yaw 新的yaw角度
+         */
         /**
          * @brief set motors to point to a new orientation
          *
@@ -109,6 +160,12 @@ namespace control {
         void TargetAbs(float new_pitch, float new_yaw);
 
         /**
+         * @brief 将云台指向新的方向，是相对于当前方向的角度
+         *
+         * @param new_pitch 新的pitch角度
+         * @param new_yaw 新的yaw角度
+         */
+        /**
          * @brief set motors to point to a new orientation
          *
          * @param new_pitch new pitch angled
@@ -117,6 +174,12 @@ namespace control {
         void TargetRel(float new_pitch, float new_yaw);
 
         /**
+         * @brief 将云台指向新的方向，是绝对于车身零点的角度，并且忽略自身偏移量
+         *
+         * @param abs_pitch 新的pitch角度
+         * @param abs_yaw 新的yaw角度
+         */
+        /**
          * @brief set motors to point to a new orientation
          *
          * @param abs_pitch new pitch max angle
@@ -124,6 +187,12 @@ namespace control {
          */
         void TargetAbsWOffset(float abs_pitch, float abs_yaw);
 
+        /**
+         * @brief 更新云台的偏移量
+         *
+         * @param pitch_offset 新的pitch偏移量
+         * @param yaw_offset 新的yaw偏移量
+         */
         /**
          * @brief update the offset of the gimbal
          *

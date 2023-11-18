@@ -91,14 +91,65 @@
 #define UI_Color_White 8
 
 namespace communication {
-
+    /**
+     * @brief 裁判系统UI类
+     */
+    /**
+     * @brief Referee system UI class
+     */
     class UserInterface {
       public:
+        /**
+         * @brief 构造函数
+         * @param uart 裁判系统所使用的串口
+         * @param referee 裁判系统对象
+         */
+         /**
+          * @brief constructor
+          * @param uart UART used by referee system
+          * @param referee referee system object
+          */
         UserInterface(bsp::UART* uart, communication::Referee* referee);
+        /**
+         * @brief 设置机器人ID
+         * @param Robot_ID 需要设置的机器人ID
+         * @return true为设置成功，false为设置失败
+         */
+        /**
+         *
+         * @param Robot_ID
+         * @return
+         */
         bool SetID(int Robot_ID);
+        /**
+         * @brief 生成一条线的图形数据
+         * @param image 图形数据
+         * @param name 图形名称
+         * @param graph_operate 图形操作
+         * @param graph_layer 图形层级
+         * @param graph_color 图形颜色
+         * @param graph_width 图形宽度
+         * @param start_x 起始点x坐标
+         * @param start_y 起始点y坐标
+         * @param end_x 终止点x坐标
+         * @param end_y 终止点y坐标
+         */
         static void LineDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
                              uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
                              uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y);
+        /**
+         *
+         * @param image
+         * @param name
+         * @param graph_operate
+         * @param graph_layer
+         * @param graph_color
+         * @param graph_width
+         * @param start_x
+         * @param start_y
+         * @param end_x
+         * @param end_y
+         */
         static void RectangleDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
                                   uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
                                   uint32_t start_x, uint32_t start_y, uint32_t end_x,
