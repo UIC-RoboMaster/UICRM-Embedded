@@ -50,6 +50,9 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(2000);
 
     while (true) {
-        osDelay(1);
+        for (int i = 0; i < 12; i++) {
+            OLED->ShowPic(display::cat[i]);
+            osDelay(1);
+        }
     }
 }
