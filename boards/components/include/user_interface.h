@@ -104,11 +104,11 @@ namespace communication {
          * @param uart 裁判系统所使用的串口
          * @param referee 裁判系统对象
          */
-         /**
-          * @brief constructor
-          * @param uart UART used by referee system
-          * @param referee referee system object
-          */
+        /**
+         * @brief constructor
+         * @param uart UART used by referee system
+         * @param referee referee system object
+         */
         UserInterface(bsp::UART* uart, communication::Referee* referee);
         /**
          * @brief 设置机器人ID

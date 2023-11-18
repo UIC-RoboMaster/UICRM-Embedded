@@ -27,7 +27,6 @@
 
 namespace control {
 
-
     /**
      * @brief 不同云台的电机偏移角度、最大角度、最小角度
      * @note 除了最小角度由用户决定，其他都应该通过读取编码器值通过uart/gdb获取
@@ -139,11 +138,11 @@ namespace control {
          * @param pitch 陀螺仪测量的pitch角度，范围为[-pi, pi]
          * @param yaw 陀螺仪测量的yaw角度，范围为[-pi, pi]
          */
-         /**
-          * @brief update the output of the motors based on current sensor data
-          * @param pitch pitch angle measured by gyroscope, range is [-pi, pi]
-          * @param yaw yaw angle measured by gyroscope, range is [-pi, pi]
-          */
+        /**
+         * @brief update the output of the motors based on current sensor data
+         * @param pitch pitch angle measured by gyroscope, range is [-pi, pi]
+         * @param yaw yaw angle measured by gyroscope, range is [-pi, pi]
+         */
         void UpdateIMU(float pitch, float yaw);
 
         /**

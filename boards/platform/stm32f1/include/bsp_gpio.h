@@ -123,7 +123,9 @@ namespace bsp {
         /**
          * @brief register interrupt callback function
          */
-        void RegisterCallback(gpit_callback_t callback) {callback_ = callback;};
+        void RegisterCallback(gpit_callback_t callback) {
+            callback_ = callback;
+        };
 
         /**
          * @brief 虚拟中断回调函数，需要在子类中实现。
@@ -131,7 +133,9 @@ namespace bsp {
         /**
          * @brief Callback back when interrupt happens
          */
-        virtual void IntCallback() {callback_();};
+        virtual void IntCallback() {
+            callback_();
+        };
 
         /**
          * @brief 全局中断回调函数
