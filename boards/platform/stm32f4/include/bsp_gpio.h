@@ -93,6 +93,8 @@ namespace bsp {
         uint8_t state_;
     };
 
+    typedef void (*gpit_callback_t)();
+
     /**
      * @brief 通用中断引脚管理类
      * @details 用于通用中断引脚的管理
@@ -116,12 +118,20 @@ namespace bsp {
         GPIT(uint16_t pin);
 
         /**
+         * @brief 注册中断回调函数
+         */
+        /**
+         * @brief register interrupt callback function
+         */
+        void RegisterCallback(gpit_callback_t callback) {callback_ = callback;};
+
+        /**
          * @brief 虚拟中断回调函数，需要在子类中实现。
          */
         /**
          * @brief Callback back when interrupt happens
          */
-        virtual void IntCallback() = 0;
+        virtual void IntCallback() {callback_();};
 
         /**
          * @brief 全局中断回调函数
@@ -141,6 +151,8 @@ namespace bsp {
         static GPIT* gpits[NUM_GPITS];
 
         uint16_t pin_;
+
+        gpit_callback_t callback_ = []() {};
     };
 
 } /* namespace bsp */

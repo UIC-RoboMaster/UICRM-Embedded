@@ -1,5 +1,6 @@
 get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 set(BOARD_NAME ${CURRENT_DIR_NAME})
+add_subdirectory(BMI088)
 add_subdirectory(buzzer)
 add_subdirectory(dbus)
 add_subdirectory(led)

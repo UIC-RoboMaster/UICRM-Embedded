@@ -252,20 +252,6 @@
 #define BMI088_IMU_NOTIFY_SHFITS 3
 
 namespace imu {
-    typedef struct {
-        uint8_t status;
-        int16_t accel[3];
-        int16_t temp;
-        int16_t gyro[3];
-    } __packed BMI088_raw_data_t;
-
-    typedef struct {
-        uint8_t status;
-        float accel[3];
-        float temp;
-        float gyro[3];
-        float time;
-    } BMI088_real_data_t;
 
     enum {
         BMI088_NO_ERROR = 0x00,
@@ -288,21 +274,31 @@ namespace imu {
         BMI088_NO_SENSOR = 0xFF,
     };
 
-    typedef struct {
-        bsp::SPI* spi;
+    struct BMI088_init_t {
+        bsp::SPIMaster* spi_master;
         bsp::GPIO* CS_ACCEL;
         bsp::GPIO* CS_GYRO;
-    } BMI088_init_t;
+        bsp::GPIT* INT_ACCEL= nullptr;
+        bsp::GPIT* INT_GYRO= nullptr;
+    };
+
+    typedef void (*BMI088_callback_t)();
 
     class BMI088 {
       public:
         BMI088(BMI088_init_t init);
-        BMI088(bsp::SPI* spi, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO);
+        BMI088(bsp::SPIMaster* spi_master, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO, bsp::GPIT* INT_ACCEL= nullptr, bsp::GPIT* INT_GYRO= nullptr);
+        void RegisterCallback(BMI088_callback_t callback);
+        void SetDMA(bool dma);
         bool IsReady();
-        void Read(float gyro[3], float accel[3], float* temperate);
+        uint8_t Init();
+        void Read(float* gyro, float* accel, float* temperate);
+        void Read_IT();
         void temperature_read_over(uint8_t* rx_buf, float* temperate);
         void accel_read_over(uint8_t* rx_buf, float accel[3], float* time);
         void gyro_read_over(uint8_t* rx_buf, float gyro[3]);
+
+        virtual void RxCompleteCallback();
 
         volatile uint8_t gyro_update_flag = 0;
         volatile uint8_t accel_update_flag = 0;
@@ -321,30 +317,41 @@ namespace imu {
         uint8_t accel_temp_dma_rx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT];
         uint8_t accel_temp_dma_tx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT] = {0xA2, 0xFF, 0xFF, 0xFF};
 
-        void imu_cmd_spi_dma();
-        void dma_callback();
+
+        float gyro_[3];
+        float accel_[3];
+        float temperature_;
+        float time_;
+
 
       private:
-        bsp::SPI* spi_;
-        bsp::GPIO* CS_ACCEL_;
-        bsp::GPIO* CS_GYRO_;
+        bsp::SPIMaster* spi_master_;
+        bsp::SPIDevice* spi_device_accel_=nullptr;
+        bsp::SPIDevice* spi_device_gyro_=nullptr;
 
-        uint8_t Init();
+        bsp::GPIT* gpit_accel_=nullptr;
+        bsp::GPIT* gpit_gyro_=nullptr;
 
-        bool bmi088_accel_init();
-        bool bmi088_gyro_init();
+        bool dma_=true;
 
-        void BMI088_ACCEL_NS_L();
-        void BMI088_ACCEL_NS_H();
+        BMI088_callback_t callback_ = []() {};
 
-        void BMI088_GYRO_NS_L();
-        void BMI088_GYRO_NS_H();
+        //Only one BMI088 object can be created
+        static BMI088* instance_;
 
-        uint8_t BMI088_read_write_byte(uint8_t tx_data);
+        static void GyroCallbackWrapper();
 
-        void BMI088_write_single_reg(uint8_t reg, uint8_t data);
-        void BMI088_read_single_reg(uint8_t reg, uint8_t* data);
-        void BMI088_read_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len);
+        static void AccelCallbackWrapper();
+
+        static void AccelSPICallbackWrapper();
+
+        static void GyroSPICallbackWrapper();
+
+
+
+        uint8_t bmi088_accel_init();
+        uint8_t bmi088_gyro_init();
+
 
         void BMI088_accel_write_single_reg(uint8_t reg, uint8_t data);
         void BMI088_accel_read_single_reg(uint8_t reg, uint8_t* data);
@@ -353,23 +360,8 @@ namespace imu {
         void BMI088_gyro_write_single_reg(uint8_t reg, uint8_t data);
         void BMI088_gyro_read_single_reg(uint8_t reg, uint8_t* data);
         void BMI088_gyro_read_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len);
+
+        void imu_cmd_spi();
     };
 
-    class BMI088_Accel_INT : public bsp::GPIT {
-      public:
-        BMI088_Accel_INT(uint16_t INT_pin, BMI088* imu);
-
-      private:
-        BMI088* imu_;
-        void IntCallback() final;
-    };
-
-    class BMI088_Gyro_INT : public bsp::GPIT {
-      public:
-        BMI088_Gyro_INT(uint16_t INT_pin, BMI088* imu);
-
-      private:
-        BMI088* imu_;
-        void IntCallback() final;
-    };
 }  // namespace imu

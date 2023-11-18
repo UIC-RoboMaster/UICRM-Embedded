@@ -73,16 +73,38 @@ void RM_RTOS_Default_Task(const void *argument);
 #define RS485_DIR1_GPIO_Port GPIOC
 #define LED_Pin GPIO_PIN_0
 #define LED_GPIO_Port GPIOC
+#define LCD_DC_Pin GPIO_PIN_1
+#define LCD_DC_GPIO_Port GPIOC
+#define Accel_INT_Pin GPIO_PIN_2
+#define Accel_INT_GPIO_Port GPIOC
+#define Accel_INT_EXTI_IRQn EXTI2_IRQn
+#define Gyro_INT_Pin GPIO_PIN_3
+#define Gyro_INT_GPIO_Port GPIOC
+#define Gyro_INT_EXTI_IRQn EXTI3_IRQn
+#define ADC_VBAT_Pin GPIO_PIN_0
+#define ADC_VBAT_GPIO_Port GPIOA
+#define ADC_KEY_Pin GPIO_PIN_1
+#define ADC_KEY_GPIO_Port GPIOA
 #define Power_OUT2_EN_Pin GPIO_PIN_4
 #define Power_OUT2_EN_GPIO_Port GPIOC
 #define DBUS_Pin GPIO_PIN_5
 #define DBUS_GPIO_Port GPIOC
+#define Gyro_CS_Pin GPIO_PIN_0
+#define Gyro_CS_GPIO_Port GPIOB
+#define Accel_CS_Pin GPIO_PIN_1
+#define Accel_CS_GPIO_Port GPIOB
 #define BUZZER_Pin GPIO_PIN_2
 #define BUZZER_GPIO_Port GPIOB
+#define LCD_Light_Pin GPIO_PIN_8
+#define LCD_Light_GPIO_Port GPIOA
 #define KEY_Pin GPIO_PIN_15
 #define KEY_GPIO_Port GPIOA
 #define RS485_DIR2_Pin GPIO_PIN_3
 #define RS485_DIR2_GPIO_Port GPIOB
+#define LCD_RES_Pin GPIO_PIN_4
+#define LCD_RES_GPIO_Port GPIOB
+#define IMU_TEMP_Pin GPIO_PIN_5
+#define IMU_TEMP_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define DM_MC01_GENERAL
