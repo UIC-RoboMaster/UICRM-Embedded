@@ -274,37 +274,125 @@ namespace imu {
         BMI088_NO_SENSOR = 0xFF,
     };
 
+    /**
+     * @brief BMI088 初始化结构体
+     */
+    /**
+     * @brief BMI088 init structure
+     */
     struct BMI088_init_t {
         bsp::SPIMaster* spi_master;
         bsp::GPIO* CS_ACCEL;
         bsp::GPIO* CS_GYRO;
-        bsp::GPIT* INT_ACCEL= nullptr;
-        bsp::GPIT* INT_GYRO= nullptr;
+        bsp::GPIT* INT_ACCEL = nullptr;
+        bsp::GPIT* INT_GYRO = nullptr;
+        bool is_DMA = true;
     };
 
+    /**
+     * @brief BMI088 回调函数
+     * @details BMI088 读取完成后的回调函数
+     * @note 由于BMI088的读取是通过DMA或者中断完成的，所以需要回调函数来通知主程序读取完成
+     */
+    /**
+     * @brief BMI088 callback function
+     * @details BMI088 callback function after reading
+     * @note Because the reading of BMI088 is completed through DMA or interrupt, a callback
+     * function is needed to notify the main program that the reading is completed
+     */
     typedef void (*BMI088_callback_t)();
 
+    /**
+     * @brief BMI088 陀螺仪和加速度计
+     * @details BMI088是一款由BOSCH公司生产的高性能陀螺仪和加速度计
+     */
+    /**
+     * @brief BMI088 gyroscope and accelerometer
+     * @details BMI088 is a high-performance gyroscope and accelerometer produced by BOSCH
+     */
     class BMI088 {
       public:
+        /**
+         * @brief 构造函数
+         * @param init 初始化结构体
+         */
+        /**
+         * @brief constructor
+         * @param init init structure
+         */
         BMI088(BMI088_init_t init);
-        BMI088(bsp::SPIMaster* spi_master, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO, bsp::GPIT* INT_ACCEL= nullptr, bsp::GPIT* INT_GYRO= nullptr);
+        /**
+         * @brief 构造函数
+         * @param spi_master SPI总线
+         * @param CS_ACCEL 加速度计片选引脚
+         * @param CS_GYRO 陀螺仪片选引脚
+         * @param INT_ACCEL 加速度计中断引脚
+         * @param INT_GYRO 陀螺仪中断引脚
+         */
+        /**
+         * @brief constructor
+         * @param spi_master SPI bus
+         * @param CS_ACCEL accelerometer chip select pin
+         * @param CS_GYRO gyroscope chip select pin
+         * @param INT_ACCEL accelerometer interrupt pin
+         * @param INT_GYRO gyroscope interrupt pin
+         */
+        BMI088(bsp::SPIMaster* spi_master, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO,
+               bsp::GPIT* INT_ACCEL = nullptr, bsp::GPIT* INT_GYRO = nullptr, bool is_DMA = true);
+        /**
+         * @brief 注册回调函数
+         * @param callback 回调函数
+         */
+        /**
+         * @brief register callback function
+         * @param callback callback function
+         */
         void RegisterCallback(BMI088_callback_t callback);
-        void SetDMA(bool dma);
+        /**
+         * @brief 判断是否初始化完成
+         * @return true为初始化完成，false为初始化未完成
+         */
+        /**
+         * @brief Determine whether the initialization is complete
+         * @return true for initialization completed, false for initialization not completed
+         */
         bool IsReady();
-        uint8_t Init();
+
+        float gyro_[3];
+        float accel_[3];
+        float temperature_;
+        float time_;
+
+      protected:
+        /**
+         * @brief 在阻塞模式下读取陀螺仪和加速度计数据
+         * @param gyro 陀螺仪数据的指针
+         * @param accel 加速度计数据的指针
+         * @param temperate 温度数据的指针
+         */
+        /**
+         * @brief Read gyroscope and accelerometer data in blocking mode
+         * @param gyro pointer to gyroscope data
+         * @param accel pointer to accelerometer data
+         * @param temperate pointer to temperature data
+         */
         void Read(float* gyro, float* accel, float* temperate);
+        /**
+         * @brief 在中断或者DMA模式下读取陀螺仪数据
+         */
+        /**
+         * @brief Read gyroscope data in interrupt or DMA mode
+         */
         void Read_IT();
         void temperature_read_over(uint8_t* rx_buf, float* temperate);
         void accel_read_over(uint8_t* rx_buf, float accel[3], float* time);
         void gyro_read_over(uint8_t* rx_buf, float gyro[3]);
 
-        virtual void RxCompleteCallback();
-
         volatile uint8_t gyro_update_flag = 0;
         volatile uint8_t accel_update_flag = 0;
         volatile uint8_t accel_temp_update_flag = 0;
         volatile uint8_t mag_update_flag = 0;
-        volatile uint8_t imu_start_dma_flag = 0;
+        volatile uint8_t bmi088_start_flag = 0;
 
         uint8_t gyro_dma_rx_buf[BMI088_SPI_DMA_GYRO_LENGHT];
         uint8_t gyro_dma_tx_buf[BMI088_SPI_DMA_GYRO_LENGHT] = {0x82, 0xFF, 0xFF, 0xFF,
@@ -317,26 +405,21 @@ namespace imu {
         uint8_t accel_temp_dma_rx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT];
         uint8_t accel_temp_dma_tx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT] = {0xA2, 0xFF, 0xFF, 0xFF};
 
-
-        float gyro_[3];
-        float accel_[3];
-        float temperature_;
-        float time_;
-
+        virtual void RxCompleteCallback();
 
       private:
         bsp::SPIMaster* spi_master_;
-        bsp::SPIDevice* spi_device_accel_=nullptr;
-        bsp::SPIDevice* spi_device_gyro_=nullptr;
+        bsp::SPIDevice* spi_device_accel_ = nullptr;
+        bsp::SPIDevice* spi_device_gyro_ = nullptr;
 
-        bsp::GPIT* gpit_accel_=nullptr;
-        bsp::GPIT* gpit_gyro_=nullptr;
+        bsp::GPIT* gpit_accel_ = nullptr;
+        bsp::GPIT* gpit_gyro_ = nullptr;
 
-        bool dma_=true;
+        bool dma_ = true;
 
         BMI088_callback_t callback_ = []() {};
 
-        //Only one BMI088 object can be created
+        // Only one BMI088 object can be created
         static BMI088* instance_;
 
         static void GyroCallbackWrapper();
@@ -347,11 +430,14 @@ namespace imu {
 
         static void GyroSPICallbackWrapper();
 
-
+        /**
+         * @brief 初始化BMI088
+         * @return BMI088_NO_ERROR为初始化成功，其他为初始化失败
+         */
+        uint8_t Init();
 
         uint8_t bmi088_accel_init();
         uint8_t bmi088_gyro_init();
-
 
         void BMI088_accel_write_single_reg(uint8_t reg, uint8_t data);
         void BMI088_accel_read_single_reg(uint8_t reg, uint8_t* data);

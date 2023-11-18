@@ -54,11 +54,9 @@ void RM_RTOS_Init(void) {
         .CS_GYRO = bmi088_gyro_cs,
         .INT_ACCEL = bmi088_accel_int,
         .INT_GYRO = bmi088_gyro_int,
+        .is_DMA = false,
     };
     bmi088 = new imu::BMI088(bmi088Init);
-    bmi088->SetDMA(false);
-    while (bmi088->Init())
-        ;
 }
 
 void RM_RTOS_Default_Task(const void* arguments) {
