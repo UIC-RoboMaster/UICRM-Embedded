@@ -23,7 +23,7 @@
 #include "oled_fonts/pic.h"
 
 namespace display {
-    picture_t cat[12] = {{
+    const picture_t cat[12] = {{
                              .data =
                                  {
                                      {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
