@@ -21,11 +21,6 @@
 #include "BMI088.h"
 
 #include <string.h>
-#ifdef F103_Nano
-#include "task.h"
-// F103 use Older version of FreeRTOS, Must include task.h to enable some RTOS features.
-// this method will be rewrite in future version.
-#endif
 
 namespace imu {
 
@@ -346,8 +341,6 @@ namespace imu {
     }
 
     void BMI088::imu_cmd_spi() {
-                UBaseType_t uxSavedInterruptStatus;
-                uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
 
                 if ((gyro_update_flag & (1 << BMI088_IMU_DR_SHFITS)) && !spi_master_->IsBusy() &&
                     !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
@@ -357,7 +350,6 @@ namespace imu {
                     spi_device_gyro_->PrepareTransmit();
                     spi_master_->TransmitReceive(spi_device_gyro_,gyro_dma_tx_buf, gyro_dma_rx_buf,
                                    BMI088_SPI_DMA_GYRO_LENGHT);
-                    taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
                     return;
                 }
 
@@ -370,7 +362,6 @@ namespace imu {
                     spi_device_accel_->PrepareTransmit();
                     spi_master_->TransmitReceive(spi_device_accel_,accel_dma_tx_buf, accel_dma_rx_buf,
                                    BMI088_SPI_DMA_ACCEL_LENGHT);
-                    taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
                     return;
                 }
                 if ((accel_temp_update_flag & (1 << BMI088_IMU_DR_SHFITS)) &&
@@ -383,10 +374,8 @@ namespace imu {
                     spi_device_accel_->PrepareTransmit();
                     spi_master_->TransmitReceive(spi_device_accel_,accel_temp_dma_tx_buf, accel_temp_dma_rx_buf,
                                    BMI088_SPI_DMA_ACCEL_TEMP_LENGHT);
-                    taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
                     return;
                 }
-                taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
     }
 
 
