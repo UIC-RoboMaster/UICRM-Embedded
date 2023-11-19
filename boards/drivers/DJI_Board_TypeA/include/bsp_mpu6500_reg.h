@@ -20,6 +20,7 @@
 
 #pragma once
 
+
 #define MPU6500_SELF_TEST_XG 0x00
 #define MPU6500_SELF_TEST_YG 0x01
 #define MPU6500_SELF_TEST_ZG 0x02
