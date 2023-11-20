@@ -60,15 +60,20 @@
 extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 extern DMA_HandleTypeDef hdma_adc1;
 extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc2;
+extern ADC_HandleTypeDef hadc3;
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
+extern DAC_HandleTypeDef hdac;
 extern DMA_HandleTypeDef hdma_sdio_tx;
 extern DMA_HandleTypeDef hdma_sdio_rx;
 extern SD_HandleTypeDef hsd;
 extern DMA_HandleTypeDef hdma_spi5_rx;
 extern DMA_HandleTypeDef hdma_spi5_tx;
 extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi4;
 extern SPI_HandleTypeDef hspi5;
+extern TIM_HandleTypeDef htim8;
 extern TIM_HandleTypeDef htim12;
 extern DMA_HandleTypeDef hdma_uart7_rx;
 extern DMA_HandleTypeDef hdma_uart8_rx;
@@ -81,9 +86,10 @@ extern DMA_HandleTypeDef hdma_usart6_tx;
 extern UART_HandleTypeDef huart7;
 extern UART_HandleTypeDef huart8;
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
-extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN EV */
 
@@ -186,17 +192,17 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles EXTI line4 interrupt.
+  * @brief This function handles EXTI line3 interrupt.
   */
-void EXTI4_IRQHandler(void)
+void EXTI3_IRQHandler(void)
 {
-  /* USER CODE BEGIN EXTI4_IRQn 0 */
+  /* USER CODE BEGIN EXTI3_IRQn 0 */
 
-  /* USER CODE END EXTI4_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(POKER_IT_Pin);
-  /* USER CODE BEGIN EXTI4_IRQn 1 */
+  /* USER CODE END EXTI3_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(IST8310_DRDY_Pin);
+  /* USER CODE BEGIN EXTI3_IRQn 1 */
 
-  /* USER CODE END EXTI4_IRQn 1 */
+  /* USER CODE END EXTI3_IRQn 1 */
 }
 
 /**
@@ -278,6 +284,8 @@ void ADC_IRQHandler(void)
 
   /* USER CODE END ADC_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
+  HAL_ADC_IRQHandler(&hadc2);
+  HAL_ADC_IRQHandler(&hadc3);
   /* USER CODE BEGIN ADC_IRQn 1 */
 
   /* USER CODE END ADC_IRQn 1 */
@@ -319,25 +327,11 @@ void EXTI9_5_IRQHandler(void)
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
   /* USER CODE END EXTI9_5_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
   HAL_GPIO_EXTI_IRQHandler(MPU6500_IT_Pin);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 
   /* USER CODE END EXTI9_5_IRQn 1 */
-}
-
-/**
-  * @brief This function handles TIM3 global interrupt.
-  */
-void TIM3_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM3_IRQn 0 */
-
-  /* USER CODE END TIM3_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim3);
-  /* USER CODE BEGIN TIM3_IRQn 1 */
-
-  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**
@@ -369,6 +363,20 @@ void USART1_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles USART2 global interrupt.
+  */
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+  RM_UART_IRQHandler(&huart2);
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+
+  /* USER CODE END USART2_IRQn 1 */
+}
+
+/**
   * @brief This function handles USART3 global interrupt.
   */
 void USART3_IRQHandler(void)
@@ -390,6 +398,7 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 0 */
 
   /* USER CODE END TIM8_BRK_TIM12_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim8);
   HAL_TIM_IRQHandler(&htim12);
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
 
@@ -408,6 +417,23 @@ void SDIO_IRQHandler(void)
   /* USER CODE BEGIN SDIO_IRQn 1 */
 
   /* USER CODE END SDIO_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM6 global interrupt, DAC1 and DAC2 underrun error interrupts.
+  */
+void TIM6_DAC_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM6_DAC_IRQn 0 */
+
+  /* USER CODE END TIM6_DAC_IRQn 0 */
+  if (hdac.State != HAL_DAC_STATE_RESET) {
+    HAL_DAC_IRQHandler(&hdac);
+  }
+  HAL_TIM_IRQHandler(&htim6);
+  /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
+
+  /* USER CODE END TIM6_DAC_IRQn 1 */
 }
 
 /**
@@ -604,6 +630,20 @@ void UART8_IRQHandler(void)
   /* USER CODE BEGIN UART8_IRQn 1 */
 
   /* USER CODE END UART8_IRQn 1 */
+}
+
+/**
+  * @brief This function handles SPI4 global interrupt.
+  */
+void SPI4_IRQHandler(void)
+{
+  /* USER CODE BEGIN SPI4_IRQn 0 */
+
+  /* USER CODE END SPI4_IRQn 0 */
+  HAL_SPI_IRQHandler(&hspi4);
+  /* USER CODE BEGIN SPI4_IRQn 1 */
+
+  /* USER CODE END SPI4_IRQn 1 */
 }
 
 /**

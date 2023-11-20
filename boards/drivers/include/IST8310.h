@@ -68,7 +68,7 @@ namespace imu {
         bool IsReady();
         void RegisterCallback(ist8310_callback_t callback);
         void ist8310_read_over(uint8_t* status_buf, IST8310_real_data_t* ist8310_real_data);
-        float mag[3];
+        float mag_[3];
 
       private:
         uint8_t Init();

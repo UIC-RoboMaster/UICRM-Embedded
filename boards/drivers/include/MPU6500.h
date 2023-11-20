@@ -1,24 +1,36 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
- #                                                          #
- # This program is free software: you can redistribute it   #
- # and/or modify it under the terms of the GNU General      #
- # Public License as published by the Free Software         #
- # Foundation, either version 3 of the License, or (at      #
- # your option) any later version.                          #
- #                                                          #
- # This program is distributed in the hope that it will be  #
- # useful, but WITHOUT ANY WARRANTY; without even           #
- # the implied warranty of MERCHANTABILITY or FITNESS       #
- # FOR A PARTICULAR PURPOSE.  See the GNU General           #
- # Public License for more details.                         #
- #                                                          #
- # You should have received a copy of the GNU General       #
- # Public License along with this program.  If not, see     #
- # <https://www.gnu.org/licenses/>.                         #
- ###########################################################*/
+# Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+#                                                          #
+# This program is free software: you can redistribute it   #
+# and/or modify it under the terms of the GNU General      #
+# Public License as published by the Free Software         #
+# Foundation, either version 3 of the License, or (at      #
+# your option) any later version.                          #
+#                                                          #
+# This program is distributed in the hope that it will be  #
+# useful, but WITHOUT ANY WARRANTY; without even           #
+# the implied warranty of MERCHANTABILITY or FITNESS       #
+# FOR A PARTICULAR PURPOSE.  See the GNU General           #
+# Public License for more details.                         #
+#                                                          #
+# You should have received a copy of the GNU General       #
+# Public License along with this program.  If not, see     #
+# <https://www.gnu.org/licenses/>.                         #
+###########################################################*/
 
 #pragma once
+#include "main.h"
+#include "bsp_gpio.h"
+#include "bsp_spi.h"
+#include "imu_info.h"
+#include <math.h>
+#define MPU6500_DELAY 55  // SPI delay
+// configured with initialization sequences
+#define MPU6500_ACC_FACTOR 4096.0f
+#define MPU6500_GYRO_FACTOR 32.768f
+
+// acc (6 bytes) + temp (2 bytes) + gyro (6 bytes) + mag_ (6 bytes)
+#define MPU6500_SIZEOF_DATA 20
 
 #define MPU6500_SELF_TEST_XG 0x00
 #define MPU6500_SELF_TEST_YG 0x01
@@ -127,3 +139,73 @@
 #define MPU6500_ID 0x70
 
 #define MPU6500_IIC_ADDR 0x68
+
+namespace driver{
+    typedef struct {
+        float x;
+        float y;
+        float z;
+    } vec3f_t;
+
+    typedef struct {
+        bsp::SPIMaster* spi;
+        bsp::GPIO* cs;
+        bsp::GPIT* int_pin;
+        bool use_mag=false;
+        bool dma=true;
+    }mpu6500_init_t;
+
+    class MPU6500 {
+      public:
+        /**
+         * @brief constructor for a MPU6500 IMU sensor
+         *
+         * @param hspi         HAL SPI handle associated with the sensor
+         * @param chip_select  chip select gpio pin
+         * @param int_pin      interrupt pin number
+         */
+        MPU6500(mpu6500_init_t init);
+
+        /**
+         * @brief reset sensor registers
+         */
+        void Reset();
+
+
+        float gyro_[3];
+        float accel_[3];
+        float mag_[3];
+        float temperature_;
+        float time_;
+
+      private:
+        /**
+         * @brief sample latest sensor data
+         */
+        void UpdateData();
+
+        void IST8310Init();
+        void WriteReg(uint8_t reg, uint8_t data);
+        void WriteRegs(uint8_t reg_start, uint8_t* data, uint8_t len);
+        void ReadReg(uint8_t reg, uint8_t* data);
+        void ReadRegs(uint8_t reg_start, uint8_t* data, uint8_t len);
+
+        void SPITxRxCpltCallback();
+        static void IntCallback();
+
+        bsp::SPIMaster* spi_;
+        bsp::SPIDevice* spi_device_;
+        bsp::GPIO* cs_;
+        bsp::GPIT* int_pin_;
+
+        bool use_mag_;
+        bool dma_;
+
+        uint8_t io_buff_[MPU6500_SIZEOF_DATA + 1];  // spi tx+rx buffer
+
+        // global interrupt wrapper
+        // TODO(alvin): try to support multiple instances in the future
+        static void SPITxRxCpltCallbackWrapper();
+        static MPU6500* instance_;
+    };
+};

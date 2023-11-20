@@ -29,7 +29,7 @@
 #include "cmsis_os.h"
 #include "spi.h"
 
-// acc (6 bytes) + temp (2 bytes) + gyro (6 bytes) + mag (6 bytes)
+// acc (6 bytes) + temp (2 bytes) + gyro (6 bytes) + mag_ (6 bytes)
 #define MPU6500_SIZEOF_DATA 20
 
 #define IST8310_DATA_READY_BIT 2
