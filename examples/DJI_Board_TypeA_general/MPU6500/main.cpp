@@ -31,7 +31,7 @@
 #define ONBOARD_IMU_CS_PIN GPIO_PIN_6
 #define PRING_UART huart8
 
-static driver::MPU6500* imu = nullptr;
+static imu::MPU6500* mpu6500 = nullptr;
 static bsp::GPIO* imu_cs = nullptr;
 static bsp::GPIT* mpu6500_it = nullptr;
 static bsp::SPI* spi5 = nullptr;
@@ -46,14 +46,14 @@ void RM_RTOS_Init(void) {
         .spi = spi5,
     };
     spi5_master = new bsp::SPIMaster(spi5_master_init);
-    driver::mpu6500_init_t mpu6500_init = {
+    imu::mpu6500_init_t mpu6500_init = {
         .spi = spi5_master,
         .cs = imu_cs,
         .int_pin = mpu6500_it,
         .use_mag = true,
         .dma = true,
     };
-    imu = new driver::MPU6500(mpu6500_init);
+    mpu6500 = new imu::MPU6500(mpu6500_init);
     bsp::SetHighresClockTimer(&htim7);
     print_use_uart(&PRING_UART);
 }
@@ -67,14 +67,14 @@ void RM_RTOS_Default_Task(const void* arguments) {
     while (true) {
         set_cursor(0, 0);
         clear_screen();
-        print("Temp: %10.4f\r\n", imu->temperature_);
-        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", imu->accel_[0], imu->accel_[1],
-              imu->accel_[2]);
-        print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", imu->gyro_[0], imu->gyro_[1],
-              imu->gyro_[2]);
-        print("MAG_X: %9.0f MAG_Y: %9.0f MAG_Z: %9.0f\r\n", imu->mag_[0], imu->mag_[1],
-              imu->mag_[2]);
-        print("\r\nTime Stamp: %.2f us\r\n", imu->time_);
+        print("Temp: %10.4f\r\n", mpu6500->temperature_);
+        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", mpu6500->accel_[0], mpu6500->accel_[1],
+              mpu6500->accel_[2]);
+        print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", mpu6500->gyro_[0], mpu6500->gyro_[1],
+              mpu6500->gyro_[2]);
+        print("MAG_X: %9.0f MAG_Y: %9.0f MAG_Z: %9.0f\r\n", mpu6500->mag_[0], mpu6500->mag_[1],
+              mpu6500->mag_[2]);
+        print("\r\nTime Stamp: %.2f us\r\n", mpu6500->time_);
         osDelay(100);
     }
 }

@@ -29,7 +29,14 @@
 namespace bsp {
 
     /* i2c callback function pointer */
-    typedef void (*i2c_rx_callback_t)(const uint8_t data[], void* args);
+    typedef void (*i2c_rx_callback_t)();
+
+    enum i2c_mode_e { I2C_MODE_BLOCKING, I2C_MODE_IT, I2C_MODE_DMA };
+
+    typedef struct {
+        I2C_HandleTypeDef* hi2c;
+        i2c_mode_e mode;
+    } i2c_init_t;
 
     class I2C {
       public:
@@ -38,7 +45,7 @@ namespace bsp {
          *
          * @param hi2c     HAL can handle
          */
-        I2C(I2C_HandleTypeDef* hi2c, bool is_master = true, bool is_dma = false);
+        I2C(i2c_init_t init);
         /**
          * @brief check if it is associated with a given CAN handle
          *
@@ -59,6 +66,10 @@ namespace bsp {
          */
         bool isReady(uint16_t id, uint32_t timeout = 50);
 
+        void SetMode(i2c_mode_e mode);
+
+        i2c_mode_e GetMode();
+
         /**
          * @brief register callback function for a specific ID on this I2C line
          *
@@ -68,7 +79,7 @@ namespace bsp {
          *
          * @return return 0 if success, -1 if invalid std_id
          */
-        int RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback, void* args = NULL);
+        int RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback);
 
         /**
          * @brief transmit I2C messages
@@ -141,24 +152,21 @@ namespace bsp {
          */
         void RxCallback();
 
+        static void CallbackWrapper(I2C_HandleTypeDef* hi2c);
+
         static I2C* FindInstance(I2C_HandleTypeDef* hi2c);
 
       private:
         I2C_HandleTypeDef* hi2c_;
-        bool is_master_;
-        bool is_dma_;
+        i2c_mode_e mode_;
 
         i2c_rx_callback_t rx_callbacks_[MAX_I2C_DEVICES] = {0};
-        void* rx_args_[MAX_I2C_DEVICES] = {NULL};
 
         std::map<uint16_t, uint8_t> id_to_index_;
         uint8_t callback_count_ = 0;
 
         static std::map<I2C_HandleTypeDef*, I2C*> ptr_map;
         static bool HandleExists(I2C_HandleTypeDef* hi2c);
-        static void I2CRxCallback(I2C_HandleTypeDef* hi2c);
-
-        uint8_t rx_data_[MAX_I2C_DATA_SIZE] = {0};
     };
 
 } /* namespace bsp */

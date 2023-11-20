@@ -21,18 +21,14 @@
 #include "IST8310.h"
 
 namespace imu {
-    IST8310::IST8310(IST8310_init_t init) : GPIT(init.int_pin) {
-        i2c_ = init.i2c;
-        rst_group_ = init.rst_group;
-        rst_pin_ = init.rst_pin;
-        RM_ASSERT_TRUE(Init() == IST8310_NO_ERROR, "IST8310 init error");
-    }
 
-    IST8310::IST8310(bsp::I2C* i2c, uint16_t int_pin, GPIO_TypeDef* rst_group, uint16_t rst_pin)
-        : GPIT(int_pin) {
-        i2c_ = i2c;
-        rst_group_ = rst_group;
-        rst_pin_ = rst_pin;
+    IST8310* IST8310::instance_ = nullptr;
+
+    IST8310::IST8310(IST8310_init_t init) {
+        i2c_ = init.i2c;
+        rst_ = init.rst;
+        int_ = init.drdy;
+        instance_ = this;
         RM_ASSERT_TRUE(Init() == IST8310_NO_ERROR, "IST8310 init error");
     }
 
@@ -45,6 +41,8 @@ namespace imu {
     }
 
     uint8_t IST8310::Init() {
+        bsp::i2c_mode_e old_mode = i2c_->GetMode();
+        i2c_->SetMode(bsp::I2C_MODE_BLOCKING);
         const uint8_t wait_time = 1;
         const uint8_t sleepTime = 50;
         uint8_t res;
@@ -69,26 +67,15 @@ namespace imu {
             if (res != ist8310_write_reg_data_error[writeNum][1])
                 return ist8310_write_reg_data_error[writeNum][2];
         }
+        ist8310_read_mag();
+        i2c_->SetMode(old_mode);
+        i2c_->RegisterRxCallback(IST8310_IIC_ADDRESS << 1, I2CCallbackWrapper);
+        int_->RegisterCallback(IntCallbackWrapper);
+        start_flag_ = true;
         return IST8310_NO_ERROR;
     }
 
-    void IST8310::ist8310_read_over(uint8_t* status_buf, IST8310_real_data_t* ist8310_real_data) {
-        if (status_buf[0] & 0x01) {
-            int16_t temp_ist8310_data = 0;
-            ist8310_real_data->status |= 1 << IST8310_DATA_READY_BIT;
-
-            temp_ist8310_data = (int16_t)((status_buf[2] << 8) | status_buf[1]);
-            ist8310_real_data->mag[0] = MAG_SEN * temp_ist8310_data;
-            temp_ist8310_data = (int16_t)((status_buf[4] << 8) | status_buf[3]);
-            ist8310_real_data->mag[1] = MAG_SEN * temp_ist8310_data;
-            temp_ist8310_data = (int16_t)((status_buf[6] << 8) | status_buf[5]);
-            ist8310_real_data->mag[2] = MAG_SEN * temp_ist8310_data;
-        } else {
-            ist8310_real_data->status &= ~(1 << IST8310_DATA_READY_BIT);
-        }
-    }
-
-    void IST8310::ist8310_read_mag(float mag_[3]) {
+    void IST8310::ist8310_read_mag() {
         uint8_t buf[6];
         int16_t temp_ist8310_data = 0;
         // read the "DATAXL" register (0x03)
@@ -102,17 +89,40 @@ namespace imu {
         mag_[2] = MAG_SEN * temp_ist8310_data;
     }
 
+    void IST8310::cmd_i2c() {
+        if (is_transmitting_ == 0) {
+            if (start_flag_) {
+                is_transmitting_ = 1;
+                i2c_->MemoryRead(IST8310_IIC_ADDRESS << 1, 0x03, rx_buf_, 6);
+                return;
+            }
+        }
+    }
+
     void IST8310::IntCallback() {
-        ist8310_read_mag(mag_);
+        if (start_flag_) {
+            cmd_i2c();
+        }
+    }
+
+    void IST8310::I2CCallback() {
+        int16_t temp_ist8310_data = 0;
+        temp_ist8310_data = (int16_t)((rx_buf_[1] << 8) | rx_buf_[0]);
+        mag_[0] = MAG_SEN * temp_ist8310_data;
+        temp_ist8310_data = (int16_t)((rx_buf_[3] << 8) | rx_buf_[2]);
+        mag_[1] = MAG_SEN * temp_ist8310_data;
+        temp_ist8310_data = (int16_t)((rx_buf_[5] << 8) | rx_buf_[4]);
+        mag_[2] = MAG_SEN * temp_ist8310_data;
+        is_transmitting_ = 0;
         callback_(mag_);
     }
 
     void IST8310::ist8310_RST_H() {
-        HAL_GPIO_WritePin(rst_group_, rst_pin_, GPIO_PIN_SET);
+        rst_->High();
     }
 
     void IST8310::ist8310_RST_L() {
-        HAL_GPIO_WritePin(rst_group_, rst_pin_, GPIO_PIN_RESET);
+        rst_->Low();
     }
 
     uint8_t IST8310::ist8310_IIC_read_single_reg(uint8_t reg) {
@@ -131,5 +141,15 @@ namespace imu {
 
     void IST8310::ist8310_IIC_write_muli_reg(uint8_t reg, uint8_t* data, uint8_t len) {
         i2c_->MemoryWrite(IST8310_IIC_ADDRESS << 1, reg, data, len);
+    }
+    void IST8310::IntCallbackWrapper() {
+        if (instance_ == nullptr)
+            return;
+        instance_->IntCallback();
+    }
+    void IST8310::I2CCallbackWrapper() {
+        if (instance_ == nullptr)
+            return;
+        instance_->I2CCallback();
     }
 }  // namespace imu

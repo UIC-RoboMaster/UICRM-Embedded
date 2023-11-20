@@ -35,7 +35,8 @@ static bsp::I2C* i2c1 = nullptr;
 void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
     HAL_Delay(1000);
-    i2c1 = new bsp::I2C(&hi2c1);
+    bsp::i2c_init_t i2c1_init = {.hi2c = &hi2c1, .mode = bsp::I2C_MODE_BLOCKING};
+    i2c1 = new bsp::I2C(i2c1_init);
     OLED = new display::OLED(i2c1, 0x78);
     HAL_Delay(1000);
 }

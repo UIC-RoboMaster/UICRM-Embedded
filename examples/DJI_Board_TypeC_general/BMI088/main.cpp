@@ -37,7 +37,7 @@ void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
     bsp::spi_init_t spiInit = {
         .hspi = &hspi1,
-        .mode = bsp::SPI_MODE_BLOCKED,
+        .mode = bsp::SPI_MODE_DMA,
     };
     spi1 = new bsp::SPI(spiInit);
     bsp::spi_master_init_t spiMasterInit = {
@@ -54,9 +54,10 @@ void RM_RTOS_Init(void) {
         .CS_GYRO = bmi088_gyro_cs,
         .INT_ACCEL = bmi088_accel_int,
         .INT_GYRO = bmi088_gyro_int,
-        .is_DMA = true,
+        .is_DMA = false,
     };
     bmi088 = new imu::BMI088(bmi088Init);
+    HAL_Delay(1000);
 }
 
 void RM_RTOS_Default_Task(const void* arguments) {

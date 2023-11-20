@@ -49,9 +49,8 @@ static const uint8_t ist8310_write_reg_data_error[IST8310_WRITE_REG_NUM][3] = {
 namespace imu {
     typedef struct {
         bsp::I2C* i2c;
-        uint16_t int_pin;
-        GPIO_TypeDef* rst_group;
-        uint16_t rst_pin;
+        bsp::GPIT* drdy;
+        bsp::GPIO* rst;
     } IST8310_init_t;
 
     typedef struct {
@@ -61,19 +60,20 @@ namespace imu {
 
     typedef void (*ist8310_callback_t)(float mag[3]);
 
-    class IST8310 : public bsp::GPIT {
+    class IST8310 {
       public:
         IST8310(IST8310_init_t init);
-        IST8310(bsp::I2C* i2c, uint16_t int_pin, GPIO_TypeDef* rst_group, uint16_t rst_pin);
         bool IsReady();
         void RegisterCallback(ist8310_callback_t callback);
-        void ist8310_read_over(uint8_t* status_buf, IST8310_real_data_t* ist8310_real_data);
         float mag_[3];
 
       private:
         uint8_t Init();
-        void ist8310_read_mag(float mag_[3]);
-        void IntCallback() final;
+        void ist8310_read_mag();
+        static void I2CCallbackWrapper();
+        static void IntCallbackWrapper();
+        void IntCallback();
+        void I2CCallback();
 
         void ist8310_RST_H();
         void ist8310_RST_L();
@@ -83,9 +83,17 @@ namespace imu {
         void ist8310_IIC_write_muli_reg(uint8_t reg, uint8_t* data, uint8_t len);
 
         bsp::I2C* i2c_;
-        GPIO_TypeDef* rst_group_;
-        uint16_t rst_pin_;
+        bsp::GPIO* rst_;
+        bsp::GPIT* int_;
 
         ist8310_callback_t callback_ = [](float mag_tmp[3]) { UNUSED(mag_tmp); };
+
+        static IST8310* instance_;
+
+        bool start_flag_;
+
+        uint8_t rx_buf_[6];
+        uint8_t is_transmitting_ = 0;
+        void cmd_i2c();
     };
 }  // namespace imu

@@ -22,14 +22,14 @@
 
 #include "bsp_os.h"
 
-namespace driver{
+namespace imu {
     MPU6500* MPU6500::instance_ = nullptr;
 
     MPU6500::MPU6500(mpu6500_init_t init) {
-        spi_=init.spi;
-        cs_=init.cs;
-        spi_device_=spi_->NewDevice(cs_);
-        int_pin_=init.int_pin;
+        spi_ = init.spi;
+        cs_ = init.cs;
+        spi_device_ = spi_->NewDevice(cs_);
+        int_pin_ = init.int_pin;
         spi_->SetAutoCS(false);
         spi_->SetMode(bsp::SPI_MODE_BLOCKED);
         const uint8_t init_len = 7;
@@ -60,10 +60,9 @@ namespace driver{
         IST8310Init();
         // enable imu interrupt
         WriteReg(MPU6500_INT_ENABLE, 0x01);
-        if(dma_){
+        if (dma_) {
             spi_->SetMode(bsp::SPI_MODE_DMA);
-        }
-        else{
+        } else {
             spi_->SetMode(bsp::SPI_MODE_INTURRUPT);
         }
         int_pin_->RegisterCallback(IntCallback);
@@ -154,4 +153,4 @@ namespace driver{
     void MPU6500::SPITxRxCpltCallbackWrapper() {
         instance_->SPITxRxCpltCallback();
     }
-}
+}  // namespace imu

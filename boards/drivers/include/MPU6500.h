@@ -19,11 +19,12 @@
 ###########################################################*/
 
 #pragma once
-#include "main.h"
+#include <math.h>
+
 #include "bsp_gpio.h"
 #include "bsp_spi.h"
 #include "imu_info.h"
-#include <math.h>
+#include "main.h"
 #define MPU6500_DELAY 55  // SPI delay
 // configured with initialization sequences
 #define MPU6500_ACC_FACTOR 4096.0f
@@ -140,20 +141,15 @@
 
 #define MPU6500_IIC_ADDR 0x68
 
-namespace driver{
-    typedef struct {
-        float x;
-        float y;
-        float z;
-    } vec3f_t;
+namespace imu {
 
     typedef struct {
         bsp::SPIMaster* spi;
         bsp::GPIO* cs;
         bsp::GPIT* int_pin;
-        bool use_mag=false;
-        bool dma=true;
-    }mpu6500_init_t;
+        bool use_mag = false;
+        bool dma = true;
+    } mpu6500_init_t;
 
     class MPU6500 {
       public:
@@ -170,7 +166,6 @@ namespace driver{
          * @brief reset sensor registers
          */
         void Reset();
-
 
         float gyro_[3];
         float accel_[3];
@@ -208,4 +203,4 @@ namespace driver{
         static void SPITxRxCpltCallbackWrapper();
         static MPU6500* instance_;
     };
-};
+};  // namespace imu
