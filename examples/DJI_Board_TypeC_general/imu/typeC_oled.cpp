@@ -67,10 +67,7 @@ static display::OLED* oled = nullptr;
 char buffer[200];
 void RM_RTOS_Init(void) {
     print_use_uart(&huart6);
-    bsp::i2c_init_t i2c2_init={
-        .hi2c=&hi2c2,
-        .mode=bsp::I2C_MODE_BLOCKING
-    };
+    bsp::i2c_init_t i2c2_init = {.hi2c = &hi2c2, .mode = bsp::I2C_MODE_BLOCKING};
     i2c = new bsp::I2C(i2c2_init);
     oled = new display::OLED(i2c, 0x78);
     bsp::IST8310_init_t IST8310_init;
