@@ -56,9 +56,9 @@ void RM_RTOS_Default_Task(const void* arg) {
         clear_screen();
         set_cursor(0, 0);
         float x, y, z;
-        x = ist8310->mag[0];
-        y = ist8310->mag[1];
-        z = ist8310->mag[2];
+        x = ist8310->mag_[0];
+        y = ist8310->mag_[1];
+        z = ist8310->mag_[2];
         print("MAG: %.2f %.2f %.2f  \r\n", x, y, z);
         osDelay(200);
     }

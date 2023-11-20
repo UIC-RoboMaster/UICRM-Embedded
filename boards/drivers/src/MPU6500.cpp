@@ -23,10 +23,15 @@
 #include "bsp_os.h"
 
 namespace driver{
-    MPU6500* MPU6500::mpu6500 = nullptr;
+    MPU6500* MPU6500::instance_ = nullptr;
 
-    MPU6500::MPU6500(SPI_HandleTypeDef* hspi, const bsp::GPIO& chip_select, uint16_t int_pin)
-        : GPIT(int_pin), hspi_(hspi), chip_select_(chip_select) {
+    MPU6500::MPU6500(mpu6500_init_t init) {
+        spi_=init.spi;
+        cs_=init.cs;
+        spi_device_=spi_->NewDevice(cs_);
+        int_pin_=init.int_pin;
+        spi_->SetAutoCS(false);
+        spi_->SetMode(bsp::SPI_MODE_BLOCKED);
         const uint8_t init_len = 7;
         const uint8_t init_data[init_len][2] = {
             {MPU6500_PWR_MGMT_1, 0x03},      // auto select clock source
@@ -48,13 +53,20 @@ namespace driver{
                 bsp_error_handler(__FUNCTION__, __LINE__, "imu register incorrect initialization");
         }
         // setup interrupt callback
-        RM_ASSERT_FALSE(mpu6500, "Repteated intialization of MPU6500");
-        mpu6500 = this;
-        HAL_SPI_RegisterCallback(hspi, HAL_SPI_TX_RX_COMPLETE_CB_ID, &MPU6500::SPITxRxCpltCallback);
+        RM_ASSERT_FALSE(instance_, "Repteated intialization of MPU6500");
+        instance_ = this;
+        spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper);
         // initialize magnetometer
         IST8310Init();
         // enable imu interrupt
         WriteReg(MPU6500_INT_ENABLE, 0x01);
+        if(dma_){
+            spi_->SetMode(bsp::SPI_MODE_DMA);
+        }
+        else{
+            spi_->SetMode(bsp::SPI_MODE_INTURRUPT);
+        }
+        int_pin_->RegisterCallback(IntCallback);
     }
 
     void MPU6500::IST8310Init() {
@@ -73,9 +85,9 @@ namespace driver{
     }
 
     void MPU6500::UpdateData() {
-        chip_select_.Low();
+        spi_device_->PrepareTransmit();
         io_buff_[0] = MPU6500_ACCEL_XOUT_H | 0x80;
-        HAL_SPI_TransmitReceive_DMA(hspi_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA + 1);
+        spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA + 1);
     }
 
     void MPU6500::Reset() {
@@ -93,10 +105,10 @@ namespace driver{
     void MPU6500::WriteRegs(uint8_t reg_start, uint8_t* data, uint8_t len) {
         uint8_t tx = reg_start & 0x7f;
 
-        chip_select_.Low();
-        HAL_SPI_Transmit(hspi_, &tx, 1, MPU6500_DELAY);
-        HAL_SPI_Transmit(hspi_, data, len, MPU6500_DELAY);
-        chip_select_.High();
+        spi_device_->PrepareTransmit();
+        spi_->Transmit(spi_device_, &tx, 1);
+        spi_->Transmit(spi_device_, data, len);
+        spi_device_->FinishTransmit();
     }
 
     void MPU6500::ReadReg(uint8_t reg, uint8_t* data) {
@@ -104,15 +116,15 @@ namespace driver{
     }
 
     void MPU6500::ReadRegs(uint8_t reg_start, uint8_t* data, uint8_t len) {
-        chip_select_.Low();
+        spi_device_->PrepareTransmit();
         *data = static_cast<uint8_t>(reg_start | 0x80);
-        HAL_SPI_Transmit(hspi_, data, 1, MPU6500_DELAY);
-        HAL_SPI_Receive(hspi_, data, len, MPU6500_DELAY);
-        chip_select_.High();
+        spi_->Transmit(spi_device_, data, 1);
+        spi_->Receive(spi_device_, data, len);
+        spi_device_->FinishTransmit();
     }
 
     void MPU6500::SPITxRxCpltCallback() {
-        chip_select_.High();
+        spi_device_->FinishTransmit();
         // NOTE(alvin): per MPU6500 documentation, the first byte of the rx / tx
         // buffer
         //              contains the address of the SPI device
@@ -122,25 +134,24 @@ namespace driver{
         for (size_t i = 0; i < MPU6500_SIZEOF_DATA; i += 2)
             array[i / 2] = (int16_t)(buff[i] << 8 | buff[i + 1]);
 
-        acce.x = (float)array[0] / (MPU6500_ACC_FACTOR / GRAVITY_ACC);
-        acce.y = (float)array[1] / (MPU6500_ACC_FACTOR / GRAVITY_ACC);
-        acce.z = (float)array[2] / (MPU6500_ACC_FACTOR / GRAVITY_ACC);
-        temp = (float)array[3] / MPU6500_TEMP_FACTOR + MPU6500_TEMP_OFFSET;
-        gyro.x = DEG2RAD((float)array[4] / MPU6500_GYRO_FACTOR);
-        gyro.y = DEG2RAD((float)array[5] / MPU6500_GYRO_FACTOR);
-        gyro.z = DEG2RAD((float)array[6] / MPU6500_GYRO_FACTOR);
-        mag.x = (float)array[7];
-        mag.y = (float)array[8];
-        mag.z = (float)array[9];
+        accel_[0] = (float)array[0] / (MPU6500_ACC_FACTOR / GRAVITY_ACC);
+        accel_[1] = (float)array[1] / (MPU6500_ACC_FACTOR / GRAVITY_ACC);
+        accel_[2] = (float)array[2] / (MPU6500_ACC_FACTOR / GRAVITY_ACC);
+        temperature_ = (float)array[3] / MPU6500_TEMP_FACTOR + MPU6500_TEMP_OFFSET;
+        gyro_[0] = DEG2RAD((float)array[4] / MPU6500_GYRO_FACTOR);
+        gyro_[1] = DEG2RAD((float)array[5] / MPU6500_GYRO_FACTOR);
+        gyro_[2] = DEG2RAD((float)array[6] / MPU6500_GYRO_FACTOR);
+        mag_[0] = (float)array[7];
+        mag_[1] = (float)array[8];
+        mag_[2] = (float)array[9];
     }
 
     void MPU6500::IntCallback() {
-        timestamp = bsp::GetHighresTickMicroSec();
-        UpdateData();
+        instance_->time_ = (float)bsp::GetHighresTickMicroSec();
+        instance_->UpdateData();
     }
 
-    void MPU6500::SPITxRxCpltCallback(SPI_HandleTypeDef* hspi) {
-        UNUSED(hspi);
-        mpu6500->SPITxRxCpltCallback();
+    void MPU6500::SPITxRxCpltCallbackWrapper() {
+        instance_->SPITxRxCpltCallback();
     }
 }

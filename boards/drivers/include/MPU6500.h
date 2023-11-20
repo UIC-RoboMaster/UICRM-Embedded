@@ -29,7 +29,7 @@
 #define MPU6500_ACC_FACTOR 4096.0f
 #define MPU6500_GYRO_FACTOR 32.768f
 
-// acc (6 bytes) + temp (2 bytes) + gyro (6 bytes) + mag (6 bytes)
+// acc (6 bytes) + temp (2 bytes) + gyro (6 bytes) + mag_ (6 bytes)
 #define MPU6500_SIZEOF_DATA 20
 
 #define MPU6500_SELF_TEST_XG 0x00
@@ -147,7 +147,15 @@ namespace driver{
         float z;
     } vec3f_t;
 
-    class MPU6500 : public bsp::GPIT {
+    typedef struct {
+        bsp::SPIMaster* spi;
+        bsp::GPIO* cs;
+        bsp::GPIT* int_pin;
+        bool use_mag=false;
+        bool dma=true;
+    }mpu6500_init_t;
+
+    class MPU6500 {
       public:
         /**
          * @brief constructor for a MPU6500 IMU sensor
@@ -156,23 +164,19 @@ namespace driver{
          * @param chip_select  chip select gpio pin
          * @param int_pin      interrupt pin number
          */
-        MPU6500(SPI_HandleTypeDef* hspi, const bsp::GPIO& chip_select, uint16_t int_pin);
+        MPU6500(mpu6500_init_t init);
 
         /**
          * @brief reset sensor registers
          */
         void Reset();
 
-        // 3-axis accelerometer
-        vec3f_t acce;
-        // 3-axis gyroscope
-        vec3f_t gyro;
-        // 3-axis magnetometer
-        vec3f_t mag;
-        // sensor temperature
-        float temp;
-        // sensor timestamp
-        uint64_t timestamp = 0;
+
+        float gyro_[3];
+        float accel_[3];
+        float mag_[3];
+        float temperature_;
+        float time_;
 
       private:
         /**
@@ -187,16 +191,21 @@ namespace driver{
         void ReadRegs(uint8_t reg_start, uint8_t* data, uint8_t len);
 
         void SPITxRxCpltCallback();
-        void IntCallback() override final;
+        static void IntCallback();
 
-        SPI_HandleTypeDef* hspi_;
-        bsp::GPIO chip_select_;
+        bsp::SPIMaster* spi_;
+        bsp::SPIDevice* spi_device_;
+        bsp::GPIO* cs_;
+        bsp::GPIT* int_pin_;
+
+        bool use_mag_;
+        bool dma_;
 
         uint8_t io_buff_[MPU6500_SIZEOF_DATA + 1];  // spi tx+rx buffer
 
         // global interrupt wrapper
         // TODO(alvin): try to support multiple instances in the future
-        static void SPITxRxCpltCallback(SPI_HandleTypeDef* hspi);
-        static MPU6500* mpu6500;
+        static void SPITxRxCpltCallbackWrapper();
+        static MPU6500* instance_;
     };
 };

@@ -103,8 +103,8 @@ namespace imu {
     }
 
     void IST8310::IntCallback() {
-        ist8310_read_mag(mag);
-        callback_(mag);
+        ist8310_read_mag(mag_);
+        callback_(mag_);
     }
 
     void IST8310::ist8310_RST_H() {
