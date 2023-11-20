@@ -20,10 +20,10 @@
 
 #include "main.h"
 
+#include "MPU6500.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "bsp_spi.h"
-#include "MPU6500.h"
 #include "cmsis_os.h"
 
 #define ONBOARD_IMU_SPI hspi5
@@ -31,30 +31,27 @@
 #define ONBOARD_IMU_CS_PIN GPIO_PIN_6
 #define PRING_UART huart8
 
-static driver::MPU6500* imu=nullptr;
+static driver::MPU6500* imu = nullptr;
 static bsp::GPIO* imu_cs = nullptr;
 static bsp::GPIT* mpu6500_it = nullptr;
 static bsp::SPI* spi5 = nullptr;
 static bsp::SPIMaster* spi5_master = nullptr;
 
 void RM_RTOS_Init(void) {
-    imu_cs = new bsp::GPIO(ONBOARD_IMU_CS_GROUP,ONBOARD_IMU_CS_PIN);
+    imu_cs = new bsp::GPIO(ONBOARD_IMU_CS_GROUP, ONBOARD_IMU_CS_PIN);
     mpu6500_it = new bsp::GPIT(MPU6500_IT_Pin);
-    bsp::spi_init_t spi5_init{
-        .hspi=&hspi5,
-        .mode=bsp::SPI_MODE_DMA
-    };
+    bsp::spi_init_t spi5_init{.hspi = &hspi5, .mode = bsp::SPI_MODE_DMA};
     spi5 = new bsp::SPI(spi5_init);
     bsp::spi_master_init_t spi5_master_init = {
-        .spi=spi5,
+        .spi = spi5,
     };
     spi5_master = new bsp::SPIMaster(spi5_master_init);
     driver::mpu6500_init_t mpu6500_init = {
-        .spi=spi5_master,
-        .cs=imu_cs,
-        .int_pin=mpu6500_it,
-        .use_mag=true,
-        .dma=true,
+        .spi = spi5_master,
+        .cs = imu_cs,
+        .int_pin = mpu6500_it,
+        .use_mag = true,
+        .dma = true,
     };
     imu = new driver::MPU6500(mpu6500_init);
     bsp::SetHighresClockTimer(&htim7);
@@ -71,10 +68,12 @@ void RM_RTOS_Default_Task(const void* arguments) {
         set_cursor(0, 0);
         clear_screen();
         print("Temp: %10.4f\r\n", imu->temperature_);
-        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", imu->accel_[0], imu->accel_[1], imu->accel_[2]);
+        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", imu->accel_[0], imu->accel_[1],
+              imu->accel_[2]);
         print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", imu->gyro_[0], imu->gyro_[1],
               imu->gyro_[2]);
-        print("MAG_X: %9.0f MAG_Y: %9.0f MAG_Z: %9.0f\r\n", imu->mag_[0], imu->mag_[1], imu->mag_[2]);
+        print("MAG_X: %9.0f MAG_Y: %9.0f MAG_Z: %9.0f\r\n", imu->mag_[0], imu->mag_[1],
+              imu->mag_[2]);
         print("\r\nTime Stamp: %.2f us\r\n", imu->time_);
         osDelay(100);
     }
