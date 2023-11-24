@@ -72,10 +72,10 @@ static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 
 const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = 4.72515f,
-    .yaw_offset_ = 3.6478f,
-    .pitch_max_ = 0.4253f,
-    .yaw_max_ = PI,
+    .pitch_offset_ = 4.3703f,
+    .yaw_offset_ = 4.2062f,
+    .pitch_max_ = 0.5571f,
+    .yaw_max_ = PI/2,
 };
 
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
@@ -127,8 +127,8 @@ void gimbalTask(void* arg) {
 
     float pitch_ratio, yaw_ratio;
     float pitch_curr, yaw_curr;
-    float pitch_target = 0, yaw_target = 0;
     float pitch_diff, yaw_diff;
+    float pitch_target = 0, yaw_target = 0;
 
     while (true) {
         if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN) {
@@ -144,24 +144,21 @@ void gimbalTask(void* arg) {
         yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
         pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
         yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
-        pitch_target = clip<float>(pitch_target + pitch_ratio, -gimbal_param->pitch_max_,
-                                   gimbal_param->pitch_max_);
-        yaw_target =
-            clip<float>(yaw_target + yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
+        pitch_target =
+            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        yaw_target = clip<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
+
+        pitch_diff = wrap<float>(pitch_target, -PI, PI);
+        yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
         pitch_curr = imu->INS_angle[2];
         yaw_curr = imu->INS_angle[0];
 
-        pitch_diff = clip<float>(pitch_target - pitch_curr, -PI, PI);
-        yaw_diff = wrap<float>(yaw_target - yaw_curr, -PI, PI);
 
-        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
-            pitch_diff = 0;
-        }
 
         gimbal->TargetRel(pitch_diff, yaw_diff);
 
-        gimbal->Update();
+        gimbal->UpdateIMU(pitch_curr,yaw_curr);
         driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
     }
@@ -170,7 +167,7 @@ void gimbalTask(void* arg) {
 void RM_RTOS_Init(void) {
     print_use_uart(&huart6);
 
-    can1 = new bsp::CAN(&hcan2, 0x201, false);
+    can1 = new bsp::CAN(&hcan1, 0x201, true);
     dbus = new remote::DBUS(&huart3);
 
     bsp::IST8310_init_t IST8310_init;
@@ -217,9 +214,9 @@ void RM_RTOS_Init(void) {
         float yaw_omega_max_iout = 5000;  // 10000
         float yaw_omega_max_out = 30000;
         float* pitch_theta_pid_param = new float[3]{15, 0, 0};
-        float* pitch_omega_pid_param = new float[3]{2900, 60, 0};
-        float* yaw_theta_pid_param = new float[3]{26, 0, 0.3};
-        float* yaw_omega_pid_param = new float[3]{3600, 20, 0};
+        float* pitch_omega_pid_param = new float[3]{1000, 100, 0};
+        float* yaw_theta_pid_param = new float[3]{15, 0, 0};
+        float* yaw_omega_pid_param = new float[3]{1000, 100, 0};
         gimbalBasicPID.pitch_theta_pid = new control::ConstrainedPID(
             pitch_theta_pid_param, pitch_theta_max_iout, pitch_theta_max_out);
         gimbalBasicPID.pitch_omega_pid = new control::ConstrainedPID(

@@ -18,41 +18,32 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "cmsis_os.h"
+#pragma once
+#include "bsp_imu.h"
+#include "cmsis_os2.h"
+#include "i2c.h"
 #include "main.h"
-#include "motor.h"
+#include "spi.h"
+#define RX_SIGNAL (1 << 0)
+extern osThreadId_t imuTaskHandle;
+const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
+                                         .attr_bits = osThreadDetached,
+                                         .cb_mem = nullptr,
+                                         .cb_size = 0,
+                                         .stack_mem = nullptr,
+                                         .stack_size = 128 * 4,
+                                         .priority = (osPriority_t)osPriorityRealtime,
+                                         .tz_module = 0,
+                                         .reserved = 0};
 
-bsp::CAN* can1 = NULL;
-driver::MotorCANBase* motor1 = NULL;
-// control::MotorCANBase* motor2 = NULL;
+class IMU : public bsp::IMU_typeC {
+  public:
+    using bsp::IMU_typeC::IMU_typeC;
 
-void RM_RTOS_Init() {
-    print_use_uart(&huart1);
+  protected:
+    void RxCompleteCallback() final;
+};
+extern IMU* imu;
+void imuTask(void* arg);
 
-    can1 = new bsp::CAN(&hcan1, 0x205, true);
-    motor1 = new driver::Motor6020(can1, 0x205);
-    // motor2 = new control::Motor6020(can2, 0x206);
-}
-
-void RM_RTOS_Default_Task(const void* args) {
-    UNUSED(args);
-    driver::MotorCANBase* motors[] = {motor1};
-
-    bsp::GPIO key(KEY_GPIO_Port, KEY_Pin);
-    while (true) {
-        if (key.Read()) {
-            motor1->SetOutput(800);
-            // motor2->SetOutput(800);
-        } else {
-            motor1->SetOutput(0);
-            // motor2->SetOutput(0);
-        }
-        driver::MotorCANBase::TransmitOutput(motors, 1);
-        set_cursor(0, 0);
-        clear_screen();
-        motor1->PrintData();
-        osDelay(100);
-    }
-}
+void init_imu();

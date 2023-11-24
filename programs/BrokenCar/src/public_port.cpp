@@ -18,41 +18,14 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "cmsis_os.h"
-#include "main.h"
-#include "motor.h"
-
-bsp::CAN* can1 = NULL;
-driver::MotorCANBase* motor1 = NULL;
-// control::MotorCANBase* motor2 = NULL;
-
-void RM_RTOS_Init() {
-    print_use_uart(&huart1);
-
-    can1 = new bsp::CAN(&hcan1, 0x205, true);
-    motor1 = new driver::Motor6020(can1, 0x205);
-    // motor2 = new control::Motor6020(can2, 0x206);
+#include "public_port.h"
+bsp::CAN* can1 = nullptr;
+bsp::CAN* can2 = nullptr;
+bsp::BatteryVol* battery_vol = nullptr;
+void init_can() {
+    can1 = new bsp::CAN(&hcan1, 0x201, true);
+    can2 = new bsp::CAN(&hcan2, 0x205, false);
 }
-
-void RM_RTOS_Default_Task(const void* args) {
-    UNUSED(args);
-    driver::MotorCANBase* motors[] = {motor1};
-
-    bsp::GPIO key(KEY_GPIO_Port, KEY_Pin);
-    while (true) {
-        if (key.Read()) {
-            motor1->SetOutput(800);
-            // motor2->SetOutput(800);
-        } else {
-            motor1->SetOutput(0);
-            // motor2->SetOutput(0);
-        }
-        driver::MotorCANBase::TransmitOutput(motors, 1);
-        set_cursor(0, 0);
-        clear_screen();
-        motor1->PrintData();
-        osDelay(100);
-    }
+void init_batt() {
+    battery_vol = new bsp::BatteryVol(&hadc3, ADC_CHANNEL_8, 1, ADC_SAMPLETIME_3CYCLES);
 }
