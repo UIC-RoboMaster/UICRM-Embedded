@@ -23,9 +23,9 @@
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_ADVANCED};
-const int8_t remote_mode_max = 3;
-const int8_t remote_mode_min = 3;
+RemoteMode available_remote_mode[] = {REMOTE_MODE_ADVANCED,REMOTE_MODE_FOLLOW};
+const int8_t remote_mode_max = 2;
+const int8_t remote_mode_min = 1;
 ShootFricMode shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_mode = SHOOT_MODE_STOP;
 bool is_killed = false;

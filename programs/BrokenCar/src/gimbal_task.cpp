@@ -106,11 +106,9 @@ void gimbalTask(void* arg) {
         }
 
         pitch_target =
-            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
-        yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
+            wrap<float>(pitch_ratio, 0,2*PI);
+        yaw_target = wrap<float>(yaw_ratio,0,2*PI);
 
-        pitch_diff = clip<float>(pitch_target, -PI, PI);
-        yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
         //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
         //            pitch_diff = 0;
@@ -120,7 +118,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
             case REMOTE_MODE_ADVANCED:
-                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->TargetRel(pitch_target, yaw_target);
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
                 //                gimbal->TargetRel(pitch_diff, yaw_diff);
