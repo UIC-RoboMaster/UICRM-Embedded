@@ -45,10 +45,10 @@ void chassisTask(void* arg) {
         osDelay(1);
     }
 
-//    float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+    float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-    // float last_speed = 0;
-//    float sin_yaw, cos_yaw;
+//     float last_speed = 0;
+    float sin_yaw, cos_yaw;
     float vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
     float offset_yaw = 0;
     float spin_speed = 350;
@@ -117,10 +117,10 @@ void chassisTask(void* arg) {
             x_edge->input(keyboard.bit.X);
         }
 
-//        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-//        sin_yaw = arm_sin_f32(relative_angle);
-//        cos_yaw = arm_cos_f32(relative_angle);
+        sin_yaw = arm_sin_f32(relative_angle);
+        cos_yaw = arm_cos_f32(relative_angle);
         if (shift_edge->posEdge()) {
             if (chassis_boost_flag) {
                 chassis_boost_flag = false;
@@ -193,8 +193,8 @@ void chassisTask(void* arg) {
         chassis_vx = vx_set_org;
         chassis_vy = vy_set_org;
         chassis_vz = offset_yaw;
-        vx_set = vx_set_org;
-        vy_set = vy_set_org;
+        vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
+        vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(
@@ -223,7 +223,7 @@ void chassisTask(void* arg) {
                 break;
             case REMOTE_MODE_ADVANCED:
                 vz_set = offset_yaw;
-                chassis->SetSpeed(vx_set, vy_set, vz_set);
+                chassis->SetSpeed(vx_set_org, vy_set_org, vz_set);
                 //                chassis->Update(true,
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,

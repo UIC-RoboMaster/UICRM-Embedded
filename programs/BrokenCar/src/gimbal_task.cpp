@@ -63,9 +63,9 @@ void gimbalTask(void* arg) {
     }
     Buzzer_Sing(SingCaliDone);
     float pitch_ratio, yaw_ratio;
-//    float pitch_curr, yaw_curr;
-//    pitch_curr = imu->INS_angle[2];
-//    yaw_curr = imu->INS_angle[0];
+    float pitch_curr, yaw_curr;
+    pitch_curr = imu->INS_angle[2];
+    yaw_curr = imu->INS_angle[0];
     float pitch_target = 0, yaw_target = 0;
 
     while (true) {
@@ -75,8 +75,8 @@ void gimbalTask(void* arg) {
             continue;
         }
 
-//        pitch_curr = imu->INS_angle[2];
-//        yaw_curr = imu->INS_angle[0];
+        pitch_curr = imu->INS_angle[2];
+        yaw_curr = imu->INS_angle[0];
         //    if (dbus->swr == remote::UP) {
         //      gimbal->TargetAbs(0, 0);
         //      gimbal->Update();
@@ -121,7 +121,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_FOLLOW:
             case REMOTE_MODE_ADVANCED:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                gimbal->Update();
+                gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
                 //                gimbal->TargetRel(pitch_diff, yaw_diff);
                 //                gimbal->Update();
