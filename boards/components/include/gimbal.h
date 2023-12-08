@@ -43,6 +43,7 @@ namespace control {
                                 center) */
         float pitch_max_;    /* maximum pitch angle the gimbal can turn from center */
         float yaw_max_;      /* maximum yaw angle the gimbal can turn from center      */
+        bool yaw_circle_=true;    /* yaw angle can circle or not */
     } gimbal_data_t;
 
     /**

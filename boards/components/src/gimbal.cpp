@@ -97,14 +97,19 @@ namespace control {
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
 
         float yt_diff = yaw_angle_ -data_.yaw_offset_ - yaw;
-        float actual_yaw_angle = yaw_motor_->GetTheta();
-        float new_yaw_diff = wrapping_clip<float>(yt_diff+actual_yaw_angle, yaw_lower_limit_,
-                                                    yaw_upper_limit_, 0, 2 * PI);
-        new_yaw_diff = new_yaw_diff - actual_yaw_angle;
-        if(yt_diff != new_yaw_diff){
-            yaw_angle_ = wrap<float>(yaw_angle_ + new_yaw_diff-yt_diff, 0,2*PI);
+        if(!data_.yaw_circle_) {
+            float actual_yaw_angle = yaw_motor_->GetTheta();
+            float new_yaw_diff = wrapping_clip<float>(yt_diff + actual_yaw_angle, yaw_lower_limit_,
+                                                      yaw_upper_limit_, 0, 2 * PI);
+            new_yaw_diff = new_yaw_diff - actual_yaw_angle;
+            if (yt_diff != new_yaw_diff) {
+                yaw_angle_ = wrap<float>(yaw_angle_ + new_yaw_diff - yt_diff, 0, 2 * PI);
+            }
+            yt_diff = wrap<float>(new_yaw_diff, -PI, PI);
         }
-        yt_diff = wrap<float>(new_yaw_diff, -PI, PI);
+        else{
+            yt_diff = wrap<float>(yt_diff, -PI, PI);
+        }
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);

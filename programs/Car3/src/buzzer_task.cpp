@@ -18,41 +18,38 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "cmsis_os.h"
-#include "main.h"
-#include "motor.h"
+#include "buzzer_task.h"
 
-bsp::CAN* can1 = NULL;
-driver::MotorCANBase* motor1 = NULL;
-// control::MotorCANBase* motor2 = NULL;
+osThreadId_t buzzerTaskHandle;
 
-void RM_RTOS_Init() {
-    print_use_uart(&huart1);
+driver::Buzzer* buzzer = nullptr;
+const driver::BuzzerNoteDelayed* buzzer_song = nullptr;
 
-    can1 = new bsp::CAN(&hcan2, 0x205, false);
-    motor1 = new driver::Motor6020(can1, 0x206);
-    // motor2 = new control::Motor6020(can2, 0x206);
+void Buzzer_Delay(uint32_t delay) {
+    osDelay(delay);
 }
 
-void RM_RTOS_Default_Task(const void* args) {
-    UNUSED(args);
-    driver::MotorCANBase* motors[] = {motor1};
-
-    bsp::GPIO key(KEY_GPIO_Port, KEY_Pin);
-    while (true) {
-        if (key.Read()) {
-            motor1->SetOutput(800);
-            // motor2->SetOutput(800);
-        } else {
-            motor1->SetOutput(0);
-            // motor2->SetOutput(0);
-        }
-        driver::MotorCANBase::TransmitOutput(motors, 1);
-        set_cursor(0, 0);
-        clear_screen();
-        motor1->PrintData();
-        osDelay(100);
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song) {
+    if (buzzer_song == nullptr) {
+        buzzer_song = song;
+        osThreadFlagsSet(buzzerTaskHandle, BUZZER_SIGNAL);
+        return true;
     }
+    return false;
+}
+void buzzerTask(void* arg) {
+    UNUSED(arg);
+    while (1) {
+        uint32_t flags = osThreadFlagsWait(BUZZER_SIGNAL, osFlagsWaitAll, osWaitForever);
+        if (flags & BUZZER_SIGNAL) {
+            if (buzzer_song != nullptr) {
+                buzzer->SingSong(buzzer_song, Buzzer_Delay);
+                buzzer_song = nullptr;
+            }
+        }
+    }
+}
+
+void init_buzzer() {
+    buzzer = new driver::Buzzer(&htim4, 3, 1000000);
 }

@@ -21,14 +21,14 @@
 #include "bsp_imu.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "dbus.h"
+#include "sbus.h"
 #include "gimbal.h"
 #include "i2c.h"
 #include "main.h"
 #include "spi.h"
 
 static bsp::CAN* can1 = nullptr;
-static remote::DBUS* dbus = nullptr;
+static remote::SBUS* sbus = nullptr;
 
 #define RX_SIGNAL (1 << 0)
 
@@ -75,7 +75,8 @@ const control::gimbal_data_t gimbal_init_data = {
     .pitch_offset_ = 2.8582f,
     .yaw_offset_ = 2.5840f,
     .pitch_max_ = 0.4897f,
-    .yaw_max_ = PI,
+    .yaw_max_ = PI/2,
+    .yaw_circle_ = true
 };
 
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
@@ -96,7 +97,7 @@ void gimbalTask(void* arg) {
 
     print("Wait for beginning signal...\r\n");
     while (true) {
-        if (dbus->keyboard.bit.V || dbus->swr == remote::DOWN) {
+        if (sbus->ch7>=0) {
             break;
         }
         osDelay(100);
@@ -131,19 +132,18 @@ void gimbalTask(void* arg) {
     float pitch_target = 0, yaw_target = 0;
 
     while (true) {
-        if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN) {
+        if (sbus->ch7<0) {
             while (true) {
-                if (dbus->keyboard.bit.V) {
+                if (sbus->ch7>=0) {
                     break;
                 }
                 osDelay(10);
             }
         }
 
-        pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
-        yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-        pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
-        yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
+
+        pitch_ratio = sbus->ch3 / 18000.0 / 7.0;
+        yaw_ratio = -sbus->ch4 / 18000.0 / 7.0;
         pitch_target =
             clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = clip<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
@@ -167,8 +167,8 @@ void gimbalTask(void* arg) {
 void RM_RTOS_Init(void) {
     print_use_uart(&huart6);
 
-    can1 = new bsp::CAN(&hcan1, 0x201, true);
-    dbus = new remote::DBUS(&huart3);
+    can1 = new bsp::CAN(&hcan2, 0x201, false);
+    sbus = new remote::SBUS(&huart3);
 
     bsp::IST8310_init_t IST8310_init;
     IST8310_init.hi2c = &hi2c3;
@@ -197,8 +197,8 @@ void RM_RTOS_Init(void) {
     imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
     imu = new IMU(imu_init, false);
 
-    pitch_motor = new driver::Motor6020(can1, 0x206);
-    yaw_motor = new driver::Motor6020(can1, 0x205);
+    pitch_motor = new driver::Motor6020(can1, 0x205);
+    yaw_motor = new driver::Motor6020(can1, 0x206);
     control::gimbal_t gimbal_data;
     gimbal_data.data = gimbal_init_data;
     gimbal_data.pitch_motor = pitch_motor;
@@ -241,9 +241,7 @@ void KillAll() {
 
     RM_EXPECT_TRUE(false, "Operation killed\r\n");
     while (true) {
-        if (dbus->keyboard.bit.V) {
-            break;
-        }
+
         pitch_motor->SetOutput(0);
         yaw_motor->SetOutput(0);
         driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
@@ -255,7 +253,7 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
 
     while (true) {
-        if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN)
+        if (sbus->ch5>0)
             KillAll();
 
         set_cursor(0, 0);
@@ -269,9 +267,9 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         print("\r\n");
 
-        print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ", dbus->ch0, dbus->ch1, dbus->ch2,
-              dbus->ch3);
-        print("SWL: %d SWR: %d @ %d ms\r\n", dbus->swl, dbus->swr, dbus->timestamp);
+        print("CH1: %-4d CH2: %-4d CH3: %-4d CH4: %-4d ", sbus->ch1, sbus->ch2, sbus->ch3,
+              sbus->ch4);
+        print("CH5: %d CH6: %d CH7: %d CH8: %d @ %d ms\r\n", sbus->ch5, sbus->ch6,sbus->ch7,sbus->ch8, sbus->timestamp);
 
         osDelay(100);
     }

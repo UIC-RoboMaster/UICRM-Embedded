@@ -23,6 +23,8 @@
 #include <cmath>
 #include <cstring>
 
+#include "utils.h"
+
 #include "bsp_error_handler.h"
 
 /* rocker range and deadzones */
@@ -69,22 +71,22 @@ namespace remote {
 
         // re-interpret the data buffer and decode into class properties
         sbus_t* repr = reinterpret_cast<sbus_t*>(data);
-        this->ch1 = repr->ch1 - SBUS_RC_ROCKER_MID;
-        this->ch2 = repr->ch2 - SBUS_RC_ROCKER_MID;
-        this->ch3 = repr->ch3 - SBUS_RC_ROCKER_MID;
-        this->ch4 = repr->ch4 - SBUS_RC_ROCKER_MID;
-        this->ch5 = repr->ch5 - SBUS_RC_ROCKER_MID;
-        this->ch6 = repr->ch6 - SBUS_RC_ROCKER_MID;
-        this->ch7 = repr->ch7 - SBUS_RC_ROCKER_MID;
-        this->ch8 = repr->ch8 - SBUS_RC_ROCKER_MID;
-        this->ch9 = repr->ch9 - SBUS_RC_ROCKER_MID;
-        this->ch10 = repr->ch10 - SBUS_RC_ROCKER_MID;
-        this->ch11 = repr->ch11 - SBUS_RC_ROCKER_MID;
-        this->ch12 = repr->ch12 - SBUS_RC_ROCKER_MID;
-        this->ch13 = repr->ch13 - SBUS_RC_ROCKER_MID;
-        this->ch14 = repr->ch14 - SBUS_RC_ROCKER_MID;
-        this->ch15 = repr->ch15 - SBUS_RC_ROCKER_MID;
-        this->ch16 = repr->ch16 - SBUS_RC_ROCKER_MID;
+        this->ch1 = clip<int16_t>(repr->ch1 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch2 = clip<int16_t>(repr->ch2 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch3 = clip<int16_t>(repr->ch3 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch4 = clip<int16_t>(repr->ch4 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch5 = clip<int16_t>(repr->ch5 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch6 = clip<int16_t>(repr->ch6 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch7 = clip<int16_t>(repr->ch7 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch8 = clip<int16_t>(repr->ch8 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch9 = clip<int16_t>(repr->ch9 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch10 = clip<int16_t>(repr->ch10 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch11 = clip<int16_t>(repr->ch11 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch12 = clip<int16_t>(repr->ch12 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch13 = clip<int16_t>(repr->ch13 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch14 = clip<int16_t>(repr->ch14 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch15 = clip<int16_t>(repr->ch15 - SBUS_RC_ROCKER_MID, -660, 660);
+        this->ch16 = clip<int16_t>(repr->ch16 - SBUS_RC_ROCKER_MID, -660, 660);
         this->ch1 = abs(this->ch1) <= SBUS_RC_ROCKER_ZERO_DRIFT ? 0 : this->ch1;
         this->ch2 = abs(this->ch2) <= SBUS_RC_ROCKER_ZERO_DRIFT ? 0 : this->ch2;
         this->ch3 = abs(this->ch3) <= SBUS_RC_ROCKER_ZERO_DRIFT ? 0 : this->ch3;
