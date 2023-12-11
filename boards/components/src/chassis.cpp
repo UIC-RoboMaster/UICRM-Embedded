@@ -39,7 +39,7 @@ namespace control {
 
                 float* pid_param = new float[3]{40, 3, 0};
                 float motor_max_iout = 2000;
-                float motor_max_out = 20000;
+                float motor_max_out = 30000;
                 pids_[FourWheel::front_left].Reinit(pid_param, motor_max_iout, motor_max_out);
                 pids_[FourWheel::front_right].Reinit(pid_param, motor_max_iout, motor_max_out);
                 pids_[FourWheel::back_left].Reinit(pid_param, motor_max_iout, motor_max_out);
