@@ -18,41 +18,21 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "cmsis_os.h"
-#include "main.h"
-#include "motor.h"
+#pragma once
+#include "gimbal.h"
+#include "pid.h"
 
-bsp::CAN* can1 = NULL;
-driver::MotorCANBase* motor1 = NULL;
-// control::MotorCANBase* motor2 = NULL;
+// basic information of gimbal
+const control::gimbal_data_t gimbal_init_data = {
+    .pitch_offset_ = 4.3703f,
+    .yaw_offset_ = 4.2062f,
+    .pitch_max_ = 0.5571f,
+    .yaw_max_ = PI / 2,
+};
+// basic information of gimbal
+extern control::gimbal_pid_t gimbalBasicPID;
+void init_gimbalBasicData();
 
-void RM_RTOS_Init() {
-    print_use_uart(&huart1);
-
-    can1 = new bsp::CAN(&hcan2, 0x205, false);
-    motor1 = new driver::Motor6020(can1, 0x206);
-    // motor2 = new control::Motor6020(can2, 0x206);
-}
-
-void RM_RTOS_Default_Task(const void* args) {
-    UNUSED(args);
-    driver::MotorCANBase* motors[] = {motor1};
-
-    bsp::GPIO key(KEY_GPIO_Port, KEY_Pin);
-    while (true) {
-        if (key.Read()) {
-            motor1->SetOutput(800);
-            // motor2->SetOutput(800);
-        } else {
-            motor1->SetOutput(0);
-            // motor2->SetOutput(0);
-        }
-        driver::MotorCANBase::TransmitOutput(motors, 1);
-        set_cursor(0, 0);
-        clear_screen();
-        motor1->PrintData();
-        osDelay(100);
-    }
-}
+// Spin PID of gimbal
+extern control::gimbal_pid_t gimbalSpinPID;
+void init_gimbalSpinData();

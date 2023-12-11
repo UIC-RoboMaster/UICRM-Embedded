@@ -18,41 +18,13 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "cmsis_os.h"
-#include "main.h"
-#include "motor.h"
+#pragma once
 
-bsp::CAN* can1 = NULL;
-driver::MotorCANBase* motor1 = NULL;
-// control::MotorCANBase* motor2 = NULL;
-
-void RM_RTOS_Init() {
-    print_use_uart(&huart1);
-
-    can1 = new bsp::CAN(&hcan2, 0x205, false);
-    motor1 = new driver::Motor6020(can1, 0x206);
-    // motor2 = new control::Motor6020(can2, 0x206);
-}
-
-void RM_RTOS_Default_Task(const void* args) {
-    UNUSED(args);
-    driver::MotorCANBase* motors[] = {motor1};
-
-    bsp::GPIO key(KEY_GPIO_Port, KEY_Pin);
-    while (true) {
-        if (key.Read()) {
-            motor1->SetOutput(800);
-            // motor2->SetOutput(800);
-        } else {
-            motor1->SetOutput(0);
-            // motor2->SetOutput(0);
-        }
-        driver::MotorCANBase::TransmitOutput(motors, 1);
-        set_cursor(0, 0);
-        clear_screen();
-        motor1->PrintData();
-        osDelay(100);
-    }
-}
+#define SHOOT_OS_DELAY 1
+#define CHASSIS_OS_DELAY 1
+#define GIMBAL_OS_DELAY 1
+#define REMOTE_OS_DELAY 1
+#define DETECT_OS_DELAY 30
+#define UI_OS_DELAY 40
+#define SHOOT_REFEREE 0
+#define ENABLE_UI 1
