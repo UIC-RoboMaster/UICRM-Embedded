@@ -47,7 +47,7 @@ void chassisTask(void* arg) {
 
     float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-//     float last_speed = 0;
+    //     float last_speed = 0;
     float sin_yaw, cos_yaw;
     float vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
     float offset_yaw = 0;

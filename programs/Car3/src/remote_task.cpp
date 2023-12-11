@@ -86,13 +86,11 @@ void remoteTask(void* arg) {
         if (selftest.sbus) {
             state_r = sbus->ch7;
             state_l = sbus->ch8;
-
         }
 
         // Update Timestamp
 
-
-        if(sbus->ch7>0 && last_state_r==0){
+        if (sbus->ch7 > 0 && last_state_r == 0) {
             mode_switch = true;
         }
         // remote mode switch
@@ -107,21 +105,18 @@ void remoteTask(void* arg) {
         }
         // shoot mode switch
         if (is_shoot_available == true || SHOOT_REFEREE == 0) {
-            if(sbus->ch8>0 && last_state_l==0){
+            if (sbus->ch8 > 0 && last_state_l == 0) {
                 shoot_fric_switch = true;
-            }
-            else {
-                if(sbus->ch8<0 && last_state_l==0){
+            } else {
+                if (sbus->ch8 < 0 && last_state_l == 0) {
                     shoot_switch = true;
                     shoot_burst_timestamp = 0;
-                }
-                else if (last_state_l <0 && selftest.sbus) {
+                } else if (last_state_l < 0 && selftest.sbus) {
                     shoot_burst_timestamp++;
                     if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
                         shoot_burst_switch = true;
                     }
-                }
-                else{
+                } else {
                     shoot_stop_switch = true;
                 }
             }

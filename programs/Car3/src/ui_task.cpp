@@ -240,7 +240,7 @@ void uiTask(void* arg) {
 
         // clear self-diagnosis messages
         if (selftest.sbus) {
-            v_edge->input(sbus->ch5<0);
+            v_edge->input(sbus->ch5 < 0);
         } else {
             v_edge->input(refereerc->remote_control.keyboard.bit.V);
         }
@@ -296,7 +296,7 @@ void uiTask(void* arg) {
             continue;
         }
         if (selftest.sbus) {
-            c_edge->input(sbus->ch5>0);
+            c_edge->input(sbus->ch5 > 0);
         } else {
             c_edge->input(refereerc->remote_control.keyboard.bit.C);
         }

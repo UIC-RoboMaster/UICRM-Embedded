@@ -154,11 +154,9 @@ void gimbalTask(void* arg) {
         pitch_curr = imu->INS_angle[2];
         yaw_curr = imu->INS_angle[0];
 
-
-
         gimbal->TargetRel(pitch_diff, yaw_diff);
 
-        gimbal->UpdateIMU(pitch_curr,yaw_curr);
+        gimbal->UpdateIMU(pitch_curr, yaw_curr);
         driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
     }

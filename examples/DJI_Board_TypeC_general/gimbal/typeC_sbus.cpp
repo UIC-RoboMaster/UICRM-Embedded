@@ -21,10 +21,10 @@
 #include "bsp_imu.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "sbus.h"
 #include "gimbal.h"
 #include "i2c.h"
 #include "main.h"
+#include "sbus.h"
 #include "spi.h"
 
 static bsp::CAN* can1 = nullptr;
@@ -71,13 +71,11 @@ static driver::MotorCANBase* yaw_motor = nullptr;
 static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 
-const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = 2.8582f,
-    .yaw_offset_ = 2.5840f,
-    .pitch_max_ = 0.4897f,
-    .yaw_max_ = PI/2,
-    .yaw_circle_ = true
-};
+const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 2.8582f,
+                                                 .yaw_offset_ = 2.5840f,
+                                                 .pitch_max_ = 0.4897f,
+                                                 .yaw_max_ = PI / 2,
+                                                 .yaw_circle_ = true};
 
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
                                             .attr_bits = osThreadDetached,
@@ -97,7 +95,7 @@ void gimbalTask(void* arg) {
 
     print("Wait for beginning signal...\r\n");
     while (true) {
-        if (sbus->ch7>=0) {
+        if (sbus->ch7 >= 0) {
             break;
         }
         osDelay(100);
@@ -132,15 +130,14 @@ void gimbalTask(void* arg) {
     float pitch_target = 0, yaw_target = 0;
 
     while (true) {
-        if (sbus->ch7<0) {
+        if (sbus->ch7 < 0) {
             while (true) {
-                if (sbus->ch7>=0) {
+                if (sbus->ch7 >= 0) {
                     break;
                 }
                 osDelay(10);
             }
         }
-
 
         pitch_ratio = sbus->ch3 / 18000.0 / 7.0;
         yaw_ratio = -sbus->ch4 / 18000.0 / 7.0;
@@ -154,11 +151,9 @@ void gimbalTask(void* arg) {
         pitch_curr = imu->INS_angle[2];
         yaw_curr = imu->INS_angle[0];
 
-
-
         gimbal->TargetRel(pitch_diff, yaw_diff);
 
-        gimbal->UpdateIMU(pitch_curr,yaw_curr);
+        gimbal->UpdateIMU(pitch_curr, yaw_curr);
         driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
     }
@@ -241,7 +236,6 @@ void KillAll() {
 
     RM_EXPECT_TRUE(false, "Operation killed\r\n");
     while (true) {
-
         pitch_motor->SetOutput(0);
         yaw_motor->SetOutput(0);
         driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
@@ -253,7 +247,7 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
 
     while (true) {
-        if (sbus->ch5>0)
+        if (sbus->ch5 > 0)
             KillAll();
 
         set_cursor(0, 0);
@@ -269,7 +263,8 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         print("CH1: %-4d CH2: %-4d CH3: %-4d CH4: %-4d ", sbus->ch1, sbus->ch2, sbus->ch3,
               sbus->ch4);
-        print("CH5: %d CH6: %d CH7: %d CH8: %d @ %d ms\r\n", sbus->ch5, sbus->ch6,sbus->ch7,sbus->ch8, sbus->timestamp);
+        print("CH5: %d CH6: %d CH7: %d CH8: %d @ %d ms\r\n", sbus->ch5, sbus->ch6, sbus->ch7,
+              sbus->ch8, sbus->timestamp);
 
         osDelay(100);
     }

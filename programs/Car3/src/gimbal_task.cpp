@@ -87,15 +87,14 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         if (selftest.sbus) {
-
             pitch_ratio = sbus->ch3 / 18000.0 / 7.0;
 
-            if(sbus->ch6>0)
+            if (sbus->ch6 > 0)
                 yaw_ratio = -sbus->ch4 / 18000.0 / 7.0;
             else
                 yaw_ratio = 0;
 
-        }  else {
+        } else {
             pitch_ratio = 0;
             yaw_ratio = 0;
         }

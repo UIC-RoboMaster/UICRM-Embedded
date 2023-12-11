@@ -31,7 +31,6 @@ driver::MotorCANBase* steering_motor = nullptr;
 
 driver::ServoMotor* load_servo = nullptr;
 
-
 void jam_callback(driver::ServoMotor* servo, const driver::servo_jam_t data) {
     UNUSED(data);
     float servo_target = servo->GetTarget();
@@ -58,11 +57,11 @@ void shootTask(void* arg) {
     //    int last_state = remote::MID;
     //    int last_state_2 = remote::MID;
     //    uint8_t shoot_state = 0;
-//    int shoot_flywheel_offset = 0;
+    //    int shoot_flywheel_offset = 0;
     //    uint8_t shoot_state_2 = 0;
     //    uint8_t last_shoot_key = 0;
     //    uint16_t shoot_time_count = 0;
-//    uint8_t servo_back = 0;
+    //    uint8_t servo_back = 0;
     //    bool can_shoot_click = false;
 
     load_servo->SetTarget(load_servo->GetTheta(), true);
@@ -73,7 +72,7 @@ void shootTask(void* arg) {
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             // 死了
-//            shoot_flywheel_offset = -5000;
+            //            shoot_flywheel_offset = -5000;
 
             //            shoot_state = 0;
             //            shoot_state_2 = 0;
@@ -162,7 +161,7 @@ void shootTask(void* arg) {
                 // laser->SetOutput(0);
                 break;
             default:
-//                shoot_flywheel_offset = -1000;
+                //                shoot_flywheel_offset = -1000;
                 // laser->SetOutput(0);
                 break;
         }
@@ -173,12 +172,12 @@ void shootTask(void* arg) {
                     // 准备就绪，未发射状态
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
                     if (!load_servo->Holding()) {
-                        load_servo->SetTarget(load_servo->GetTheta(), false );
+                        load_servo->SetTarget(load_servo->GetTheta(), false);
                     }
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
-                    if (last_shoot_mode != SHOOT_MODE_SINGLE){
+                    if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, true);
                         shoot_mode = SHOOT_MODE_PREPARED;
                     }
@@ -259,8 +258,8 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::Motor3508(can2,0x201);
-    flywheel_right = new driver::Motor3508(can2,0x202);
+    flywheel_left = new driver::Motor3508(can2, 0x201);
+    flywheel_right = new driver::Motor3508(can2, 0x202);
     pid1_param = new float[3]{150, 1, 0.15};
     pid2_param = new float[3]{150, 1, 0.15};
     driver::flywheel_t flywheel1_data = {
@@ -305,5 +304,4 @@ void kill_shoot() {
     flywheel_right->SetOutput(0);
     driver::MotorCANBase* motors[] = {flywheel_left, flywheel_right, steering_motor};
     driver::MotorCANBase::TransmitOutput(motors, 3);
-
 }

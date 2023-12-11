@@ -87,7 +87,6 @@ void chassisTask(void* arg) {
             }
         }
 
-
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
         sin_yaw = arm_sin_f32(relative_angle);
@@ -98,7 +97,7 @@ void chassisTask(void* arg) {
         } else if (ch1_edge->negEdge()) {
             vx_set_org = 0;
             vx_ramp->SetCurrent(0);
-        }  else {
+        } else {
             if (vx_set_org > 0) {
                 vx_set_org = vx_ramp->Calc(-current_speed_offset);
             } else if (vx_set_org < 0) {
@@ -117,7 +116,7 @@ void chassisTask(void* arg) {
                 vy_set_org = vy_ramp->Calc(current_speed_offset);
             }
         }
-        if(sbus->ch6 < 0){
+        if (sbus->ch6 < 0) {
             if (ch4_edge->get()) {
                 offset_yaw = sbus->ch4;
             } else if (ch4_edge->negEdge()) {

@@ -135,7 +135,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             "CH8: %d "
             "@ %d "
             "ms\r\n",
-            sbus->ch1, sbus->ch2, sbus->ch3, sbus->ch4, sbus->ch5, sbus->ch6, sbus->ch7,sbus->ch8,
+            sbus->ch1, sbus->ch2, sbus->ch3, sbus->ch4, sbus->ch5, sbus->ch6, sbus->ch7, sbus->ch8,
             sbus->timestamp);
         print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
               imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");

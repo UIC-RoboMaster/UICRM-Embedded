@@ -20,9 +20,9 @@
 
 #pragma once
 #include "cmsis_os2.h"
-#include "sbus.h"
 #include "main.h"
 #include "referee_task.h"
+#include "sbus.h"
 #include "selftest_task.h"
 #include "user_define.h"
 #include "utils.h"

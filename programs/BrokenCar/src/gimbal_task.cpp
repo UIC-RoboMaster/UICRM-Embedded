@@ -105,10 +105,8 @@ void gimbalTask(void* arg) {
             yaw_ratio = 0;
         }
 
-        pitch_target =
-            wrap<float>(pitch_ratio, 0,2*PI);
-        yaw_target = wrap<float>(yaw_ratio,0,2*PI);
-
+        pitch_target = wrap<float>(pitch_ratio, 0, 2 * PI);
+        yaw_target = wrap<float>(yaw_ratio, 0, 2 * PI);
 
         //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
         //            pitch_diff = 0;
@@ -151,5 +149,5 @@ void kill_gimbal() {
     yaw_motor->SetOutput(0);
     pitch_motor->SetOutput(0);
     // steering_motor->SetOutput(0);
-    driver::MotorCANBase::TransmitOutput(gimbal_motors,2);
+    driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
 }

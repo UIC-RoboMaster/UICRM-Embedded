@@ -18,12 +18,12 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "main.h"
+#include "sbus.h"
 
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "sbus.h"
+#include "main.h"
 
 bsp::CAN* can = nullptr;
 driver::MotorCANBase* fl_motor = nullptr;
@@ -69,7 +69,7 @@ void RM_RTOS_Default_Task(const void* args) {
         chassis->SetSpeed(-sbus->ch1, sbus->ch2, sbus->ch4);
 
         // Kill switch
-        if (sbus->ch5>=550) {
+        if (sbus->ch5 >= 550) {
             RM_ASSERT_TRUE(false, "Operation killed");
         }
 
