@@ -137,6 +137,18 @@ namespace bsp {
         template <bool FromISR = false>
         int32_t Write(const uint8_t* data, uint32_t length);
 
+        /**
+         * @brief 修改串口波特率
+         * @param baudrate 波特率
+         * @note 仅在串口初始化之前调用有效
+         */
+        /**
+         * @brief change baudrate
+         * @param baudrate baudrate
+         * @note only valid before uart initialization
+         */
+         void SetBaudrate(uint32_t baudrate);
+
       protected:
         /**
          * @brief 串口发送完成回调函数
