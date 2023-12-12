@@ -122,6 +122,26 @@ namespace bsp {
         int Transmit(uint16_t id, const uint8_t data[], uint32_t length);
 
         /**
+         * @brief 发送CAN数据，使用扩展Can ID
+         *
+         * @param id      tx id
+         * @param data[]  数据
+         * @param length  数据长度，必须在(0, 8]之间
+         *
+         * @return  返回发送的字节数，如果发送失败返回-1
+         */
+        /**
+         * @brief transmit can messages, using extended can id
+         *
+         * @param id      tx id
+         * @param data[]  data bytes
+         * @param length  length of data, must be in (0, 8]
+         *
+         * @return  number of bytes transmitted, -1 if failed
+         */
+        int TransmitExtend(uint32_t id, const uint8_t data[], uint32_t length);
+
+        /**
          * @brief CAN的接收回调
          *
          * @note 该函数不应该被用户调用
