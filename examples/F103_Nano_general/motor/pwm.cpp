@@ -34,35 +34,34 @@
 driver::MotorPWMBase* motor1;
 
 void RM_RTOS_Init() {
-   print_use_uart(&huart1);
-   motor1 = new driver::MotorPWMBase(&htim2, 1, TIM_CLOCK_FREQ,
-                                     MOTOR_OUT_FREQ, 0);
+    print_use_uart(&huart1);
+    motor1 = new driver::MotorPWMBase(&htim2, 1, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, 0);
 
-   motor1->SetOutput(1000);
-   HAL_Delay(3000);
+    motor1->SetOutput(1000);
+    HAL_Delay(3000);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
-   UNUSED(args);
-   bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
+    UNUSED(args);
+    bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
 
-   int current = 0;
-   while (true) {
-       if (key.Read() == 0) {
-           osDelay(30);
-           if (key.Read() == 1)
-               continue;
-           while (key.Read() == 0) {
-               osDelay(30);
-           }
-           if (current == 1000) {
-               current = 750;
-               motor1->SetOutput(current);
-           } else {
-               current = 1000;
-               motor1->SetOutput(current);
-           }
-           osDelay(200);
-       }
-   }
+    int current = 0;
+    while (true) {
+        if (key.Read() == 0) {
+            osDelay(30);
+            if (key.Read() == 1)
+                continue;
+            while (key.Read() == 0) {
+                osDelay(30);
+            }
+            if (current == 1000) {
+                current = 750;
+                motor1->SetOutput(current);
+            } else {
+                current = 1000;
+                motor1->SetOutput(current);
+            }
+            osDelay(200);
+        }
+    }
 }
