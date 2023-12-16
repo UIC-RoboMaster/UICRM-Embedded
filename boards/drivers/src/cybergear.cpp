@@ -22,6 +22,7 @@
 #include "arm_math.h"
 #include "bsp_print.h"
 #include <string.h>
+#include "utils.h"
 namespace driver{
 
     /**
@@ -72,7 +73,8 @@ namespace driver{
                     break;
                 case 2:
                     //read frame
-                    theta_ = uint_to_float((data[0]<<8)|data[1], -4*PI, 4*PI, 16);
+                    mit_theta_ = uint_to_float((data[0]<<8)|data[1], -4*PI, 4*PI, 16);
+                    theta_ = wrapc<float>(uint_to_float((data[0]<<8)|data[1], -4*PI, 4*PI, 16),0,2*PI);
                     omega_ = uint_to_float((data[2]<<8)|data[3], -30, 30, 16);
                     torque_ = uint_to_float((data[4]<<8)|data[5], -12, 12, 16);
                     temperature_ = ((data[6]<<8)|data[7])*0.1;
@@ -205,14 +207,20 @@ namespace driver{
     float CyberGear::GetThetaDelta(const float target) const {
         return target - theta_;
     }
+    float CyberGear::GetMITTheta() const {
+        return mit_theta_;
+    }
+    float CyberGear::GetMITThetaDelta(const float target) const {
+        return target - mit_theta_;
+    }
     float CyberGear::GetOmega() const {
             return omega_;
     }
-    float CyberGear::GetTorque() const {
-            return torque_;
-    }
     float CyberGear::GetOmegaDelta(const float target) const {
             return target - omega_;
+    }
+    float CyberGear::GetTorque() const {
+            return torque_;
     }
     float CyberGear::GetTemp() const {
             return temperature_;
@@ -223,5 +231,6 @@ namespace driver{
             print("Torque: % .4f ", GetTorque());
             print("Motor temp: % .1f \r\n", GetTemp());
     }
+
 
 };

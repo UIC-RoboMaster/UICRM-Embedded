@@ -82,6 +82,10 @@ namespace driver {
 
         float GetThetaDelta(const float target)const;
 
+        float GetMITTheta() const;
+
+        float GetMITThetaDelta(const float target)const;
+
         float GetOmega() const;
 
         float GetOmegaDelta(const float target)const;
@@ -114,6 +118,7 @@ namespace driver {
         cybergear_mode_e mode_=CYBERGEAR_MODE_CURRENT;
 
         float theta_=0;
+        float mit_theta_=0;
         float omega_=0;
         float torque_=0;
         float temperature_=0;

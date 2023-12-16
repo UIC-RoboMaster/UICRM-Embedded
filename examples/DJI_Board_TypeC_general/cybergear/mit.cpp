@@ -57,10 +57,10 @@ void RM_RTOS_Default_Task(const void* arguments) {
             }
             if (current == 0) {
                 current = 10000;
-                pos = 12.5;
+                pos = 12.56;
             } else {
                 current = 0;
-                pos = -12.5;
+                pos = -12.56;
             }
         }
         motor1->SetOutput(pos, 30, 80, 50, 0.5);
