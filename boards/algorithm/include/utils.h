@@ -82,6 +82,44 @@ T wrap(T value, T min, T max) {
 }
 
 /**
+ * @brief 环绕一个值使其落入给定范围，此函数会不断环绕直到落入范围
+ *
+ * @tparam T    值的类型
+ * @param value 要环绕的值
+ * @param min   范围最小值
+ * @param max   范围最大值
+ *
+ * @return 落入范围[min, max]的环绕值
+ *
+ * @note 如果value距离min或max超过一个周期，行为未定义
+ */
+/**
+ * @brief wrap around a value to fall into a given range, this function will
+ * wrap around until it falls into the range
+ *
+ * @tparam T    type of the value
+ * @param value value to be wrapped around
+ * @param min   range min
+ * @param max   range max
+ *
+ * @return wrapped around value that falls in the range [min, max]
+ *
+ * @note undefined behavior if value is more than one cycle away from min or
+ * max
+ */
+template <typename T>
+T wrapc(T value, T min, T max) {
+    const T range = max - min;
+    while (value < min) {
+            value += range;
+    }
+    while (value > max) {
+            value -= range;
+    }
+    return value;
+}
+
+/**
  * @brief 将一个值限制范围后，环绕使其落入给定的环绕范围
  *
  * @tparam T        值的类型

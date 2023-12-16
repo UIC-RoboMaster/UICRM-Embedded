@@ -66,8 +66,8 @@ namespace bsp {
         can->RxCallback();
     }
 
-    CAN::CAN(CAN_HandleTypeDef* hcan, uint32_t start_id, bool is_master)
-        : hcan_(hcan), start_id_(start_id) {
+    CAN::CAN(CAN_HandleTypeDef* hcan, uint32_t start_id, bool is_master,uint8_t ext_id_suffix)
+        : hcan_(hcan), start_id_(start_id),ext_id_suffix_(ext_id_suffix) {
         RM_ASSERT_FALSE(HandleExists(hcan), "Repeated CAN initialization");
         ConfigureFilter(is_master);
         // activate rx interrupt
@@ -96,6 +96,18 @@ namespace bsp {
         return 0;
     }
 
+    int CAN::RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback, void* args){
+        if (ext_callback_count_ >= MAX_CAN_DEVICES)
+            return -1;
+
+        rx_ext_args_[callback_count_] = args;
+        rx_ext_callbacks_[callback_count_] = callback;
+        ext_to_index_[ext_id_suffix] = ext_callback_count_;
+        ext_callback_count_++;
+
+        return 0;
+    }
+
     int CAN::Transmit(uint16_t id, const uint8_t data[], uint32_t length) {
         RM_EXPECT_TRUE(IS_CAN_DLC(length), "CAN tx data length exceeds limit");
         if (!IS_CAN_DLC(length))
@@ -116,8 +128,34 @@ namespace bsp {
             return -1;
 
         // poll for can transmission to complete
-        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
-            ;
+//        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
+//            ;
+
+        return length;
+    }
+
+    int CAN::TransmitExtend(uint32_t id, const uint8_t data[], uint32_t length) {
+        RM_EXPECT_TRUE(IS_CAN_DLC(length), "CAN tx data length exceeds limit");
+        if (!IS_CAN_DLC(length))
+            return -1;
+
+        CAN_TxHeaderTypeDef header = {
+            .StdId = 0x0,
+            .ExtId = id,
+            .IDE = CAN_ID_EXT,
+            .RTR = CAN_RTR_DATA,
+            .DLC = length,
+            .TransmitGlobalTime = DISABLE,
+        };
+
+        uint32_t mailbox;
+
+        if (HAL_CAN_AddTxMessage(hcan_, &header, (uint8_t*)data, &mailbox) != HAL_OK)
+            return -1;
+
+        // poll for can transmission to complete
+//        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
+//            ;
 
         return length;
     }
@@ -126,6 +164,10 @@ namespace bsp {
         CAN_RxHeaderTypeDef header;
         uint8_t data[MAX_CAN_DATA_SIZE];
         HAL_CAN_GetRxMessage(hcan_, CAN_RX_FIFO0, &header, data);
+        if(header.IDE == CAN_ID_EXT){
+            RxExtendCallback(header,data);
+            return;
+        }
         uint16_t callback_id = header.StdId;
         const auto it = id_to_index_.find(callback_id);
         if (it == id_to_index_.end())
@@ -134,6 +176,21 @@ namespace bsp {
         // find corresponding callback
         if (rx_callbacks_[callback_id])
             rx_callbacks_[callback_id](data, rx_args_[callback_id]);
+    }
+
+    void CAN::RxExtendCallback(CAN_RxHeaderTypeDef header,
+                               uint8_t* data) {
+        uint32_t extId = header.ExtId;
+        // use the first ext_id_suffix_ bits to identify the devices
+        uint32_t identifier = extId & ((1 << ext_id_suffix_) - 1);
+        const auto it = ext_to_index_.find(identifier);
+        if (it == ext_to_index_.end())
+            return;
+        identifier = it->second;
+        // find corresponding callback
+        if (rx_ext_callbacks_[identifier])
+            rx_ext_callbacks_[identifier](data, extId,rx_ext_args_[identifier]);
+
     }
 
     void CAN::ConfigureFilter(bool is_master) {
