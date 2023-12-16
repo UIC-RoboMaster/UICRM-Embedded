@@ -21,8 +21,8 @@
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "main.h"
 #include "cybergear.h"
+#include "main.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
@@ -30,7 +30,6 @@
 // Refer to typeA datasheet for channel detail
 static bsp::CAN* can1 = nullptr;
 static driver::CyberGear* motor1 = nullptr;
-
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
@@ -48,7 +47,7 @@ void RM_RTOS_Default_Task(const void* arguments) {
     motor1->MotorEnable();
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
     uint16_t current = 0;
-    float pos=12.5;
+    float pos = 12.5;
     while (true) {
         set_cursor(0, 0);
         clear_screen();
@@ -58,10 +57,10 @@ void RM_RTOS_Default_Task(const void* arguments) {
             }
             if (current == 0) {
                 current = 10000;
-                pos=12.5;
+                pos = 12.5;
             } else {
                 current = 0;
-                pos=-12.5;
+                pos = -12.5;
             }
         }
         motor1->SetOutput(pos, 30, 80, 50, 0.5);
