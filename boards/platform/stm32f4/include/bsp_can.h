@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 #include "bsp_error_handler.h"
 #include "can.h"
@@ -204,18 +204,18 @@ namespace bsp {
         can_rx_callback_t rx_callbacks_[MAX_CAN_DEVICES] = {0};
         void* rx_args_[MAX_CAN_DEVICES] = {NULL};
 
-        std::map<uint16_t, uint8_t> id_to_index_;
+        std::unordered_map<uint16_t, uint8_t> id_to_index_;
         uint8_t callback_count_ = 0;
 
         can_rx_ext_callback_t rx_ext_callbacks_[MAX_CAN_DEVICES] = {0};
         void* rx_ext_args_[MAX_CAN_DEVICES] = {NULL};
 
-        std::map<uint32_t, uint8_t> ext_to_index_;
+        std::unordered_map<uint32_t, uint8_t> ext_to_index_;
         uint8_t ext_callback_count_ = 0;
 
         uint8_t ext_id_suffix_;
 
-        static std::map<CAN_HandleTypeDef*, CAN*> ptr_map;
+        static std::unordered_map<CAN_HandleTypeDef*, CAN*> ptr_map;
         static CAN* FindInstance(CAN_HandleTypeDef* hcan);
         static bool HandleExists(CAN_HandleTypeDef* hcan);
         static void RxFIFO0MessagePendingCallback(CAN_HandleTypeDef* hcan);
