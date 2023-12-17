@@ -26,6 +26,14 @@
 
 namespace bsp {
 
+    /**
+     * @brief 串口管理类
+     * @details 用于串口的收发
+     */
+    /**
+     * @brief UART manager
+     * @details used for UART send and receive
+     */
     class UART {
       public:
         /**
@@ -128,6 +136,18 @@ namespace bsp {
          */
         template <bool FromISR = false>
         int32_t Write(const uint8_t* data, uint32_t length);
+
+        /**
+         * @brief 修改串口波特率
+         * @param baudrate 波特率
+         * @note 仅在串口初始化之前调用有效
+         */
+        /**
+         * @brief change baudrate
+         * @param baudrate baudrate
+         * @note only valid before uart initialization
+         */
+         void SetBaudrate(uint32_t baudrate);
 
       protected:
         /**

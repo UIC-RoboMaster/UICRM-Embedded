@@ -36,7 +36,7 @@
  * @param huart HAL uart handle
  * @param dma whether to use DMA
  */
-void print_use_uart(UART_HandleTypeDef* huart, bool dma = true);
+void print_use_uart(UART_HandleTypeDef* huart, bool dma = true, uint32_t baudrate = 115200);
 
 #ifndef NO_USB
 /**
