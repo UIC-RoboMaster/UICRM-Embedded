@@ -26,7 +26,7 @@
 
 namespace bsp {
 
-    std::map<CAN_HandleTypeDef*, CAN*> CAN::ptr_map;
+    std::unordered_map<CAN_HandleTypeDef*, CAN*> CAN::ptr_map;
 
     /**
      * @brief find instantiated can line
@@ -154,8 +154,8 @@ namespace bsp {
             return -1;
 
         // poll for can transmission to complete
-//        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
-//            ;
+        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
+            ;
 
         return length;
     }
