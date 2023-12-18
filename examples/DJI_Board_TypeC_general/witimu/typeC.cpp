@@ -39,6 +39,9 @@ const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
                                          .reserved = 0};
 osThreadId_t imuTaskHandle;
 
+/// The class IUART is a wrapper of bsp::UART, which is used to
+/// implement the virtual function RxCompleteCallback() to
+/// receive data from the wit-imu
 class IUART : public bsp::UART {
   public:
     using bsp::UART::UART;
@@ -51,6 +54,7 @@ class IUART : public bsp::UART {
 
 static IUART* wituart = nullptr;
 
+/// The class WITUART is not an UART, It means that the WIT-IMU using UART
 static imu::WITUART* witimu = nullptr;
 
 void imuTask(void* arg) {
@@ -58,28 +62,35 @@ void imuTask(void* arg) {
 
     while (true) {
         uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-        if (flags & RX_SIGNAL) {  // unnecessary check
+        if (flags & RX_SIGNAL) {
             witimu->Update();
         }
     }
 }
 
 void RM_RTOS_Init(void) {
+    /// because imu occupies uart1, no other UART can be used, so we need to use USB to print
     print_use_usb();
     wituart = new IUART(&huart1);
+    /// Some models of wit-imu may need to change baudrate to 921600
     //    wituart->SetBaudrate(921600);
+    /// Setup Rx and Tx buffer size
     wituart->SetupTx(100);
     wituart->SetupRx(100);
     witimu = new imu::WITUART(wituart);
-    uint8_t status_data[] = {0x08, 0x00};
+    /// Before write the register, you need to unlock the wit-imu
     witimu->Unlock();
     HAL_Delay(100);
+    /// Set only output the INS data (Euler Angles)
+    uint8_t status_data[] = {0x08, 0x00};
     witimu->WriteReg(0x02, status_data);
     HAL_Delay(100);
+    /// Calibrate the IMU
     status_data[0] = 0x01;
     status_data[1] = 0x00;
     witimu->WriteReg(0x01, status_data);
     HAL_Delay(100);
+    /// Lock the IMU
     witimu->Lock();
     HAL_Delay(100);
 }
