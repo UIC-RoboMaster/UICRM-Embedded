@@ -105,6 +105,9 @@ void RM_RTOS_Default_Task(const void *argument);
 #define LED_G4_GPIO_Port GPIOG
 #define LED_G3_Pin GPIO_PIN_3
 #define LED_G3_GPIO_Port GPIOG
+#define TRIG_KEY_Pin GPIO_PIN_10
+#define TRIG_KEY_GPIO_Port GPIOF
+#define TRIG_KEY_EXTI_IRQn EXTI15_10_IRQn
 #define LED_G2_Pin GPIO_PIN_2
 #define LED_G2_GPIO_Port GPIOG
 #define USB_KEY_Pin GPIO_PIN_2
