@@ -1,12 +1,12 @@
 # UIC RoboMaster Embedded
 
-![arm](https://github.com/yry0008/UICRM-Embedded/workflows/arm%20build/badge.svg)
+![arm](https://github.com/UIC-RoboMaster/UICRM-Embedded/workflows/arm%20build/badge.svg)
 
 Embedded system development @ BNU-HKBU UIC RoboMaster
 
 ## User Guide
 
-You can follow the instructions below to setup the necessary environments for
+You can follow the instructions below to set up the necessary environments for
 building the source code and flashing the embedded chips.
 
 ### Install ARM Toolchain (manual)
@@ -16,7 +16,7 @@ building the source code and flashing the embedded chips.
 2. Download the pre-built toolchain according to your operating system.
 3. Decompress it to some directory and find an absolute path to the `bin` directory.
 
-   In my case: `/Users/alvin/gcc-arm-none-eabi-10.3-2021.10/bin`.
+   In my case: `/Users/yry0008/gcc-arm-none-eabi-10.3-2021.10/bin`.
 
 4. For Windows users, add the following line (replace `<path>`
    with the actual binary path found in step 3) to `PATH` environment variable.
@@ -35,7 +35,7 @@ building the source code and flashing the embedded chips.
 2. Download the pre-built toolchain according to your operating system.
 3. Decompress it to some directory and find an absolute path to the `bin` directory.
 
-   In my case: `/Users/alvin/openocd-0.11.0-2021.10/bin`.
+   In my case: `/Users/yry0008/openocd-0.11.0-2021.10/bin`.
 4. For Windows users, add the following line (replace `<path>`
     with the actual binary path found in step 3) to `PATH` environment variable.
    For Linux / Mac users, add the following line (replace `<path>`
@@ -54,8 +54,8 @@ building the source code and flashing the embedded chips.
 1. Go to the [official download page](https://sourceforge.net/projects/mingw-w64/files/)
    for Mingw-w64.
    
-### Install Make (Windows only)
-1. Go to the [official download page](https://sourceforge.net/projects/gnuwin32/files/make/3.81/)
+### Install Ninja (Windows only)
+1. Go to the [official download page](https://ninja-build.org)
 
 ### Compile Project (CLion)
 You can directly open the project in CLion and build it.
@@ -71,35 +71,23 @@ You need to set the path of the embedded toolchain in the CLion settings.
    cmake -DCMAKE_BUILD_TYPE=Release ..
    make -j
    ```
-   In  Windows you should add the option to let cmake use make to build.
+   In Windows, you should add the option to let cmake use ninja to build.
    ```sh
-   cmake -DCMAKE_BUILD_TYPE=Release ... -G "Unix Makefiles"
+   cmake -DCMAKE_BUILD_TYPE=Release ... -G "Ninja"
    ```
    Change build type to `Debug` or `RelWithDebInfo` in order to debug with `gdb`.
    Note that `Debug` build could be much slower than the other two due to lack
    of compiler optimizations.
 
 ### Flash Binary to Chip (Clion)
+
 Choose the target you want to flash and click the `Run` button.
+
+The default configuration is for CMSIS-DAP debugger. If you are using ST-LINK,
+you need to change the configuration in the CLion settings.
 
 ### Flash Binary to Chip (OpenOCD)
 TODO
-
-
-### Flash Binary to Chip (ST-Link/Deprecated)
-
-1. Install [stlink](https://github.com/stlink-org/stlink).
-
-    1. For Mac users, `brew install stlink` could be a shortcut.
-    2. For Ubuntu users, `sudo apt install stlink` could be a shortcut.
-    3. For Arch users, `sudo pacman -S stlink` could be a shortcut.
-    4. For Linux users, either use prebuilt binaries, or build from source
-       following their compile manual.
-
-2. Flash one of the example programs by running `make flash-<xxx>` in the
-   `build/` directory created at compilation.
-
-   e.g. `make flash-example_buzzer` -> and you shall hear some music (or noise)
 
 ### Document Usage
 
@@ -114,10 +102,12 @@ You will need [Doxygen](https://www.doxygen.nl/index.html).
 To generate documentations after compiling the project.
 
 - Run `make doc` in the `build/` directory
+- In windows, you need to run `ninja doc` in the `build/` directory
 
 To view the generated document:
 
-- Run `firefox docs/html/index.html`
+- Run `firefox docs/html/index.html`, or
+- Open `docs/html/index.html` in your browser.
 
 ## Developer Guide
 
@@ -129,13 +119,14 @@ You can use any editor you like, but we recommend using [CLion](https://www.jetb
 ### Format Code
 
 The continuous integration system will check the source code against
-[Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+a specific coding style. If the code does not follow the style, the
+formatting check will fail and the code will not be merged.
 All codes are required to be formatted correctly before merging. There are several
 integrated build commands that can help you automatically format your changes.
 
 **Prerequisite**: install `clang-format`
 
-* Linux users can simply install it using `sudo apt install clang-format-10`.
+* Linux's users can simply install it using `sudo apt install clang-format-10`.
 * Mac and Windows users need to download prebuilt binaries from
   [here](https://releases.llvm.org/download.html).
 
@@ -155,44 +146,12 @@ There are 2 choices for such server, with tradeoffs of their own.
     
   This is the easiest way to debug. Choose the target and Directly click the `Debug` button in CLion.
 
-* **`st-util`**
-
-  This tool comes with [stlink](#flash-binary-to-chip), but be aware
-  that this is a third-party implementation and is not stable. The most
-  recent release tested to be working is `v1.5.1` (**Notice:** `st-util`
-  have poor performance, it could malfunction most of the time, so
-  it is not recommended).
-
 * **`OpenOCD`**
 
   This tool is much more stable but is slightly less intelligent in detecting
-  ST-LINK version and it has not been updated since 2017. To install it,
+  ST-LINK version, and it has not been updated since 2017. To install it,
     * `brew install openocd` for Mac users
     * `sudo apt install openocd` for Ubuntu users
     * `sudo pacman -S openocd` for Arch users
 
-Follow the steps below to debug an executable
-
-1. Launch a `gdb` server by either choice
-    * `st-util`
-    * `openocd -f <project root>/debug/OpenOCD/st-link-v2-1.cfg`
-2. In a separate terminal, `cd` into the `build` directory and run `make debug-xxx`
-   (e.g. `make debug-example_buzzer`). This will open up a `gdb` session.
-3. Run `target extended-remote :<port>` (or `tar ext :<port>` in short )
-   to connect to the `gdb` server.
-    * For `st-util`, replace `<port>` with `4242`.
-    * For `openocd`, replace `<port>` with `3333`.
-4. Run `load` to flash the executable (Note that you can also run `make` here
-   without exiting `gdb` to re-build the executable if you modified some
-   source code).
-5. Debug just like any regular `gdb` debugger: use commands like `continue`,
-   `run`, `break`, `watch`, `next`, `step` the same way you will expect.
-
-## Docs to call objects.
-
-First Install `doxygen` , add `doxygen` to path.
-
-Then run `make doc` in the `build/` directory.
-Or choose the target `doc` in CLion and click the `Build` button.
-
-Then open `docs/html/index.html` in your browser to view the generated docs.
+  Thought directly using `openocd` is possible, but it is only recommended for advanced users.
