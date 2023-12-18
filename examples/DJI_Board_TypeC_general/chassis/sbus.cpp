@@ -73,7 +73,8 @@ void RM_RTOS_Default_Task(const void* args) {
             RM_ASSERT_TRUE(false, "Operation killed");
         }
 
-        chassis->Update(false, 30, 20, 60);
+        chassis->SetPower(false, 30, 20, 60);
+        chassis->Update();
         driver ::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(10);
     }
