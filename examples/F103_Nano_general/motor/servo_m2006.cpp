@@ -37,7 +37,7 @@ void RM_RTOS_Init() {
     HAL_Delay(200);
     print_use_uart(&huart1);
     dbus = new remote::DBUS(&huart2);
-    can2 = new bsp::CAN(&hcan1, 0x201, true);
+    can2 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::Motor2006(can2, 0x201);
     driver::servo_t servo_data;
 

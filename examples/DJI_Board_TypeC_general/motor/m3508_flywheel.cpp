@@ -38,7 +38,7 @@ static driver::FlyWheelMotor* flywheel2 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart6);
-    can1 = new bsp::CAN(&hcan1, 0x201, true);
+    can1 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::Motor3508(can1, 0x201);
     motor2 = new driver::Motor3508(can1, 0x202);
 

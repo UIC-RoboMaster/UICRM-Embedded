@@ -128,16 +128,35 @@ namespace control {
         }
     }
 
-    void Chassis::Update(bool power_limit_on, float power_limit, float chassis_power,
-                         float chassis_power_buffer) {
+
+    void Chassis::SetPower(bool power_limit_on, float power_limit, float chassis_power,
+                           float chassis_power_buffer) {
+        power_limit_on_ = power_limit_on;
+        power_limit_info_.power_limit = power_limit;
+        power_limit_info_.WARNING_power = power_limit * 0.9;
+        power_limit_info_.WARNING_power_buff = 50;
+        current_chassis_power_ = chassis_power;
+        current_chassis_power_buffer_ = chassis_power_buffer;
         switch (model_) {
-            case CHASSIS_MECANUM_WHEEL: {
-                power_limit_info_.power_limit = power_limit;
-                power_limit_info_.WARNING_power = power_limit * 0.9;
-                power_limit_info_.WARNING_power_buff = 50;
+            case CHASSIS_MECANUM_WHEEL:
                 power_limit_info_.buffer_total_current_limit = 3500 * FourWheel::motor_num;
                 power_limit_info_.power_total_current_limit =
                     5000 * FourWheel::motor_num / 80.0 * power_limit;
+                break;
+            case CHASSIS_ONE_WHEEL:
+                power_limit_info_.buffer_total_current_limit = 180000 * OneWheel::motor_num;
+                power_limit_info_.power_total_current_limit =
+                    257000 * OneWheel::motor_num / 80.0 * power_limit;
+                break;
+            default:
+                RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
+        }
+
+    }
+
+    void Chassis::Update() {
+        switch (model_) {
+            case CHASSIS_MECANUM_WHEEL: {
 
                 float PID_output[FourWheel::motor_num];
                 float output[FourWheel::motor_num];
@@ -152,8 +171,8 @@ namespace control {
                 PID_output[FourWheel::back_right] = pids_[FourWheel::back_right].ComputeOutput(
                     motors_[FourWheel::back_right]->GetOmegaDelta(speeds_[FourWheel::back_right]));
 
-                power_limit_->Output(power_limit_on, power_limit_info_, chassis_power,
-                                     chassis_power_buffer, PID_output, output);
+                power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
+                                     current_chassis_power_buffer_, PID_output, output);
 
                 motors_[FourWheel::front_left]->SetOutput(
                     control::ClipMotorRange(output[FourWheel::front_left]));
@@ -166,12 +185,6 @@ namespace control {
                 break;
             }
             case CHASSIS_ONE_WHEEL: {
-                power_limit_info_.power_limit = power_limit;
-                power_limit_info_.WARNING_power = power_limit * 0.9;
-                power_limit_info_.WARNING_power_buff = 50;
-                power_limit_info_.buffer_total_current_limit = 180000 * OneWheel::motor_num;
-                power_limit_info_.power_total_current_limit =
-                    257000 * OneWheel::motor_num / 80.0 * power_limit;
 
                 float PID_output[OneWheel::motor_num];
                 float output[OneWheel::motor_num];
@@ -179,8 +192,8 @@ namespace control {
                 PID_output[OneWheel::center] = pids_[OneWheel::center].ComputeOutput(
                     motors_[OneWheel::center]->GetOmegaDelta(speeds_[OneWheel::center]));
 
-                power_limit_->Output(power_limit_on, power_limit_info_, chassis_power,
-                                     chassis_power_buffer, PID_output, output);
+                power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
+                                     current_chassis_power_buffer_, PID_output, output);
 
                 motors_[OneWheel::center]->SetOutput(
                     control::ClipMotorRange(output[OneWheel::center]));
@@ -191,5 +204,6 @@ namespace control {
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
     }
+
 
 } /* namespace control */

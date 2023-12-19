@@ -31,7 +31,7 @@ driver::MotorCANBase* motor1 = NULL;
 void RM_RTOS_Init() {
     print_use_uart(&huart4);
 
-    can2 = new bsp::CAN(&hcan2, 0x205, false);
+    can2 = new bsp::CAN(&hcan2, false);
     motor1 = new driver::Motor6020(can2, 0x205);
     // motor2 = new control::Motor6020(can2, 0x206);
 }

@@ -68,11 +68,10 @@ namespace bsp {
          * @brief constructor for bsp CAN instance
          *
          * @param hcan     HAL can handle
-         * @param start_id lowest possible stdid for rx, deprecated
          * @param is_master whether this is the master node, set to true if hcan is hcan1, otherwise
          * false
          */
-        CAN(CAN_HandleTypeDef* hcan, uint32_t start_id, bool is_master = true, uint8_t ext_id_suffix = 8);
+        CAN(CAN_HandleTypeDef* hcan, bool is_master = true, uint8_t ext_id_suffix = 8);
         /**
          * @brief 检查是否与给定的CAN句柄相关联
          *
@@ -199,7 +198,6 @@ namespace bsp {
         void ConfigureFilter(bool is_master);
 
         CAN_HandleTypeDef* hcan_;
-        const uint32_t start_id_;
 
         can_rx_callback_t rx_callbacks_[MAX_CAN_DEVICES] = {0};
         void* rx_args_[MAX_CAN_DEVICES] = {NULL};

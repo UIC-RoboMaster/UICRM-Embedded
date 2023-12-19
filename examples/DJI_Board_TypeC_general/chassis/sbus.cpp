@@ -37,7 +37,7 @@ remote::SBUS* sbus = nullptr;
 void RM_RTOS_Init() {
     HAL_Delay(200);
     print_use_uart(&huart1);
-    can = new bsp::CAN(&hcan1, 0x201, true);
+    can = new bsp::CAN(&hcan1, true);
     fl_motor = new driver::Motor3508(can, 0x202);
     fr_motor = new driver::Motor3508(can, 0x201);
     bl_motor = new driver::Motor3508(can, 0x203);
@@ -73,7 +73,8 @@ void RM_RTOS_Default_Task(const void* args) {
             RM_ASSERT_TRUE(false, "Operation killed");
         }
 
-        chassis->Update(false, 30, 20, 60);
+        chassis->SetPower(false, 30, 20, 60);
+        chassis->Update();
         driver ::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(10);
     }

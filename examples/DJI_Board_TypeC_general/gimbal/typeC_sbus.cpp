@@ -162,7 +162,7 @@ void gimbalTask(void* arg) {
 void RM_RTOS_Init(void) {
     print_use_uart(&huart6);
 
-    can1 = new bsp::CAN(&hcan2, 0x201, false);
+    can1 = new bsp::CAN(&hcan2, false);
     sbus = new remote::SBUS(&huart3);
 
     bsp::IST8310_init_t IST8310_init;

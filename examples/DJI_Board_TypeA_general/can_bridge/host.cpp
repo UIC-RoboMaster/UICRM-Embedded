@@ -35,7 +35,7 @@ static remote::DBUS* dbus = nullptr;
 void RM_RTOS_Init(void) {
     print_use_usb();
 
-    can1 = new bsp::CAN(&hcan1, 0x200, true, 8);
+    can1 = new bsp::CAN(&hcan1, true, 8);
     can_bridge = new communication::CanBridge(can1, 0x02);
 
     dbus = new remote::DBUS(&huart1);

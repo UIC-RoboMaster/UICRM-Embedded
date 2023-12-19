@@ -79,12 +79,22 @@ namespace control {
          */
         void SetSpeed(const float x_speed, const float y_speed = 0, const float turn_speed = 0);
 
+
+        /**
+         * @brief set the power limit for chassis motors
+         * @param power_limit_on whether to enable power limit
+         * @param power_limit total power limit, in [W]
+         * @param chassis_power Current chassis power, in [W]
+         * @param chassis_power_buffer Current chassis power buffer, in [J]
+         */
+        void SetPower(bool power_limit_on, float power_limit, float chassis_power,
+                    float chassis_power_buffer);
+
         /**
          * @brief calculate the output of the motors under current configuration
          * @note does not command the motor immediately
          */
-        void Update(bool power_limit_on, float power_limit, float chassis_power,
-                    float chassis_power_buffer);
+        void Update();
 
       private:
         // acquired from user
@@ -96,7 +106,10 @@ namespace control {
         PowerLimit* power_limit_ = nullptr;
         float* speeds_ = nullptr;
 
+        bool power_limit_on_;
         power_limit_t power_limit_info_;
+        float current_chassis_power_;
+        float current_chassis_power_buffer_;
 
         float chassis_offset_;
     };

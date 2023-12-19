@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 #include "bsp_error_handler.h"
 #include "can.h"
@@ -68,11 +68,10 @@ namespace bsp {
          * @brief constructor for bsp CAN instance
          *
          * @param hcan     HAL can handle
-         * @param start_id lowest possible stdid for rx, deprecated
          * @param is_master whether this is the master node, set to true if hcan is hcan1, otherwise
          * false
          */
-        CAN(CAN_HandleTypeDef* hcan, uint32_t start_id, bool is_master = true, uint8_t ext_id_suffix = 8);
+        CAN(CAN_HandleTypeDef* hcan, bool is_master = true, uint8_t ext_id_suffix = 8);
         /**
          * @brief 检查是否与给定的CAN句柄相关联
          *
@@ -199,23 +198,22 @@ namespace bsp {
         void ConfigureFilter(bool is_master);
 
         CAN_HandleTypeDef* hcan_;
-        const uint32_t start_id_;
 
         can_rx_callback_t rx_callbacks_[MAX_CAN_DEVICES] = {0};
         void* rx_args_[MAX_CAN_DEVICES] = {NULL};
 
-        std::map<uint16_t, uint8_t> id_to_index_;
+        std::unordered_map<uint16_t, uint8_t> id_to_index_;
         uint8_t callback_count_ = 0;
 
         can_rx_ext_callback_t rx_ext_callbacks_[MAX_CAN_DEVICES] = {0};
         void* rx_ext_args_[MAX_CAN_DEVICES] = {NULL};
 
-        std::map<uint32_t, uint8_t> ext_to_index_;
+        std::unordered_map<uint32_t, uint8_t> ext_to_index_;
         uint8_t ext_callback_count_ = 0;
 
         uint8_t ext_id_suffix_;
 
-        static std::map<CAN_HandleTypeDef*, CAN*> ptr_map;
+        static std::unordered_map<CAN_HandleTypeDef*, CAN*> ptr_map;
         static CAN* FindInstance(CAN_HandleTypeDef* hcan);
         static bool HandleExists(CAN_HandleTypeDef* hcan);
         static void RxFIFO0MessagePendingCallback(CAN_HandleTypeDef* hcan);

@@ -204,7 +204,8 @@ void chassisTask(void* arg) {
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->Update(false, 30, 20, (float)100);
+                chassis->SetPower(false, 30, 20, 100);
+                chassis->Update();
                 break;
             case REMOTE_MODE_SPIN:
 
@@ -219,7 +220,8 @@ void chassisTask(void* arg) {
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->Update(false, 30, 20, (float)100);
+                chassis->SetPower(false, 30, 20, 100);
+                chassis->Update();
                 break;
             case REMOTE_MODE_ADVANCED:
                 vz_set = offset_yaw;
@@ -228,7 +230,8 @@ void chassisTask(void* arg) {
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->Update(false, 30, 20, (float)100);
+                chassis->SetPower(false, 30, 20, 100);
+                chassis->Update();
                 break;
             default:
                 // Not Support

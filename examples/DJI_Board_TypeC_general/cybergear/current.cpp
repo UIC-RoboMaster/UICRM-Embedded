@@ -33,7 +33,7 @@ static driver::CyberGear* motor1 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hcan1, 0x01, true);
+    can1 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::CyberGear(can1, 0x32, 0x33);
     motor1->SetMode(driver::CYBERGEAR_MODE_CURRENT);
 

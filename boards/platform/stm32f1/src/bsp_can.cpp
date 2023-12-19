@@ -26,7 +26,7 @@
 
 namespace bsp {
 
-    std::map<CAN_HandleTypeDef*, CAN*> CAN::ptr_map;
+    std::unordered_map<CAN_HandleTypeDef*, CAN*> CAN::ptr_map;
 
     /**
      * @brief find instantiated can line
@@ -66,8 +66,8 @@ namespace bsp {
         can->RxCallback();
     }
 
-    CAN::CAN(CAN_HandleTypeDef* hcan, uint32_t start_id, bool is_master,uint8_t ext_id_suffix)
-        : hcan_(hcan), start_id_(start_id),ext_id_suffix_(ext_id_suffix) {
+    CAN::CAN(CAN_HandleTypeDef* hcan, bool is_master,uint8_t ext_id_suffix)
+        : hcan_(hcan),ext_id_suffix_(ext_id_suffix) {
         RM_ASSERT_FALSE(HandleExists(hcan), "Repeated CAN initialization");
         ConfigureFilter(is_master);
         // activate rx interrupt
@@ -154,8 +154,8 @@ namespace bsp {
             return -1;
 
         // poll for can transmission to complete
-//        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
-//            ;
+        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
+            ;
 
         return length;
     }
@@ -189,7 +189,7 @@ namespace bsp {
         identifier = it->second;
         // find corresponding callback
         if (rx_ext_callbacks_[identifier])
-            rx_ext_callbacks_[identifier](data, extId,rx_args_[identifier]);
+            rx_ext_callbacks_[identifier](data, extId,rx_ext_args_[identifier]);
 
     }
 
