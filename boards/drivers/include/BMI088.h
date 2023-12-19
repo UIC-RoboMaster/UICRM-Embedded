@@ -420,15 +420,13 @@ namespace imu {
         BMI088_callback_t callback_ = []() {};
 
         // Only one BMI088 object can be created
-        static BMI088* instance_;
+        static void GyroCallbackWrapper(void* args);
 
-        static void GyroCallbackWrapper();
+        static void AccelCallbackWrapper(void* args);
 
-        static void AccelCallbackWrapper();
+        static void AccelSPICallbackWrapper(void* args);
 
-        static void AccelSPICallbackWrapper();
-
-        static void GyroSPICallbackWrapper();
+        static void GyroSPICallbackWrapper(void* args);
 
         /**
          * @brief 初始化BMI088

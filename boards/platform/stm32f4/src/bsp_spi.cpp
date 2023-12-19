@@ -27,7 +27,7 @@ void RM_SPI_IRQHandler(SPI_HandleTypeDef* hspi) {
 
 namespace bsp {
 
-    std::map<SPI_HandleTypeDef*, SPI*> SPI::ptr_map;
+    std::unordered_map<SPI_HandleTypeDef*, SPI*> SPI::ptr_map;
 
     /* get initialized uart_t instance given its hspi handle struct */
     SPI* SPI::FindInstance(SPI_HandleTypeDef* hspi) {
@@ -142,8 +142,9 @@ namespace bsp {
 
     SPIDevice::SPIDevice(spi_device_init_t init) : spi_(init.spi), cs_(init.cs) {
     }
-    void SPIDevice::RegisterCallback(spi_device_rx_callback_t callback) {
+    void SPIDevice::RegisterCallback(spi_device_rx_callback_t callback,void* args) {
         callback_ = callback;
+        args_ = args;
     }
     void SPIDevice::PrepareTransmit() {
         cs_->Low();
@@ -155,10 +156,10 @@ namespace bsp {
         return cs_->Read() == 0;
     }
     void SPIDevice::CallbackWrapper() {
-        callback_();
+        callback_(args_);
     }
 
-    std::map<SPI*, SPIMaster*> SPIMaster::ptr_map;
+    std::unordered_map<SPI*, SPIMaster*> SPIMaster::ptr_map;
 
     SPIMaster::SPIMaster(spi_master_init_t init) {
         spi_ = init.spi;

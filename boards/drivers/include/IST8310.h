@@ -70,8 +70,8 @@ namespace imu {
       private:
         uint8_t Init();
         void ist8310_read_mag();
-        static void I2CCallbackWrapper();
-        static void IntCallbackWrapper();
+        static void I2CCallbackWrapper(void* args);
+        static void IntCallbackWrapper(void* args);
         void IntCallback();
         void I2CCallback();
 
@@ -88,7 +88,6 @@ namespace imu {
 
         ist8310_callback_t callback_ = [](float mag_tmp[3]) { UNUSED(mag_tmp); };
 
-        static IST8310* instance_;
 
         bool start_flag_;
 

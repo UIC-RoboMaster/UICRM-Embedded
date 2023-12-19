@@ -24,10 +24,8 @@
 
 namespace imu {
 
-    BMI088* BMI088::instance_ = nullptr;
 
     BMI088::BMI088(BMI088_init_t init) {
-        instance_ = this;
         spi_master_ = init.spi_master;
         spi_device_accel_ = spi_master_->NewDevice(init.CS_ACCEL);
         spi_device_gyro_ = spi_master_->NewDevice(init.CS_GYRO);
@@ -40,7 +38,6 @@ namespace imu {
 
     BMI088::BMI088(bsp::SPIMaster* spi_master, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO,
                    bsp::GPIT* INT_ACCEL, bsp::GPIT* INT_GYRO, bool is_DMA) {
-        instance_ = this;
         spi_master_ = spi_master;
         spi_device_accel_ = spi_master_->NewDevice(CS_ACCEL);
         spi_device_gyro_ = spi_master_->NewDevice(CS_GYRO);
@@ -152,8 +149,8 @@ namespace imu {
     uint8_t BMI088::Init() {
         uint8_t error = BMI088_NO_ERROR;
 
-        gpit_accel_->RegisterCallback(BMI088::AccelCallbackWrapper);
-        gpit_gyro_->RegisterCallback(BMI088::GyroCallbackWrapper);
+        gpit_accel_->RegisterCallback(BMI088::AccelCallbackWrapper,this);
+        gpit_gyro_->RegisterCallback(BMI088::GyroCallbackWrapper,this);
 
         spi_master_->SetMode(bsp::SPI_MODE_BLOCKED);
         spi_master_->SetAutoCS(false);
@@ -167,8 +164,8 @@ namespace imu {
         Read(this->gyro_, this->accel_, &(this->temperature_));
 
         // spi_->hspi_->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
-        spi_device_accel_->RegisterCallback(BMI088::AccelSPICallbackWrapper);
-        spi_device_gyro_->RegisterCallback(BMI088::GyroSPICallbackWrapper);
+        spi_device_accel_->RegisterCallback(BMI088::AccelSPICallbackWrapper,this);
+        spi_device_gyro_->RegisterCallback(BMI088::GyroSPICallbackWrapper,this);
         if (dma_) {
             spi_master_->SetMode(bsp::SPI_MODE_DMA);
         } else {
@@ -375,54 +372,58 @@ namespace imu {
         }
     }
 
-    void BMI088::AccelSPICallbackWrapper() {
-        if (instance_ == nullptr)
+    void BMI088::AccelSPICallbackWrapper(void* args) {
+        if (args == nullptr)
             return;
-        if (instance_->accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
-            instance_->accel_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
-            instance_->accel_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
-            instance_->spi_device_accel_->FinishTransmit();
+        BMI088* bmi088 = reinterpret_cast<BMI088*>(args);
+        if (bmi088->accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
+            bmi088->accel_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
+            bmi088->accel_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
+            bmi088->spi_device_accel_->FinishTransmit();
         }
         // temperature read over
-        if (instance_->accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
-            instance_->accel_temp_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
-            instance_->accel_temp_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
-            instance_->spi_device_accel_->FinishTransmit();
+        if (bmi088->accel_temp_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
+            bmi088->accel_temp_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
+            bmi088->accel_temp_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
+            bmi088->spi_device_accel_->FinishTransmit();
         }
-        instance_->imu_cmd_spi();
+        bmi088->imu_cmd_spi();
     }
 
-    void BMI088::GyroSPICallbackWrapper() {
-        if (instance_ == nullptr)
+    void BMI088::GyroSPICallbackWrapper(void* args) {
+        if (args == nullptr)
             return;
-        if (instance_->gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
-            instance_->gyro_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
-            instance_->gyro_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
-            instance_->spi_device_gyro_->FinishTransmit();
+        BMI088* bmi088 = reinterpret_cast<BMI088*>(args);
+        if (bmi088->gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) {
+            bmi088->gyro_update_flag &= ~(1 << BMI088_IMU_SPI_SHFITS);
+            bmi088->gyro_update_flag |= (1 << BMI088_IMU_UPDATE_SHFITS);
+            bmi088->spi_device_gyro_->FinishTransmit();
         }
-        instance_->imu_cmd_spi();
+        bmi088->imu_cmd_spi();
 
-        if (instance_->gyro_update_flag & (1 << BMI088_IMU_UPDATE_SHFITS)) {
-            instance_->gyro_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
-            instance_->gyro_update_flag |= (1 << BMI088_IMU_NOTIFY_SHFITS);
-            instance_->Read_IT();
-            instance_->RxCompleteCallback();
+        if (bmi088->gyro_update_flag & (1 << BMI088_IMU_UPDATE_SHFITS)) {
+            bmi088->gyro_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
+            bmi088->gyro_update_flag |= (1 << BMI088_IMU_NOTIFY_SHFITS);
+            bmi088->Read_IT();
+            bmi088->RxCompleteCallback();
         }
     }
-    void BMI088::GyroCallbackWrapper() {
-        if (instance_ == nullptr)
+    void BMI088::GyroCallbackWrapper(void* args) {
+        if (args == nullptr)
             return;
-        instance_->gyro_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
-        if (instance_->bmi088_start_flag)
-            instance_->imu_cmd_spi();
+        BMI088* bmi088 = reinterpret_cast<BMI088*>(args);
+        bmi088->gyro_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
+        if (bmi088->bmi088_start_flag)
+            bmi088->imu_cmd_spi();
     }
-    void BMI088::AccelCallbackWrapper() {
-        if (instance_ == nullptr)
+    void BMI088::AccelCallbackWrapper(void* args) {
+        if (args == nullptr)
             return;
-        instance_->accel_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
-        instance_->accel_temp_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
-        if (instance_->bmi088_start_flag)
-            instance_->imu_cmd_spi();
+        BMI088* bmi088 = reinterpret_cast<BMI088*>(args);
+        bmi088->accel_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
+        bmi088->accel_temp_update_flag |= 1 << BMI088_IMU_DR_SHFITS;
+        if (bmi088->bmi088_start_flag)
+            bmi088->imu_cmd_spi();
     }
     void BMI088::RegisterCallback(BMI088_callback_t callback) {
         callback_ = callback;

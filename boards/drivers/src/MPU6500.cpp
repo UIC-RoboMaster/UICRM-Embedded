@@ -23,8 +23,6 @@
 #include "bsp_os.h"
 
 namespace imu {
-    MPU6500* MPU6500::instance_ = nullptr;
-
     MPU6500::MPU6500(mpu6500_init_t init) {
         spi_ = init.spi;
         cs_ = init.cs;
@@ -53,9 +51,7 @@ namespace imu {
                 bsp_error_handler(__FUNCTION__, __LINE__, "imu register incorrect initialization");
         }
         // setup interrupt callback
-        RM_ASSERT_FALSE(instance_, "Repteated intialization of MPU6500");
-        instance_ = this;
-        spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper);
+        spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper,this);
         // initialize magnetometer
         IST8310Init();
         // enable imu interrupt
@@ -65,7 +61,7 @@ namespace imu {
         } else {
             spi_->SetMode(bsp::SPI_MODE_INTURRUPT);
         }
-        int_pin_->RegisterCallback(IntCallback);
+        int_pin_->RegisterCallback(IntCallback, this);
     }
 
     void MPU6500::IST8310Init() {
@@ -145,12 +141,18 @@ namespace imu {
         mag_[2] = (float)array[9];
     }
 
-    void MPU6500::IntCallback() {
-        instance_->time_ = (float)bsp::GetHighresTickMicroSec();
-        instance_->UpdateData();
+    void MPU6500::IntCallback(void* args) {
+        if (args == nullptr)
+            return;
+        MPU6500* mpu6500 = reinterpret_cast<MPU6500*>(args);
+        mpu6500->time_ = (float)bsp::GetHighresTickMicroSec();
+        mpu6500->UpdateData();
     }
 
-    void MPU6500::SPITxRxCpltCallbackWrapper() {
-        instance_->SPITxRxCpltCallback();
+    void MPU6500::SPITxRxCpltCallbackWrapper(void* args) {
+        if (args == nullptr)
+            return;
+        MPU6500* mpu6500 = reinterpret_cast<MPU6500*>(args);
+        mpu6500->SPITxRxCpltCallback();
     }
 }  // namespace imu

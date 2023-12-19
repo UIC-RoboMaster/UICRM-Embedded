@@ -186,7 +186,7 @@ namespace imu {
         void ReadRegs(uint8_t reg_start, uint8_t* data, uint8_t len);
 
         void SPITxRxCpltCallback();
-        static void IntCallback();
+        static void IntCallback(void* args);
 
         bsp::SPIMaster* spi_;
         bsp::SPIDevice* spi_device_;
@@ -200,7 +200,6 @@ namespace imu {
 
         // global interrupt wrapper
         // TODO(alvin): try to support multiple instances in the future
-        static void SPITxRxCpltCallbackWrapper();
-        static MPU6500* instance_;
+        static void SPITxRxCpltCallbackWrapper(void* args);
     };
 };  // namespace imu

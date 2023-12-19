@@ -93,7 +93,7 @@ namespace bsp {
         uint8_t state_;
     };
 
-    typedef void (*gpit_callback_t)();
+    typedef void (*gpit_callback_t)(void* args);
 
     /**
      * @brief 通用中断引脚管理类
@@ -123,8 +123,9 @@ namespace bsp {
         /**
          * @brief register interrupt callback function
          */
-        void RegisterCallback(gpit_callback_t callback) {
+        void RegisterCallback(gpit_callback_t callback, void* args = nullptr) {
             callback_ = callback;
+            args_ = args;
         };
 
         /**
@@ -134,7 +135,7 @@ namespace bsp {
          * @brief Callback back when interrupt happens
          */
         virtual void IntCallback() {
-            callback_();
+            callback_(args_);
         };
 
         /**
@@ -156,7 +157,9 @@ namespace bsp {
 
         uint16_t pin_;
 
-        gpit_callback_t callback_ = []() {};
+        gpit_callback_t callback_ = [](void* args) { UNUSED(args);};
+
+        void* args_ = nullptr;
     };
 
 } /* namespace bsp */

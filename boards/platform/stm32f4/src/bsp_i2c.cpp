@@ -40,7 +40,7 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef* hi2c) {
 
 namespace bsp {
 
-    std::map<I2C_HandleTypeDef*, I2C*> I2C::ptr_map;
+    std::unordered_map<I2C_HandleTypeDef*, I2C*> I2C::ptr_map;
 
     /**
      * @brief find instantiated can line
@@ -77,7 +77,7 @@ namespace bsp {
         return HAL_I2C_IsDeviceReady(hi2c_, id, 1, timeout) == HAL_OK;
     }
 
-    int I2C::RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback) {
+    int I2C::RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback, void* args){
         // int callback_id = std_id - start_id_;
         // todo: Rx Callback
         if (callback_count_ >= MAX_I2C_DEVICES)
@@ -85,6 +85,7 @@ namespace bsp {
 
         rx_callbacks_[callback_count_] = callback;
         id_to_index_[std_id] = callback_count_;
+        rx_args_[callback_count_] = args;
         callback_count_++;
 
         return 0;
@@ -199,7 +200,7 @@ namespace bsp {
         callback_id = it->second;
         // find corresponding callback
         if (rx_callbacks_[callback_id])
-            rx_callbacks_[callback_id]();
+            rx_callbacks_[callback_id](rx_args_[callback_id]);
     }
     void I2C::SetMode(i2c_mode_e mode) {
         mode_ = mode;
