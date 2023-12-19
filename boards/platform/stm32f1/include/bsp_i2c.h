@@ -19,7 +19,7 @@
  ###########################################################*/
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 #include "i2c.h"
 #include "main.h"
@@ -29,7 +29,7 @@
 namespace bsp {
 
     /* i2c callback function pointer */
-    typedef void (*i2c_rx_callback_t)();
+    typedef void (*i2c_rx_callback_t)(void* args);
 
     enum i2c_mode_e { I2C_MODE_BLOCKING, I2C_MODE_IT, I2C_MODE_DMA };
 
@@ -79,7 +79,7 @@ namespace bsp {
          *
          * @return return 0 if success, -1 if invalid std_id
          */
-        int RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback);
+        int RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback, void* args = NULL);
 
         /**
          * @brief transmit I2C messages
@@ -161,11 +161,12 @@ namespace bsp {
         i2c_mode_e mode_;
 
         i2c_rx_callback_t rx_callbacks_[MAX_I2C_DEVICES] = {0};
+        void* rx_args_[MAX_I2C_DEVICES] = {NULL};
 
-        std::map<uint16_t, uint8_t> id_to_index_;
+        std::unordered_map<uint16_t, uint8_t> id_to_index_;
         uint8_t callback_count_ = 0;
 
-        static std::map<I2C_HandleTypeDef*, I2C*> ptr_map;
+        static std::unordered_map<I2C_HandleTypeDef*, I2C*> ptr_map;
         static bool HandleExists(I2C_HandleTypeDef* hi2c);
     };
 

@@ -18,7 +18,7 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 #pragma once
-#include <map>
+#include <unordered_map>
 
 #include "bsp_gpio.h"
 #include "main.h"
@@ -168,11 +168,11 @@ namespace bsp {
         uint8_t* rx_buffer_;
 
       private:
-        static std::map<SPI_HandleTypeDef*, SPI*> ptr_map;
+        static std::unordered_map<SPI_HandleTypeDef*, SPI*> ptr_map;
         static SPI* FindInstance(SPI_HandleTypeDef* hspi);
     };
 
-    typedef void (*spi_device_rx_callback_t)();
+    typedef void (*spi_device_rx_callback_t)(void* args);
 
     typedef struct {
         SPI* spi;
@@ -208,7 +208,7 @@ namespace bsp {
          * @brief register a callback function to be called when the spi receives data
          * @param callback the function will be called
          */
-        void RegisterCallback(spi_device_rx_callback_t callback);
+        void RegisterCallback(spi_device_rx_callback_t callback,void* args=NULL);
         void PrepareTransmit();
         void FinishTransmit();
         bool IsTransmitting();
@@ -220,7 +220,8 @@ namespace bsp {
       private:
         SPI* spi_;
         GPIO* cs_;
-        spi_device_rx_callback_t callback_ = []() {};
+        spi_device_rx_callback_t callback_ = [](void* args) { UNUSED(args);};
+        void* args_ = NULL;
     };
 
     typedef struct {
@@ -366,7 +367,7 @@ namespace bsp {
         SPIDevice* device_[SPI_MAX_DEVICE] = {NULL};
         uint8_t device_count_ = 0;
         bool auto_cs_ = true;
-        static std::map<SPI*, SPIMaster*> ptr_map;
+        static std::unordered_map<SPI*, SPIMaster*> ptr_map;
         static SPIMaster* FindInstance(SPI* spi);
     };
 }  // namespace bsp

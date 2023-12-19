@@ -45,7 +45,7 @@ void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
     bsp::spi_init_t spiInit = {
         .hspi = &hspi1,
-        .mode = bsp::SPI_MODE_BLOCKED,
+        .mode = bsp::SPI_MODE_DMA,
     };
     spi1 = new bsp::SPI(spiInit);
     bsp::spi_master_init_t spiMasterInit = {
@@ -68,7 +68,7 @@ void RM_RTOS_Init(void) {
 
     ist8310_rst = new bsp::GPIO(GPIOG, GPIO_PIN_6);
     ist8310_int = new bsp::GPIT(DRDY_IST8310_Pin);
-    bsp::i2c_init_t i2c3_init = {.hi2c = &hi2c3, .mode = bsp::I2C_MODE_DMA};
+    bsp::i2c_init_t i2c3_init = {.hi2c = &hi2c3, .mode = bsp::I2C_MODE_IT};
     i2c3 = new bsp::I2C(i2c3_init);
     imu::IST8310_init_t ist8310Init = {.i2c = i2c3, .drdy = ist8310_int, .rst = ist8310_rst};
     ist8310 = new imu::IST8310(ist8310Init);
@@ -87,6 +87,6 @@ void RM_RTOS_Default_Task(const void* arguments) {
         print("MAG_X: %9.0f MAG_Y: %9.0f MAG_Z: %9.0f\r\n", ist8310->mag_[0], ist8310->mag_[1],
               ist8310->mag_[2]);
         print("\r\nTime Stamp: %.2f s\r\n", bmi088->time_);
-        osDelay(200);
+        osDelay(20);
     }
 }
