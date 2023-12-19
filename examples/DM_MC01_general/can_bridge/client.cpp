@@ -49,7 +49,7 @@ void update_channel_data(communication::can_bridge_ext_id_t ext_id,
 void RM_RTOS_Init(void) {
     print_use_usb();
 
-    can1 = new bsp::CAN(&hcan1,  true, 8);
+    can1 = new bsp::CAN(&hcan1, true, 8);
     can_bridge = new communication::CanBridge(can1, 0x01);
     can_bridge->RegisterRxCallback(0x42, update_channel_data, nullptr);
 }
