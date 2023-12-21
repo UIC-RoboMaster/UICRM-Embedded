@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#ifndef NO_IMU
+#include "main.h"
 #include "bsp_pwm.h"
 #include "pid.h"
 
@@ -43,4 +43,3 @@ namespace driver {
     };
 
 }  // namespace bsp
-#endif
