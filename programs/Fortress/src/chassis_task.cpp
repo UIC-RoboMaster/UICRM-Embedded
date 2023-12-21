@@ -257,7 +257,8 @@ void init_chassis() {
     control::chassis_t chassis_data;
     chassis_data.motors = motors;
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
-    chassis = new control::Chassis(chassis_data, 0.04);
+    chassis_data.offset = 0.04;
+    chassis = new control::Chassis(chassis_data);
 }
 void kill_chassis() {
     driver::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};

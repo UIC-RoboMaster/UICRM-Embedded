@@ -139,6 +139,8 @@ namespace imu {
         mag_[0] = (float)array[7];
         mag_[1] = (float)array[8];
         mag_[2] = (float)array[9];
+        if (callback_ != nullptr)
+            callback_();
     }
 
     void MPU6500::IntCallback(void* args) {
@@ -154,5 +156,8 @@ namespace imu {
             return;
         MPU6500* mpu6500 = reinterpret_cast<MPU6500*>(args);
         mpu6500->SPITxRxCpltCallback();
+    }
+    void MPU6500::RegisterCallback(mpu6500_callback_t callback) {
+        callback_ = callback;
     }
 }  // namespace imu

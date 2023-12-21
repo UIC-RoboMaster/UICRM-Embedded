@@ -48,12 +48,13 @@ namespace bsp {
             default:
                 bsp_error_handler(__FUNCTION__, __LINE__, "pwm channel not valid");
         }
-        SetFrequency(output_freq);
-        SetPulseWidth(pulse_width);
+        SetFrequency(output_freq_);
+        SetPulseWidth(pulse_width_);
     }
 
     void PWM::Start() {
         HAL_TIM_PWM_Start(htim_, channel_);
+
     }
 
     void PWM::Stop() {

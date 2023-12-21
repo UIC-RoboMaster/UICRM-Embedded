@@ -23,6 +23,7 @@
 #include "motor.h"
 #include "pid.h"
 #include "power_limit.h"
+#include "can_bridge.h"
 
 #define MAX_WHEEL_NUM 8
 
@@ -31,7 +32,7 @@ namespace control {
     /**
      * @brief chassis models
      */
-    typedef enum { CHASSIS_MECANUM_WHEEL, CHASSIS_ONE_WHEEL } chassis_model_t;
+    typedef enum { CHASSIS_MECANUM_WHEEL } chassis_model_t;
 
     /**
      * @brief structure used when chassis instance is initialized
@@ -39,6 +40,7 @@ namespace control {
     typedef struct {
         driver::MotorCANBase** motors; /* motor instances of all chassis motors */
         chassis_model_t model;         /* chassis model                         */
+        float offset = 0;
     } chassis_t;
 
     /**
@@ -48,9 +50,6 @@ namespace control {
         enum { front_left, front_right, back_left, back_right, motor_num };
     };
 
-    struct OneWheel {
-        enum { center, motor_num };
-    };
 
     /**
      * @brief wrapper class for chassis
@@ -63,7 +62,7 @@ namespace control {
          * @param chassis structure that used to initialize chassis, refer to type
          * chassis_t
          */
-        Chassis(const chassis_t chassis, float offset = 0);
+        Chassis(const chassis_t chassis);
 
         /**
          * @brief destructor for chassis
@@ -96,6 +95,28 @@ namespace control {
          */
         void Update();
 
+        void CanBridgeSetTxId(uint8_t tx_id);
+
+        static void CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args);
+
+
+        static void CanBridgeUpdateEventTurnWrapper(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args);
+
+
+        static void CanBridgeUpdateEventPowerLimitWrapper(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args);
+
+
+        static void CanBridgeUpdateEventCurrentPowerWrapper(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args);
+
+
+        void CanBridgeUpdateEventXY(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data);
+
+        void CanBridgeUpdateEventTurn(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data);
+
+        void CanBridgeUpdateEventPowerLimit(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data);
+
+        void CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data);
+
       private:
         // acquired from user
         driver::MotorCANBase** motors_ = nullptr;
@@ -106,12 +127,31 @@ namespace control {
         PowerLimit* power_limit_ = nullptr;
         float* speeds_ = nullptr;
 
-        bool power_limit_on_;
-        power_limit_t power_limit_info_;
-        float current_chassis_power_;
-        float current_chassis_power_buffer_;
+        uint8_t wheel_num_ = 0;
+
+        bool power_limit_on_=false;
+        power_limit_t power_limit_info_ = {
+            .power_limit = 120,
+            .WARNING_power = 108,
+            .WARNING_power_buff = 50,
+            .buffer_total_current_limit = 3500.0f * wheel_num_,
+            .power_total_current_limit = 5000.0f * wheel_num_ / 80.0f * power_limit_info_.power_limit,
+        };
+
+        float current_chassis_power_=0;
+        float current_chassis_power_buffer_=0;
 
         float chassis_offset_;
+
+        uint8_t can_bridge_tx_id_=0x00;
+        float can_bridge_vx_=0;
+        float can_bridge_vy_=0;
+        float can_bridge_vt_=0;
+
+        bool chassis_enable_ =true;
+
+
+
     };
 
 }  // namespace control

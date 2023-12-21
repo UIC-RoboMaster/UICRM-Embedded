@@ -12,3 +12,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_sbus
 uicrm_add_arm_executable(${PROJECT_NAME}_can_bridge
         TARGET ${BOARD_NAME}
         SOURCES can_bridge_chassis.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_can_bridge_sender
+        TARGET ${BOARD_NAME}
+        SOURCES can_bridge_chassis_sender.cpp)

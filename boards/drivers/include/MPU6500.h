@@ -151,6 +151,9 @@ namespace imu {
         bool dma = true;
     } mpu6500_init_t;
 
+
+    typedef void (*mpu6500_callback_t)();
+
     class MPU6500 {
       public:
         /**
@@ -172,6 +175,8 @@ namespace imu {
         float mag_[3];
         float temperature_;
         float time_;
+
+        void RegisterCallback(mpu6500_callback_t callback);
 
       private:
         /**
@@ -198,8 +203,9 @@ namespace imu {
 
         uint8_t io_buff_[MPU6500_SIZEOF_DATA + 1];  // spi tx+rx buffer
 
+        mpu6500_callback_t callback_=[](){};
+
         // global interrupt wrapper
-        // TODO(alvin): try to support multiple instances in the future
         static void SPITxRxCpltCallbackWrapper(void* args);
     };
 };  // namespace imu

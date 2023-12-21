@@ -24,7 +24,7 @@
 
 namespace control {
 
-    Chassis::Chassis(const chassis_t chassis, float offset) : pids_() {
+    Chassis::Chassis(const chassis_t chassis) : pids_() {
         // acquired from user
         model_ = chassis.model;
 
@@ -50,28 +50,15 @@ namespace control {
                 speeds_ = new float[FourWheel::motor_num];
                 for (int i = 0; i < FourWheel::motor_num; ++i)
                     speeds_[i] = 0;
+
+                wheel_num_ = FourWheel::motor_num;
                 break;
             }
-            case CHASSIS_ONE_WHEEL: {
-                motors_ = new driver::MotorCANBase*[OneWheel::motor_num];
-                motors_[OneWheel::center] = chassis.motors[OneWheel::center];
 
-                float* pid_param = new float[3]{140000, 20000, 0};
-                float motor_max_iout = 30000;
-                float motor_max_out = 30000;
-                pids_[FourWheel::front_left].Reinit(pid_param, motor_max_iout, motor_max_out);
-
-                power_limit_ = new PowerLimit(OneWheel::motor_num);
-
-                speeds_ = new float[OneWheel::motor_num];
-                for (int i = 0; i < OneWheel::motor_num; ++i)
-                    speeds_[i] = 0;
-                break;
-            }
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
-        chassis_offset_ = offset;
+        chassis_offset_ = chassis.offset;
     }
 
     Chassis::~Chassis() {
@@ -88,15 +75,7 @@ namespace control {
                 speeds_ = nullptr;
                 break;
             }
-            case CHASSIS_ONE_WHEEL: {
-                motors_[OneWheel::center] = nullptr;
-                delete[] motors_;
-                motors_ = nullptr;
 
-                delete[] speeds_;
-                speeds_ = nullptr;
-                break;
-            }
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
@@ -105,9 +84,7 @@ namespace control {
     void Chassis::SetSpeed(const float x_speed, const float y_speed, const float turn_speed) {
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
-                constexpr int MAX_ABS_CURRENT = 12288;  // refer to MotorM3508 for details
-                float move_sum = fabs(x_speed) + fabs(y_speed) + fabs(turn_speed);
-                float scale = move_sum >= MAX_ABS_CURRENT ? MAX_ABS_CURRENT / move_sum : 1;
+                float scale = 1;
 
                 speeds_[FourWheel::front_left] =
                     scale * (y_speed + x_speed + turn_speed * (1 - chassis_offset_));  // 2
@@ -119,10 +96,7 @@ namespace control {
                     -scale * (y_speed + x_speed - turn_speed * (1 + chassis_offset_));  // 4
                 break;
             }
-            case CHASSIS_ONE_WHEEL: {
-                speeds_[OneWheel::center] = x_speed;
-                break;
-            }
+
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
@@ -143,11 +117,7 @@ namespace control {
                 power_limit_info_.power_total_current_limit =
                     5000 * FourWheel::motor_num / 80.0 * power_limit;
                 break;
-            case CHASSIS_ONE_WHEEL:
-                power_limit_info_.buffer_total_current_limit = 180000 * OneWheel::motor_num;
-                power_limit_info_.power_total_current_limit =
-                    257000 * OneWheel::motor_num / 80.0 * power_limit;
-                break;
+
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
@@ -155,6 +125,12 @@ namespace control {
     }
 
     void Chassis::Update() {
+        if(!chassis_enable_){
+            for(int i=0;i<wheel_num_;i++){
+                motors_[i]->SetOutput(0);
+                pids_[i].Reset();
+            }
+        }
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
 
@@ -184,25 +160,95 @@ namespace control {
                     control::ClipMotorRange(output[FourWheel::back_right]));
                 break;
             }
-            case CHASSIS_ONE_WHEEL: {
 
-                float PID_output[OneWheel::motor_num];
-                float output[OneWheel::motor_num];
-
-                PID_output[OneWheel::center] = pids_[OneWheel::center].ComputeOutput(
-                    motors_[OneWheel::center]->GetOmegaDelta(speeds_[OneWheel::center]));
-
-                power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
-                                     current_chassis_power_buffer_, PID_output, output);
-
-                motors_[OneWheel::center]->SetOutput(
-                    control::ClipMotorRange(output[OneWheel::center]));
-
-                break;
-            }
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
+    }
+
+    void Chassis::CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id,
+                                         communication::can_bridge_data_t data, void* args) {
+        Chassis* chassis = reinterpret_cast<Chassis*>(args);
+        chassis->CanBridgeUpdateEventXY(ext_id,data);
+    }
+
+    void Chassis::CanBridgeUpdateEventTurnWrapper(communication::can_bridge_ext_id_t ext_id,
+                                           communication::can_bridge_data_t data, void* args) {
+        Chassis* chassis = reinterpret_cast<Chassis*>(args);
+        chassis->CanBridgeUpdateEventTurn(ext_id,data);
+    }
+
+    void Chassis::CanBridgeUpdateEventPowerLimitWrapper(communication::can_bridge_ext_id_t ext_id,
+                                                 communication::can_bridge_data_t data,
+                                                 void* args) {
+        Chassis* chassis = reinterpret_cast<Chassis*>(args);
+        chassis->CanBridgeUpdateEventPowerLimit(ext_id,data);
+    }
+
+    void Chassis::CanBridgeUpdateEventCurrentPowerWrapper(communication::can_bridge_ext_id_t ext_id,
+                                                   communication::can_bridge_data_t data,
+                                                   void* args) {
+        Chassis* chassis = reinterpret_cast<Chassis*>(args);
+        chassis->CanBridgeUpdateEventCurrentPower(ext_id,data);
+    }
+
+    void Chassis::CanBridgeUpdateEventXY(communication::can_bridge_ext_id_t ext_id,
+                                         communication::can_bridge_data_t data) {
+        if(can_bridge_tx_id_!=0x00){
+            if(can_bridge_tx_id_!=ext_id.data.tx_id){
+                return;
+            }
+        }
+        can_bridge_vx_ = data.data_two_float.data[0];
+        can_bridge_vy_ = data.data_two_float.data[1];
+    }
+    void Chassis::CanBridgeUpdateEventTurn(communication::can_bridge_ext_id_t ext_id,
+                                           communication::can_bridge_data_t data) {
+        if(can_bridge_tx_id_!=0x00){
+            if(can_bridge_tx_id_!=ext_id.data.tx_id){
+                return;
+            }
+        }
+        can_bridge_vt_ = data.data_two_float.data[1];
+        float is_enable = data.data_two_float.data[0];
+        if(is_enable>0.1f){
+            chassis_enable_ = true;
+        }else{
+            chassis_enable_ = false;
+        }
+        if(chassis_enable_){
+            SetSpeed(can_bridge_vx_,can_bridge_vy_,can_bridge_vt_);
+        }else{
+            SetSpeed(0,0,0);
+        }
+    }
+    void Chassis::CanBridgeUpdateEventPowerLimit(communication::can_bridge_ext_id_t ext_id,
+                                                 communication::can_bridge_data_t data) {
+        if(can_bridge_tx_id_!=0x00){
+            if(can_bridge_tx_id_!=ext_id.data.tx_id){
+                return;
+            }
+        }
+        float is_enable = data.data_two_float.data[0];
+        if(is_enable>0.1f){
+            power_limit_on_ = true;
+        }else{
+            power_limit_on_ = false;
+        }
+        power_limit_info_.power_limit = data.data_two_float.data[1];
+    }
+    void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
+                                                   communication::can_bridge_data_t data) {
+        if(can_bridge_tx_id_!=0x00){
+            if(can_bridge_tx_id_!=ext_id.data.tx_id){
+                return;
+            }
+        }
+        current_chassis_power_ = data.data_two_float.data[0];
+        current_chassis_power_buffer_ = data.data_two_float.data[1];
+    }
+    void Chassis::CanBridgeSetTxId(uint8_t tx_id) {
+        can_bridge_tx_id_ = tx_id;
     }
 
 
