@@ -159,8 +159,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
               mpu6500->mag_[2]);
         print("\r\nTime Stamp: %.2f us\r\n", mpu6500->time_);
         print("Calibrated: true\r\n");
-        print("Yaw: %.2f Pitch: %.2f Roll: %.2f\r\n", ahrs->INS_Angle[0] / PI * 180,
-              ahrs->INS_Angle[1] / PI * 180, ahrs->INS_Angle[2] / PI * 180);
+        print("Yaw: %.2f Pitch: %.2f Roll: %.2f\r\n", ahrs->INS_angle[0] / PI * 180,
+              ahrs->INS_angle[1] / PI * 180, ahrs->INS_angle[2] / PI * 180);
         osDelay(50);
     }
 }

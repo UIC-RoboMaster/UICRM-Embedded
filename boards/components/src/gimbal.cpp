@@ -67,14 +67,24 @@ namespace control {
     void Gimbal::Update() {
         float pt_diff = pitch_motor_->GetThetaDelta(pitch_angle_);
         pt_diff = wrap<float>(pt_diff, -PI, PI);
+
+        if(abs(pt_diff)<data_.pitch_eposition){
+            pt_diff = 0;
+        }
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
         float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
         float yt_diff = yaw_motor_->GetThetaDelta(yaw_angle_);
         yt_diff = wrap<float>(yt_diff, -PI, PI);
+
+        if(abs(yt_diff)<data_.yaw_eposition){
+            yt_diff = 0;
+        }
+
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
+
 
         pitch_motor_->SetOutput(po_out);
         yaw_motor_->SetOutput(yo_out);
@@ -91,6 +101,10 @@ namespace control {
             pitch_angle_ = wrap<float>(pitch_angle_ + new_pitch_diff-pt_diff, 0,2*PI);
         }
         pt_diff = wrap<float>(new_pitch_diff, -PI, PI);
+
+        if(abs(pt_diff)<data_.pitch_eposition){
+            pt_diff = 0;
+        }
 
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
         float po_in = pitch_motor_->GetOmegaDelta(pt_out);
@@ -110,15 +124,24 @@ namespace control {
         else{
             yt_diff = wrap<float>(yt_diff, -PI, PI);
         }
+
+        if(abs(yt_diff)<data_.yaw_eposition){
+            yt_diff = 0;
+        }
+
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
+
+
 
         pitch_motor_->SetOutput(po_out);
         yaw_motor_->SetOutput(yo_out);
     }
 
     void Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
+        if(data_.pitch_inverted)abs_pitch = -abs_pitch;
+        if(data_.yaw_inverted)abs_yaw = -abs_yaw;
         float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
         float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
         pitch_angle_ = wrapping_clip<float>(clipped_pitch + data_.pitch_offset_, pitch_lower_limit_,
@@ -128,6 +151,8 @@ namespace control {
     }
 
     void Gimbal::TargetAbsWOffset(float abs_pitch, float abs_yaw) {
+        if(data_.pitch_inverted)abs_pitch = -abs_pitch;
+        if(data_.yaw_inverted)abs_yaw = -abs_yaw;
         float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
         float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
         pitch_angle_ =
@@ -137,7 +162,8 @@ namespace control {
     }
 
     void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
-
+        if(data_.pitch_inverted)rel_pitch = -rel_pitch;
+        if(data_.yaw_inverted)rel_yaw = -rel_yaw;
         pitch_angle_ = wrap<float>(pitch_angle_ + rel_pitch, 0,2*PI);
         yaw_angle_ = wrap<float>(yaw_angle_ + rel_yaw, 0,2*PI);
     }

@@ -108,8 +108,16 @@ namespace bsp {
     }
 
     bool SPI::IsBusy() {
-        return HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY;
+        return HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY ||
+               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_TX ||
+               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_RX ||
+               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_TX_RX;
     }
+
+    void SPI::Abort() {
+        HAL_SPI_Abort_IT(hspi_);
+    }
+
     void SPI::RegisterCallback(spi_rx_callback_t callback) {
         callback_ = callback;
     }
@@ -139,6 +147,7 @@ namespace bsp {
                 break;
         }
     }
+
 
     SPIDevice::SPIDevice(spi_device_init_t init) : spi_(init.spi), cs_(init.cs) {
     }
@@ -172,6 +181,7 @@ namespace bsp {
 
     spi_master_status_e SPIMaster::Transmit(SPIDevice* device, uint8_t* tx_data, uint32_t length) {
         if (spi_->IsBusy()) {
+            spi_->Abort();
             return SPI_MASTER_STATUS_BUSY;
         }
         if (auto_cs_) {
@@ -183,6 +193,7 @@ namespace bsp {
 
     spi_master_status_e SPIMaster::Receive(SPIDevice* device, uint8_t* rx_data, uint32_t length) {
         if (spi_->IsBusy()) {
+            spi_->Abort();
             return SPI_MASTER_STATUS_BUSY;
         }
         if (auto_cs_) {
@@ -195,6 +206,7 @@ namespace bsp {
     spi_master_status_e SPIMaster::TransmitReceive(SPIDevice* device, uint8_t* tx_data,
                                                    uint8_t* rx_data, uint32_t length) {
         if (spi_->IsBusy()) {
+            spi_->Abort();
             return SPI_MASTER_STATUS_BUSY;
         }
         if (auto_cs_) {
