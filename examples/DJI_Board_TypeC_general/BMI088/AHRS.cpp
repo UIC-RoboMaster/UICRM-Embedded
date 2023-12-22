@@ -169,8 +169,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
             "Temp: %10.4f\r\n"
             "Calibrated: true\r\n"
             "Yaw: %.2f Pitch: %.2f Roll: %.2f\r\n",
-            bmi088->temperature_, ahrs->INS_Angle[0] / PI * 180, ahrs->INS_Angle[1] / PI * 180,
-            ahrs->INS_Angle[2] / PI * 180);
+            bmi088->temperature_, ahrs->INS_angle[0] / PI * 180, ahrs->INS_angle[1] / PI * 180,
+            ahrs->INS_angle[2] / PI * 180);
         osDelay(50);
     }
 }

@@ -27,9 +27,9 @@ namespace control{
         is_mag_ = is_mag;
         cailb_flag_ = false;
         cailb_done_ = false;
-        INS_Angle[0] = 0;
-        INS_Angle[1] = 0;
-        INS_Angle[2] = 0;
+        INS_angle[0] = 0;
+        INS_angle[1] = 0;
+        INS_angle[2] = 0;
         q[0] = 1;
         q[1] = 0;
         q[2] = 0;
@@ -83,9 +83,9 @@ namespace control{
         return cailb_done_;
     }
     void AHRS::INSCalculate() {
-        INS_Angle[0]=atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
-        INS_Angle[1]=asinf(-2.0f * (q[1] * q[3] - q[0] * q[2]));
-        INS_Angle[2] =
+        INS_angle[0]=atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
+        INS_angle[1]=asinf(-2.0f * (q[1] * q[3] - q[0] * q[2]));
+        INS_angle[2] =
             atan2f(2.0f * (q[0] * q[1] + q[2] * q[3]), 2.0f * (q[0] * q[0] + q[3] * q[3]) - 1.0f);
     }
 }

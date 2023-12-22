@@ -18,36 +18,38 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
-#include "MahonyAHRS.h"
+#include "bsp_gpio.h"
+#include "bsp_print.h"
+#include "cmsis_os.h"
 #include "main.h"
-//clang-format off
-#include "arm_math.h"
-//clang-format on
-namespace control {
-    class AHRS {
-      public:
-        AHRS(bool is_mag);
+#include "motor.h"
 
-        void Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+#define KEY_GPIO_GROUP GPIOB
+#define KEY_GPIO_PIN GPIO_PIN_2
 
-        void Update(float gx, float gy, float gz, float ax, float ay, float az);
+static bsp::CAN* can1 = nullptr;
+static driver::MotorCANBase* motor = nullptr;
 
-        void Cailbrate();
+void RM_RTOS_Init() {
+    print_use_uart(&huart8);
 
-        bool IsCailbrated();
+    can1 = new bsp::CAN(&hcan1);
+    motor = new driver::Motor6623(can1, 0x205);
+}
 
-        float INS_angle[3];
-      private:
-        float q[4];
-        float g_zerodrift[3]={0};
-        bool is_mag_;
-        bool cailb_flag_;
-        bool cailb_done_;
-        uint16_t calib_cnt_=0;
+void RM_RTOS_Default_Task(const void* args) {
+    UNUSED(args);
+    driver::MotorCANBase* motors[] = {motor};
 
-        void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
-
-        void INSCalculate();
-    };
+    bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
+    while (true) {
+        motor->PrintData();
+        if (key.Read())
+            motor->SetOutput(3000);
+        else
+            motor->SetOutput(0);
+        driver::MotorCANBase::TransmitOutput(motors, 1);
+        motor->PrintData();
+        osDelay(100);
+    }
 }
