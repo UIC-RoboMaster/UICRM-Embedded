@@ -51,7 +51,7 @@ namespace imu {
                 bsp_error_handler(__FUNCTION__, __LINE__, "imu register incorrect initialization");
         }
         // setup interrupt callback
-        spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper,this);
+        spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper, this);
         // initialize magnetometer
         IST8310Init();
         // enable imu interrupt

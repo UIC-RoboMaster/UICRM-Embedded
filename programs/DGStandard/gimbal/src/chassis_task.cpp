@@ -84,7 +84,6 @@ void chassisTask(void* arg) {
         ext_id.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
         ext_id.data.rx_id = 0x52;
 
-
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
             osDelay(CHASSIS_OS_DELAY);
@@ -333,7 +332,6 @@ void chassisTask(void* arg) {
 }
 
 void init_chassis() {
-
     can_bridge = new communication::CanBridge(can1, 0x51);
 }
 void kill_chassis() {

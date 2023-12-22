@@ -23,9 +23,8 @@
 #include <cmath>
 #include <cstring>
 
-#include "utils.h"
-
 #include "bsp_error_handler.h"
+#include "utils.h"
 
 /* rocker range and deadzones */
 #define SBUS_RC_ROCKER_MID 1024

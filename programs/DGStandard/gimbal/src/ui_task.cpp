@@ -133,8 +133,7 @@ void uiTask(void* arg) {
         osDelay(UI_OS_DELAY);
 
         // Update Gimbal GUI
-        gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle,
-                          true);
+        gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle, true);
         osDelay(UI_OS_DELAY);
 
         // Update current mode GUI

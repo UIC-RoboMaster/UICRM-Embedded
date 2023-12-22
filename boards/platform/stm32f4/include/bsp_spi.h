@@ -216,7 +216,7 @@ namespace bsp {
          * @brief register a callback function to be called when the spi receives data
          * @param callback the function will be called
          */
-        void RegisterCallback(spi_device_rx_callback_t callback,void* args=NULL);
+        void RegisterCallback(spi_device_rx_callback_t callback, void* args = NULL);
         void PrepareTransmit();
         void FinishTransmit();
         bool IsTransmitting();
@@ -228,7 +228,7 @@ namespace bsp {
       private:
         SPI* spi_;
         GPIO* cs_;
-        spi_device_rx_callback_t callback_ = [](void* args) { UNUSED(args);};
+        spi_device_rx_callback_t callback_ = [](void* args) { UNUSED(args); };
         void* args_ = NULL;
     };
 

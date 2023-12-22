@@ -142,7 +142,7 @@ namespace bsp {
 
     SPIDevice::SPIDevice(spi_device_init_t init) : spi_(init.spi), cs_(init.cs) {
     }
-    void SPIDevice::RegisterCallback(spi_device_rx_callback_t callback,void* args) {
+    void SPIDevice::RegisterCallback(spi_device_rx_callback_t callback, void* args) {
         callback_ = callback;
         args_ = args;
     }

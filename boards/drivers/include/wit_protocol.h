@@ -19,9 +19,9 @@
  ###########################################################*/
 
 #pragma once
-#include "main.h"
-#include "bsp_uart.h"
 #include "arm_math.h"
+#include "bsp_uart.h"
+#include "main.h"
 
 namespace imu {
 
@@ -44,36 +44,34 @@ namespace imu {
     };
 
     class WITUART {
-        public:
-          WITUART(bsp::UART* uart);
-          ~WITUART()=default;
-          float mag_[3]={0};
-          float gyro_[3]={0};
-          float accel_[3]={0};
-          float INS_angle[3]={0};
-          float temp_=0;
-          uint16_t version_=0;
-          uint16_t port_status_[4]={0};
-          float quat_[4]={0};
-          //TODO: Read GPS Data
+      public:
+        WITUART(bsp::UART* uart);
+        ~WITUART() = default;
+        float mag_[3] = {0};
+        float gyro_[3] = {0};
+        float accel_[3] = {0};
+        float INS_angle[3] = {0};
+        float temp_ = 0;
+        uint16_t version_ = 0;
+        uint16_t port_status_[4] = {0};
+        float quat_[4] = {0};
+        // TODO: Read GPS Data
 
-          void Update(bool fromISR=false);
+        void Update(bool fromISR = false);
 
-          void Unlock();
+        void Unlock();
 
-          void Lock();
+        void Lock();
 
-          void ReadReg(uint8_t reg, uint8_t func,uint16_t* data);
+        void ReadReg(uint8_t reg, uint8_t func, uint16_t* data);
 
-          void RegisterReadCallback(wit_read_callback_t callback);
+        void RegisterReadCallback(wit_read_callback_t callback);
 
-          void WriteReg(uint8_t reg, uint8_t* data);
+        void WriteReg(uint8_t reg, uint8_t* data);
 
-
-        private:
-          bsp::UART* uart_;
-          wit_read_callback_t read_callback_;
-          uint16_t* read_reg_data_;
-
+      private:
+        bsp::UART* uart_;
+        wit_read_callback_t read_callback_;
+        uint16_t* read_reg_data_;
     };
-}
+}  // namespace imu

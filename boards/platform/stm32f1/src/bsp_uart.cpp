@@ -297,10 +297,10 @@ namespace bsp {
     void UART::RxCompleteCallback() {
     }
     void UART::SetBaudrate(uint32_t baudrate) {
-        if(HAL_UART_DeInit(huart_) != HAL_OK)
+        if (HAL_UART_DeInit(huart_) != HAL_OK)
             Error_Handler();
         huart_->Init.BaudRate = baudrate;
-        if(HAL_UART_Init(huart_) != HAL_OK)
+        if (HAL_UART_Init(huart_) != HAL_OK)
             Error_Handler();
     }
 

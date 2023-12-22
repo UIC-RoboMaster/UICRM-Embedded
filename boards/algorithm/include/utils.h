@@ -111,10 +111,10 @@ template <typename T>
 T wrapc(T value, T min, T max) {
     const T range = max - min;
     while (value < min) {
-            value += range;
+        value += range;
     }
     while (value > max) {
-            value -= range;
+        value -= range;
     }
     return value;
 }

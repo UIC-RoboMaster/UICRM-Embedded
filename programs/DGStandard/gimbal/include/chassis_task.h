@@ -20,6 +20,7 @@
 
 #pragma once
 #include "bsp_can.h"
+#include "can_bridge.h"
 #include "chassis.h"
 #include "cmsis_os2.h"
 #include "gimbal_task.h"
@@ -31,7 +32,6 @@
 #include "remote_task.h"
 #include "selftest_task.h"
 #include "utils.h"
-#include "can_bridge.h"
 extern osThreadId_t chassisTaskHandle;
 const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
                                              .attr_bits = osThreadDetached,
@@ -46,7 +46,6 @@ void chassisTask(void* arg);
 void init_chassis();
 void kill_chassis();
 
-
 extern float chassis_vx;
 extern float chassis_vy;
 extern float chassis_vz;
@@ -54,4 +53,3 @@ extern bool chassis_boost_flag;
 const float chassis_vx_max = 660.0f;
 const float chassis_vy_max = 660.0f;
 const float chassis_vz_max = 660.0f;
-

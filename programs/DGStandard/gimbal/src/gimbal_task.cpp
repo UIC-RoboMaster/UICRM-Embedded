@@ -38,7 +38,7 @@ void gimbalTask(void* arg) {
         osDelay(GIMBAL_OS_DELAY);
     }
     int i = 0;
-    while (i < 5000 || mpu6500->temperature_<48.0f) {
+    while (i < 5000 || mpu6500->temperature_ < 48.0f) {
         while (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);

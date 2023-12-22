@@ -19,38 +19,39 @@
  ###########################################################*/
 
 #include "can_bridge.h"
+
 #include <string.h>
 
 namespace communication {
-    static void can_bridge_callback(const uint8_t data[],const uint32_t ext_id,void* args) {
+    static void can_bridge_callback(const uint8_t data[], const uint32_t ext_id, void* args) {
         CanBridge* bridge = reinterpret_cast<CanBridge*>(args);
-        bridge->CallbackWrapper(data,ext_id);
+        bridge->CallbackWrapper(data, ext_id);
     }
     CanBridge::CanBridge(bsp::CAN* can, uint8_t id) {
         can_ = can;
         id_ = id;
-        can_->RegisterRxExtendCallback(id_,can_bridge_callback, this);
+        can_->RegisterRxExtendCallback(id_, can_bridge_callback, this);
     }
     void CanBridge::Send(can_bridge_ext_id_t ext_id, can_bridge_data_t data) {
-        ext_id.data.tx_id= id_;
-        can_->TransmitExtend(ext_id.id,data.data,8);
+        ext_id.data.tx_id = id_;
+        can_->TransmitExtend(ext_id.id, data.data, 8);
     }
 
     void CanBridge::CallbackWrapper(const uint8_t* data, const uint32_t ext_id) {
         can_bridge_ext_id_t ext_id_struct;
         ext_id_struct.id = ext_id;
         can_bridge_data_t data_struct;
-        memcpy(data_struct.data,data,8);
+        memcpy(data_struct.data, data, 8);
         const auto it = reg_to_index_.find(ext_id_struct.data.reg);
         if (it != reg_to_index_.end()) {
-            reg_callbacks_[it->second](ext_id_struct,data_struct,reg_args_[it->second]);
+            reg_callbacks_[it->second](ext_id_struct, data_struct, reg_args_[it->second]);
         }
     }
 
     void CanBridge::RegisterRxCallback(uint8_t reg, can_bridge_rx_callback_t callback, void* args) {
-        reg_callbacks_[reg_callback_count_]=callback;
-        reg_args_[reg_callback_count_]=args;
-        reg_to_index_[reg]=reg_callback_count_;
+        reg_callbacks_[reg_callback_count_] = callback;
+        reg_args_[reg_callback_count_] = args;
+        reg_to_index_[reg] = reg_callback_count_;
         reg_callback_count_++;
     }
-}
+}  // namespace communication

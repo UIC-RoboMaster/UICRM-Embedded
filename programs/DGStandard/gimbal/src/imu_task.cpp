@@ -42,7 +42,6 @@ void MPU6500ReceiveDone() {
     osThreadFlagsSet(imuTaskHandle, RX_SIGNAL);
 }
 
-
 void imuTask(void* arg) {
     UNUSED(arg);
 

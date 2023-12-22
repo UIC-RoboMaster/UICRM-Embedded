@@ -147,7 +147,7 @@ namespace bsp {
          * @param baudrate baudrate
          * @note only valid before uart initialization
          */
-         void SetBaudrate(uint32_t baudrate);
+        void SetBaudrate(uint32_t baudrate);
 
       protected:
         /**

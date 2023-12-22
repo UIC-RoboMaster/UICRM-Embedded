@@ -19,18 +19,17 @@
  ###########################################################*/
 
 #include "AHRS.h"
-
 #include "MPU6500.h"
+#include "bsp_can.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "bsp_spi.h"
 #include "cmsis_os.h"
+#include "dbus.h"
+#include "gimbal.h"
 #include "heater.h"
 #include "main.h"
-#include "bsp_can.h"
-#include "dbus.h"
 #include "motor.h"
-#include "gimbal.h"
 
 #define ONBOARD_IMU_SPI hspi5
 #define ONBOARD_IMU_CS_GROUP GPIOF
@@ -127,7 +126,7 @@ void gimbalTask(void* arg) {
     }
 
     int i = 0;
-    while (i < 2000 || mpu6500->temperature_<49.0f) {
+    while (i < 2000 || mpu6500->temperature_ < 49.0f) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
         driver::MotorCANBase::TransmitOutput(gimbal_motors1, 1);

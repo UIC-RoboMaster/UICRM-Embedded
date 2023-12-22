@@ -19,14 +19,14 @@
  ###########################################################*/
 
 #pragma once
-#include "cmsis_os2.h"
-#include "i2c.h"
-#include "main.h"
-#include "spi.h"
-#include "mpu6500.h"
 #include "ahrs.h"
 #include "bsp_pwm.h"
+#include "cmsis_os2.h"
 #include "heater.h"
+#include "i2c.h"
+#include "main.h"
+#include "mpu6500.h"
+#include "spi.h"
 #define RX_SIGNAL (1 << 0)
 
 extern imu::MPU6500* mpu6500;
@@ -42,7 +42,6 @@ const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
                                          .priority = (osPriority_t)osPriorityRealtime,
                                          .tz_module = 0,
                                          .reserved = 0};
-
 
 void imuTask(void* arg);
 

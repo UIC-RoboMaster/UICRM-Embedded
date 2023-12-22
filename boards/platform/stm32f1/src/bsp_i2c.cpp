@@ -77,7 +77,7 @@ namespace bsp {
         return HAL_I2C_IsDeviceReady(hi2c_, id, 1, timeout) == HAL_OK;
     }
 
-    int I2C::RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback, void* args){
+    int I2C::RegisterRxCallback(uint32_t std_id, i2c_rx_callback_t callback, void* args) {
         // int callback_id = std_id - start_id_;
         // todo: Rx Callback
         if (callback_count_ >= MAX_I2C_DEVICES)
