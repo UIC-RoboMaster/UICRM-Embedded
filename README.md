@@ -75,6 +75,11 @@ You need to set the path of the embedded toolchain in the CLion settings.
    ```sh
    cmake -DCMAKE_BUILD_TYPE=Release ... -G "Ninja"
    ```
+   Using ninja to build.
+   ```sh
+   ninja -j
+   ```
+   
    Change build type to `Debug` or `RelWithDebInfo` in order to debug with `gdb`.
    Note that `Debug` build could be much slower than the other two due to lack
    of compiler optimizations.
