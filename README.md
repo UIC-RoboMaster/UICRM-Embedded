@@ -11,48 +11,37 @@ building the source code and flashing the embedded chips.
 
 ### Install ARM Toolchain (manual)
 
-1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
-   for ARM Toolchain.
+1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for ARM Toolchain.
 2. Download the pre-built toolchain according to your operating system.
 3. Decompress it to some directory and find an absolute path to the `bin` directory.
 
-   In my case: `/Users/yry0008/gcc-arm-none-eabi-10.3-2021.10/bin`.
+    In my case: `/Users/yry0008/gcc-arm-none-eabi-10.3-2021.10/bin`.
 
-4. For Windows users, add the following line (replace `<path>`
-   with the actual binary path found in step 3) to `PATH` environment variable.
+4. For Windows users, add the following line (replace `<path>` with the actual binary path found in step 3) to `PATH` environment variable.
 
-   For Linux / Mac users, add the following line (replace `<path>`
-   with the actual binary path found in step 3) to `~/.bashrc` for bash users
-   or `~/.zshrc` for zsh users.
+    For Linux / Mac users, add the following line (replace `<path>` with the actual binary path found in step 3) to `~/.bashrc` for bash users or `~/.zshrc` for zsh users.
 
-   ```sh
-   export PATH=<path>:$PATH
-   ```
+    ```sh
+    export PATH=<path>:$PATH
+    ```
 
 ### Install OpenOCD (manual)
-1. Go to the [official download page](https://gnutoolchains.com/arm-eabi/openocd/)
-   for OpenOCD.
+1. Go to the [official download page](https://gnutoolchains.com/arm-eabi/openocd/) for OpenOCD.
 2. Download the pre-built toolchain according to your operating system.
 3. Decompress it to some directory and find an absolute path to the `bin` directory.
 
-   In my case: `/Users/yry0008/openocd-0.11.0-2021.10/bin`.
-4. For Windows users, add the following line (replace `<path>`
-    with the actual binary path found in step 3) to `PATH` environment variable.
-   For Linux / Mac users, add the following line (replace `<path>`
-   with the actual binary path found in step 3) to `~/.bashrc` for bash users
-   or `~/.zshrc` for zsh users.
+    In my case: `/Users/yry0008/openocd-0.11.0-2021.10/bin`.
+4. For Windows users, add the following line (replace `<path>` with the actual binary path found in step 3) to `PATH` environment variable. For Linux / Mac users, add the following line (replace `<path>` with the actual binary path found in step 3) to `~/.bashrc` for bash users or `~/.zshrc` for zsh users.
 
-   ```sh
-   export PATH=<path>:$PATH
-   ```
+    ```sh
+    export PATH=<path>:$PATH
+    ```
 
 ### Install CMake
-1. Go to the [official download page](https://cmake.org/download/)
-   for CMake.
+1. Go to the [official download page](https://cmake.org/download/) for CMake.
 
 ### Install Mingw-w64 (Windows only)
-1. Go to the [official download page](https://sourceforge.net/projects/mingw-w64/files/)
-   for Mingw-w64.
+1. Go to the [official download page](https://sourceforge.net/projects/mingw-w64/files/) for Mingw-w64.
    
 ### Install Ninja (Windows only)
 1. Go to the [official download page](https://ninja-build.org)
@@ -61,23 +50,28 @@ building the source code and flashing the embedded chips.
 You can directly open the project in CLion and build it.
 You need to set the path of the embedded toolchain in the CLion settings.
 
+    In Windows, you should open `Settings`, `Build, Execution, Deployment`, `CMake`, then set the `Generator` to Ninja.
+
 ### Compile Project (Manual)
 
 1. Go to your project root directory in a terminal.
 2. Run the following command to build the entire project.
 
-   ```sh
-   mkdir build && cd build
-   cmake -DCMAKE_BUILD_TYPE=Release ..
-   make -j
-   ```
-   In Windows, you should add the option to let cmake use ninja to build.
-   ```sh
-   cmake -DCMAKE_BUILD_TYPE=Release ... -G "Ninja"
-   ```
-   Change build type to `Debug` or `RelWithDebInfo` in order to debug with `gdb`.
-   Note that `Debug` build could be much slower than the other two due to lack
-   of compiler optimizations.
+    ```sh
+    mkdir build && cd build
+    cmake -DCMAKE_BUILD_TYPE=Release ..
+    make -j
+    ```
+    In Windows, you should add the option to let cmake use ninja to build.
+    ```sh
+    cmake -DCMAKE_BUILD_TYPE=Release ... -G "Ninja"
+    ```
+    Using ninja to build.
+    ```sh
+    ninja -j
+    ```
+   
+    Change build type to `Debug` or `RelWithDebInfo` in order to debug with `gdb`. Note that `Debug` build could be much slower than the other two due to lack of compiler optimizations.
 
 ### Flash Binary to Chip (Clion)
 
@@ -96,8 +90,7 @@ You will need [Doxygen](https://www.doxygen.nl/index.html).
 1. For Mac users, `brew install doxygen` could be a shortcut.
 2. For Ubuntu users, `sudo apt install doxygen` could be a shortcut.
 3. For Arch users, `sudo pacman -S doxygen` could be a shortcut.
-4. For Linux users, either use prebuilt binaries, or build from source
-   following their compile manual.
+4. For Linux users, either use prebuilt binaries, or build from source following their compile manual.
 
 To generate documentations after compiling the project.
 
@@ -127,14 +120,12 @@ integrated build commands that can help you automatically format your changes.
 **Prerequisite**: install `clang-format`
 
 * Linux's users can simply install it using `sudo apt install clang-format-10`.
-* Mac and Windows users need to download prebuilt binaries from
-  [here](https://releases.llvm.org/download.html).
+* Mac and Windows users need to download prebuilt binaries from [here](https://releases.llvm.org/download.html).
 
 With `clang-format` installed, you can run the following commands inside `build/`
 to automatically format your changes.
 
-1. `make check-format`: Check `diff` between current source and
-   formatted source (without modifying any source file)
+1. `make check-format`: Check `diff` between current source and formatted source (without modifying any source file)
 2. `make format`: Format all source files (**Modifies** file in place)
 
 ### Debug with `gdb`
@@ -144,14 +135,8 @@ There are 2 choices for such server, with tradeoffs of their own.
 
 * **`Clion Debugger`**
     
-  This is the easiest way to debug. Choose the target and Directly click the `Debug` button in CLion.
+This is the easiest way to debug. Choose the target and Directly click the `Debug` button in CLion.
 
 * **`OpenOCD`**
 
-  This tool is much more stable but is slightly less intelligent in detecting
-  ST-LINK version, and it has not been updated since 2017. To install it,
-    * `brew install openocd` for Mac users
-    * `sudo apt install openocd` for Ubuntu users
-    * `sudo pacman -S openocd` for Arch users
-
-  Thought directly using `openocd` is possible, but it is only recommended for advanced users.
+Thought directly using `openocd` is possible, but it is only recommended for advanced users.
