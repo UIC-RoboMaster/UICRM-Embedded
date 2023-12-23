@@ -61,7 +61,7 @@ building the source code and flashing the embedded chips.
 You can directly open the project in CLion and build it.
 You need to set the path of the embedded toolchain in the CLion settings.
 
-   In Windows, you should open `Settings`, `Build, Execution, Deployment`, `CMake`, then set the `Generator` to Ninja.
+    In Windows, you should open `Settings`, `Build, Execution, Deployment`, `CMake`, then set the `Generator` to Ninja.
 
 ### Compile Project (Manual)
 
