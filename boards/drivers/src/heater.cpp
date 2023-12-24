@@ -21,23 +21,13 @@
 
 namespace driver {
 
-    Heater::Heater(bsp::PWM* pwm, float target_temp) : pid_() {
-        pwm_ = pwm;
-        temp_ = target_temp;
-        pwm_->Start();
-        float* pid_param = new float[3]{160, 0.1, 0};
-        float heater_I_limit = 800;
-        float heater_output_limit = 500;
-        pid_.Reinit(pid_param, heater_I_limit, heater_output_limit);
-    }
-
     Heater::Heater(heater_init_t init) : pid_() {
         temp_ = init.target_temp;
         pwm_ = init.pwm;
         pwm_->Start();
-        float* pid_param = new float[3]{160, 0.1, 0};
-        float heater_I_limit = 800;
-        float heater_output_limit = 500;
+        float* pid_param = init.pid_param;
+        float heater_I_limit = init.heater_I_limit;
+        float heater_output_limit = init.heater_output_limit;
         pid_.Reinit(pid_param, heater_I_limit, heater_output_limit);
     }
 

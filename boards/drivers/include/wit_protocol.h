@@ -19,9 +19,11 @@
  ###########################################################*/
 
 #pragma once
+//clang-format off
 #include "arm_math.h"
-#include "bsp_uart.h"
 #include "main.h"
+//clang-format on
+#include "bsp_uart.h"
 
 namespace imu {
 

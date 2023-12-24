@@ -32,6 +32,7 @@ static communication::CanBridge* can_bridge = nullptr;
 
 void chassisTask(void* arg) {
     UNUSED(arg);
+    kill_chassis();
     osDelay(1000);
 
     while (remote_mode == REMOTE_MODE_KILL) {
@@ -49,8 +50,8 @@ void chassisTask(void* arg) {
     float sin_yaw, cos_yaw, vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
     float offset_yaw = 0;
     float spin_speed = 350;
-    float manual_mode_yaw_pid_args[3] = {300, 0, 0};
-    float manual_mode_yaw_pid_max_iout = 0;
+    float manual_mode_yaw_pid_args[3] = {200, 0.5, 0};
+    float manual_mode_yaw_pid_max_iout = 100;
     float manual_mode_yaw_pid_max_out = 350;
     control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
         manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
@@ -86,7 +87,7 @@ void chassisTask(void* arg) {
 
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
-            osDelay(CHASSIS_OS_DELAY);
+            osDelay(CHASSIS_OS_DELAY + 4);
 
             continue;
         }
@@ -337,6 +338,8 @@ void init_chassis() {
 void kill_chassis() {
     communication::can_bridge_ext_id_t ext_id;
     communication::can_bridge_data_t can_bridge_data;
+    ext_id.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
+    ext_id.data.rx_id = 0x52;
     ext_id.data.reg = 0x71;
 
     can_bridge_data.data_two_float.data[0] = (float)0;

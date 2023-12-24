@@ -64,7 +64,7 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     while (1) {
         // Offline Detection && Security Check
-        is_dbus_offline = (!selftest.dbus && !selftest.refereerc) || dbus->swr == remote::DOWN;
+        is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
         // Kill Detection
         //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
         //        is_shoot_available =

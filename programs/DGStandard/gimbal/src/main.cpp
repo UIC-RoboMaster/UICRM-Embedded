@@ -41,6 +41,7 @@ void RM_RTOS_Init(void) {
     init_can();
     init_imu();
     init_buzzer();
+    init_selftest();
     // init_referee();
     init_remote();
     // init_shoot();
