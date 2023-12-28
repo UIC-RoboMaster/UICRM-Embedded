@@ -20,7 +20,6 @@
 
 #include "wit_protocol.h"
 
-#include "arm_math.h"
 
 namespace imu {
     WITUART::WITUART(bsp::UART* uart) {
