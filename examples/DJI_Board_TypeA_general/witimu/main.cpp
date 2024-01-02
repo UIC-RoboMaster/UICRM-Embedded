@@ -69,14 +69,13 @@ void imuTask(void* arg) {
 }
 
 void RM_RTOS_Init(void) {
-    /// because imu occupies uart1, no other UART can be used, so we need to use USB to print
-    print_use_usb();
-    wituart = new IUART(&huart1);
+    print_use_uart(&huart8);
+    wituart = new IUART(&huart6);
     /// Some models of wit-imu may need to change baudrate to 921600
-        wituart->SetBaudrate(921600);
+    wituart->SetBaudrate(921600);
     /// Setup Rx and Tx buffer size
-    wituart->SetupTx(100);
-    wituart->SetupRx(100);
+    wituart->SetupTx(6);
+    wituart->SetupRx(12);
     witimu = new imu::WITUART(wituart);
     /// Before write the register, you need to unlock the wit-imu
     witimu->Unlock();
@@ -106,7 +105,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         clear_screen();
         // print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0);
         // print("Temp: %.2f\r\n", witimu->temp_);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n, witimu->INS_angle[0] / PI * 180",
+        print("Euler Angles: %.2f, %.2f, %.2f\r\n", witimu->INS_angle[0] / PI * 180,
               witimu->INS_angle[1] / PI * 180, witimu->INS_angle[2] / PI * 180);
 
         osDelay(50);
