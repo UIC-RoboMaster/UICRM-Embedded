@@ -42,7 +42,7 @@ void RM_RTOS_Init(void) {
     init_imu();
     init_buzzer();
     init_selftest();
-    // init_referee();
+    init_referee();
     init_remote();
     // init_shoot();
     init_gimbal();
@@ -53,7 +53,7 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
-    //    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
+    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
     //    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);

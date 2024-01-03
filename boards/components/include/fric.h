@@ -26,4 +26,6 @@ namespace control {
         driver::FlyWheelMotor* motors[2];
     } fric_init_t;
 
+
+
 }

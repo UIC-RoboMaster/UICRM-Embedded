@@ -223,8 +223,8 @@ void chassisTask(void* arg) {
                 {
                     ext_id.data.reg = 0x72;
 
-                    can_bridge_data.data_two_float.data[0] = (float)0;
-                    can_bridge_data.data_two_float.data[1] = 200.0f;
+                    can_bridge_data.data_two_float.data[0] = (float)1;
+                    can_bridge_data.data_two_float.data[1] = (float)referee->game_robot_status.chassis_power_limit;
 
                     can_bridge->Send(ext_id, can_bridge_data);
                     osDelay(1);
@@ -232,8 +232,8 @@ void chassisTask(void* arg) {
                 {
                     ext_id.data.reg = 0x73;
 
-                    can_bridge_data.data_two_float.data[0] = 120.0f;
-                    can_bridge_data.data_two_float.data[1] = 60.0f;
+                    can_bridge_data.data_two_float.data[0] = referee->power_heat_data.chassis_power;
+                    can_bridge_data.data_two_float.data[1] = (float)referee->power_heat_data.chassis_power_buffer;
 
                     can_bridge->Send(ext_id, can_bridge_data);
                     osDelay(1);
@@ -268,8 +268,8 @@ void chassisTask(void* arg) {
                 {
                     ext_id.data.reg = 0x72;
 
-                    can_bridge_data.data_two_float.data[0] = (float)0;
-                    can_bridge_data.data_two_float.data[1] = 200.0f;
+                    can_bridge_data.data_two_float.data[0] = (float)1;
+                    can_bridge_data.data_two_float.data[1] = (float)referee->game_robot_status.chassis_power_limit;
 
                     can_bridge->Send(ext_id, can_bridge_data);
                     osDelay(1);
@@ -277,8 +277,8 @@ void chassisTask(void* arg) {
                 {
                     ext_id.data.reg = 0x73;
 
-                    can_bridge_data.data_two_float.data[0] = 120.0f;
-                    can_bridge_data.data_two_float.data[1] = 60.0f;
+                    can_bridge_data.data_two_float.data[0] = referee->power_heat_data.chassis_power;
+                    can_bridge_data.data_two_float.data[1] = (float)referee->power_heat_data.chassis_power_buffer;
 
                     can_bridge->Send(ext_id, can_bridge_data);
                     osDelay(1);
@@ -307,8 +307,8 @@ void chassisTask(void* arg) {
                 {
                     ext_id.data.reg = 0x72;
 
-                    can_bridge_data.data_two_float.data[0] = (float)0;
-                    can_bridge_data.data_two_float.data[1] = 200.0f;
+                    can_bridge_data.data_two_float.data[0] = (float)1;
+                    can_bridge_data.data_two_float.data[1] = (float)referee->game_robot_status.chassis_power_limit;
 
                     can_bridge->Send(ext_id, can_bridge_data);
                     osDelay(1);
@@ -316,8 +316,8 @@ void chassisTask(void* arg) {
                 {
                     ext_id.data.reg = 0x73;
 
-                    can_bridge_data.data_two_float.data[0] = 120.0f;
-                    can_bridge_data.data_two_float.data[1] = 60.0f;
+                    can_bridge_data.data_two_float.data[0] = referee->power_heat_data.chassis_power;
+                    can_bridge_data.data_two_float.data[1] = (float)referee->power_heat_data.chassis_power_buffer;
 
                     can_bridge->Send(ext_id, can_bridge_data);
                     osDelay(1);

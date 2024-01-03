@@ -110,16 +110,7 @@ namespace control {
         power_limit_info_.WARNING_power_buff = 50;
         current_chassis_power_ = chassis_power;
         current_chassis_power_buffer_ = chassis_power_buffer;
-        switch (model_) {
-            case CHASSIS_MECANUM_WHEEL:
-                power_limit_info_.buffer_total_current_limit = 3500 * FourWheel::motor_num;
-                power_limit_info_.power_total_current_limit =
-                    5000 * FourWheel::motor_num / 80.0 * power_limit;
-                break;
 
-            default:
-                RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
-        }
     }
 
     void Chassis::Update() {
@@ -129,6 +120,18 @@ namespace control {
                 pids_[i].Reset();
             }
         }
+
+        switch (model_) {
+            case CHASSIS_MECANUM_WHEEL:
+                power_limit_info_.buffer_total_current_limit = 3500 * FourWheel::motor_num;
+                power_limit_info_.power_total_current_limit =
+                    5000 * FourWheel::motor_num / 80.0 * power_limit_info_.power_limit;
+                break;
+
+            default:
+                RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
+        }
+
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
                 float PID_output[FourWheel::motor_num];
@@ -234,6 +237,7 @@ namespace control {
             power_limit_on_ = false;
         }
         power_limit_info_.power_limit = data.data_two_float.data[1];
+        power_limit_info_.WARNING_power = data.data_two_float.data[1]*0.9f;
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
                                                    communication::can_bridge_data_t data) {

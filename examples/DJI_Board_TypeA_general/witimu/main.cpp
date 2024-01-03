@@ -69,6 +69,7 @@ void imuTask(void* arg) {
 }
 
 void RM_RTOS_Init(void) {
+    HAL_Delay(2000);
     print_use_uart(&huart8);
     wituart = new IUART(&huart6);
     /// Some models of wit-imu may need to change baudrate to 921600

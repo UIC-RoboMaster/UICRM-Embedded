@@ -66,13 +66,13 @@ void refereercTask(void* arg) {
 }
 
 void init_referee() {
-    referee_uart = new RefereeUART(&huart6, &refereeTaskHandle);
+    referee_uart = new RefereeUART(&huart3, &refereeTaskHandle);
     referee_uart->SetupRx(300);
     referee_uart->SetupTx(300);
     referee = new communication::Referee;
 
-    refereerc_uart = new RefereeUART(&huart1, &refereercTaskHandle);
-    refereerc_uart->SetupRx(300);
-    refereerc_uart->SetupTx(300);
-    refereerc = new communication::Referee;
+//    refereerc_uart = new RefereeUART(&huart1, &refereercTaskHandle);
+//    refereerc_uart->SetupRx(300);
+//    refereerc_uart->SetupTx(300);
+//    refereerc = new communication::Referee;
 }
