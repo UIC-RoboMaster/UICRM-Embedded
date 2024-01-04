@@ -377,5 +377,6 @@ namespace bsp {
         bool auto_cs_ = true;
         static std::unordered_map<SPI*, SPIMaster*> ptr_map;
         static SPIMaster* FindInstance(SPI* spi);
+        uint8_t busy_count_ = 0;
     };
 }  // namespace bsp

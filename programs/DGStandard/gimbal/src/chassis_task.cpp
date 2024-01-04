@@ -28,7 +28,8 @@ bool chassis_boost_flag = true;
 const float speed_offset = 660;
 const float speed_offset_boost = 1320;
 
-static communication::CanBridge* can_bridge = nullptr;
+communication::CanBridge* can_bridge = nullptr;
+control::ChassisCanBridgeSender* chassis = nullptr;
 
 void chassisTask(void* arg) {
     UNUSED(arg);
@@ -79,16 +80,17 @@ void chassisTask(void* arg) {
     BoolEdgeDetector* ch2_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* ch3_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
-    communication::can_bridge_ext_id_t ext_id;
-    communication::can_bridge_data_t can_bridge_data;
+
+    chassis->Enable();
     while (true) {
-        ext_id.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
-        ext_id.data.rx_id = 0x52;
+
 
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
-            osDelay(CHASSIS_OS_DELAY + 4);
-
+            while(remote_mode == REMOTE_MODE_KILL){
+                osDelay(CHASSIS_OS_DELAY + 2);
+            }
+            chassis->Enable();
             continue;
         }
         {
@@ -202,42 +204,12 @@ void chassisTask(void* arg) {
             case REMOTE_MODE_FOLLOW:
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(
                     yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
-                {
-                    ext_id.data.reg = 0x70;
-
-                    can_bridge_data.data_two_float.data[0] = vx_set;
-                    can_bridge_data.data_two_float.data[1] = vy_set;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
-                {
-                    ext_id.data.reg = 0x71;
-
-                    can_bridge_data.data_two_float.data[0] = (float)1;
-                    can_bridge_data.data_two_float.data[1] = manual_mode_pid_output;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
-                {
-                    ext_id.data.reg = 0x72;
-
-                    can_bridge_data.data_two_float.data[0] = (float)1;
-                    can_bridge_data.data_two_float.data[1] = (float)referee->game_robot_status.chassis_power_limit;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
-                {
-                    ext_id.data.reg = 0x73;
-
-                    can_bridge_data.data_two_float.data[0] = referee->power_heat_data.chassis_power;
-                    can_bridge_data.data_two_float.data[1] = (float)referee->power_heat_data.chassis_power_buffer;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
+                chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);
+                osDelay(1);
+                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                                  referee->power_heat_data.chassis_power,
+                                  referee->power_heat_data.chassis_power_buffer);
+                osDelay(1);
                 break;
             case REMOTE_MODE_SPIN:
 
@@ -247,81 +219,26 @@ void chassisTask(void* arg) {
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
                 vz_set = spin_speed;
-                {
-                    ext_id.data.reg = 0x70;
-
-                    can_bridge_data.data_two_float.data[0] = vx_set;
-                    can_bridge_data.data_two_float.data[1] = vy_set;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
-                {
-                    ext_id.data.reg = 0x71;
-
-                    can_bridge_data.data_two_float.data[0] = (float)1;
-                    can_bridge_data.data_two_float.data[1] = vz_set;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
-                {
-                    ext_id.data.reg = 0x72;
-
-                    can_bridge_data.data_two_float.data[0] = (float)1;
-                    can_bridge_data.data_two_float.data[1] = (float)referee->game_robot_status.chassis_power_limit;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
-                {
-                    ext_id.data.reg = 0x73;
-
-                    can_bridge_data.data_two_float.data[0] = referee->power_heat_data.chassis_power;
-                    can_bridge_data.data_two_float.data[1] = (float)referee->power_heat_data.chassis_power_buffer;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
+                chassis->SetSpeed(vx_set, vy_set, vz_set);
+                osDelay(1);
+                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                                  referee->power_heat_data.chassis_power,
+                                  referee->power_heat_data.chassis_power_buffer);
+                osDelay(1);
                 break;
             case REMOTE_MODE_ADVANCED:
                 vz_set = offset_yaw;
-                {
-                    ext_id.data.reg = 0x70;
-
-                    can_bridge_data.data_two_float.data[0] = vx_set;
-                    can_bridge_data.data_two_float.data[1] = vy_set;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
+                if (offset_yaw != 0) {
+                    spin_speed = spin_speed + offset_yaw;
+                    offset_yaw = 0;
+                    spin_speed = clip<float>(spin_speed, -660, 660);
                 }
-                {
-                    ext_id.data.reg = 0x71;
-
-                    can_bridge_data.data_two_float.data[0] = (float)1;
-                    can_bridge_data.data_two_float.data[1] = vz_set;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
-                {
-                    ext_id.data.reg = 0x72;
-
-                    can_bridge_data.data_two_float.data[0] = (float)1;
-                    can_bridge_data.data_two_float.data[1] = (float)referee->game_robot_status.chassis_power_limit;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
-                {
-                    ext_id.data.reg = 0x73;
-
-                    can_bridge_data.data_two_float.data[0] = referee->power_heat_data.chassis_power;
-                    can_bridge_data.data_two_float.data[1] = (float)referee->power_heat_data.chassis_power_buffer;
-
-                    can_bridge->Send(ext_id, can_bridge_data);
-                    osDelay(1);
-                }
+                chassis->SetSpeed(vx_set_org, vy_set_org, vz_set);
+                osDelay(1);
+                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                                  referee->power_heat_data.chassis_power,
+                                  referee->power_heat_data.chassis_power_buffer);
+                osDelay(1);
                 break;
             default:
                 // Not Support
@@ -334,16 +251,10 @@ void chassisTask(void* arg) {
 
 void init_chassis() {
     can_bridge = new communication::CanBridge(can1, 0x51);
+    chassis = new control::ChassisCanBridgeSender(can_bridge, 0x52);
+    chassis->SetChassisRegId(0x70, 0x71, 0x72, 0x73);
+    chassis->Disable();
 }
 void kill_chassis() {
-    communication::can_bridge_ext_id_t ext_id;
-    communication::can_bridge_data_t can_bridge_data;
-    ext_id.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
-    ext_id.data.rx_id = 0x52;
-    ext_id.data.reg = 0x71;
-
-    can_bridge_data.data_two_float.data[0] = (float)0;
-    can_bridge_data.data_two_float.data[1] = 0.0f;
-
-    can_bridge->Send(ext_id, can_bridge_data);
+    chassis->Disable();
 }

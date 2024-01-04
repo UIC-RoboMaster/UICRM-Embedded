@@ -253,4 +253,74 @@ namespace control {
         can_bridge_tx_id_ = tx_id;
     }
 
+    ChassisCanBridgeSender::ChassisCanBridgeSender(communication::CanBridge* can_bridge,uint8_t rx_id)
+        : can_bridge_(can_bridge), device_rx_id_(rx_id){
+        rx_id_.data.rx_id = rx_id;
+        rx_id_.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
+    }
+    void ChassisCanBridgeSender::SetChassisRegId(uint8_t xy_reg_id, uint8_t turn_on_reg_id,
+                                                 uint8_t power_limit_reg_id,
+                                                 uint8_t current_power_reg_id) {
+        chassis_xy_reg_id_ = xy_reg_id;
+        chassis_turn_on_reg_id_ = turn_on_reg_id;
+        chassis_power_limit_reg_id_ = power_limit_reg_id;
+        chassis_current_power_reg_id_ = current_power_reg_id;
+    }
+    void ChassisCanBridgeSender::Enable() {
+        if(!chassis_enable_){
+            chassis_enable_ = true;
+            data_.data_two_float.data[0] = 1.0f;
+            data_.data_two_float.data[1] = 0.0f;
+            rx_id_.data.reg = chassis_turn_on_reg_id_;
+            can_bridge_->Send(rx_id_, data_);
+        }
+    }
+    void ChassisCanBridgeSender::Disable() {
+        if(chassis_enable_){
+            chassis_enable_ = false;
+
+        }
+        data_.data_two_float.data[0] = 0;
+        data_.data_two_float.data[1] = 0;
+        rx_id_.data.reg = chassis_turn_on_reg_id_;
+        can_bridge_->Send(rx_id_, data_);
+    }
+    void ChassisCanBridgeSender::SetSpeed(const float x_speed, const float y_speed,
+                                          const float turn_speed) {
+        if(chassis_enable_){
+            data_.data_two_float.data[0] = x_speed;
+            data_.data_two_float.data[1] = y_speed;
+            rx_id_.data.reg = chassis_xy_reg_id_;
+            can_bridge_->Send(rx_id_, data_);
+            data_.data_two_float.data[0] = 1.0f;
+            data_.data_two_float.data[1] = turn_speed;
+            rx_id_.data.reg = chassis_turn_on_reg_id_;
+            can_bridge_->Send(rx_id_, data_);
+        }
+    }
+    void ChassisCanBridgeSender::SetPower(bool power_limit_on, float power_limit,
+                                          float chassis_power, float chassis_power_buffer, bool force_update) {
+        if(chassis_enable_){
+            if(power_limit_on != chassis_power_limit_on_ || power_limit != chassis_power_limit_ || force_update){
+                chassis_power_limit_on_ = power_limit_on;
+                chassis_power_limit_ = power_limit;
+                if(power_limit_on){
+                    data_.data_two_float.data[0] = 1.0f;
+                }
+                else{
+                    data_.data_two_float.data[0] = 0.0f;
+                }
+                data_.data_two_float.data[1] = power_limit;
+                rx_id_.data.reg = chassis_power_limit_reg_id_;
+                can_bridge_->Send(rx_id_, data_);
+            }
+            {
+                data_.data_two_float.data[0] = chassis_power;
+                data_.data_two_float.data[1] = chassis_power_buffer;
+                rx_id_.data.reg = chassis_current_power_reg_id_;
+                can_bridge_->Send(rx_id_, data_);
+            }
+        }
+    }
+
 } /* namespace control */

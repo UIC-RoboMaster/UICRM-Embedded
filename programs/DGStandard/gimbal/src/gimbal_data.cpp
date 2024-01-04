@@ -36,7 +36,7 @@ void init_gimbalBasicData() {
     float yaw_omega_max_iout = 10000;  // 10000
     float yaw_omega_max_out = 30000;
     float* pitch_theta_pid_param = new float[3]{15, 0, 0};
-    float* pitch_omega_pid_param = new float[3]{4000, 50, 0};
+    float* pitch_omega_pid_param = new float[3]{3500, 50, 0};
     float* yaw_theta_pid_param = new float[3]{15, 0, 0};
     float* yaw_omega_pid_param = new float[3]{1500, 1, 0};
     gimbalBasicPID.pitch_theta_pid = new control::ConstrainedPID(

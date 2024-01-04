@@ -35,9 +35,13 @@
 #include "shoot_task.h"
 #include "ui_task.h"
 #include "user_define.h"
+
+#include <string.h>
+#include "task.h"
+
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim7);
-    print_use_usb();
+    print_use_uart(&huart8);
     init_can();
     init_imu();
     init_buzzer();
@@ -69,6 +73,7 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(3000);
     Buzzer_Sing(DJI);
     char s[50];
+//    char CPU_RunInfo[512];
     while (true) {
         set_cursor(0, 0);
         clear_screen();
@@ -145,10 +150,22 @@ void RM_RTOS_Default_Task(const void* arg) {
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        osDelay(100);
         // print("\r\n");
         // yaw_motor->PrintData();
         // pitch_motor->PrintData();
 
-        osDelay(75);
+//        memset(CPU_RunInfo,0,512);
+//        vTaskList((char *)&CPU_RunInfo); //获取任务运行时间信息
+//        print("---------------------------------------------\r\n");
+//        print("NAME   STATUS   PRIORITY   LESSSTACK   NUM\r\n");
+//        print("%s\r\n", CPU_RunInfo);
+//        print("---------------------------------------------\r\n");
+//        memset(CPU_RunInfo,0,512);
+//        vTaskGetRunTimeStats((char *)&CPU_RunInfo);
+//        print("NAME   COUNT   PERSENT\r\n");
+//        print("%s", CPU_RunInfo);
+//        print("---------------------------------------------\r\n\n");
+//        osDelay(1000);
     }
 }

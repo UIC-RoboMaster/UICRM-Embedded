@@ -121,6 +121,14 @@ namespace bsp {
         bool IsBusy();
 
         /**
+         * @brief 中断SPI传输
+         */
+        /**
+         * @brief Abort SPI transmission
+         */
+        void Abort();
+
+        /**
          * @brief 设置SPI的传输模式
          * @param mode 被设置的模式
          */
@@ -369,5 +377,6 @@ namespace bsp {
         bool auto_cs_ = true;
         static std::unordered_map<SPI*, SPIMaster*> ptr_map;
         static SPIMaster* FindInstance(SPI* spi);
+        uint8_t busy_count_ = 0;
     };
 }  // namespace bsp
