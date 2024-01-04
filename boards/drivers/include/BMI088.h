@@ -358,10 +358,10 @@ namespace imu {
          */
         bool IsReady();
 
-        float gyro_[3]; /**< 陀螺仪数据 */
-        float accel_[3]; /**< 加速度计数据 */
+        float gyro_[3];     /**< 陀螺仪数据 */
+        float accel_[3];    /**< 加速度计数据 */
         float temperature_; /**< 温度 */
-        float time_; /**< 时间戳 */
+        float time_;        /**< 时间戳 */
 
       protected:
         /**
