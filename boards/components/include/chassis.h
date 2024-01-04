@@ -160,7 +160,7 @@ namespace control {
 
     class ChassisCanBridgeSender {
       public:
-        ChassisCanBridgeSender(communication::CanBridge* can_bridge,uint8_t rx_id);
+        ChassisCanBridgeSender(communication::CanBridge* can_bridge, uint8_t rx_id);
         void SetChassisRegId(uint8_t xy_reg_id, uint8_t turn_on_reg_id, uint8_t power_limit_reg_id,
                              uint8_t current_power_reg_id);
         void Enable();
@@ -182,7 +182,8 @@ namespace control {
          * @param chassis_power_buffer Current chassis power buffer, in [J]
          */
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                      float chassis_power_buffer,bool force_update = false);
+                      float chassis_power_buffer, bool force_update = false);
+
       private:
         communication::CanBridge* can_bridge_;
         bool chassis_enable_ = true;

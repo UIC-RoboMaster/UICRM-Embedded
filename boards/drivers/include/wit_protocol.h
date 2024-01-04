@@ -20,8 +20,8 @@
 
 #pragma once
 //clang-format off
-#include "main.h"
 #include "arm_math.h"
+#include "main.h"
 //clang-format on
 #include "bsp_uart.h"
 

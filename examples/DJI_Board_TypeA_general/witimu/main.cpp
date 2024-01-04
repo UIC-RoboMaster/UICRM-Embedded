@@ -18,11 +18,12 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "main.h"
+
 #include "bsp_print.h"
 #include "bsp_uart.h"
 #include "cmsis_os.h"
 #include "i2c.h"
-#include "main.h"
 #include "spi.h"
 #include "wit_protocol.h"
 

@@ -110,7 +110,6 @@ namespace control {
         power_limit_info_.WARNING_power_buff = 50;
         current_chassis_power_ = chassis_power;
         current_chassis_power_buffer_ = chassis_power_buffer;
-
     }
 
     void Chassis::Update() {
@@ -237,7 +236,7 @@ namespace control {
             power_limit_on_ = false;
         }
         power_limit_info_.power_limit = data.data_two_float.data[1];
-        power_limit_info_.WARNING_power = data.data_two_float.data[1]*0.9f;
+        power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
                                                    communication::can_bridge_data_t data) {
@@ -253,8 +252,9 @@ namespace control {
         can_bridge_tx_id_ = tx_id;
     }
 
-    ChassisCanBridgeSender::ChassisCanBridgeSender(communication::CanBridge* can_bridge,uint8_t rx_id)
-        : can_bridge_(can_bridge), device_rx_id_(rx_id){
+    ChassisCanBridgeSender::ChassisCanBridgeSender(communication::CanBridge* can_bridge,
+                                                   uint8_t rx_id)
+        : can_bridge_(can_bridge), device_rx_id_(rx_id) {
         rx_id_.data.rx_id = rx_id;
         rx_id_.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
     }
@@ -267,7 +267,7 @@ namespace control {
         chassis_current_power_reg_id_ = current_power_reg_id;
     }
     void ChassisCanBridgeSender::Enable() {
-        if(!chassis_enable_){
+        if (!chassis_enable_) {
             chassis_enable_ = true;
             data_.data_two_float.data[0] = 1.0f;
             data_.data_two_float.data[1] = 0.0f;
@@ -276,9 +276,8 @@ namespace control {
         }
     }
     void ChassisCanBridgeSender::Disable() {
-        if(chassis_enable_){
+        if (chassis_enable_) {
             chassis_enable_ = false;
-
         }
         data_.data_two_float.data[0] = 0;
         data_.data_two_float.data[1] = 0;
@@ -287,7 +286,7 @@ namespace control {
     }
     void ChassisCanBridgeSender::SetSpeed(const float x_speed, const float y_speed,
                                           const float turn_speed) {
-        if(chassis_enable_){
+        if (chassis_enable_) {
             data_.data_two_float.data[0] = x_speed;
             data_.data_two_float.data[1] = y_speed;
             rx_id_.data.reg = chassis_xy_reg_id_;
@@ -299,15 +298,16 @@ namespace control {
         }
     }
     void ChassisCanBridgeSender::SetPower(bool power_limit_on, float power_limit,
-                                          float chassis_power, float chassis_power_buffer, bool force_update) {
-        if(chassis_enable_){
-            if(power_limit_on != chassis_power_limit_on_ || power_limit != chassis_power_limit_ || force_update){
+                                          float chassis_power, float chassis_power_buffer,
+                                          bool force_update) {
+        if (chassis_enable_) {
+            if (power_limit_on != chassis_power_limit_on_ || power_limit != chassis_power_limit_ ||
+                force_update) {
                 chassis_power_limit_on_ = power_limit_on;
                 chassis_power_limit_ = power_limit;
-                if(power_limit_on){
+                if (power_limit_on) {
                     data_.data_two_float.data[0] = 1.0f;
-                }
-                else{
+                } else {
                     data_.data_two_float.data[0] = 0.0f;
                 }
                 data_.data_two_float.data[1] = power_limit;

@@ -30,14 +30,14 @@
 #include "imu_task.h"
 #include "public_port.h"
 // #include "referee_task.h"
+#include <string.h>
+
 #include "remote_task.h"
 #include "selftest_task.h"
 #include "shoot_task.h"
+#include "task.h"
 #include "ui_task.h"
 #include "user_define.h"
-
-#include <string.h>
-#include "task.h"
 
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim7);
@@ -73,7 +73,7 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(3000);
     Buzzer_Sing(DJI);
     char s[50];
-//    char CPU_RunInfo[512];
+    //    char CPU_RunInfo[512];
     while (true) {
         set_cursor(0, 0);
         clear_screen();
@@ -155,17 +155,17 @@ void RM_RTOS_Default_Task(const void* arg) {
         // yaw_motor->PrintData();
         // pitch_motor->PrintData();
 
-//        memset(CPU_RunInfo,0,512);
-//        vTaskList((char *)&CPU_RunInfo); //获取任务运行时间信息
-//        print("---------------------------------------------\r\n");
-//        print("NAME   STATUS   PRIORITY   LESSSTACK   NUM\r\n");
-//        print("%s\r\n", CPU_RunInfo);
-//        print("---------------------------------------------\r\n");
-//        memset(CPU_RunInfo,0,512);
-//        vTaskGetRunTimeStats((char *)&CPU_RunInfo);
-//        print("NAME   COUNT   PERSENT\r\n");
-//        print("%s", CPU_RunInfo);
-//        print("---------------------------------------------\r\n\n");
-//        osDelay(1000);
+        //        memset(CPU_RunInfo,0,512);
+        //        vTaskList((char *)&CPU_RunInfo); //获取任务运行时间信息
+        //        print("---------------------------------------------\r\n");
+        //        print("NAME   STATUS   PRIORITY   LESSSTACK   NUM\r\n");
+        //        print("%s\r\n", CPU_RunInfo);
+        //        print("---------------------------------------------\r\n");
+        //        memset(CPU_RunInfo,0,512);
+        //        vTaskGetRunTimeStats((char *)&CPU_RunInfo);
+        //        print("NAME   COUNT   PERSENT\r\n");
+        //        print("%s", CPU_RunInfo);
+        //        print("---------------------------------------------\r\n\n");
+        //        osDelay(1000);
     }
 }

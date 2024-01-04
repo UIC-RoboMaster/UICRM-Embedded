@@ -790,8 +790,6 @@ namespace driver {
         bool align_complete_;
     };
 
-
-
     /**
      * @brief 飞轮电机的初始化结构体
      *

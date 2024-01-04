@@ -199,4 +199,4 @@ namespace driver {
     float DMMotor4310::GetTorque() const {
         return torque_;
     }
-}
+}  // namespace driver

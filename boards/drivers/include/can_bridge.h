@@ -28,6 +28,12 @@
 #define MAX_CAN_BRIDGE_REG 32
 
 namespace communication {
+    /**
+     * @brief CAN Bridge所传输数据的数据类型
+     */
+     /**
+      * @brief data type of CAN Bridge
+      */
     enum can_bridge_type_e {
         CAN_BRIDGE_PING = 0x00,
         CAN_BRIDGE_TYPE_INT64 = 0x01,
@@ -56,6 +62,12 @@ namespace communication {
         CAN_BRIDGE_PONG = 0x1F,
     };
 
+    /**
+     * @brief CAN Bridge所传输数据的扩展ID组成
+     */
+     /**
+      * @brief CAN Bridge data extension ID composition
+      */
     typedef union {
         struct {
             uint16_t rx_id : 8;
@@ -152,17 +164,69 @@ namespace communication {
         } __packed data_error;
     } __packed can_bridge_data_t;
 
+
     typedef void (*can_bridge_rx_callback_t)(can_bridge_ext_id_t ext_id, can_bridge_data_t data,
                                              void* args);
 
+    /**
+     * @brief CAN Bridge
+     * @details CAN Bridge是一个用于在CAN总线上传输数据的协议。其拥有类似计算机网络中的IP地址的扩展ID，用于辨别包的发送者和接收者。
+     */
+     /**
+      * @brief CAN Bridge
+      * @details CAN Bridge is a protocol used to transfer data on the CAN bus. It has an extension ID similar to the IP address in computer networks to identify the sender and receiver of the packet.
+      */
     class CanBridge {
       public:
+        /**
+         * @brief 构造函数
+         * @param can CAN总线
+         * @param id 本机ID
+         */
+         /**
+          * @brief constructor
+          * @param can CAN bus
+          * @param id local ID
+          */
         CanBridge(bsp::CAN* can, uint8_t id);
         ~CanBridge() = default;
+        /**
+         * @brief 发送数据
+         * @param ext_id 组装好的扩展ID数据，包括发送者ID、接收者ID、寄存器ID和数据类型
+         * @param data 数据
+         */
+                /**
+                * @brief send data
+                * @param ext_id assembled extension ID data, including sender ID, receiver ID, register ID and data type
+                * @param data data
+                */
         void Send(can_bridge_ext_id_t ext_id, can_bridge_data_t data);
 
+        /**
+         * @brief 注册回调函数
+         * @param reg 回调寄存器ID
+         * @param callback 回调函数
+         * @param args 回调函数参数
+         */
+         /**
+          * @brief register callback function
+          * @param reg callback register ID
+          * @param callback callback function
+          * @param args callback function parameter
+          */
         void RegisterRxCallback(uint8_t reg, can_bridge_rx_callback_t callback, void* args = NULL);
 
+        /**
+         * @brief 回调处理函数
+         * @note 用于CAN总线接收到数据时调用，不能手动调用
+         * @param data 数据
+         * @param ext_id 扩展ID
+         */
+         /**
+          * @brief callback processing function
+          * @param data data
+          * @param ext_id extend ID
+          */
         void CallbackWrapper(const uint8_t data[], const uint32_t ext_id);
 
       private:

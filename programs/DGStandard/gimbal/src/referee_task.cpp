@@ -71,8 +71,8 @@ void init_referee() {
     referee_uart->SetupTx(300);
     referee = new communication::Referee;
 
-//    refereerc_uart = new RefereeUART(&huart1, &refereercTaskHandle);
-//    refereerc_uart->SetupRx(300);
-//    refereerc_uart->SetupTx(300);
-//    refereerc = new communication::Referee;
+    //    refereerc_uart = new RefereeUART(&huart1, &refereercTaskHandle);
+    //    refereerc_uart->SetupRx(300);
+    //    refereerc_uart->SetupTx(300);
+    //    refereerc = new communication::Referee;
 }

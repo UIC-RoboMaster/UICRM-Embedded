@@ -73,7 +73,7 @@ void RM_RTOS_Init(void) {
     print_use_usb();
     wituart = new IUART(&huart1);
     /// Some models of wit-imu may need to change baudrate to 921600
-        wituart->SetBaudrate(921600);
+    wituart->SetBaudrate(921600);
     /// Setup Rx and Tx buffer size
     wituart->SetupTx(100);
     wituart->SetupRx(100);
