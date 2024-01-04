@@ -181,12 +181,12 @@ namespace bsp {
     spi_master_status_e SPIMaster::Transmit(SPIDevice* device, uint8_t* tx_data, uint32_t length) {
         if (spi_->IsBusy()) {
             busy_count_++;
-            if(busy_count_ > 5){
+            if (busy_count_ > 5) {
                 spi_->Abort();
             }
             return SPI_MASTER_STATUS_BUSY;
         }
-        busy_count_=0;
+        busy_count_ = 0;
         if (auto_cs_) {
             device->PrepareTransmit();
         }
@@ -197,12 +197,12 @@ namespace bsp {
     spi_master_status_e SPIMaster::Receive(SPIDevice* device, uint8_t* rx_data, uint32_t length) {
         if (spi_->IsBusy()) {
             busy_count_++;
-            if(busy_count_ > 5){
+            if (busy_count_ > 5) {
                 spi_->Abort();
             }
             return SPI_MASTER_STATUS_BUSY;
         }
-        busy_count_=0;
+        busy_count_ = 0;
         if (auto_cs_) {
             device->PrepareTransmit();
         }
@@ -214,12 +214,12 @@ namespace bsp {
                                                    uint8_t* rx_data, uint32_t length) {
         if (spi_->IsBusy()) {
             busy_count_++;
-            if(busy_count_ > 5){
+            if (busy_count_ > 5) {
                 spi_->Abort();
             }
             return SPI_MASTER_STATUS_BUSY;
         }
-        busy_count_=0;
+        busy_count_ = 0;
         if (auto_cs_) {
             device->PrepareTransmit();
         }

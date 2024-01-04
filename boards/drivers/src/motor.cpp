@@ -536,7 +536,6 @@ namespace driver {
         servo_->CalcOutput();
     }
 
-
     FlyWheelMotor::FlyWheelMotor(flywheel_t data) {
         motor_ = data.motor;
         max_speed_ = data.max_speed;

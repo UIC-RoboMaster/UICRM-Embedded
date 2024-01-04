@@ -20,7 +20,6 @@
 
 #include "wit_protocol.h"
 
-
 namespace imu {
     WITUART::WITUART(bsp::UART* uart) {
         uart_ = uart;

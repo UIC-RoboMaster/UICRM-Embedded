@@ -25,7 +25,7 @@
 #include "main.h"
 
 #ifndef PI
-#define PI               3.14159265358979f
+#define PI 3.14159265358979f
 #endif
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port

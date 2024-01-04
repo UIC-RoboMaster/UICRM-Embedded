@@ -18,8 +18,8 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "main.h"
 #include "bsp_can.h"
+#include "main.h"
 
 namespace driver {
     /**
@@ -275,7 +275,7 @@ namespace driver {
         uint16_t tx_id_;
         uint16_t tx_id_actual_;
 
-        volatile dm_m4310_mode_t mode_;     // current motor mode
+        volatile dm_m4310_mode_t mode_;  // current motor mode
         volatile float kp_set_ = 0;      // defined kp value
         volatile float kd_set_ = 0;      // defined kd value
         volatile float vel_set_ = 0;     // defined velocity
@@ -302,4 +302,4 @@ namespace driver {
         constexpr static float T_MIN = -18;
         constexpr static float T_MAX = 18;
     };
-}
+}  // namespace driver
