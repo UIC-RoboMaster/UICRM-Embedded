@@ -57,6 +57,7 @@ void chassisTask(void* arg) {
     control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
         manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
     manual_mode_pid->Reset();
+    float yaw_pid_error = 0;
     float manual_mode_pid_output = 0;
     float current_speed_offset = speed_offset;
     remote::keyboard_t keyboard;
@@ -200,8 +201,11 @@ void chassisTask(void* arg) {
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
-                manual_mode_pid_output = manual_mode_pid->ComputeOutput(
-                    yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
+                yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+                if(fabs(yaw_pid_error) < 0.01f){
+                    yaw_pid_error = 0;
+                }
+                manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);
                 chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
