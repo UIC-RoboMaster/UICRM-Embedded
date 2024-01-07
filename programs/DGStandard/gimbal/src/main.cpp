@@ -41,7 +41,7 @@
 
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim7);
-    print_use_uart(&huart8);
+    print_use_uart(&huart8,true,921600);
     init_can();
     init_imu();
     init_buzzer();
@@ -56,6 +56,7 @@ void RM_RTOS_Init(void) {
 
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
+    extimuTaskHandle = osThreadNew(extimuTask, nullptr, &extimuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
     refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
     //    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
@@ -72,32 +73,34 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     osDelay(3000);
     Buzzer_Sing(DJI);
-    char s[50];
+//    char s[50];
     //    char CPU_RunInfo[512];
     while (true) {
-        set_cursor(0, 0);
-        clear_screen();
-        switch (remote_mode) {
-            case REMOTE_MODE_PREPARE:
-                strcpy(s, "PREPARE");
-                break;
-            case REMOTE_MODE_STOP:
-                strcpy(s, "STOP");
-                break;
-            case REMOTE_MODE_KILL:
-                strcpy(s, "KILL");
-                break;
-            case REMOTE_MODE_FOLLOW:
-                strcpy(s, "MANUAL");
-                break;
-            case REMOTE_MODE_SPIN:
-                strcpy(s, "SPIN");
-                break;
-            default:
-                strcpy(s, "UNKNOWN");
-                break;
-        }
-        print("Mode:%s\r\n", s);
+        print("%.4f %.4f\r\n",yaw_motor->GetTheta(),yaw_motor->GetOmega());
+        osDelay(2);
+//        set_cursor(0, 0);
+//        clear_screen();
+//        switch (remote_mode) {
+//            case REMOTE_MODE_PREPARE:
+//                strcpy(s, "PREPARE");
+//                break;
+//            case REMOTE_MODE_STOP:
+//                strcpy(s, "STOP");
+//                break;
+//            case REMOTE_MODE_KILL:
+//                strcpy(s, "KILL");
+//                break;
+//            case REMOTE_MODE_FOLLOW:
+//                strcpy(s, "MANUAL");
+//                break;
+//            case REMOTE_MODE_SPIN:
+//                strcpy(s, "SPIN");
+//                break;
+//            default:
+//                strcpy(s, "UNKNOWN");
+//                break;
+//        }
+//        print("Mode:%s\r\n", s);
         //        switch (shoot_fric_mode) {
         //            case SHOOT_FRIC_MODE_PREPARING:
         //                strcpy(s, "PREPARE");
@@ -113,44 +116,44 @@ void RM_RTOS_Default_Task(const void* arg) {
         //                break;
         //        }
         //        print("Shoot Fric Mode:%s\r\n", s);
-        switch (shoot_mode) {
-            case SHOOT_MODE_PREPARING:
-                strcpy(s, "PREPARE");
-                break;
-            case SHOOT_MODE_STOP:
-                strcpy(s, "STOP");
-                break;
-            case SHOOT_MODE_PREPARED:
-                strcpy(s, "PREPARED");
-                break;
-            case SHOOT_MODE_DISABLE:
-                strcpy(s, "DISABLE");
-                break;
-            case SHOOT_MODE_SINGLE:
-                strcpy(s, "SINGLE");
-                break;
-            case SHOOT_MODE_BURST:
-                strcpy(s, "BURST");
-                break;
-        }
-        print("Shoot Mode:%s\r\n", s);
-        print(
-            "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
-            "TWL: %d "
-            "@ %d "
-            "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
-            dbus->timestamp);
-
-        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
-        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
-        print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
-        print("\r\n");
-        print("Shooter Cooling Heat: %hu\r\n",
-              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
-        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
-        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        osDelay(100);
+//        switch (shoot_mode) {
+//            case SHOOT_MODE_PREPARING:
+//                strcpy(s, "PREPARE");
+//                break;
+//            case SHOOT_MODE_STOP:
+//                strcpy(s, "STOP");
+//                break;
+//            case SHOOT_MODE_PREPARED:
+//                strcpy(s, "PREPARED");
+//                break;
+//            case SHOOT_MODE_DISABLE:
+//                strcpy(s, "DISABLE");
+//                break;
+//            case SHOOT_MODE_SINGLE:
+//                strcpy(s, "SINGLE");
+//                break;
+//            case SHOOT_MODE_BURST:
+//                strcpy(s, "BURST");
+//                break;
+//        }
+//        print("Shoot Mode:%s\r\n", s);
+//        print(
+//            "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
+//            "TWL: %d "
+//            "@ %d "
+//            "ms\r\n",
+//            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
+//            dbus->timestamp);
+//
+//        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
+//        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
+//        print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
+//        print("\r\n");
+//        print("Shooter Cooling Heat: %hu\r\n",
+//              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+//        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
+//        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+//        osDelay(100);
         // print("\r\n");
         // yaw_motor->PrintData();
         // pitch_motor->PrintData();

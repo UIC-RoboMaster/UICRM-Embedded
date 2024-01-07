@@ -20,6 +20,7 @@
 
 #include "imu_task.h"
 
+#include "bsp_uart.h"
 #include "bsp_os.h"
 
 #define ONBOARD_IMU_SPI hspi5
@@ -36,7 +37,27 @@ bsp::GPIT* mpu6500_it = nullptr;
 bsp::SPI* spi5 = nullptr;
 bsp::SPIMaster* spi5_master = nullptr;
 
+class IUART : public bsp::UART {
+  public:
+    using bsp::UART::UART;
+
+  protected:
+    void RxCompleteCallback() final {
+        osThreadFlagsSet(extimuTaskHandle, RX_SIGNAL);
+    }
+};
+
+
+IUART* wituart = nullptr;
+
+/// The class WITUART is not an UART, It means that the WIT-IMU using UART
+imu::WITUART* witimu = nullptr;
+
 osThreadId_t imuTaskHandle;
+osThreadId_t extimuTaskHandle;
+
+float yaw_offset = 0;
+bool imu_ok = false;
 
 void MPU6500ReceiveDone() {
     osThreadFlagsSet(imuTaskHandle, RX_SIGNAL);
@@ -54,6 +75,18 @@ void imuTask(void* arg) {
             ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
                          mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2]);
             heater->Update(mpu6500->temperature_);
+        }
+    }
+}
+
+void extimuTask(void* arg) {
+    UNUSED(arg);
+
+    while (true) {
+        uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
+        if (flags & RX_SIGNAL) {
+            witimu->Update();
+
         }
     }
 }
@@ -85,4 +118,41 @@ void init_imu() {
     };
     heater = new driver::Heater(heater_init);
     mpu6500->RegisterCallback(MPU6500ReceiveDone);
+
+
+    HAL_Delay(500);
+    wituart = new IUART(&huart6);
+    /// Some models of wit-imu may need to change baudrate to 921600
+    wituart->SetBaudrate(921600);
+    /// Setup Rx and Tx buffer size
+    wituart->SetupTx(6);
+    wituart->SetupRx(12);
+    witimu = new imu::WITUART(wituart);
+    /// Before write the register, you need to unlock the wit-imu
+    witimu->Unlock();
+    HAL_Delay(100);
+    /// Set only output the INS data (Euler Angles)
+    uint8_t status_data[] = {0x08, 0x00};
+    witimu->WriteReg(0x02, status_data);
+    HAL_Delay(100);
+    status_data[0] = 0x01;
+    status_data[1] = 0x00;
+    witimu->WriteReg(0x24, status_data);
+    HAL_Delay(100);
+    /// Calibrate the IMU
+//    status_data[0] = 0x01;
+//    status_data[1] = 0x00;
+//    witimu->WriteReg(0x01, status_data);
+//    HAL_Delay(5000);
+//    status_data[0] = 0x01;
+//    status_data[1] = 0x00;
+//    witimu->WriteReg(0x61, status_data);
+//    HAL_Delay(3000);
+    /// Lock the IMU
+    witimu->Lock();
+    HAL_Delay(100);
+}
+void reset_yaw() {
+    yaw_offset = witimu->INS_angle[2];
+    imu_ok=true;
 }

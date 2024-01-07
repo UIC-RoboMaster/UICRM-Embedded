@@ -72,6 +72,14 @@ namespace control {
             pt_diff = 0;
         }
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
+//        if(pt_out>0.01f){
+//            pt_out=2*PI;
+//        }
+//        else if(pt_out<-0.01f) {
+//            pt_out = -2*PI;
+//        }else{
+//            pt_out = 0;
+//        }
         float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
         float yt_diff = yaw_motor_->GetThetaDelta(yaw_angle_);
@@ -82,6 +90,13 @@ namespace control {
         }
 
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
+        if(yaw_angle_>data_.yaw_offset_){
+            yt_out=3*PI;
+        }else if(yaw_angle_<data_.yaw_offset_) {
+            yt_out = -3*PI;
+        }else{
+            yt_out = 0;
+        }
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
 
@@ -105,8 +120,12 @@ namespace control {
         }
 
         float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
+
+
+
         float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
+
 
         float yt_diff = yaw_angle_ - data_.yaw_offset_ - yaw;
         if (!data_.yaw_circle_) {
@@ -127,6 +146,7 @@ namespace control {
         }
 
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
+
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
 

@@ -32,7 +32,7 @@ const control::gimbal_data_t gimbal_init_data = {
     .pitch_inverted = false,
     .yaw_inverted = true,
     .pitch_eposition = 0,
-    .yaw_eposition = 0,
+    .yaw_eposition = 0.001f,
 };
 // basic information of gimbal
 extern control::gimbal_pid_t gimbalBasicPID;
