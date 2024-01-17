@@ -202,7 +202,7 @@ void chassisTask(void* arg) {
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
                 yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-                if(fabs(yaw_pid_error) < 0.01f){
+                if (fabs(yaw_pid_error) < 0.01f) {
                     yaw_pid_error = 0;
                 }
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);

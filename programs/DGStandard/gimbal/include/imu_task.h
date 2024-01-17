@@ -20,13 +20,13 @@
 
 #pragma once
 #include "ahrs.h"
+#include "bsp_i2c.h"
 #include "bsp_pwm.h"
+#include "bsp_spi.h"
 #include "cmsis_os2.h"
 #include "heater.h"
 #include "main.h"
 #include "mpu6500.h"
-#include "bsp_spi.h"
-#include "bsp_i2c.h"
 #include "wit_protocol.h"
 #define RX_SIGNAL (1 << 0)
 
@@ -53,14 +53,14 @@ void imuTask(void* arg);
 
 extern osThreadId_t extimuTaskHandle;
 const osThreadAttr_t extimuTaskAttribute = {.name = "extimuTask",
-                                         .attr_bits = osThreadDetached,
-                                         .cb_mem = nullptr,
-                                         .cb_size = 0,
-                                         .stack_mem = nullptr,
-                                         .stack_size = 128 * 4,
-                                         .priority = (osPriority_t)osPriorityRealtime,
-                                         .tz_module = 0,
-                                         .reserved = 0};
+                                            .attr_bits = osThreadDetached,
+                                            .cb_mem = nullptr,
+                                            .cb_size = 0,
+                                            .stack_mem = nullptr,
+                                            .stack_size = 128 * 4,
+                                            .priority = (osPriority_t)osPriorityRealtime,
+                                            .tz_module = 0,
+                                            .reserved = 0};
 
 void extimuTask(void* arg);
 

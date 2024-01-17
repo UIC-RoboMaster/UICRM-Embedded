@@ -20,8 +20,8 @@
 
 #include "imu_task.h"
 
-#include "bsp_uart.h"
 #include "bsp_os.h"
+#include "bsp_uart.h"
 
 #define ONBOARD_IMU_SPI hspi5
 #define ONBOARD_IMU_CS_GROUP GPIOF
@@ -46,7 +46,6 @@ class IUART : public bsp::UART {
         osThreadFlagsSet(extimuTaskHandle, RX_SIGNAL);
     }
 };
-
 
 IUART* wituart = nullptr;
 
@@ -86,7 +85,6 @@ void extimuTask(void* arg) {
         uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
         if (flags & RX_SIGNAL) {
             witimu->Update();
-
         }
     }
 }
@@ -119,7 +117,6 @@ void init_imu() {
     heater = new driver::Heater(heater_init);
     mpu6500->RegisterCallback(MPU6500ReceiveDone);
 
-
     HAL_Delay(500);
     wituart = new IUART(&huart6);
     /// Some models of wit-imu may need to change baudrate to 921600
@@ -140,19 +137,19 @@ void init_imu() {
     witimu->WriteReg(0x24, status_data);
     HAL_Delay(100);
     /// Calibrate the IMU
-//    status_data[0] = 0x01;
-//    status_data[1] = 0x00;
-//    witimu->WriteReg(0x01, status_data);
-//    HAL_Delay(5000);
-//    status_data[0] = 0x01;
-//    status_data[1] = 0x00;
-//    witimu->WriteReg(0x61, status_data);
-//    HAL_Delay(3000);
+    //    status_data[0] = 0x01;
+    //    status_data[1] = 0x00;
+    //    witimu->WriteReg(0x01, status_data);
+    //    HAL_Delay(5000);
+    //    status_data[0] = 0x01;
+    //    status_data[1] = 0x00;
+    //    witimu->WriteReg(0x61, status_data);
+    //    HAL_Delay(3000);
     /// Lock the IMU
     witimu->Lock();
     HAL_Delay(100);
 }
 void reset_yaw() {
     yaw_offset = witimu->INS_angle[2];
-    imu_ok=true;
+    imu_ok = true;
 }
