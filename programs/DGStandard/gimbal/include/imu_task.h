@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#include "ahrs.h"
+#include "AHRS.h"
 #include "bsp_i2c.h"
 #include "bsp_pwm.h"
 #include "bsp_spi.h"
