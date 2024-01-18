@@ -26,7 +26,7 @@
 #include "cmsis_os2.h"
 #include "heater.h"
 #include "main.h"
-#include "mpu6500.h"
+#include "MPU6500.h"
 #include "wit_protocol.h"
 #define RX_SIGNAL (1 << 0)
 
