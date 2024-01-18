@@ -54,7 +54,6 @@ void shootTask(void* arg) {
 
     driver::MotorCANBase* motors[] = {steering_motor};
 
-
     //    int last_state = remote::MID;
     //    int last_state_2 = remote::MID;
     //    uint8_t shoot_state = 0;

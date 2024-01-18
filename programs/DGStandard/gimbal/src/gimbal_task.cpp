@@ -71,8 +71,8 @@ void gimbalTask(void* arg) {
     float pitch_curr, yaw_curr;
     pitch_curr = ahrs->INS_angle[2];
     yaw_curr = ahrs->INS_angle[0];
-//    pitch_curr = witimu->INS_angle[0];
-//    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
+    //    pitch_curr = witimu->INS_angle[0];
+    //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
     float pitch_target = 0, yaw_target = 0;
 
     while (true) {
@@ -83,8 +83,8 @@ void gimbalTask(void* arg) {
         }
         pitch_curr = ahrs->INS_angle[2];
         yaw_curr = ahrs->INS_angle[0];
-//        pitch_curr = witimu->INS_angle[0];
-//        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
+        //        pitch_curr = witimu->INS_angle[0];
+        //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
         //    if (dbus->swr == remote::UP) {
         //      gimbal->TargetAbs(0, 0);
         //      gimbal->Update();
@@ -127,9 +127,9 @@ void gimbalTask(void* arg) {
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
-                                gimbal->TargetRel(pitch_diff, yaw_diff);
-                                gimbal->UpdateIMU(pitch_curr, yaw_curr);
-                                break;
+                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->UpdateIMU(pitch_curr, yaw_curr);
+                break;
             case REMOTE_MODE_ADVANCED:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->Update();
@@ -147,8 +147,8 @@ void gimbalTask(void* arg) {
 void init_gimbal() {
     init_gimbalBasicData();
     init_gimbalSpinData();
-    pitch_motor = new driver::Motor6020(can2, 0x20A,true);
-    yaw_motor = new driver::Motor6020(can1, 0x209,true);
+    pitch_motor = new driver::Motor6020(can2, 0x20A, true);
+    yaw_motor = new driver::Motor6020(can1, 0x209, true);
     control::gimbal_t gimbal_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;
