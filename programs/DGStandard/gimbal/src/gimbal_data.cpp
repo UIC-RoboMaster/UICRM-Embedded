@@ -29,12 +29,12 @@ control::gimbal_pid_t gimbalBasicPID;
 void init_gimbalBasicData() {
     float pitch_theta_max_iout = 0;
     float pitch_theta_max_out = 10;
-    float pitch_omega_max_iout = 10000;
-    float pitch_omega_max_out = 30000;
+    float pitch_omega_max_iout = 3000;
+    float pitch_omega_max_out = 16384;
     float yaw_theta_max_iout = 0;
-    float yaw_theta_max_out = 10;
-    float yaw_omega_max_iout = 10000;  // 10000
-    float yaw_omega_max_out = 30000;
+    float yaw_theta_max_out = 31;
+    float yaw_omega_max_iout = 2000;  // 10000
+    float yaw_omega_max_out = 16383;
     float* pitch_theta_pid_param = new float[3]{10, 0, 10};
     float* pitch_omega_pid_param = new float[3]{3000, 100, 0};
     float* yaw_theta_pid_param = new float[3]{25, 0, 500};

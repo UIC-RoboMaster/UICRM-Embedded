@@ -95,7 +95,7 @@ void RM_RTOS_Init(void) {
     };
     mpu6500 = new imu::MPU6500(mpu6500_init);
     bsp::SetHighresClockTimer(&htim7);
-    print_use_uart(&PRING_UART, true);
+    print_use_uart(&PRING_UART, true,921600);
 
     ahrs = new control::AHRS(false);
     heater_pwm = new bsp::PWM(&htim3, 2, 1000000, 2000, 0);

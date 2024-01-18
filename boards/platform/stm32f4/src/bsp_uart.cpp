@@ -238,10 +238,6 @@ namespace bsp {
 
     template <bool FromISR>
     int32_t UART::Write(const uint8_t* data, uint32_t length) {
-        if (!tx_dma_) {
-            HAL_UART_Transmit(huart_, (uint8_t*)data, length, 1000);
-            return length;
-        }
         // enter critical session
         UBaseType_t isrflags;
         if (FromISR) {
@@ -261,7 +257,12 @@ namespace bsp {
                 length = tx_size_;
             /* directly write into the read buffer and start transmission */
             memcpy(tx_read_, data, length);
-            HAL_UART_Transmit_DMA(huart_, tx_read_, length);
+            if(tx_dma_){
+                HAL_UART_Transmit_DMA(huart_, tx_read_, length);
+            }
+            else{
+                HAL_UART_Transmit_IT(huart_, tx_read_, length);
+            }
         }
 
         // exit critical session

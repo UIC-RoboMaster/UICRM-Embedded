@@ -90,13 +90,13 @@ namespace control {
         }
 
         float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
-        if(yaw_angle_>data_.yaw_offset_){
-            yt_out=3*PI;
-        }else if(yaw_angle_<data_.yaw_offset_) {
-            yt_out = -3*PI;
-        }else{
-            yt_out = 0;
-        }
+//        if(yaw_angle_>data_.yaw_offset_){
+//            yt_out=3*PI;
+//        }else if(yaw_angle_<data_.yaw_offset_) {
+//            yt_out = -3*PI;
+//        }else{
+//            yt_out = 0;
+//        }
         float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
         float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
 

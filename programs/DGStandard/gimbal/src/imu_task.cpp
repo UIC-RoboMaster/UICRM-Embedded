@@ -132,6 +132,7 @@ void init_imu() {
     uint8_t status_data[] = {0x08, 0x00};
     witimu->WriteReg(0x02, status_data);
     HAL_Delay(100);
+    // Use 6-axis mode
     status_data[0] = 0x01;
     status_data[1] = 0x00;
     witimu->WriteReg(0x24, status_data);
@@ -150,6 +151,6 @@ void init_imu() {
     HAL_Delay(100);
 }
 void reset_yaw() {
-    yaw_offset = witimu->INS_angle[2];
+//    yaw_offset = witimu->INS_angle[2];
     imu_ok = true;
 }
