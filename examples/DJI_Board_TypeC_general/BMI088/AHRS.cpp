@@ -81,7 +81,7 @@ void imuUpdateTask(void* arguments) {
 
 void RM_RTOS_Init(void) {
     HAL_Delay(500);
-    print_use_uart(&huart1,true,921600);
+    print_use_uart(&huart1, true, 921600);
     bsp::spi_init_t spiInit = {
         .hspi = &hspi1,
         .mode = bsp::SPI_MODE_DMA,

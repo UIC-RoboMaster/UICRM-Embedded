@@ -156,5 +156,5 @@ void kill_gimbal() {
     pitch_motor->SetOutput(0);
     // steering_motor->SetOutput(0);
     driver::MotorCANBase::TransmitOutput(&pitch_motor, 1);
-        driver::MotorCANBase::TransmitOutput(&yaw_motor, 1);
+    driver::MotorCANBase::TransmitOutput(&yaw_motor, 1);
 }

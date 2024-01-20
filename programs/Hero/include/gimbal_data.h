@@ -28,8 +28,8 @@ const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 0.9750f,
                                                  .pitch_max_ = 0.5039f,
                                                  .yaw_max_ = PI / 2,
                                                  .yaw_circle_ = true,
-    .pitch_inverted = true,
-    .yaw_inverted = true};
+                                                 .pitch_inverted = true,
+                                                 .yaw_inverted = true};
 // basic information of gimbal
 extern control::gimbal_pid_t gimbalBasicPID;
 void init_gimbalBasicData();

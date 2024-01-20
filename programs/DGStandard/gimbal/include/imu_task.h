@@ -20,13 +20,13 @@
 
 #pragma once
 #include "AHRS.h"
+#include "MPU6500.h"
 #include "bsp_i2c.h"
 #include "bsp_pwm.h"
 #include "bsp_spi.h"
 #include "cmsis_os2.h"
 #include "heater.h"
 #include "main.h"
-#include "MPU6500.h"
 #include "wit_protocol.h"
 #define RX_SIGNAL (1 << 0)
 

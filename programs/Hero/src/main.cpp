@@ -140,14 +140,14 @@ void RM_RTOS_Default_Task(const void* arg) {
               imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
         print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
         print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(), pitch_motor->GetOmega());
-//        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
-//        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
-//        print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
-//        print("\r\n");
-//        print("Shooter Cooling Heat: %hu\r\n",
-//              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
-//        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
-//        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        //        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
+        //        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current /
+        //        1000.0); print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
+        //        print("\r\n");
+        //        print("Shooter Cooling Heat: %hu\r\n",
+        //              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        //        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
+        //        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
         // print("\r\n");
         // yaw_motor->PrintData();
         // pitch_motor->PrintData();
