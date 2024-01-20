@@ -51,7 +51,7 @@ typedef struct {
     bool yaw_motor;
     bool pitch_motor;
     bool steering_motor;
-    bool sbus;
+    bool dbus;
     bool referee;
     bool refereerc;
     bool imu_cali;

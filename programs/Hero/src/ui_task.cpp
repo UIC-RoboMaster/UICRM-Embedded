@@ -193,7 +193,7 @@ void uiTask(void* arg) {
             yaw_motor_check_edge->input(selftest.yaw_motor);
             pitch_motor_check_edge->input(selftest.pitch_motor);
             steer_motor_check_edge->input(selftest.steering_motor);
-            dbus_edge->input(selftest.sbus);
+            dbus_edge->input(selftest.dbus);
             imu_cali_edge->input(selftest.imu_cali);
             imu_temp_edge->input(selftest.imu_temp);
             if (fl_motor_check_edge->negEdge()) {
@@ -239,8 +239,8 @@ void uiTask(void* arg) {
         }
 
         // clear self-diagnosis messages
-        if (selftest.sbus) {
-            v_edge->input(sbus->ch5 < 0);
+        if (selftest.dbus) {
+            v_edge->input(dbus->keyboard.bit.V);
         } else {
             v_edge->input(refereerc->remote_control.keyboard.bit.V);
         }
@@ -295,8 +295,8 @@ void uiTask(void* arg) {
             osDelay(110);
             continue;
         }
-        if (selftest.sbus) {
-            c_edge->input(sbus->ch5 > 0);
+        if (selftest.dbus) {
+            c_edge->input(dbus->keyboard.bit.C);
         } else {
             c_edge->input(refereerc->remote_control.keyboard.bit.C);
         }

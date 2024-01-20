@@ -20,6 +20,7 @@
 
 #pragma once
 #include "bsp_can.h"
+#include "can_bridge.h"
 #include "chassis.h"
 #include "cmsis_os2.h"
 #include "gimbal_task.h"
@@ -44,11 +45,7 @@ const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
 void chassisTask(void* arg);
 void init_chassis();
 void kill_chassis();
-extern control::Chassis* chassis;
-extern driver::MotorCANBase* fl_motor;
-extern driver::MotorCANBase* fr_motor;
-extern driver::MotorCANBase* bl_motor;
-extern driver::MotorCANBase* br_motor;
+
 extern float chassis_vx;
 extern float chassis_vy;
 extern float chassis_vz;

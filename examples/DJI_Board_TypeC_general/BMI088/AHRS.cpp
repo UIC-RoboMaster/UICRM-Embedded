@@ -81,7 +81,7 @@ void imuUpdateTask(void* arguments) {
 
 void RM_RTOS_Init(void) {
     HAL_Delay(500);
-    print_use_uart(&huart1);
+    print_use_uart(&huart1,true,921600);
     bsp::spi_init_t spiInit = {
         .hspi = &hspi1,
         .mode = bsp::SPI_MODE_DMA,
@@ -101,9 +101,10 @@ void RM_RTOS_Init(void) {
         .CS_GYRO = bmi088_gyro_cs,
         .INT_ACCEL = bmi088_accel_int,
         .INT_GYRO = bmi088_gyro_int,
-        .is_DMA = false,
+        .is_DMA = true,
     };
     bmi088 = new imu::BMI088(bmi088Init);
+    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
 
     ist8310_rst = new bsp::GPIO(GPIOG, GPIO_PIN_6);
     ist8310_int = new bsp::GPIT(DRDY_IST8310_Pin);

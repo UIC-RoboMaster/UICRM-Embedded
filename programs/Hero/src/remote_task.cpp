@@ -20,9 +20,9 @@
 
 #include "remote_task.h"
 
-remote::SBUS* sbus = nullptr;
-RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
+remote::DBUS* dbus = nullptr;
+RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
+RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
 const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
@@ -31,7 +31,7 @@ ShootMode shoot_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
 
 void init_dbus() {
-    sbus = new remote::SBUS(&huart3);
+    dbus = new remote::DBUS(&huart3);
 }
 osThreadId_t remoteTaskHandle;
 void remoteTask(void* arg) {
@@ -43,16 +43,28 @@ void remoteTask(void* arg) {
     bool shoot_burst_switch = false;
     bool shoot_stop_switch = false;
     uint32_t shoot_burst_timestamp = 0;
-    int16_t last_state_r = 0;
-    int16_t last_state_l = 0;
-    int16_t state_r = 0;
-    int16_t state_l = 0;
+    remote::switch_t last_state_r = remote::MID;
+    remote::switch_t last_state_l = remote::MID;
+    remote::keyboard_t last_keyboard;
+    remote::mouse_t last_mouse;
+    remote::switch_t state_r = remote::MID;
+    remote::switch_t state_l = remote::MID;
+    remote::keyboard_t keyboard;
+    remote::mouse_t mouse;
+    memset(&keyboard, 0, sizeof(keyboard));
+    memset(&mouse, 0, sizeof(mouse));
+    memset(&last_keyboard, 0, sizeof(last_keyboard));
+    memset(&last_mouse, 0, sizeof(last_mouse));
     bool is_dbus_offline;
     bool is_robot_dead;
     bool is_shoot_available;
+    BoolEdgeDetector* z_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ctrl_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     while (1) {
         // Offline Detection && Security Check
-        is_dbus_offline = (!selftest.sbus && !selftest.refereerc) || sbus->ch7 <= -550;
+        is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
         // Kill Detection
         //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
         //        is_shoot_available =
@@ -82,19 +94,49 @@ void remoteTask(void* arg) {
         // Update Last State
         last_state_r = state_r;
         last_state_l = state_l;
+        last_keyboard = keyboard;
+        last_mouse = mouse;
         // Update State
-        if (selftest.sbus) {
-            state_r = sbus->ch7;
-            state_l = sbus->ch8;
+        if (selftest.dbus) {
+            state_r = dbus->swr;
+            state_l = dbus->swl;
+            keyboard = dbus->keyboard;
+            mouse = dbus->mouse;
+        } else if (selftest.refereerc) {
+            state_r = remote::MID;
+            state_l = remote::MID;
+            keyboard = refereerc->remote_control.keyboard;
+            mouse = refereerc->remote_control.mouse;
         }
 
         // Update Timestamp
+        z_edge->input(keyboard.bit.Z);
+        ctrl_edge->input(keyboard.bit.CTRL);
+        mouse_left_edge->input(mouse.l);
+        mouse_right_edge->input(mouse.r);
 
-        if (sbus->ch7 > 0 && last_state_r == 0) {
-            mode_switch = true;
+        if (last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
+            shoot_fric_mode = SHOOT_FRIC_SPEEDUP;
         }
-        // remote mode switch
+        if (last_keyboard.bit.B == 1 && keyboard.bit.B == 0) {
+            shoot_fric_mode = SHOOT_FRIC_SPEEDDOWN;
+        }
 
+        // remote mode switch
+        switch (state_r) {
+            case remote::UP:
+                if (last_state_r == remote::MID && selftest.dbus) {
+                    mode_switch = true;
+                }
+                break;
+            case remote::MID:
+                if (ctrl_edge->posEdge()) {
+                    mode_switch = true;
+                }
+                break;
+            case remote::DOWN:
+                break;
+        }
         if (mode_switch) {
             mode_switch = false;
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
@@ -105,22 +147,51 @@ void remoteTask(void* arg) {
         }
         // shoot mode switch
         if (is_shoot_available == true || SHOOT_REFEREE == 0) {
-            if (sbus->ch8 > 0 && last_state_l == 0) {
-                shoot_fric_switch = true;
-            } else {
-                if (sbus->ch8 < 0 && last_state_l == 0) {
-                    shoot_switch = true;
-                    shoot_burst_timestamp = 0;
-                } else if (last_state_l < 0 && selftest.sbus) {
-                    shoot_burst_timestamp++;
-                    if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
-                        shoot_burst_switch = true;
+            switch (state_l) {
+                case remote::UP:
+                    if (last_state_l == remote::MID && selftest.dbus) {
+                        shoot_fric_switch = true;
                     }
-                } else {
-                    shoot_stop_switch = true;
-                }
+                    break;
+                case remote::DOWN:
+                    if (last_state_l == remote::MID && selftest.dbus) {
+                        shoot_switch = true;
+                        shoot_burst_timestamp = 0;
+                    } else if (last_state_l == remote::DOWN && selftest.dbus) {
+                        shoot_burst_timestamp++;
+                        if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
+                            shoot_burst_switch = true;
+                        }
+                    }
+                    break;
+                case remote::MID:
+                    switch (last_state_l) {
+                        case remote::DOWN:
+                            shoot_stop_switch = true;
+                            break;
+                        case remote::UP:
+                            break;
+                        case remote::MID:
+                            if (z_edge->posEdge()) {
+                                shoot_fric_switch = true;
+                            }
+                            if (mouse_left_edge->posEdge()) {
+                                shoot_switch = true;
+                                shoot_burst_timestamp = 0;
+                            } else if (mouse_left_edge->get()) {
+                                shoot_burst_timestamp++;
+                                if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
+                                    shoot_burst_switch = true;
+                                }
+                            } else if (mouse_left_edge->negEdge()) {
+                                shoot_stop_switch = true;
+                            } else {
+                                shoot_stop_switch = true;
+                            }
+                            break;
+                    }
+                    break;
             }
-
             // 切换摩擦轮模式
             if (shoot_fric_switch) {
                 shoot_fric_switch = false;

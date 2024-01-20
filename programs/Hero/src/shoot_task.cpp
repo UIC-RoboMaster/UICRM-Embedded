@@ -35,7 +35,7 @@ void jam_callback(driver::ServoMotor* servo, const driver::servo_jam_t data) {
     UNUSED(data);
     float servo_target = servo->GetTarget();
     if (servo_target > servo->GetTheta()) {
-        float prev_target = servo->GetTarget() - 2 * PI / 8;
+        float prev_target = servo->GetTarget() - 2 * PI / 5;
         servo->SetTarget(prev_target, true);
     }
 }
@@ -44,7 +44,7 @@ osThreadId_t shootTaskHandle;
 
 void shootTask(void* arg) {
     UNUSED(arg);
-    driver::MotorCANBase* motors[] = {flywheel_left, flywheel_right, steering_motor};
+    driver::MotorCANBase* motors[] = {flywheel_left, flywheel_right};
     // 启动等待
     osDelay(1000);
     while (remote_mode == REMOTE_MODE_KILL) {
@@ -178,13 +178,13 @@ void shootTask(void* arg) {
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
-                        load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, true);
+                        load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 5, true);
                         shoot_mode = SHOOT_MODE_PREPARED;
                     }
                     break;
                 case SHOOT_MODE_BURST:
                     // 连发子弹
-                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 5, false);
                     break;
                 case SHOOT_MODE_STOP:
                     // 停止发射
@@ -252,7 +252,8 @@ void shootTask(void* arg) {
         load_servo->CalcOutput();
         flywheel1->CalcOutput();
         flywheel2->CalcOutput();
-        driver::MotorCANBase::TransmitOutput(motors, 3);
+        driver::MotorCANBase::TransmitOutput(motors, 2);
+        driver::MotorCANBase::TransmitOutput(&steering_motor, 1);
         osDelay(SHOOT_OS_DELAY);
     }
 }
@@ -279,13 +280,13 @@ void init_shoot() {
     flywheel1->SetSpeed(0);
     flywheel2->SetSpeed(0);
 
-    steering_motor = new driver::Motor2006(can2, 0x203);
+    steering_motor = new driver::Motor3508(can1, 0x202);
 
     driver::servo_t servo_data;
     servo_data.motor = steering_motor;
     servo_data.max_speed = 2.5 * PI;
     servo_data.max_acceleration = 16 * PI;
-    servo_data.transmission_ratio = M2006P36_RATIO;
+    servo_data.transmission_ratio = M3508P19_RATIO;
     servo_data.omega_pid_param = new float[3]{6000, 80, 0.3};
     servo_data.max_iout = 4000;
     servo_data.max_out = 10000;
@@ -302,6 +303,7 @@ void kill_shoot() {
     steering_motor->SetOutput(0);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
-    driver::MotorCANBase* motors[] = {flywheel_left, flywheel_right, steering_motor};
-    driver::MotorCANBase::TransmitOutput(motors, 3);
+    driver::MotorCANBase* motors[] = {flywheel_left, flywheel_right};
+    driver::MotorCANBase::TransmitOutput(motors, 2);
+    driver::MotorCANBase::TransmitOutput(&steering_motor, 1);
 }
