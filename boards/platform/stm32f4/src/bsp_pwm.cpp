@@ -54,7 +54,6 @@ namespace bsp {
 
     void PWM::Start() {
         HAL_TIM_PWM_Start(htim_, channel_);
-
     }
 
     void PWM::Stop() {

@@ -29,7 +29,8 @@ namespace control {
       public:
         AHRS(bool is_mag);
 
-        void Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+        void Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my,
+                    float mz);
 
         void Update(float gx, float gy, float gz, float ax, float ay, float az);
 
@@ -37,17 +38,19 @@ namespace control {
 
         bool IsCailbrated();
 
-        float INS_Angle[3];
+        float INS_angle[3];
+
       private:
         float q[4];
-        float g_zerodrift[3]={0};
+        float g_zerodrift[3] = {0};
         bool is_mag_;
         bool cailb_flag_;
         bool cailb_done_;
-        uint16_t calib_cnt_=0;
+        uint16_t calib_cnt_ = 0;
 
-        void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+        void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx,
+                              float my, float mz);
 
         void INSCalculate();
     };
-}
+}  // namespace control

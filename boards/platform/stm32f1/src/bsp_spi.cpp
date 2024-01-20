@@ -108,17 +108,26 @@ namespace bsp {
     }
 
     bool SPI::IsBusy() {
-        return HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY;
+        return HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY ||
+               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_TX ||
+               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_RX ||
+               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_TX_RX;
     }
-    void SPI::RegisterCallback(spi_rx_callback_t callback) {
+
+    void SPI::Abort() {
+        HAL_SPI_Abort_IT(hspi_);
+    }
+
+    void SPI::RegisterCallback(spi_rx_callback_t callback,void* args) {
         callback_ = callback;
+        callback_args_ = args;
     }
     void SPI::CallbackWrapper(SPI_HandleTypeDef* hspi) {
         SPI* instance = FindInstance(hspi);
         if (instance == nullptr) {
             return;
         }
-        instance->callback_(instance);
+        instance->callback_(instance->callback_args_);
     }
     bool SPI::IsDMA() {
         return mode_ == SPI_MODE_DMA;
@@ -142,7 +151,7 @@ namespace bsp {
 
     SPIDevice::SPIDevice(spi_device_init_t init) : spi_(init.spi), cs_(init.cs) {
     }
-    void SPIDevice::RegisterCallback(spi_device_rx_callback_t callback,void* args) {
+    void SPIDevice::RegisterCallback(spi_device_rx_callback_t callback, void* args) {
         callback_ = callback;
         args_ = args;
     }
@@ -159,12 +168,10 @@ namespace bsp {
         callback_(args_);
     }
 
-    std::unordered_map<SPI*, SPIMaster*> SPIMaster::ptr_map;
 
     SPIMaster::SPIMaster(spi_master_init_t init) {
         spi_ = init.spi;
-        spi_->RegisterCallback(CallbackWrapper);
-        ptr_map[spi_] = this;
+        spi_->RegisterCallback(this->CallbackWrapper,this);
     }
 
     SPIMaster::~SPIMaster() {
@@ -172,8 +179,13 @@ namespace bsp {
 
     spi_master_status_e SPIMaster::Transmit(SPIDevice* device, uint8_t* tx_data, uint32_t length) {
         if (spi_->IsBusy()) {
+            busy_count_++;
+            if (busy_count_ > 5) {
+                spi_->Abort();
+            }
             return SPI_MASTER_STATUS_BUSY;
         }
+        busy_count_ = 0;
         if (auto_cs_) {
             device->PrepareTransmit();
         }
@@ -183,8 +195,13 @@ namespace bsp {
 
     spi_master_status_e SPIMaster::Receive(SPIDevice* device, uint8_t* rx_data, uint32_t length) {
         if (spi_->IsBusy()) {
+            busy_count_++;
+            if (busy_count_ > 5) {
+                spi_->Abort();
+            }
             return SPI_MASTER_STATUS_BUSY;
         }
+        busy_count_ = 0;
         if (auto_cs_) {
             device->PrepareTransmit();
         }
@@ -195,8 +212,13 @@ namespace bsp {
     spi_master_status_e SPIMaster::TransmitReceive(SPIDevice* device, uint8_t* tx_data,
                                                    uint8_t* rx_data, uint32_t length) {
         if (spi_->IsBusy()) {
+            busy_count_++;
+            if (busy_count_ > 5) {
+                spi_->Abort();
+            }
             return SPI_MASTER_STATUS_BUSY;
         }
+        busy_count_ = 0;
         if (auto_cs_) {
             device->PrepareTransmit();
         }
@@ -222,22 +244,14 @@ namespace bsp {
         device_[device_count_++] = device;
     }
 
-    void SPIMaster::CallbackWrapper(SPI* spi) {
-        SPIMaster* instance = FindInstance(spi);
-        if (instance == nullptr) {
+    void SPIMaster::CallbackWrapper(void* args) {
+        SPIMaster* spi_master = reinterpret_cast<SPIMaster*>(args);
+        if (spi_master == nullptr) {
             return;
         }
-        instance->CallbackWrapper();
+        spi_master->Callback();
     }
-    SPIMaster* SPIMaster::FindInstance(SPI* spi) {
-        const auto it = ptr_map.find(spi);
-        if (it == ptr_map.end()) {
-            return nullptr;
-        }
-
-        return it->second;
-    }
-    void SPIMaster::CallbackWrapper() {
+    void SPIMaster::Callback() {
         for (int i = 0; i < device_count_; i++) {
             if (device_[i]->IsTransmitting()) {
                 if (auto_cs_) {

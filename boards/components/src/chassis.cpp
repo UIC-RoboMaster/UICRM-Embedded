@@ -102,7 +102,6 @@ namespace control {
         }
     }
 
-
     void Chassis::SetPower(bool power_limit_on, float power_limit, float chassis_power,
                            float chassis_power_buffer) {
         power_limit_on_ = power_limit_on;
@@ -111,29 +110,29 @@ namespace control {
         power_limit_info_.WARNING_power_buff = 50;
         current_chassis_power_ = chassis_power;
         current_chassis_power_buffer_ = chassis_power_buffer;
+    }
+
+    void Chassis::Update() {
+        if (!chassis_enable_) {
+            for (int i = 0; i < wheel_num_; i++) {
+                motors_[i]->SetOutput(0);
+                pids_[i].Reset();
+            }
+        }
+
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
                 power_limit_info_.buffer_total_current_limit = 3500 * FourWheel::motor_num;
                 power_limit_info_.power_total_current_limit =
-                    5000 * FourWheel::motor_num / 80.0 * power_limit;
+                    5000 * FourWheel::motor_num / 80.0 * power_limit_info_.power_limit;
                 break;
 
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
 
-    }
-
-    void Chassis::Update() {
-        if(!chassis_enable_){
-            for(int i=0;i<wheel_num_;i++){
-                motors_[i]->SetOutput(0);
-                pids_[i].Reset();
-            }
-        }
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
-
                 float PID_output[FourWheel::motor_num];
                 float output[FourWheel::motor_num];
 
@@ -167,35 +166,36 @@ namespace control {
     }
 
     void Chassis::CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id,
-                                         communication::can_bridge_data_t data, void* args) {
+                                                communication::can_bridge_data_t data, void* args) {
         Chassis* chassis = reinterpret_cast<Chassis*>(args);
-        chassis->CanBridgeUpdateEventXY(ext_id,data);
+        chassis->CanBridgeUpdateEventXY(ext_id, data);
     }
 
     void Chassis::CanBridgeUpdateEventTurnWrapper(communication::can_bridge_ext_id_t ext_id,
-                                           communication::can_bridge_data_t data, void* args) {
+                                                  communication::can_bridge_data_t data,
+                                                  void* args) {
         Chassis* chassis = reinterpret_cast<Chassis*>(args);
-        chassis->CanBridgeUpdateEventTurn(ext_id,data);
+        chassis->CanBridgeUpdateEventTurn(ext_id, data);
     }
 
     void Chassis::CanBridgeUpdateEventPowerLimitWrapper(communication::can_bridge_ext_id_t ext_id,
-                                                 communication::can_bridge_data_t data,
-                                                 void* args) {
+                                                        communication::can_bridge_data_t data,
+                                                        void* args) {
         Chassis* chassis = reinterpret_cast<Chassis*>(args);
-        chassis->CanBridgeUpdateEventPowerLimit(ext_id,data);
+        chassis->CanBridgeUpdateEventPowerLimit(ext_id, data);
     }
 
     void Chassis::CanBridgeUpdateEventCurrentPowerWrapper(communication::can_bridge_ext_id_t ext_id,
-                                                   communication::can_bridge_data_t data,
-                                                   void* args) {
+                                                          communication::can_bridge_data_t data,
+                                                          void* args) {
         Chassis* chassis = reinterpret_cast<Chassis*>(args);
-        chassis->CanBridgeUpdateEventCurrentPower(ext_id,data);
+        chassis->CanBridgeUpdateEventCurrentPower(ext_id, data);
     }
 
     void Chassis::CanBridgeUpdateEventXY(communication::can_bridge_ext_id_t ext_id,
                                          communication::can_bridge_data_t data) {
-        if(can_bridge_tx_id_!=0x00){
-            if(can_bridge_tx_id_!=ext_id.data.tx_id){
+        if (can_bridge_tx_id_ != 0x00) {
+            if (can_bridge_tx_id_ != ext_id.data.tx_id) {
                 return;
             }
         }
@@ -204,43 +204,44 @@ namespace control {
     }
     void Chassis::CanBridgeUpdateEventTurn(communication::can_bridge_ext_id_t ext_id,
                                            communication::can_bridge_data_t data) {
-        if(can_bridge_tx_id_!=0x00){
-            if(can_bridge_tx_id_!=ext_id.data.tx_id){
+        if (can_bridge_tx_id_ != 0x00) {
+            if (can_bridge_tx_id_ != ext_id.data.tx_id) {
                 return;
             }
         }
         can_bridge_vt_ = data.data_two_float.data[1];
         float is_enable = data.data_two_float.data[0];
-        if(is_enable>0.1f){
+        if (is_enable > 0.1f) {
             chassis_enable_ = true;
-        }else{
+        } else {
             chassis_enable_ = false;
         }
-        if(chassis_enable_){
-            SetSpeed(can_bridge_vx_,can_bridge_vy_,can_bridge_vt_);
-        }else{
-            SetSpeed(0,0,0);
+        if (chassis_enable_) {
+            SetSpeed(can_bridge_vx_, can_bridge_vy_, can_bridge_vt_);
+        } else {
+            SetSpeed(0, 0, 0);
         }
     }
     void Chassis::CanBridgeUpdateEventPowerLimit(communication::can_bridge_ext_id_t ext_id,
                                                  communication::can_bridge_data_t data) {
-        if(can_bridge_tx_id_!=0x00){
-            if(can_bridge_tx_id_!=ext_id.data.tx_id){
+        if (can_bridge_tx_id_ != 0x00) {
+            if (can_bridge_tx_id_ != ext_id.data.tx_id) {
                 return;
             }
         }
         float is_enable = data.data_two_float.data[0];
-        if(is_enable>0.1f){
+        if (is_enable > 0.1f) {
             power_limit_on_ = true;
-        }else{
+        } else {
             power_limit_on_ = false;
         }
         power_limit_info_.power_limit = data.data_two_float.data[1];
+        power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
                                                    communication::can_bridge_data_t data) {
-        if(can_bridge_tx_id_!=0x00){
-            if(can_bridge_tx_id_!=ext_id.data.tx_id){
+        if (can_bridge_tx_id_ != 0x00) {
+            if (can_bridge_tx_id_ != ext_id.data.tx_id) {
                 return;
             }
         }
@@ -251,5 +252,75 @@ namespace control {
         can_bridge_tx_id_ = tx_id;
     }
 
+    ChassisCanBridgeSender::ChassisCanBridgeSender(communication::CanBridge* can_bridge,
+                                                   uint8_t rx_id)
+        : can_bridge_(can_bridge), device_rx_id_(rx_id) {
+        rx_id_.data.rx_id = rx_id;
+        rx_id_.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
+    }
+    void ChassisCanBridgeSender::SetChassisRegId(uint8_t xy_reg_id, uint8_t turn_on_reg_id,
+                                                 uint8_t power_limit_reg_id,
+                                                 uint8_t current_power_reg_id) {
+        chassis_xy_reg_id_ = xy_reg_id;
+        chassis_turn_on_reg_id_ = turn_on_reg_id;
+        chassis_power_limit_reg_id_ = power_limit_reg_id;
+        chassis_current_power_reg_id_ = current_power_reg_id;
+    }
+    void ChassisCanBridgeSender::Enable() {
+        if (!chassis_enable_) {
+            chassis_enable_ = true;
+            data_.data_two_float.data[0] = 1.0f;
+            data_.data_two_float.data[1] = 0.0f;
+            rx_id_.data.reg = chassis_turn_on_reg_id_;
+            can_bridge_->Send(rx_id_, data_);
+        }
+    }
+    void ChassisCanBridgeSender::Disable() {
+        if (chassis_enable_) {
+            chassis_enable_ = false;
+        }
+        data_.data_two_float.data[0] = 0;
+        data_.data_two_float.data[1] = 0;
+        rx_id_.data.reg = chassis_turn_on_reg_id_;
+        can_bridge_->Send(rx_id_, data_);
+    }
+    void ChassisCanBridgeSender::SetSpeed(const float x_speed, const float y_speed,
+                                          const float turn_speed) {
+        if (chassis_enable_) {
+            data_.data_two_float.data[0] = x_speed;
+            data_.data_two_float.data[1] = y_speed;
+            rx_id_.data.reg = chassis_xy_reg_id_;
+            can_bridge_->Send(rx_id_, data_);
+            data_.data_two_float.data[0] = 1.0f;
+            data_.data_two_float.data[1] = turn_speed;
+            rx_id_.data.reg = chassis_turn_on_reg_id_;
+            can_bridge_->Send(rx_id_, data_);
+        }
+    }
+    void ChassisCanBridgeSender::SetPower(bool power_limit_on, float power_limit,
+                                          float chassis_power, float chassis_power_buffer,
+                                          bool force_update) {
+        if (chassis_enable_) {
+            if (power_limit_on != chassis_power_limit_on_ || power_limit != chassis_power_limit_ ||
+                force_update) {
+                chassis_power_limit_on_ = power_limit_on;
+                chassis_power_limit_ = power_limit;
+                if (power_limit_on) {
+                    data_.data_two_float.data[0] = 1.0f;
+                } else {
+                    data_.data_two_float.data[0] = 0.0f;
+                }
+                data_.data_two_float.data[1] = power_limit;
+                rx_id_.data.reg = chassis_power_limit_reg_id_;
+                can_bridge_->Send(rx_id_, data_);
+            }
+            {
+                data_.data_two_float.data[0] = chassis_power;
+                data_.data_two_float.data[1] = chassis_power_buffer;
+                rx_id_.data.reg = chassis_current_power_reg_id_;
+                can_bridge_->Send(rx_id_, data_);
+            }
+        }
+    }
 
 } /* namespace control */

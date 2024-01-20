@@ -98,6 +98,8 @@ namespace control {
     }
 
     float ConstrainedPID::ComputeOutput(float error) {
+//        if((error > 0 && cumulated_err_ < 0) || (error < 0 && cumulated_err_ > 0))
+//            cumulated_err_ = 0;
         if (ki_ != 0) {
             cumulated_err_ += error;
             cumulated_err_ = clip<float>(cumulated_err_, -max_iout_ / ki_, max_iout_ / ki_);

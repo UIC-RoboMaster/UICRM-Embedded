@@ -26,6 +26,9 @@
 
 namespace bsp {
 
+
+    typedef void (*uart_rx_callback_t)(uint8_t* data, uint32_t length);
+
     /**
      * @brief 串口管理类
      * @details 用于串口的收发
@@ -147,7 +150,7 @@ namespace bsp {
          * @param baudrate baudrate
          * @note only valid before uart initialization
          */
-         void SetBaudrate(uint32_t baudrate);
+        void SetBaudrate(uint32_t baudrate);
 
       protected:
         /**

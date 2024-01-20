@@ -44,7 +44,7 @@ namespace bsp {
     /**
      * @brief callback function for can rx
      */
-    typedef void (*can_rx_ext_callback_t)(const uint8_t data[],const uint32_t ext_id,void* args);
+    typedef void (*can_rx_ext_callback_t)(const uint8_t data[], const uint32_t ext_id, void* args);
 
     /**
      * @brief CAN管理类
@@ -108,7 +108,6 @@ namespace bsp {
          */
         int RegisterRxCallback(uint32_t std_id, can_rx_callback_t callback, void* args = NULL);
 
-
         /**
          * @brief 注册CAN接收回调函数
          *
@@ -127,7 +126,8 @@ namespace bsp {
          *
          * @return return 0 if success, -1 if invalid std_id
          */
-        int RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback, void* args = NULL);
+        int RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback,
+                                     void* args = NULL);
 
         /**
          * @brief 发送CAN数据
@@ -191,8 +191,7 @@ namespace bsp {
          *
          * @note should not be called explicitly form the application side
          */
-        void RxExtendCallback(CAN_RxHeaderTypeDef header,
-                              uint8_t* data);
+        void RxExtendCallback(CAN_RxHeaderTypeDef header, uint8_t* data);
 
       private:
         void ConfigureFilter(bool is_master);

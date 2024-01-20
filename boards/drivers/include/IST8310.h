@@ -88,7 +88,6 @@ namespace imu {
 
         ist8310_callback_t callback_ = [](float mag_tmp[3]) { UNUSED(mag_tmp); };
 
-
         bool start_flag_;
 
         uint8_t rx_buf_[6];

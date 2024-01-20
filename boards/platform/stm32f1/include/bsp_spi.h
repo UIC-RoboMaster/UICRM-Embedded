@@ -31,7 +31,7 @@ namespace bsp {
     class SPI;
 
     /* spi callback function pointer */
-    typedef void (*spi_rx_callback_t)(SPI* spi);
+    typedef void (*spi_rx_callback_t)(void* args);
 
     enum spi_mode_e {
         SPI_MODE_BLOCKED = 0,
@@ -121,6 +121,14 @@ namespace bsp {
         bool IsBusy();
 
         /**
+         * @brief 中断SPI传输
+         */
+        /**
+         * @brief Abort SPI transmission
+         */
+        void Abort();
+
+        /**
          * @brief 设置SPI的传输模式
          * @param mode 被设置的模式
          */
@@ -138,7 +146,7 @@ namespace bsp {
          * @brief register a callback function to be called when the spi receives data
          * @param callback the function will be called
          */
-        void RegisterCallback(spi_rx_callback_t callback);
+        void RegisterCallback(spi_rx_callback_t callback,void* args);
 
         /**
          * @brief 检测是否使用DMA
@@ -163,7 +171,8 @@ namespace bsp {
       protected:
         SPI_HandleTypeDef* hspi_;
         spi_mode_e mode_;
-        spi_rx_callback_t callback_ = [](SPI* spi) { UNUSED(spi); };
+        spi_rx_callback_t callback_ = [](void * args) { UNUSED(args); };
+        void* callback_args_ = NULL;
         uint8_t rx_size_;
         uint8_t* rx_buffer_;
 
@@ -208,7 +217,7 @@ namespace bsp {
          * @brief register a callback function to be called when the spi receives data
          * @param callback the function will be called
          */
-        void RegisterCallback(spi_device_rx_callback_t callback,void* args=NULL);
+        void RegisterCallback(spi_device_rx_callback_t callback, void* args = NULL);
         void PrepareTransmit();
         void FinishTransmit();
         bool IsTransmitting();
@@ -220,7 +229,7 @@ namespace bsp {
       private:
         SPI* spi_;
         GPIO* cs_;
-        spi_device_rx_callback_t callback_ = [](void* args) { UNUSED(args);};
+        spi_device_rx_callback_t callback_ = [](void* args) { UNUSED(args); };
         void* args_ = NULL;
     };
 
@@ -359,15 +368,14 @@ namespace bsp {
          * @brief the function used for SPI callback.
          * @param spi SPI class
          */
-        static void CallbackWrapper(SPI* spi);
-        void CallbackWrapper();
+        static void CallbackWrapper(void* args);
+        void Callback();
 
       private:
         SPI* spi_;
         SPIDevice* device_[SPI_MAX_DEVICE] = {NULL};
         uint8_t device_count_ = 0;
         bool auto_cs_ = true;
-        static std::unordered_map<SPI*, SPIMaster*> ptr_map;
-        static SPIMaster* FindInstance(SPI* spi);
+        uint8_t busy_count_ = 0;
     };
 }  // namespace bsp

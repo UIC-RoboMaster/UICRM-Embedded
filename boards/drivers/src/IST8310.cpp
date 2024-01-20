@@ -66,8 +66,8 @@ namespace imu {
         }
         ist8310_read_mag();
         i2c_->SetMode(old_mode);
-        i2c_->RegisterRxCallback(IST8310_IIC_ADDRESS << 1, I2CCallbackWrapper,this);
-        int_->RegisterCallback(IntCallbackWrapper,this);
+        i2c_->RegisterRxCallback(IST8310_IIC_ADDRESS << 1, I2CCallbackWrapper, this);
+        int_->RegisterCallback(IntCallbackWrapper, this);
         start_flag_ = true;
         return IST8310_NO_ERROR;
     }
@@ -140,13 +140,13 @@ namespace imu {
         i2c_->MemoryWrite(IST8310_IIC_ADDRESS << 1, reg, data, len);
     }
     void IST8310::IntCallbackWrapper(void* args) {
-        if(args == nullptr)
+        if (args == nullptr)
             return;
         IST8310* ist8310 = reinterpret_cast<IST8310*>(args);
         ist8310->IntCallback();
     }
     void IST8310::I2CCallbackWrapper(void* args) {
-        if(args == nullptr)
+        if (args == nullptr)
             return;
         IST8310* ist8310 = reinterpret_cast<IST8310*>(args);
         ist8310->I2CCallback();

@@ -18,18 +18,17 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-
 #include "AHRS.h"
 
-namespace control{
+namespace control {
 
     AHRS::AHRS(bool is_mag) {
         is_mag_ = is_mag;
         cailb_flag_ = false;
         cailb_done_ = false;
-        INS_Angle[0] = 0;
-        INS_Angle[1] = 0;
-        INS_Angle[2] = 0;
+        INS_angle[0] = 0;
+        INS_angle[1] = 0;
+        INS_angle[2] = 0;
         q[0] = 1;
         q[1] = 0;
         q[2] = 0;
@@ -37,18 +36,20 @@ namespace control{
     }
     void AHRS::Update(float gx, float gy, float gz, float ax, float ay, float az, float mx,
                       float my, float mz) {
-        if (cailb_done_){
-            MahonyAHRSupdate(q, gx-g_zerodrift[0], gy-g_zerodrift[1], gz-g_zerodrift[2], ax, ay, az, mx, my, mz);
+        if (cailb_done_) {
+            MahonyAHRSupdate(q, gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2], ax,
+                             ay, az, mx, my, mz);
             INSCalculate();
-        }else if(cailb_flag_){
+        } else if (cailb_flag_) {
             CailbrateHandler(gx, gy, gz, ax, ay, az, mx, my, mz);
         }
     }
     void AHRS::Update(float gx, float gy, float gz, float ax, float ay, float az) {
-        if (cailb_done_){
-            MahonyAHRSupdateIMU(q, gx-g_zerodrift[0], gy-g_zerodrift[1], gz-g_zerodrift[2], ax, ay, az);
+        if (cailb_done_) {
+            MahonyAHRSupdateIMU(q, gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2],
+                                ax, ay, az);
             INSCalculate();
-        }else if (cailb_flag_){
+        } else if (cailb_flag_) {
             CailbrateHandler(gx, gy, gz, ax, ay, az, 0, 0, 0);
         }
     }
@@ -60,13 +61,12 @@ namespace control{
         UNUSED(mx);
         UNUSED(my);
         UNUSED(mz);
-        if(calib_cnt_<2000){
+        if (calib_cnt_ < 2000) {
             calib_cnt_++;
             g_zerodrift[0] += gx;
             g_zerodrift[1] += gy;
             g_zerodrift[2] += gz;
-        }
-        else{
+        } else {
             g_zerodrift[0] /= 2000;
             g_zerodrift[1] /= 2000;
             g_zerodrift[2] /= 2000;
@@ -83,9 +83,10 @@ namespace control{
         return cailb_done_;
     }
     void AHRS::INSCalculate() {
-        INS_Angle[0]=atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
-        INS_Angle[1]=asinf(-2.0f * (q[1] * q[3] - q[0] * q[2]));
-        INS_Angle[2] =
+        INS_angle[0] =
+            atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
+        INS_angle[1] = asinf(-2.0f * (q[1] * q[3] - q[0] * q[2]));
+        INS_angle[2] =
             atan2f(2.0f * (q[0] * q[1] + q[2] * q[3]), 2.0f * (q[0] * q[0] + q[3] * q[3]) - 1.0f);
     }
-}
+}  // namespace control

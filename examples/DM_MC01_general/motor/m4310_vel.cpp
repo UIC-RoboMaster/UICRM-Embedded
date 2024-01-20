@@ -18,23 +18,23 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "DMmotor.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "main.h"
-#include "motor.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
 
 // Refer to typeA datasheet for channel detail
 static bsp::CAN* can1 = nullptr;
-static driver::Motor4310* motor1 = nullptr;
+static driver::DMMotor4310* motor1 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart5);
     can1 = new bsp::CAN(&hcan1, true);
-    motor1 = new driver::Motor4310(can1, 0x30, 0x31, driver::VEL);
+    motor1 = new driver::DMMotor4310(can1, 0x30, 0x31, driver::VEL);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);

@@ -19,8 +19,8 @@
  ###########################################################*/
 
 #pragma once
-#include "main.h"
 #include "bsp_pwm.h"
+#include "main.h"
 #include "pid.h"
 
 namespace driver {
@@ -28,12 +28,14 @@ namespace driver {
     typedef struct {
         bsp::PWM* pwm;
         float target_temp;
+        float* pid_param = new float[3]{160, 0.1, 0};
+        float heater_I_limit = 800;
+        float heater_output_limit = 500;
     } heater_init_t;
 
     class Heater {
       public:
         Heater(heater_init_t init);
-        Heater(bsp::PWM* pwm, float target_temp);
         float Update(float real_temp);
 
       private:
@@ -42,4 +44,4 @@ namespace driver {
         control::ConstrainedPID pid_;
     };
 
-}  // namespace bsp
+}  // namespace driver

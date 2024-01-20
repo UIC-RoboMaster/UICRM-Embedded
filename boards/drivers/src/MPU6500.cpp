@@ -30,6 +30,7 @@ namespace imu {
         int_pin_ = init.int_pin;
         spi_->SetAutoCS(false);
         spi_->SetMode(bsp::SPI_MODE_BLOCKED);
+        dma_ = init.dma;
         const uint8_t init_len = 7;
         const uint8_t init_data[init_len][2] = {
             {MPU6500_PWR_MGMT_1, 0x03},      // auto select clock source
@@ -51,7 +52,7 @@ namespace imu {
                 bsp_error_handler(__FUNCTION__, __LINE__, "imu register incorrect initialization");
         }
         // setup interrupt callback
-        spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper,this);
+        spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper, this);
         // initialize magnetometer
         IST8310Init();
         // enable imu interrupt
@@ -119,7 +120,6 @@ namespace imu {
     }
 
     void MPU6500::SPITxRxCpltCallback() {
-        spi_device_->FinishTransmit();
         // NOTE(alvin): per MPU6500 documentation, the first byte of the rx / tx
         // buffer
         //              contains the address of the SPI device
@@ -141,6 +141,7 @@ namespace imu {
         mag_[2] = (float)array[9];
         if (callback_ != nullptr)
             callback_();
+        spi_device_->FinishTransmit();
     }
 
     void MPU6500::IntCallback(void* args) {

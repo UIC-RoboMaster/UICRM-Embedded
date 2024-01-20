@@ -37,13 +37,17 @@ namespace control {
      * by reading encoder values through uart/gdb
      */
     typedef struct {
-        float pitch_offset_; /* pitch offset angle (angle when muzzle is at vertical
-                                center) */
-        float yaw_offset_;   /* yaw offset angle (angle when muzzle is at horizontal
-                                center) */
-        float pitch_max_;    /* maximum pitch angle the gimbal can turn from center */
-        float yaw_max_;      /* maximum yaw angle the gimbal can turn from center      */
-        bool yaw_circle_=true;    /* yaw angle can circle or not */
+        float pitch_offset_;     /* pitch offset angle (angle when muzzle is at vertical
+                                    center) */
+        float yaw_offset_;       /* yaw offset angle (angle when muzzle is at horizontal
+                                    center) */
+        float pitch_max_;        /* maximum pitch angle the gimbal can turn from center */
+        float yaw_max_;          /* maximum yaw angle the gimbal can turn from center      */
+        bool yaw_circle_ = true; /* yaw angle can circle or not */
+        bool pitch_inverted = false;
+        bool yaw_inverted = false;
+        float pitch_eposition = 0;
+        float yaw_eposition = 0;
     } gimbal_data_t;
 
     /**

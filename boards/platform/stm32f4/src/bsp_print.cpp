@@ -25,9 +25,9 @@
 #include "main.h"
 #include "printf.h"  // third party tiny-printf implemnetations
 
-#define MAX_PRINT_LEN 256
+#define MAX_PRINT_LEN 1024
 
-static bsp::UART* print_uart = NULL;
+bsp::UART* print_uart = NULL;
 #ifndef NO_USB
 static bsp::VirtualUSB* print_usb = NULL;
 #endif
@@ -38,7 +38,7 @@ void print_use_uart(UART_HandleTypeDef* huart, bool dma, uint32_t baudrate) {
         delete print_uart;
 
     print_uart = new bsp::UART(huart);
-    if(baudrate != huart->Init.BaudRate)
+    if (baudrate != huart->Init.BaudRate)
         print_uart->SetBaudrate(baudrate);
     print_uart->SetupTx(MAX_PRINT_LEN * 2, dma);  // burst transfer size up to 2x max buffer size
 #ifndef NO_USB

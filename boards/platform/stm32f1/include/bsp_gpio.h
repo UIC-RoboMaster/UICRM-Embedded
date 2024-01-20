@@ -157,7 +157,7 @@ namespace bsp {
 
         uint16_t pin_;
 
-        gpit_callback_t callback_ = [](void* args) { UNUSED(args);};
+        gpit_callback_t callback_ = [](void* args) { UNUSED(args); };
 
         void* args_ = nullptr;
     };

@@ -24,7 +24,6 @@
 
 namespace imu {
 
-
     BMI088::BMI088(BMI088_init_t init) {
         spi_master_ = init.spi_master;
         spi_device_accel_ = spi_master_->NewDevice(init.CS_ACCEL);
@@ -149,8 +148,8 @@ namespace imu {
     uint8_t BMI088::Init() {
         uint8_t error = BMI088_NO_ERROR;
 
-        gpit_accel_->RegisterCallback(BMI088::AccelCallbackWrapper,this);
-        gpit_gyro_->RegisterCallback(BMI088::GyroCallbackWrapper,this);
+        gpit_accel_->RegisterCallback(BMI088::AccelCallbackWrapper, this);
+        gpit_gyro_->RegisterCallback(BMI088::GyroCallbackWrapper, this);
 
         spi_master_->SetMode(bsp::SPI_MODE_BLOCKED);
         spi_master_->SetAutoCS(false);
@@ -164,8 +163,8 @@ namespace imu {
         Read(this->gyro_, this->accel_, &(this->temperature_));
 
         // spi_->hspi_->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
-        spi_device_accel_->RegisterCallback(BMI088::AccelSPICallbackWrapper,this);
-        spi_device_gyro_->RegisterCallback(BMI088::GyroSPICallbackWrapper,this);
+        spi_device_accel_->RegisterCallback(BMI088::AccelSPICallbackWrapper, this);
+        spi_device_gyro_->RegisterCallback(BMI088::GyroSPICallbackWrapper, this);
         if (dma_) {
             spi_master_->SetMode(bsp::SPI_MODE_DMA);
         } else {
