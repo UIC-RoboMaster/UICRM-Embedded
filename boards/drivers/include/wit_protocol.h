@@ -48,7 +48,7 @@ namespace imu {
     class WITUART {
       public:
         WITUART(bsp::UART* uart);
-        ~WITUART() = default;
+        ~WITUART();
         float mag_[3] = {0};
         float gyro_[3] = {0};
         float accel_[3] = {0};
@@ -59,7 +59,7 @@ namespace imu {
         float quat_[4] = {0};
         // TODO: Read GPS Data
 
-        void Update(bool fromISR = false);
+        void Update();
 
         void Unlock();
 
@@ -71,9 +71,14 @@ namespace imu {
 
         void WriteReg(uint8_t reg, uint8_t* data);
 
+        static void CallbackWrapper(void* args);
+
       private:
         bsp::UART* uart_;
         wit_read_callback_t read_callback_;
         uint16_t* read_reg_data_;
+
+        uint8_t* read_ptr_= nullptr;
+        uint32_t read_len_=0;
     };
 }  // namespace imu

@@ -22,6 +22,8 @@
 
 #include "bsp_error_handler.h"
 #include "dbus_package.h"
+#include "bsp_uart.h"
+#include "bsp_thread.h"
 
 namespace communication {
 
@@ -34,6 +36,7 @@ namespace communication {
 
     class Protocol {
       public:
+
         /**
          * @brief update the information from referee system
          *
@@ -53,7 +56,7 @@ namespace communication {
 
         volatile bool connection_flag_ = false;
 
-      private:
+      protected:
         int seq = 0;
 
         uint8_t bufferRx[MAX_FRAME_LEN] = {0};
@@ -113,6 +116,38 @@ namespace communication {
          */
         virtual int ProcessDataTx(int cmd_id, uint8_t* data) = 0;
     };
+
+    class UARTProtocol: public Protocol {
+      public:
+        UARTProtocol(bsp::UART* uart);
+        ~UARTProtocol();
+
+      protected:
+        bsp::UART* uart_;
+      private:
+
+        uint8_t* read_ptr_= nullptr;
+        uint32_t read_len_=0;
+        static void CallbackWrapper(void* args);
+        bsp::EventThread* callback_thread_ = nullptr;
+        static void callback_thread_func_(void* args);
+
+
+        const osThreadAttr_t callback_thread_attr_=
+            {
+                .name = "ProtocolUpdateTask",
+                .attr_bits = osThreadDetached,
+                .cb_mem = nullptr,
+                .cb_size = 0,
+                .stack_mem = nullptr,
+                .stack_size = 256 * 4,
+                .priority = (osPriority_t)osPriorityHigh,
+                .tz_module = 0,
+                .reserved = 0};
+    };
+
+
+
 
     /* Command for Referee */
 
@@ -391,8 +426,9 @@ namespace communication {
         uint16_t reserved;
     } __packed remote_control_t;
 
-    class Referee : public Protocol {
+    class Referee : public UARTProtocol {
       public:
+        Referee(bsp::UART* uart);
         game_status_t game_status{};
         game_result_t game_result{};
         game_robot_HP_t game_robot_HP{};
@@ -480,8 +516,9 @@ namespace communication {
         char dummy;  // no actual meaning
     } __packed shoot_cmd_t;
 
-    class Host : public Protocol {
+    class Host : public UARTProtocol {
       public:
+        Host(bsp::UART* uart);
         pack_t pack{};
         target_angle_t target_angle{};
         no_target_flag_t no_target_flag{};

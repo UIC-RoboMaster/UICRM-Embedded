@@ -54,7 +54,8 @@ namespace imu {
         // setup interrupt callback
         spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper, this);
         // initialize magnetometer
-        IST8310Init();
+        if(use_mag_)
+            IST8310Init();
         // enable imu interrupt
         WriteReg(MPU6500_INT_ENABLE, 0x01);
         if (dma_) {
@@ -83,7 +84,10 @@ namespace imu {
     void MPU6500::UpdateData() {
         spi_device_->PrepareTransmit();
         io_buff_[0] = MPU6500_ACCEL_XOUT_H | 0x80;
-        spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA + 1);
+        if(use_mag_)
+            spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA + 1);
+        else
+            spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA+1-6);
     }
 
     void MPU6500::Reset() {

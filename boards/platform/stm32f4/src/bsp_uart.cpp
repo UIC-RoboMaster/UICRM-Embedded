@@ -288,7 +288,10 @@ namespace bsp {
             tx_read_ = tx_write_;
             tx_write_ = tmp;
             /* initiate new transmission call for pending data */
-            HAL_UART_Transmit_DMA(huart_, tx_read_, tx_pending_);
+            if(tx_dma_)
+                HAL_UART_Transmit_DMA(huart_, tx_read_, tx_pending_);
+            else
+                HAL_UART_Transmit_IT(huart_, tx_read_, tx_pending_);
             /* clear the number of pending bytes */
             tx_pending_ = 0;
         }
@@ -296,6 +299,11 @@ namespace bsp {
     }
 
     void UART::RxCompleteCallback() {
+        if (rx_ptr_!=nullptr) {
+            *rx_len_ = this->Read<true>(rx_ptr_);
+            if(callback_!=nullptr)
+                callback_(callback_args_);
+        }
     }
     void UART::SetBaudrate(uint32_t baudrate) {
         if (HAL_UART_DeInit(huart_) != HAL_OK)
@@ -303,6 +311,14 @@ namespace bsp {
         huart_->Init.BaudRate = baudrate;
         if (HAL_UART_Init(huart_) != HAL_OK)
             Error_Handler();
+    }
+    void UART::SetupRxData(uint8_t** rx_ptr, uint32_t* rx_len) {
+        rx_ptr_ = rx_ptr;
+        rx_len_ = rx_len;
+    }
+    void UART::RegisterCallback(uart_rx_callback_t callback, void* args) {
+        callback_ = callback;
+        callback_args_ = args;
     }
 
 } /* namespace bsp */

@@ -48,36 +48,14 @@ static bsp::GPIO* ist8310_rst = nullptr;
 static bsp::GPIT* ist8310_int = nullptr;
 static imu::IST8310* ist8310 = nullptr;
 
-const osThreadAttr_t imuUpdateTaskAttribute = {.name = "imuUpdateTask",
-                                               .attr_bits = osThreadDetached,
-                                               .cb_mem = nullptr,
-                                               .cb_size = 0,
-                                               .stack_mem = nullptr,
-                                               .stack_size = 256 * 4,
-                                               .priority = (osPriority_t)osPriorityNormal,
-                                               .tz_module = 0,
-                                               .reserved = 0};
-
-osThreadId_t imuUpdateTaskHandle;
 
 void BMI088ReceiveDone() {
-    osThreadFlagsSet(imuUpdateTaskHandle, RX_SIGNAL);
+    ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
+                 bmi088->accel_[1], bmi088->accel_[2]);
+    heater->Update(bmi088->temperature_);
 }
 
-void imuUpdateTask(void* arguments) {
-    UNUSED(arguments);
-    while (true) {
-        uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-        if (flags & RX_SIGNAL) {
-            // ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
-            // bmi088->accel_[1], bmi088->accel_[2], ist8310->mag_[0], ist8310->mag_[1],
-            // ist8310->mag_[2]);
-            ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
-                         bmi088->accel_[1], bmi088->accel_[2]);
-            heater->Update(bmi088->temperature_);
-        }
-    }
-}
+
 
 void RM_RTOS_Init(void) {
     HAL_Delay(500);
@@ -123,7 +101,7 @@ void RM_RTOS_Init(void) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-    imuUpdateTaskHandle = osThreadNew(imuUpdateTask, nullptr, &imuUpdateTaskAttribute);
+    
 }
 void RM_RTOS_Default_Task(const void* arguments) {
     UNUSED(arguments);

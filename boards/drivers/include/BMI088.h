@@ -19,11 +19,11 @@
  ###########################################################*/
 
 #pragma once
-
+#include "main.h"
 #include "bsp_error_handler.h"
 #include "bsp_gpio.h"
 #include "bsp_spi.h"
-#include "cmsis_os.h"
+#include "bsp_thread.h"
 
 #define BMI088_ACC_CHIP_ID 0x00  // the register is  " Who am I "
 #define BMI088_ACC_CHIP_ID_VALUE 0x1E
@@ -384,9 +384,9 @@ namespace imu {
          * @brief Read gyroscope data in interrupt or DMA mode
          */
         void Read_IT();
-        void temperature_read_over(uint8_t* rx_buf, float* temperate);
-        void accel_read_over(uint8_t* rx_buf, float accel[3], float* time);
-        void gyro_read_over(uint8_t* rx_buf, float gyro[3]);
+        static void temperature_read_over(uint8_t* rx_buf, float* temperate);
+        static void accel_read_over(uint8_t* rx_buf, float accel[3], float* time);
+        static void gyro_read_over(uint8_t* rx_buf, float gyro[3]);
 
         volatile uint8_t gyro_update_flag = 0;
         volatile uint8_t accel_update_flag = 0;
@@ -446,6 +446,22 @@ namespace imu {
         void BMI088_gyro_read_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len);
 
         void imu_cmd_spi();
+
+        bsp::EventThread* callback_thread_ = nullptr;
+
+        const osThreadAttr_t callback_thread_attr_=
+            {
+                .name = "bmi088UpdateTask",
+                .attr_bits = osThreadDetached,
+                .cb_mem = nullptr,
+                .cb_size = 0,
+                .stack_mem = nullptr,
+                .stack_size = 128 * 4,
+                .priority = (osPriority_t)osPriorityRealtime,
+                .tz_module = 0,
+                .reserved = 0};
+
+        static void callback_thread_func_(void* arg);
     };
 
 }  // namespace imu

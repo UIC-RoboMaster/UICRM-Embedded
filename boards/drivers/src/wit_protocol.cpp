@@ -23,15 +23,16 @@
 namespace imu {
     WITUART::WITUART(bsp::UART* uart) {
         uart_ = uart;
+
+        uart_->SetupRxData(&read_ptr_,&read_len_);
+        uart_->RegisterCallback(CallbackWrapper,this);
+
     }
 
-    void WITUART::Update(bool fromISR) {
-        uint8_t* data;
-        int length;
-        if (fromISR)
-            length = uart_->Read<true>(&data);
-        else
-            length = uart_->Read<false>(&data);
+    void WITUART::Update() {
+        uint8_t* data= read_ptr_;
+        uint32_t length= read_len_;
+
         if (length < 11) {
             return;
         }
@@ -102,5 +103,12 @@ namespace imu {
     void WITUART::RegisterReadCallback(wit_read_callback_t callback) {
         read_callback_ = callback;
     }
+    void WITUART::CallbackWrapper(void* args) {
+        if (args == nullptr)
+            return;
+        WITUART* wituart = reinterpret_cast<WITUART*>(args);
+        wituart->Update();
+    }
+    WITUART::~WITUART() = default;
 
 }  // namespace imu

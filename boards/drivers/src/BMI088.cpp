@@ -173,6 +173,13 @@ namespace imu {
 
         bmi088_start_flag = 1;
 
+        bsp::thread_init_t thread_init = {
+            .func = callback_thread_func_,
+            .args = this,
+            .attr = callback_thread_attr_,
+        };
+        callback_thread_ = new bsp::EventThread(thread_init);
+
         return error;
     }
 
@@ -404,7 +411,7 @@ namespace imu {
             bmi088->gyro_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
             bmi088->gyro_update_flag |= (1 << BMI088_IMU_NOTIFY_SHFITS);
             bmi088->Read_IT();
-            bmi088->RxCompleteCallback();
+            bmi088->callback_thread_->Set();
         }
     }
     void BMI088::GyroCallbackWrapper(void* args) {
@@ -430,6 +437,10 @@ namespace imu {
 
     void BMI088::RxCompleteCallback() {
         callback_();
+    }
+    void BMI088::callback_thread_func_(void* arg) {
+        BMI088* bmi088 = reinterpret_cast<BMI088*>(arg);
+        bmi088->RxCompleteCallback();
     }
 
 }  // namespace imu
