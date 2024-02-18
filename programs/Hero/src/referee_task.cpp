@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -19,7 +19,6 @@
  ###########################################################*/
 
 #include "referee_task.h"
-
 
 bsp::UART* referee_uart = nullptr;
 bsp::UART* refereerc_uart = nullptr;

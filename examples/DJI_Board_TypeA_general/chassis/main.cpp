@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -63,8 +63,6 @@ void RM_RTOS_Default_Task(const void* args) {
 
     osDelay(500);  // DBUS initialization needs time
 
-    driver::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
-
     while (true) {
         chassis->SetSpeed(dbus->ch0, dbus->ch1, dbus->ch2);
 
@@ -74,7 +72,6 @@ void RM_RTOS_Default_Task(const void* args) {
         }
         chassis->SetPower(false, 30, 20, 60);
         chassis->Update();
-        driver ::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(10);
     }
 }

@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -25,16 +25,11 @@
 #include "main.h"
 #include "protocol.h"
 
-
-
-
 communication::Referee* referee = nullptr;
 bsp::UART* referee_uart = nullptr;
 
 communication::Referee* refereeRc = nullptr;
 bsp::UART* refereeRc_uart = nullptr;
-
-
 
 void RM_RTOS_Init(void) {
     print_use_uart(&huart8);
@@ -53,7 +48,6 @@ void RM_RTOS_Init(void) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-
 }
 
 void RM_RTOS_Default_Task(const void* argument) {

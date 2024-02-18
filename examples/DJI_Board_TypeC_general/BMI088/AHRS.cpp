@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -48,14 +48,11 @@ static bsp::GPIO* ist8310_rst = nullptr;
 static bsp::GPIT* ist8310_int = nullptr;
 static imu::IST8310* ist8310 = nullptr;
 
-
 void BMI088ReceiveDone() {
     ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
                  bmi088->accel_[1], bmi088->accel_[2]);
     heater->Update(bmi088->temperature_);
 }
-
-
 
 void RM_RTOS_Init(void) {
     HAL_Delay(500);
@@ -101,7 +98,6 @@ void RM_RTOS_Init(void) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-    
 }
 void RM_RTOS_Default_Task(const void* arguments) {
     UNUSED(arguments);

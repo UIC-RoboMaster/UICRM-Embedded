@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -19,34 +19,14 @@
  ###########################################################*/
 
 #pragma once
-
+#include "MotorBase.h"
 #include "bsp_can.h"
-#include "bsp_pwm.h"
 #include "pid.h"
 #include "utils.h"
+#include <unordered_map>
+#include "bsp_thread.h"
 
 namespace driver {
-
-    /**
-     * @brief DJI通用电机的标准接口
-     */
-    /**
-     * @brief Basic Interface for DJI Motor
-     */
-    class MotorBase {
-      public:
-        MotorBase() : output_(0) {
-        }
-        virtual ~MotorBase() {
-        }
-
-        virtual void SetOutput(int16_t val) {
-            output_ = val;
-        }
-
-      protected:
-        int16_t output_;
-    };
 
     /**
      * @brief 带有CAN通信的DJI通用电机的标准接口
@@ -68,7 +48,9 @@ namespace driver {
          * @param can    CAN instance
          * @param rx_id  CAN rx id
          */
-        MotorCANBase(bsp::CAN* can, uint16_t rx_id);
+        MotorCANBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id=0x00);
+
+        static void SetFrequency(uint32_t freq=1000);
 
         /**
          * @brief 更新电机的反馈数据
@@ -152,6 +134,30 @@ namespace driver {
 
         virtual uint16_t GetTemp() const;
 
+        virtual void CalcOutput() {};
+
+
+
+        /**
+         * @brief 设置ServoMotor为MotorCANBase的友元，因为它们需要使用MotorCANBase的许多私有参数。
+         */
+        /**
+         * @brief set ServoMotor as friend of MotorCANBase since they need to use
+         *        many of the private parameters of MotorCANBase.
+         */
+        friend class ServoMotor;
+
+        volatile bool connection_flag_ = false;
+
+
+      protected:
+        volatile float theta_;
+        volatile float omega_;
+        uint16_t tx_id_;
+      private:
+        bsp::CAN* can_;
+        uint16_t rx_id_;
+
         /**
          * @brief 发送CAN消息以设置电机输出
          * @param motors[]    CAN电机指针数组
@@ -165,25 +171,34 @@ namespace driver {
          */
         static void TransmitOutput(MotorCANBase* motors[], uint8_t num_motors);
 
-        /**
-         * @brief 设置ServoMotor为MotorCANBase的友元，因为它们需要使用MotorCANBase的许多私有参数。
-         */
-        /**
-         * @brief set ServoMotor as friend of MotorCANBase since they need to use
-         *        many of the private parameters of MotorCANBase.
-         */
-        friend class ServoMotor;
 
-        volatile bool connection_flag_ = false;
+        static const int16_t MAX_OUT=32767;
 
-      protected:
-        volatile float theta_;
-        volatile float omega_;
-        uint16_t tx_id_;
+        static bool is_init_;
 
-      private:
-        bsp::CAN* can_;
-        uint16_t rx_id_;
+        static bsp::Thread* can_motor_thread_;
+        static constexpr osThreadAttr_t can_motor_thread_attr_=
+            {
+                .name = "MotorUpdateTask",
+                .attr_bits = osThreadDetached,
+                .cb_mem = nullptr,
+                .cb_size = 0,
+                .stack_mem = nullptr,
+                .stack_size = 256 * 4,
+                .priority = (osPriority_t)osPriorityHigh,
+                .tz_module = 0,
+                .reserved = 0};
+
+
+
+        static void CanMotorThread(void* args);
+
+        static uint16_t id_[10];
+        static bsp::CAN* can_to_index_[10];
+        static uint8_t group_cnt_;
+        static MotorCANBase* motors_[10][4];
+        static uint8_t motor_cnt_[10];
+        static uint32_t delay_time;
 
     };
 
@@ -208,6 +223,7 @@ namespace driver {
 
       private:
         volatile int16_t raw_current_get_ = 0;
+        static const int16_t MAX_OUT=10000;
     };
 
     /**
@@ -234,6 +250,8 @@ namespace driver {
       private:
         volatile int16_t raw_current_get_ = 0;
         volatile uint8_t raw_temperature_ = 0;
+        static const int16_t MAX_OUT=32767;
+
     };
 
     /**
@@ -260,99 +278,11 @@ namespace driver {
       private:
         volatile int16_t raw_current_get_ = 0;
         volatile uint8_t raw_temperature_ = 0;
+        static const int16_t MAX_OUT=25000;
+        static const int16_t MAX_OUT_C = 16383;
     };
 
-    /**
-     * @brief DJI 6623电机的标准类
-     */
-    /**
-     * @brief DJI 6623 motor class
-     */
-    class Motor6623 : public MotorCANBase {
-      public:
-        /* constructor wrapper over MotorCANBase */
-        Motor6623(bsp::CAN* can, uint16_t rx_id);
-        /* implements data update callback */
-        void UpdateData(const uint8_t data[]) override final;
-        /* implements data printout */
-        void PrintData() const override final;
-        /* override base implementation with max current protection */
-        void SetOutput(int16_t val) override final;
-        /* override default implementation with not implemented */
-        float GetOmega() const override final;
-        float GetOmegaDelta(const float target) const override final;
 
-      private:
-        volatile int16_t raw_current_get_ = 0;
-        volatile int16_t raw_current_set_ = 0;
-
-        static const int16_t CURRENT_CORRECTION = -1;  // current direction is reversed
-    };
-
-    /**
-     * @brief PWM电机的标准类，用于一帧为20ms的通用PWM的电机与伺服
-     */
-    /**
-     * @brief PWM motor base class, used for general PWM motor and servomotor with
-     *       20ms frame
-     */
-    class MotorPWMBase : public MotorBase {
-      public:
-        /**
-         * @brief 基础构造函数
-         *
-         * @param htim           HAL定时器句柄
-         * @param channel        HAL定时器通道，取值范围为[0, 4)
-         * @param clock_freq     定时器的时钟频率，单位为[Hz]
-         * @param output_freq    期望的输出频率，单位为[Hz]
-         * @param idle_throttle  空闲时的脉宽，单位为[us]
-         *
-         * @note M3508的idle_throttle约为1500，snail的idle_throttle约为1100
-         */
-        /**
-         * @brief constructor
-         *
-         * @param htim           HAL timer handle
-         * @param channel        HAL timer channel, from [0, 4)
-         * @param clock_freq     clock frequency associated with the timer, in [Hz]
-         * @param output_freq    desired output frequency, in [Hz]
-         * @param idle_throttle  idling pulse width, in [us]
-         *
-         * @note M3508 have idle_throttle about 1500, snail have idle_throttle about
-         * 1100
-         */
-        MotorPWMBase(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,
-                     uint32_t output_freq, uint32_t idle_throttle);
-
-        /**
-         * @brief 设置输出
-         *
-         * @param val 与idle_throttle的偏移量，单位为[us]
-         */
-        /**
-         * @brief set and transmit output
-         *
-         * @param val offset value with respect to the idle throttle pulse width, in
-         * [us]
-         */
-        virtual void SetOutput(int16_t val) override;
-
-      private:
-        bsp::PWM pwm_;
-        uint32_t idle_throttle_;
-    };
-
-    /**
-     * @brief DJI snail 2305电机的标准类
-     */
-    /**
-     * @brief DJI snail 2305 motor class
-     */
-    class Motor2305 : public MotorPWMBase {
-      public:
-        /* override base implementation with max current protection */
-        void SetOutput(int16_t val) override final;
-    };
 
     /**
      * @brief 伺服电机旋转模式，用于DJI的CAN协议电机

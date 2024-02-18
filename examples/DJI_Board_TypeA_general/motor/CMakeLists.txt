@@ -24,10 +24,6 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m6020
         TARGET ${BOARD_NAME}
         SOURCES m6020.cpp)
 
-uicrm_add_arm_executable(${PROJECT_NAME}_m6623
-        TARGET ${BOARD_NAME}
-        SOURCES m6623.cpp)
-
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
         TARGET ${BOARD_NAME}
         SOURCES servo_m2006.cpp)

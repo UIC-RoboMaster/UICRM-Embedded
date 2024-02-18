@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -20,6 +20,7 @@
 
 #include "AHRS.h"
 #include "MPU6500.h"
+#include "MotorCanBase.h"
 #include "bsp_can.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
@@ -29,7 +30,6 @@
 #include "gimbal.h"
 #include "heater.h"
 #include "main.h"
-#include "motor.h"
 
 #define ONBOARD_IMU_SPI hspi5
 #define ONBOARD_IMU_CS_GROUP GPIOF
@@ -114,9 +114,6 @@ osThreadId_t gimbalTaskHandle;
 void gimbalTask(void* arg) {
     UNUSED(arg);
 
-    driver::MotorCANBase* gimbal_motors1[] = {pitch_motor};
-    driver::MotorCANBase* gimbal_motors2[] = {yaw_motor};
-
     print("Wait for beginning signal...\r\n");
     while (true) {
         if (dbus->keyboard.bit.V || dbus->swr == remote::DOWN) {
@@ -129,8 +126,7 @@ void gimbalTask(void* arg) {
     while (i < 2000 || mpu6500->temperature_ < 49.0f) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        driver::MotorCANBase::TransmitOutput(gimbal_motors1, 1);
-        driver::MotorCANBase::TransmitOutput(gimbal_motors2, 1);
+
         osDelay(1);
         ++i;
     }
@@ -142,8 +138,7 @@ void gimbalTask(void* arg) {
     while (!ahrs->IsCailbrated()) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        driver::MotorCANBase::TransmitOutput(gimbal_motors1, 1);
-        driver::MotorCANBase::TransmitOutput(gimbal_motors2, 1);
+
         osDelay(1);
         ++i;
     }
@@ -182,8 +177,7 @@ void gimbalTask(void* arg) {
         gimbal->TargetRel(pitch_diff, yaw_diff);
 
         gimbal->UpdateIMU(pitch_curr, yaw_curr);
-        driver::MotorCANBase::TransmitOutput(gimbal_motors1, 1);
-        driver::MotorCANBase::TransmitOutput(gimbal_motors2, 1);
+
         osDelay(1);
     }
 }
@@ -261,8 +255,6 @@ void RM_RTOS_Threads_Init(void) {
 }
 
 void KillAll() {
-    driver::MotorCANBase* gimbal_motors1[] = {pitch_motor};
-    driver::MotorCANBase* gimbal_motors2[] = {yaw_motor};
     RM_EXPECT_TRUE(false, "Operation killed\r\n");
     while (true) {
         if (dbus->keyboard.bit.V) {
@@ -270,8 +262,7 @@ void KillAll() {
         }
         pitch_motor->SetOutput(0);
         yaw_motor->SetOutput(0);
-        driver::MotorCANBase::TransmitOutput(gimbal_motors1, 1);
-        driver::MotorCANBase::TransmitOutput(gimbal_motors2, 1);
+
         osDelay(10);
     }
 }

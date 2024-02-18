@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -27,8 +27,6 @@
 
 #define RX_SIGNAL (1 << 0)
 
-
-
 communication::Referee* referee = nullptr;
 bsp::UART* referee_uart = nullptr;
 
@@ -50,7 +48,6 @@ void refereeTask(void* arg) {
 
 void RM_RTOS_Init(void) {
     print_use_uart(&huart8);
-
 
     referee_uart = new bsp::UART(&huart3);
     referee_uart->SetupRx(300);

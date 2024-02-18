@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,8 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "motor.h"
-
+#include "MotorCanBase.h"
 #include "arm_math.h"
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
@@ -40,24 +39,77 @@ namespace driver {
         motor->UpdateData(data);
     }
 
-    MotorCANBase::MotorCANBase(bsp::CAN* can, uint16_t rx_id)
-        : theta_(0), omega_(0), can_(can), rx_id_(rx_id) {
-        constexpr uint16_t GROUP_SIZE = 4;
-        constexpr uint16_t RX1_ID_START = 0x201;
-        constexpr uint16_t RX2_ID_START = 0x205;
-        constexpr uint16_t RX3_ID_START = 0x209;
-        constexpr uint16_t TX1_ID = 0x200;
-        constexpr uint16_t TX2_ID = 0x1ff;
-        constexpr uint16_t TX3_ID = 0x2ff;
+    bool MotorCANBase::is_init_ = false;
+    uint16_t MotorCANBase::id_[10]={0};
+    bsp::CAN* MotorCANBase::can_to_index_[10] = {nullptr};
+    uint8_t MotorCANBase::group_cnt_=0;
+    MotorCANBase* MotorCANBase::motors_[10][4]={{nullptr}};
+    uint8_t MotorCANBase::motor_cnt_[10]={0};
+    bsp::Thread* MotorCANBase::can_motor_thread_ = nullptr;
+    uint32_t MotorCANBase::delay_time=1;
 
-        RM_ASSERT_GE(rx_id, RX1_ID_START, "Invalid rx id");
-        RM_ASSERT_LT(rx_id, RX3_ID_START + GROUP_SIZE, "Invalid rx id");
-        if (rx_id >= RX3_ID_START)
-            tx_id_ = TX3_ID;
-        else if (rx_id >= RX2_ID_START)
-            tx_id_ = TX2_ID;
-        else
-            tx_id_ = TX1_ID;
+    MotorCANBase::MotorCANBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
+        : theta_(0), omega_(0), can_(can), rx_id_(rx_id) {
+        if(tx_id == 0x00){
+            constexpr uint16_t GROUP_SIZE = 4;
+            constexpr uint16_t RX1_ID_START = 0x201;
+            constexpr uint16_t RX2_ID_START = 0x205;
+            constexpr uint16_t RX3_ID_START = 0x209;
+            constexpr uint16_t TX1_ID = 0x200;
+            constexpr uint16_t TX2_ID = 0x1ff;
+            constexpr uint16_t TX3_ID = 0x2ff;
+
+            RM_ASSERT_GE(rx_id, RX1_ID_START, "Invalid rx id");
+            RM_ASSERT_LT(rx_id, RX3_ID_START + GROUP_SIZE, "Invalid rx id");
+            if (rx_id >= RX3_ID_START)
+                tx_id_ = TX3_ID;
+            else if (rx_id >= RX2_ID_START)
+                tx_id_ = TX2_ID;
+            else
+                tx_id_ = TX1_ID;
+        }
+        else{
+                tx_id_ = tx_id;
+        }
+
+        if(is_init_==false){
+            is_init_=true;
+            bsp::thread_init_t thread_init = {
+                .func = CanMotorThread,
+                .args = nullptr,
+                .attr = can_motor_thread_attr_
+            };
+            can_motor_thread_ = new bsp::Thread(thread_init);
+            can_motor_thread_->Start();
+            memset(id_,0xff,sizeof(id_));
+            memset(motors_, 0, sizeof(motors_));
+            group_cnt_=0;
+            memset(motor_cnt_,0,sizeof(motor_cnt_));
+        }
+        for(uint8_t i=0;i<10;i++){
+            if(tx_id_==id_[i] && can_to_index_[i]==can_){
+                if(motor_cnt_[i]<4){
+                    motors_[i][motor_cnt_[i]]=this;
+                    motor_cnt_[i]++;
+                    break;
+                }
+                else{
+                    RM_ASSERT_TRUE(false,"Exceeding maximum of 4 motor commands per CAN message");
+                }
+            }else if(id_[i]==0xffff){
+                id_[i]=tx_id_;
+                can_to_index_[i]=can_;
+                motors_[i][0]=this;
+                group_cnt_++;
+                motor_cnt_[i]++;
+                break;
+            }
+        }
+    }
+
+    void MotorCANBase::SetFrequency(uint32_t freq) {
+        RM_ASSERT_FALSE(is_init_, "Frequency should be set before motor initialization");
+        delay_time = 1000 / freq;
     }
 
     void MotorCANBase::TransmitOutput(MotorCANBase* motors[], uint8_t num_motors) {
@@ -99,6 +151,19 @@ namespace driver {
 
     uint16_t MotorCANBase::GetTemp() const {
         return 0;
+    }
+    void MotorCANBase::CanMotorThread(void* args) {
+        UNUSED(args);
+        while(1){
+            for(uint8_t i=0;i<group_cnt_;i++){
+                for(uint8_t j=0;j<motor_cnt_[i];j++){
+                    motors_[i][j]->CalcOutput();
+                }
+                TransmitOutput(motors_[i],motor_cnt_[i]);
+            }
+            osDelay(delay_time);
+        }
+
     }
 
     Motor3508::Motor3508(CAN* can, uint16_t rx_id) : MotorCANBase(can, rx_id) {
@@ -180,42 +245,8 @@ namespace driver {
         return raw_temperature_;
     }
 
-    Motor6623::Motor6623(CAN* can, uint16_t rx_id) : MotorCANBase(can, rx_id) {
-        can->RegisterRxCallback(rx_id, can_motor_callback, this);
-    }
 
-    void Motor6623::UpdateData(const uint8_t data[]) {
-        const int16_t raw_theta = data[0] << 8 | data[1];
-        raw_current_get_ = (data[2] << 8 | data[3]) * CURRENT_CORRECTION;
-        raw_current_set_ = (data[4] << 8 | data[5]) * CURRENT_CORRECTION;
 
-        constexpr float THETA_SCALE = 2 * PI / 8192;
-        theta_ = raw_theta * THETA_SCALE;
-
-        connection_flag_ = true;
-    }
-
-    void Motor6623::PrintData() const {
-        print("theta: % .4f ", GetTheta());
-        print("raw current get: % d ", raw_current_get_);
-        print("raw current set: % d \r\n", raw_current_set_);
-    }
-
-    void Motor6623::SetOutput(int16_t val) {
-        constexpr int16_t MAX_ABS_CURRENT = 5000;  // ~5.3A
-        output_ = clip<int16_t>(val * CURRENT_CORRECTION, -MAX_ABS_CURRENT, MAX_ABS_CURRENT);
-    }
-
-    float Motor6623::GetOmega() const {
-        RM_EXPECT_TRUE(false, "6623 does not support omega messurement");
-        return 0;
-    }
-
-    float Motor6623::GetOmegaDelta(const float target) const {
-        UNUSED(target);
-        RM_EXPECT_TRUE(false, "6623 does not support omega messurement");
-        return 0;
-    }
 
     Motor2006::Motor2006(CAN* can, uint16_t rx_id) : MotorCANBase(can, rx_id) {
         can->RegisterRxCallback(rx_id, can_motor_callback, this);
@@ -249,23 +280,7 @@ namespace driver {
         return raw_current_get_;
     }
 
-    MotorPWMBase::MotorPWMBase(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,
-                               uint32_t output_freq, uint32_t idle_throttle)
-        : pwm_(htim, channel, clock_freq, output_freq, idle_throttle),
-          idle_throttle_(idle_throttle) {
-        pwm_.Start();
-    }
 
-    void MotorPWMBase::SetOutput(int16_t val) {
-        output_ = val;
-        pwm_.SetPulseWidth(val + idle_throttle_);
-    }
-
-    void Motor2305::SetOutput(int16_t val) {
-        constexpr int16_t MIN_OUTPUT = 0;
-        constexpr int16_t MAX_OUTPUT = 700;
-        MotorPWMBase::SetOutput(clip<int16_t>(val, MIN_OUTPUT, MAX_OUTPUT));
-    }
 
     /**
      * @brief default servomotor callback that overrides the standard can motor

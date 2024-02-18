@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -48,11 +48,10 @@ float yaw_offset = 0;
 bool imu_ok = false;
 
 void MPU6500ReceiveDone() {
-    ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
-                 mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2]);
+    ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2], mpu6500->accel_[0],
+                 mpu6500->accel_[1], mpu6500->accel_[2]);
     heater->Update(mpu6500->temperature_);
 }
-
 
 void extimuTask(void* arg) {
     UNUSED(arg);

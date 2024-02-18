@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,38 +18,28 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "cmsis_os.h"
+#pragma once
 #include "main.h"
-#include "motor.h"
 
-#define KEY_GPIO_GROUP GPIOB
-#define KEY_GPIO_PIN GPIO_PIN_2
+namespace driver {
+    /**
+     * @brief DJI通用电机的标准接口
+     */
+    /**
+     * @brief Basic Interface for DJI Motor
+     */
+    class MotorBase {
+      public:
+        MotorBase() : output_(0) {
+        }
+        virtual ~MotorBase() {
+        }
 
-static bsp::CAN* can1 = nullptr;
-static driver::MotorCANBase* motor = nullptr;
+        virtual void SetOutput(int16_t val) {
+            output_ = val;
+        }
 
-void RM_RTOS_Init() {
-    print_use_uart(&huart8);
-
-    can1 = new bsp::CAN(&hcan1);
-    motor = new driver::Motor6623(can1, 0x205);
-}
-
-void RM_RTOS_Default_Task(const void* args) {
-    UNUSED(args);
-    driver::MotorCANBase* motors[] = {motor};
-
-    bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-    while (true) {
-        motor->PrintData();
-        if (key.Read())
-            motor->SetOutput(3000);
-        else
-            motor->SetOutput(0);
-        driver::MotorCANBase::TransmitOutput(motors, 1);
-        motor->PrintData();
-        osDelay(100);
-    }
-}
+      protected:
+        int16_t output_;
+    };
+};

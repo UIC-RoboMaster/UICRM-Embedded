@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -19,11 +19,11 @@
  ###########################################################*/
 
 #pragma once
+#include "MotorCanBase.h"
 #include "bsp_gpio.h"
 #include "cmsis_os2.h"
 #include "imu_task.h"
 #include "main.h"
-#include "motor.h"
 #include "public_port.h"
 #include "referee_task.h"
 #include "remote_task.h"

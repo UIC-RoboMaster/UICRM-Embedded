@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -44,7 +44,6 @@ osThreadId_t shootTaskHandle;
 
 void shootTask(void* arg) {
     UNUSED(arg);
-    driver::MotorCANBase* motors[] = {flywheel_left, flywheel_right};
     // 启动等待
     osDelay(1000);
     while (remote_mode == REMOTE_MODE_KILL) {
@@ -252,8 +251,7 @@ void shootTask(void* arg) {
         load_servo->CalcOutput();
         flywheel1->CalcOutput();
         flywheel2->CalcOutput();
-        driver::MotorCANBase::TransmitOutput(motors, 2);
-        driver::MotorCANBase::TransmitOutput(&steering_motor, 1);
+
         osDelay(SHOOT_OS_DELAY);
     }
 }
@@ -303,7 +301,4 @@ void kill_shoot() {
     steering_motor->SetOutput(0);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
-    driver::MotorCANBase* motors[] = {flywheel_left, flywheel_right};
-    driver::MotorCANBase::TransmitOutput(motors, 2);
-    driver::MotorCANBase::TransmitOutput(&steering_motor, 1);
 }

@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -45,14 +45,14 @@ static bsp::GPIT* mpu6500_it = nullptr;
 static bsp::SPI* spi5 = nullptr;
 static bsp::SPIMaster* spi5_master = nullptr;
 
-
 void MPU6500ReceiveDone() {
     // ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
     // mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2], mpu6500->mag_[0],
     // mpu6500->mag_[1], mpu6500->mag_[2]);
-    ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
-                 mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2]);
-    heater->Update(mpu6500->temperature_);}
+    ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2], mpu6500->accel_[0],
+                 mpu6500->accel_[1], mpu6500->accel_[2]);
+    heater->Update(mpu6500->temperature_);
+}
 
 void RM_RTOS_Init(void) {
     HAL_Delay(500);
@@ -85,7 +85,6 @@ void RM_RTOS_Init(void) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-
 }
 void RM_RTOS_Default_Task(const void* arguments) {
     UNUSED(arguments);

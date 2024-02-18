@@ -37,9 +37,9 @@ namespace bsp {
       public:
         Thread(thread_init_t init);
 
-        ~Thread();
+        virtual ~Thread();
 
-        void Start();
+        virtual void Start();
 
         void Join();
 
@@ -53,7 +53,7 @@ namespace bsp {
 
         void* GetArgs();
 
-      private:
+      protected:
         osThreadId_t thread_handle_;
         thread_func_t func_;
         osThreadAttr_t attr_;
@@ -61,5 +61,13 @@ namespace bsp {
         static const uint32_t rx_signal_ = 1 << 0;
     };
 
+    class EventThread: public Thread {
+      public:
+        EventThread(thread_init_t init);
+
+        void Start() override final;
+      private:
+        static void ThreadFunc(void* args);
+    };
 
 }
