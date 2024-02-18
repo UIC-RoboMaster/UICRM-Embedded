@@ -45,36 +45,14 @@ static bsp::GPIT* mpu6500_it = nullptr;
 static bsp::SPI* spi5 = nullptr;
 static bsp::SPIMaster* spi5_master = nullptr;
 
-const osThreadAttr_t imuUpdateTaskAttribute = {.name = "imuUpdateTask",
-                                               .attr_bits = osThreadDetached,
-                                               .cb_mem = nullptr,
-                                               .cb_size = 0,
-                                               .stack_mem = nullptr,
-                                               .stack_size = 256 * 4,
-                                               .priority = (osPriority_t)osPriorityNormal,
-                                               .tz_module = 0,
-                                               .reserved = 0};
-
-osThreadId_t imuUpdateTaskHandle;
 
 void MPU6500ReceiveDone() {
-    osThreadFlagsSet(imuUpdateTaskHandle, RX_SIGNAL);
-}
-
-void imuUpdateTask(void* arguments) {
-    UNUSED(arguments);
-    while (true) {
-        uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-        if (flags & RX_SIGNAL) {
-            // ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
-            // mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2], mpu6500->mag_[0],
-            // mpu6500->mag_[1], mpu6500->mag_[2]);
-            ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
-                         mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2]);
-            heater->Update(mpu6500->temperature_);
-        }
-    }
-}
+    // ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
+    // mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2], mpu6500->mag_[0],
+    // mpu6500->mag_[1], mpu6500->mag_[2]);
+    ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
+                 mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2]);
+    heater->Update(mpu6500->temperature_);}
 
 void RM_RTOS_Init(void) {
     HAL_Delay(500);
@@ -107,7 +85,7 @@ void RM_RTOS_Init(void) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-    imuUpdateTaskHandle = osThreadNew(imuUpdateTask, nullptr, &imuUpdateTaskAttribute);
+
 }
 void RM_RTOS_Default_Task(const void* arguments) {
     UNUSED(arguments);

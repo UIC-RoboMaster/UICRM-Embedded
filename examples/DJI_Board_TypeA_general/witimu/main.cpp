@@ -28,32 +28,11 @@
 
 #define RX_SIGNAL (1 << 0)
 
-const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
-                                        .attr_bits = osThreadDetached,
-                                        .cb_mem = nullptr,
-                                        .cb_size = 0,
-                                        .stack_mem = nullptr,
-                                        .stack_size = 256 * 4,
-                                        .priority = (osPriority_t)osPriorityNormal,
-                                        .tz_module = 0,
-                                        .reserved = 0};
-osThreadId_t imuTaskHandle;
 
 
 /// The class WITUART is not an UART, It means that the WIT-IMU using UART
 static bsp::UART* wituart = nullptr;
 static imu::WITUART* witimu = nullptr;
-
-void imuTask(void* arg) {
-   UNUSED(arg);
-
-   while (true) {
-       uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-       if (flags & RX_SIGNAL) {
-           witimu->Update();
-       }
-   }
-}
 
 void RM_RTOS_Init(void) {
    /// because imu occupies uart1, no other UART can be used, so we need to use USB to print
@@ -83,7 +62,7 @@ void RM_RTOS_Init(void) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-   imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
+
 }
 
 void RM_RTOS_Default_Task(const void* arg) {

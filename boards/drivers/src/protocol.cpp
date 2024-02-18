@@ -109,6 +109,11 @@ namespace communication {
     UARTProtocol::~UARTProtocol() {
         delete callback_thread_;
     }
+    package_t UARTProtocol::Transmit(int cmd_id) {
+        package_t package = Protocol::Transmit(cmd_id);
+        uart_->Write(package.data, package.length);
+        return package;
+    }
 
     Referee::Referee(bsp::UART* uart): UARTProtocol(uart) {
 

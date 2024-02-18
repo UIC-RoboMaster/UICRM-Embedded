@@ -358,7 +358,6 @@ namespace communication {
         }
         referee_->PrepareUIContent(graph_content);
         frame_ = referee_->Transmit(communication::STUDENT_INTERACTIVE);
-        uart_->Write(frame_.data, frame_.length);
         return frame_.length;
     }
 

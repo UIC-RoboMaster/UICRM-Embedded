@@ -25,8 +25,15 @@ namespace imu {
         uart_ = uart;
 
         uart_->SetupRxData(&read_ptr_,&read_len_);
-        uart_->RegisterCallback(CallbackWrapper,this);
 
+
+        bsp::thread_init_t thread_init = {
+            .func = callback_thread_func_,
+            .args = this,
+            .attr = callback_thread_attr_,
+        };
+        callback_thread_ = new bsp::EventThread(thread_init);
+        uart_->RegisterCallback(CallbackWrapper,this);
     }
 
     void WITUART::Update() {
@@ -107,8 +114,14 @@ namespace imu {
         if (args == nullptr)
             return;
         WITUART* wituart = reinterpret_cast<WITUART*>(args);
+        wituart->callback_thread_->Set();
+    }
+    void WITUART::callback_thread_func_(void* arg) {
+        WITUART* wituart = reinterpret_cast<WITUART*>(arg);
         wituart->Update();
     }
-    WITUART::~WITUART() = default;
+    WITUART::~WITUART(){
+        delete callback_thread_;
+    }
 
 }  // namespace imu

@@ -46,7 +46,7 @@ namespace communication {
          */
         bool Receive(package_t package);
 
-        /**
+        virtual /**
          * @brief prepare the information to be sent and zip as a package
          *
          * @param cmd_id    command id
@@ -119,8 +119,11 @@ namespace communication {
 
     class UARTProtocol: public Protocol {
       public:
-        UARTProtocol(bsp::UART* uart);
+        explicit UARTProtocol(bsp::UART* uart);
         ~UARTProtocol();
+
+        package_t Transmit(int cmd_id)override;
+
 
       protected:
         bsp::UART* uart_;

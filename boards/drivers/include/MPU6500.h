@@ -24,6 +24,7 @@
 #include "bsp_gpio.h"
 #include "bsp_spi.h"
 #include "imu_info.h"
+#include "bsp_thread.h"
 #include "main.h"
 #define MPU6500_DELAY 55  // SPI delay
 // configured with initialization sequences
@@ -162,7 +163,9 @@ namespace imu {
          * @param chip_select  chip select gpio pin
          * @param int_pin      interrupt pin number
          */
-        MPU6500(mpu6500_init_t init);
+        explicit MPU6500(mpu6500_init_t init);
+
+        ~MPU6500();
 
         /**
          * @brief reset sensor registers
@@ -206,5 +209,21 @@ namespace imu {
 
         // global interrupt wrapper
         static void SPITxRxCpltCallbackWrapper(void* args);
+
+        bsp::EventThread* callback_thread_ = nullptr;
+
+        const osThreadAttr_t callback_thread_attr_=
+            {
+                .name = "mpu6500UpdateTask",
+                .attr_bits = osThreadDetached,
+                .cb_mem = nullptr,
+                .cb_size = 0,
+                .stack_mem = nullptr,
+                .stack_size = 128 * 4,
+                .priority = (osPriority_t)osPriorityRealtime,
+                .tz_module = 0,
+                .reserved = 0};
+
+        static void callback_thread_func_(void* arg);
     };
 };  // namespace imu

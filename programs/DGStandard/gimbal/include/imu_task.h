@@ -38,19 +38,6 @@ extern bool imu_ok;
 extern imu::MPU6500* mpu6500;
 extern control::AHRS* ahrs;
 
-extern osThreadId_t imuTaskHandle;
-const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
-                                         .attr_bits = osThreadDetached,
-                                         .cb_mem = nullptr,
-                                         .cb_size = 0,
-                                         .stack_mem = nullptr,
-                                         .stack_size = 128 * 4,
-                                         .priority = (osPriority_t)osPriorityRealtime,
-                                         .tz_module = 0,
-                                         .reserved = 0};
-
-void imuTask(void* arg);
-
 extern osThreadId_t extimuTaskHandle;
 const osThreadAttr_t extimuTaskAttribute = {.name = "extimuTask",
                                             .attr_bits = osThreadDetached,
