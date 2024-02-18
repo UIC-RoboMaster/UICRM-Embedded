@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -37,45 +37,20 @@ bsp::GPIT* mpu6500_it = nullptr;
 bsp::SPI* spi5 = nullptr;
 bsp::SPIMaster* spi5_master = nullptr;
 
-class IUART : public bsp::UART {
-  public:
-    using bsp::UART::UART;
-
-  protected:
-    void RxCompleteCallback() final {
-        osThreadFlagsSet(extimuTaskHandle, RX_SIGNAL);
-    }
-};
-
-IUART* wituart = nullptr;
+bsp::UART* wituart = nullptr;
 
 /// The class WITUART is not an UART, It means that the WIT-IMU using UART
 imu::WITUART* witimu = nullptr;
 
-osThreadId_t imuTaskHandle;
 osThreadId_t extimuTaskHandle;
 
 float yaw_offset = 0;
 bool imu_ok = false;
 
 void MPU6500ReceiveDone() {
-    osThreadFlagsSet(imuTaskHandle, RX_SIGNAL);
-}
-
-void imuTask(void* arg) {
-    UNUSED(arg);
-
-    while (true) {
-        uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-        if (flags & RX_SIGNAL) {
-            // ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
-            // mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2], mpu6500->mag_[0],
-            // mpu6500->mag_[1], mpu6500->mag_[2]);
-            ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
-                         mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2]);
-            heater->Update(mpu6500->temperature_);
-        }
-    }
+    ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2], mpu6500->accel_[0],
+                 mpu6500->accel_[1], mpu6500->accel_[2]);
+    heater->Update(mpu6500->temperature_);
 }
 
 void extimuTask(void* arg) {
@@ -118,7 +93,7 @@ void init_imu() {
     mpu6500->RegisterCallback(MPU6500ReceiveDone);
 
     HAL_Delay(500);
-    wituart = new IUART(&huart6);
+    wituart = new bsp::UART(&huart6);
     /// Some models of wit-imu may need to change baudrate to 921600
     wituart->SetBaudrate(921600);
     /// Setup Rx and Tx buffer size

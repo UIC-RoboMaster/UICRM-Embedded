@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,8 +18,8 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "MotorCanBase.h"
 #include "main.h"
-#include "motor.h"
 
 namespace control {
     typedef struct {

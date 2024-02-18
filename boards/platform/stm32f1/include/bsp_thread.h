@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,38 +18,56 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "cmsis_os.h"
+#pragma once
 #include "main.h"
-#include "motor.h"
+#include "cmsis_os2.h"
 
-#define KEY_GPIO_GROUP GPIOB
-#define KEY_GPIO_PIN GPIO_PIN_2
+namespace bsp {
 
-static bsp::CAN* can1 = nullptr;
-static driver::MotorCANBase* motor = nullptr;
 
-void RM_RTOS_Init() {
-    print_use_uart(&huart1);
+    typedef void (*thread_func_t)(void* args);
 
-    can1 = new bsp::CAN(&hcan1);
-    motor = new driver::Motor6623(can1, 0x205);
-}
+    typedef struct {
+        thread_func_t func;
+        void* args;
+        osThreadAttr_t attr;
+    }thread_init_t;
 
-void RM_RTOS_Default_Task(const void* args) {
-    UNUSED(args);
-    driver::MotorCANBase* motors[] = {motor};
+    class Thread {
+      public:
+        Thread(thread_init_t init);
 
-    bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-    while (true) {
-        motor->PrintData();
-        if (key.Read())
-            motor->SetOutput(3000);
-        else
-            motor->SetOutput(0);
-        driver::MotorCANBase::TransmitOutput(motors, 1);
-        motor->PrintData();
-        osDelay(100);
-    }
+        virtual ~Thread();
+
+        virtual void Start();
+
+        void Join();
+
+        void Pause();
+
+        void Resume();
+
+        void Wait(uint32_t millisec=0, uint32_t signal = 0);
+
+        void Set(uint32_t signal = 0);
+
+        void* GetArgs();
+
+      protected:
+        osThreadId_t thread_handle_;
+        thread_func_t func_;
+        osThreadAttr_t attr_;
+        void* args_;
+        static const uint32_t rx_signal_ = 1 << 0;
+    };
+
+    class EventThread: public Thread {
+      public:
+        EventThread(thread_init_t init);
+
+        void Start() override final;
+      private:
+        static void ThreadFunc(void* args);
+    };
+
 }

@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -20,8 +20,8 @@
 
 #pragma once
 
+#include "MotorCanBase.h"
 #include "can.h"
-#include "motor.h"
 #include "pid.h"
 #include "utils.h"
 

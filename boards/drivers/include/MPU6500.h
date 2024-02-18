@@ -1,22 +1,22 @@
 /*###########################################################
-# Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
-#                                                          #
-# This program is free software: you can redistribute it   #
-# and/or modify it under the terms of the GNU General      #
-# Public License as published by the Free Software         #
-# Foundation, either version 3 of the License, or (at      #
-# your option) any later version.                          #
-#                                                          #
-# This program is distributed in the hope that it will be  #
-# useful, but WITHOUT ANY WARRANTY; without even           #
-# the implied warranty of MERCHANTABILITY or FITNESS       #
-# FOR A PARTICULAR PURPOSE.  See the GNU General           #
-# Public License for more details.                         #
-#                                                          #
-# You should have received a copy of the GNU General       #
-# Public License along with this program.  If not, see     #
-# <https://www.gnu.org/licenses/>.                         #
-###########################################################*/
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ #                                                          #
+ # This program is free software: you can redistribute it   #
+ # and/or modify it under the terms of the GNU General      #
+ # Public License as published by the Free Software         #
+ # Foundation, either version 3 of the License, or (at      #
+ # your option) any later version.                          #
+ #                                                          #
+ # This program is distributed in the hope that it will be  #
+ # useful, but WITHOUT ANY WARRANTY; without even           #
+ # the implied warranty of MERCHANTABILITY or FITNESS       #
+ # FOR A PARTICULAR PURPOSE.  See the GNU General           #
+ # Public License for more details.                         #
+ #                                                          #
+ # You should have received a copy of the GNU General       #
+ # Public License along with this program.  If not, see     #
+ # <https://www.gnu.org/licenses/>.                         #
+ ###########################################################*/
 
 #pragma once
 #include <math.h>
@@ -24,6 +24,7 @@
 #include "bsp_gpio.h"
 #include "bsp_spi.h"
 #include "imu_info.h"
+#include "bsp_thread.h"
 #include "main.h"
 #define MPU6500_DELAY 55  // SPI delay
 // configured with initialization sequences
@@ -162,7 +163,9 @@ namespace imu {
          * @param chip_select  chip select gpio pin
          * @param int_pin      interrupt pin number
          */
-        MPU6500(mpu6500_init_t init);
+        explicit MPU6500(mpu6500_init_t init);
+
+        ~MPU6500();
 
         /**
          * @brief reset sensor registers
@@ -206,5 +209,21 @@ namespace imu {
 
         // global interrupt wrapper
         static void SPITxRxCpltCallbackWrapper(void* args);
+
+        bsp::EventThread* callback_thread_ = nullptr;
+
+        const osThreadAttr_t callback_thread_attr_=
+            {
+                .name = "mpu6500UpdateTask",
+                .attr_bits = osThreadDetached,
+                .cb_mem = nullptr,
+                .cb_size = 0,
+                .stack_mem = nullptr,
+                .stack_size = 128 * 4,
+                .priority = (osPriority_t)osPriorityRealtime,
+                .tz_module = 0,
+                .reserved = 0};
+
+        static void callback_thread_func_(void* arg);
     };
 };  // namespace imu

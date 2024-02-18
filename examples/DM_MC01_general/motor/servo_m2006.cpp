@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,13 +18,13 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "MotorCanBase.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "dbus.h"
 #include "main.h"
-#include "motor.h"
 
 bsp::CAN* can2 = NULL;
 driver::MotorCANBase* motor1 = NULL;
@@ -57,7 +57,6 @@ void RM_RTOS_Init() {
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
-    driver::MotorCANBase* motors[] = {motor1};
     int last_state = remote::MID;
     int state = 0;
 
@@ -78,7 +77,6 @@ void RM_RTOS_Default_Task(const void* args) {
         }
         load_servo->CalcOutput();
 
-        driver::MotorCANBase::TransmitOutput(motors, 1);
         osDelay(1);
     }
 }

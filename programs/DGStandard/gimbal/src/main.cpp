@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -50,11 +50,8 @@ void RM_RTOS_Init(void) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-    imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     extimuTaskHandle = osThreadNew(extimuTask, nullptr, &extimuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
-    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
-    //    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);

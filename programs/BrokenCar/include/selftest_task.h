@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #pragma once
+#include "MotorCanBase.h"
 #include "buzzer_notes.h"
 #include "buzzer_task.h"
 #include "chassis_task.h"
@@ -26,7 +27,6 @@
 #include "gimbal_task.h"
 #include "imu_task.h"
 #include "main.h"
-#include "motor.h"
 #include "referee_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"

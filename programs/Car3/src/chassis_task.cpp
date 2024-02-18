@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -34,7 +34,6 @@ const float speed_offset_boost = 1320;
 void chassisTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
-    driver::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
 
     while (remote_mode == REMOTE_MODE_KILL) {
         kill_chassis();
@@ -179,7 +178,6 @@ void chassisTask(void* arg) {
                 kill_chassis();
         }
         chassis_vz = vz_set;
-        driver::MotorCANBase::TransmitOutput(motors, 4);
         osDelay(CHASSIS_OS_DELAY);
     }
 }
@@ -202,10 +200,8 @@ void init_chassis() {
     chassis = new control::Chassis(chassis_data);
 }
 void kill_chassis() {
-    driver::MotorCANBase* motors[] = {fl_motor, fr_motor, bl_motor, br_motor};
     fl_motor->SetOutput(0);
     fr_motor->SetOutput(0);
     bl_motor->SetOutput(0);
     br_motor->SetOutput(0);
-    driver::MotorCANBase::TransmitOutput(motors, 4);
 }

@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -52,8 +52,6 @@ void shootTask(void* arg) {
         osDelay(SHOOT_OS_DELAY);
     }
 
-    driver::MotorCANBase* motors[] = {steering_motor};
-
     //    int last_state = remote::MID;
     //    int last_state_2 = remote::MID;
     //    uint8_t shoot_state = 0;
@@ -70,7 +68,6 @@ void shootTask(void* arg) {
 
     load_servo->SetTarget(load_servo->GetTheta(), true);
     load_servo->CalcOutput();
-    driver::MotorCANBase::TransmitOutput(motors, 1);
 
     ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
@@ -300,7 +297,6 @@ void shootTask(void* arg) {
         //        }
         // 计算输出
         load_servo->CalcOutput();
-        driver::MotorCANBase::TransmitOutput(motors, 1);
         osDelay(SHOOT_OS_DELAY);
     }
 }
@@ -333,9 +329,7 @@ void init_shoot() {
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
-    driver::MotorCANBase* motors[] = {steering_motor};
     steering_motor->SetOutput(0);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
-    driver::MotorCANBase::TransmitOutput(motors, 1);
 }

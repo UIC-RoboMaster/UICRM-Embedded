@@ -1,22 +1,22 @@
 /*###########################################################
-# Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
-#                                                          #
-# This program is free software: you can redistribute it   #
-# and/or modify it under the terms of the GNU General      #
-# Public License as published by the Free Software         #
-# Foundation, either version 3 of the License, or (at      #
-# your option) any later version.                          #
-#                                                          #
-# This program is distributed in the hope that it will be  #
-# useful, but WITHOUT ANY WARRANTY; without even           #
-# the implied warranty of MERCHANTABILITY or FITNESS       #
-# FOR A PARTICULAR PURPOSE.  See the GNU General           #
-# Public License for more details.                         #
-#                                                          #
-# You should have received a copy of the GNU General       #
-# Public License along with this program.  If not, see     #
-# <https://www.gnu.org/licenses/>.                         #
-###########################################################*/
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ #                                                          #
+ # This program is free software: you can redistribute it   #
+ # and/or modify it under the terms of the GNU General      #
+ # Public License as published by the Free Software         #
+ # Foundation, either version 3 of the License, or (at      #
+ # your option) any later version.                          #
+ #                                                          #
+ # This program is distributed in the hope that it will be  #
+ # useful, but WITHOUT ANY WARRANTY; without even           #
+ # the implied warranty of MERCHANTABILITY or FITNESS       #
+ # FOR A PARTICULAR PURPOSE.  See the GNU General           #
+ # Public License for more details.                         #
+ #                                                          #
+ # You should have received a copy of the GNU General       #
+ # Public License along with this program.  If not, see     #
+ # <https://www.gnu.org/licenses/>.                         #
+ ###########################################################*/
 
 #include "MPU6500.h"
 
@@ -31,6 +31,7 @@ namespace imu {
         spi_->SetAutoCS(false);
         spi_->SetMode(bsp::SPI_MODE_BLOCKED);
         dma_ = init.dma;
+        use_mag_ = init.use_mag;
         const uint8_t init_len = 7;
         const uint8_t init_data[init_len][2] = {
             {MPU6500_PWR_MGMT_1, 0x03},      // auto select clock source
@@ -54,7 +55,8 @@ namespace imu {
         // setup interrupt callback
         spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper, this);
         // initialize magnetometer
-        IST8310Init();
+        if(use_mag_)
+            IST8310Init();
         // enable imu interrupt
         WriteReg(MPU6500_INT_ENABLE, 0x01);
         if (dma_) {
@@ -62,6 +64,14 @@ namespace imu {
         } else {
             spi_->SetMode(bsp::SPI_MODE_INTURRUPT);
         }
+
+        bsp::thread_init_t thread_init = {
+            .func = callback_thread_func_,
+            .args = this,
+            .attr = callback_thread_attr_,
+        };
+        callback_thread_ = new bsp::EventThread(thread_init);
+
         int_pin_->RegisterCallback(IntCallback, this);
     }
 
@@ -83,7 +93,10 @@ namespace imu {
     void MPU6500::UpdateData() {
         spi_device_->PrepareTransmit();
         io_buff_[0] = MPU6500_ACCEL_XOUT_H | 0x80;
-        spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA + 1);
+        if(use_mag_)
+            spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA + 1);
+        else
+            spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA+1-6);
     }
 
     void MPU6500::Reset() {
@@ -136,11 +149,13 @@ namespace imu {
         gyro_[0] = DEG2RAD((float)array[4] / MPU6500_GYRO_FACTOR);
         gyro_[1] = DEG2RAD((float)array[5] / MPU6500_GYRO_FACTOR);
         gyro_[2] = DEG2RAD((float)array[6] / MPU6500_GYRO_FACTOR);
-        mag_[0] = (float)array[7];
-        mag_[1] = (float)array[8];
-        mag_[2] = (float)array[9];
-        if (callback_ != nullptr)
-            callback_();
+        if(use_mag_){
+            mag_[0] = (float)array[7];
+            mag_[1] = (float)array[8];
+            mag_[2] = (float)array[9];
+        }
+        if (callback_thread_ != nullptr)
+            callback_thread_->Set();
         spi_device_->FinishTransmit();
     }
 
@@ -160,5 +175,14 @@ namespace imu {
     }
     void MPU6500::RegisterCallback(mpu6500_callback_t callback) {
         callback_ = callback;
+    }
+
+    void MPU6500::callback_thread_func_(void* arg) {
+        MPU6500* mpu6500 = reinterpret_cast<MPU6500*>(arg);
+        if(mpu6500->callback_ != nullptr)
+            mpu6500->callback_();
+    }
+    MPU6500::~MPU6500() {
+        delete callback_thread_;
     }
 }  // namespace imu

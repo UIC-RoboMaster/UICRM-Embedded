@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -28,55 +28,19 @@
 
 #define RX_SIGNAL (1 << 0)
 
-const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
-                                         .attr_bits = osThreadDetached,
-                                         .cb_mem = nullptr,
-                                         .cb_size = 0,
-                                         .stack_mem = nullptr,
-                                         .stack_size = 256 * 4,
-                                         .priority = (osPriority_t)osPriorityNormal,
-                                         .tz_module = 0,
-                                         .reserved = 0};
-osThreadId_t imuTaskHandle;
-
-/// The class IUART is a wrapper of bsp::UART, which is used to
-/// implement the virtual function RxCompleteCallback() to
-/// receive data from the wit-imu
-class IUART : public bsp::UART {
-  public:
-    using bsp::UART::UART;
-
-  protected:
-    void RxCompleteCallback() final {
-        osThreadFlagsSet(imuTaskHandle, RX_SIGNAL);
-    }
-};
-
-static IUART* wituart = nullptr;
-
 /// The class WITUART is not an UART, It means that the WIT-IMU using UART
+static bsp::UART* wituart = nullptr;
 static imu::WITUART* witimu = nullptr;
-
-void imuTask(void* arg) {
-    UNUSED(arg);
-
-    while (true) {
-        uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-        if (flags & RX_SIGNAL) {
-            witimu->Update();
-        }
-    }
-}
 
 void RM_RTOS_Init(void) {
     /// because imu occupies uart1, no other UART can be used, so we need to use USB to print
     print_use_usb();
-    wituart = new IUART(&huart1);
+    wituart = new bsp::UART(&huart1);
     /// Some models of wit-imu may need to change baudrate to 921600
     wituart->SetBaudrate(921600);
     /// Setup Rx and Tx buffer size
-    wituart->SetupTx(100);
-    wituart->SetupRx(100);
+    wituart->SetupTx(10);
+    wituart->SetupRx(20);
     witimu = new imu::WITUART(wituart);
     /// Before write the register, you need to unlock the wit-imu
     witimu->Unlock();
@@ -96,7 +60,6 @@ void RM_RTOS_Init(void) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-    imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
@@ -106,7 +69,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         clear_screen();
         // print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0);
         // print("Temp: %.2f\r\n", witimu->temp_);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n, witimu->INS_angle[0] / PI * 180",
+        print("Euler Angles: %.2f, %.2f, %.2f\r\n", witimu->INS_angle[0] / PI * 180,
               witimu->INS_angle[1] / PI * 180, witimu->INS_angle[2] / PI * 180);
 
         osDelay(50);

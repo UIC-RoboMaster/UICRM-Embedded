@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -27,7 +27,7 @@
 namespace bsp {
 
 
-    typedef void (*uart_rx_callback_t)(uint8_t* data, uint32_t length);
+    typedef void (*uart_rx_callback_t)(void* args);
 
     /**
      * @brief 串口管理类
@@ -152,6 +152,10 @@ namespace bsp {
          */
         void SetBaudrate(uint32_t baudrate);
 
+        void SetupRxData(uint8_t** rx_ptr, uint32_t* rx_len);
+
+        void RegisterCallback(uart_rx_callback_t callback, void* args);
+
       protected:
         /**
          * @brief 串口发送完成回调函数
@@ -173,6 +177,12 @@ namespace bsp {
         uint32_t rx_size_;
         uint8_t* rx_data_[2];
         uint8_t rx_index_;
+
+        /* new rx callback */
+        uint8_t** rx_ptr_ = nullptr;
+        uint32_t* rx_len_ = nullptr;
+        uart_rx_callback_t callback_= [](void* args){ UNUSED(args);};
+        void* callback_args_ = nullptr;
         /* tx */
         uint32_t tx_size_;
         uint32_t tx_pending_;

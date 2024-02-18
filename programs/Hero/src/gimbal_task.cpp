@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -44,8 +44,7 @@ void gimbalTask(void* arg) {
 
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        driver::MotorCANBase::TransmitOutput(&pitch_motor, 1);
-        driver::MotorCANBase::TransmitOutput(&yaw_motor, 1);
+
         osDelay(GIMBAL_OS_DELAY);
         ++i;
     }
@@ -57,8 +56,7 @@ void gimbalTask(void* arg) {
     while (!imu->DataReady() || !imu->CaliDone()) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        driver::MotorCANBase::TransmitOutput(&pitch_motor, 1);
-        driver::MotorCANBase::TransmitOutput(&yaw_motor, 1);
+
         osDelay(1);
         ++i;
     }
@@ -132,8 +130,6 @@ void gimbalTask(void* arg) {
                 kill_gimbal();
         }
 
-        driver::MotorCANBase::TransmitOutput(&pitch_motor, 1);
-        driver::MotorCANBase::TransmitOutput(&yaw_motor, 1);
         osDelay(GIMBAL_OS_DELAY);
     }
 }
@@ -155,6 +151,4 @@ void kill_gimbal() {
     yaw_motor->SetOutput(0);
     pitch_motor->SetOutput(0);
     // steering_motor->SetOutput(0);
-    driver::MotorCANBase::TransmitOutput(&pitch_motor, 1);
-    driver::MotorCANBase::TransmitOutput(&yaw_motor, 1);
 }

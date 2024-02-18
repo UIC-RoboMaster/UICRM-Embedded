@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -85,6 +85,38 @@ namespace communication {
 
     void Protocol::AppendFrame(uint8_t* data, int length) {
         append_crc16_check_sum(data, length);
+    }
+
+    UARTProtocol::UARTProtocol(bsp::UART* uart): Protocol() {
+        uart_ = uart;
+        uart_->SetupRxData(&read_ptr_,&read_len_);
+        uart_->RegisterCallback(CallbackWrapper,this);
+        bsp::thread_init_t thread_init = {
+            .func = callback_thread_func_,
+            .args = this,
+            .attr = callback_thread_attr_,
+        };
+        callback_thread_ = new bsp::EventThread(thread_init);
+    }
+    void UARTProtocol::CallbackWrapper(void* args) {
+        UARTProtocol* uart_protocol_ = reinterpret_cast<UARTProtocol*>(args);
+        uart_protocol_->callback_thread_->Set();
+    }
+    void UARTProtocol::callback_thread_func_(void* args) {
+        UARTProtocol* uart_protocol_ = reinterpret_cast<UARTProtocol*>(args);
+        uart_protocol_->Receive(communication::package_t{uart_protocol_->read_ptr_,(int)uart_protocol_->read_len_ });
+    }
+    UARTProtocol::~UARTProtocol() {
+        delete callback_thread_;
+    }
+    package_t UARTProtocol::Transmit(int cmd_id) {
+        package_t package = Protocol::Transmit(cmd_id);
+        uart_->Write(package.data, package.length);
+        return package;
+    }
+
+    Referee::Referee(bsp::UART* uart): UARTProtocol(uart) {
+
     }
 
     bool Referee::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
@@ -190,11 +222,16 @@ namespace communication {
             default:
                 data_len = -1;
         }
+        if(data_len>0)
+            uart_->Write(data, data_len);
         return data_len;
     }
 
     void Referee::PrepareUIContent(content graph_content) {
         graph_content_ = graph_content;
+    }
+
+    Host::Host(bsp::UART* uart) : UARTProtocol(uart) {
     }
 
     bool Host::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
@@ -229,5 +266,6 @@ namespace communication {
         }
         return data_len;
     }
+
 
 } /* namespace communication */

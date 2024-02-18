@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -23,15 +23,23 @@
 namespace imu {
     WITUART::WITUART(bsp::UART* uart) {
         uart_ = uart;
+
+        uart_->SetupRxData(&read_ptr_,&read_len_);
+
+
+        bsp::thread_init_t thread_init = {
+            .func = callback_thread_func_,
+            .args = this,
+            .attr = callback_thread_attr_,
+        };
+        callback_thread_ = new bsp::EventThread(thread_init);
+        uart_->RegisterCallback(CallbackWrapper,this);
     }
 
-    void WITUART::Update(bool fromISR) {
-        uint8_t* data;
-        int length;
-        if (fromISR)
-            length = uart_->Read<true>(&data);
-        else
-            length = uart_->Read<false>(&data);
+    void WITUART::Update() {
+        uint8_t* data= read_ptr_;
+        uint32_t length= read_len_;
+
         if (length < 11) {
             return;
         }
@@ -101,6 +109,19 @@ namespace imu {
     }
     void WITUART::RegisterReadCallback(wit_read_callback_t callback) {
         read_callback_ = callback;
+    }
+    void WITUART::CallbackWrapper(void* args) {
+        if (args == nullptr)
+            return;
+        WITUART* wituart = reinterpret_cast<WITUART*>(args);
+        wituart->callback_thread_->Set();
+    }
+    void WITUART::callback_thread_func_(void* arg) {
+        WITUART* wituart = reinterpret_cast<WITUART*>(arg);
+        wituart->Update();
+    }
+    WITUART::~WITUART(){
+        delete callback_thread_;
     }
 
 }  // namespace imu

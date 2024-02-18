@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -37,19 +37,6 @@ extern bool imu_ok;
 
 extern imu::MPU6500* mpu6500;
 extern control::AHRS* ahrs;
-
-extern osThreadId_t imuTaskHandle;
-const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
-                                         .attr_bits = osThreadDetached,
-                                         .cb_mem = nullptr,
-                                         .cb_size = 0,
-                                         .stack_mem = nullptr,
-                                         .stack_size = 128 * 4,
-                                         .priority = (osPriority_t)osPriorityRealtime,
-                                         .tz_module = 0,
-                                         .reserved = 0};
-
-void imuTask(void* arg);
 
 extern osThreadId_t extimuTaskHandle;
 const osThreadAttr_t extimuTaskAttribute = {.name = "extimuTask",

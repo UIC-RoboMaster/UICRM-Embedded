@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -92,8 +92,6 @@ osThreadId_t gimbalTaskHandle;
 void gimbalTask(void* arg) {
     UNUSED(arg);
 
-    driver::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
-
     print("Wait for beginning signal...\r\n");
     while (true) {
         if (dbus->keyboard.bit.V || dbus->swr == remote::DOWN) {
@@ -106,7 +104,6 @@ void gimbalTask(void* arg) {
     while (i < 2000 || !imu->DataReady()) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
         ++i;
     }
@@ -118,7 +115,6 @@ void gimbalTask(void* arg) {
     while (!imu->DataReady() || !imu->CaliDone()) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
         ++i;
     }
@@ -157,7 +153,6 @@ void gimbalTask(void* arg) {
         gimbal->TargetRel(pitch_diff, yaw_diff);
 
         gimbal->UpdateIMU(pitch_curr, yaw_curr);
-        driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(1);
     }
 }
@@ -235,8 +230,6 @@ void RM_RTOS_Threads_Init(void) {
 }
 
 void KillAll() {
-    driver::MotorCANBase* gimbal_motors[] = {pitch_motor, yaw_motor};
-
     RM_EXPECT_TRUE(false, "Operation killed\r\n");
     while (true) {
         if (dbus->keyboard.bit.V) {
@@ -244,7 +237,6 @@ void KillAll() {
         }
         pitch_motor->SetOutput(0);
         yaw_motor->SetOutput(0);
-        driver::MotorCANBase::TransmitOutput(gimbal_motors, 2);
         osDelay(10);
     }
 }

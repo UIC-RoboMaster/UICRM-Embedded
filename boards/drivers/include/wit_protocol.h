@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -23,6 +23,7 @@
 #include "main.h"
 #include "arm_math.h"
 // clang-format on
+#include "bsp_thread.h"
 #include "bsp_uart.h"
 
 namespace imu {
@@ -47,8 +48,8 @@ namespace imu {
 
     class WITUART {
       public:
-        WITUART(bsp::UART* uart);
-        ~WITUART() = default;
+        explicit WITUART(bsp::UART* uart);
+        ~WITUART();
         float mag_[3] = {0};
         float gyro_[3] = {0};
         float accel_[3] = {0};
@@ -59,7 +60,7 @@ namespace imu {
         float quat_[4] = {0};
         // TODO: Read GPS Data
 
-        void Update(bool fromISR = false);
+        void Update();
 
         void Unlock();
 
@@ -71,9 +72,30 @@ namespace imu {
 
         void WriteReg(uint8_t reg, uint8_t* data);
 
+        static void CallbackWrapper(void* args);
+
       private:
         bsp::UART* uart_;
-        wit_read_callback_t read_callback_;
-        uint16_t* read_reg_data_;
+        wit_read_callback_t read_callback_=[](){};
+        uint16_t* read_reg_data_ = nullptr;
+
+        uint8_t* read_ptr_= nullptr;
+        uint32_t read_len_=0;
+
+        bsp::EventThread* callback_thread_ = nullptr;
+
+        const osThreadAttr_t callback_thread_attr_=
+            {
+                .name = "witIMUUpdateTask",
+                .attr_bits = osThreadDetached,
+                .cb_mem = nullptr,
+                .cb_size = 0,
+                .stack_mem = nullptr,
+                .stack_size = 128 * 4,
+                .priority = (osPriority_t)osPriorityRealtime,
+                .tz_module = 0,
+                .reserved = 0};
+
+        static void callback_thread_func_(void* arg);
     };
 }  // namespace imu
