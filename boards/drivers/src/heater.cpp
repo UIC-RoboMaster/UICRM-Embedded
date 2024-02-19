@@ -32,8 +32,7 @@ namespace driver {
     }
 
     float Heater::Update(float real_temp) {
-        if (real_temp < temp_ - 1)
-            pid_.cumulated_err_ = 0;
+
         float output = pid_.ComputeOutput(temp_ - real_temp);
         output = output > 0 ? output : 0;
         if (real_temp > temp_ + 0.5)

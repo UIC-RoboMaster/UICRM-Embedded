@@ -200,17 +200,19 @@ namespace control {
         } PID_ErrorHandler_t;
 
         typedef struct{
-            uint16_t max_out;
-            uint16_t max_iout;
-            float deadband;
-            float kp;
-            float ki;
-            float kd;
-            float A;
-            float B;
-            float output_filtering_coefficient;
-            float derivative_filtering_coefficient;
-            uint8_t mode;
+            float kp; //比例系数
+            float ki; //积分系数
+            float kd; //微分系数
+
+            uint16_t max_out; //输出限幅
+            uint16_t max_iout; //积分输出限幅
+            float deadband; //死区
+            //变速积分
+            float A; //变速积分所能达到的最大值为A+B
+            float B; //启动变速积分的死区
+            float output_filtering_coefficient; //输出滤波系数
+            float derivative_filtering_coefficient; //微分滤波系数
+            uint8_t mode; //PID控制器的模式
         } PID_Init_t;
 
 
@@ -257,7 +259,7 @@ namespace control {
          */
         ConstrainedPID(float* param, float max_iout, float max_out);
 
-        ConstrainedPID(PID_Init_t pid_init);
+        explicit ConstrainedPID(PID_Init_t pid_init);
 
         /**
          * @brief 根据当前误差计算输出
@@ -397,10 +399,29 @@ namespace control {
 
         uint8_t mode_=0x00;
 
-        PID_ErrorHandler_t PID_ErrorHandler;
+        PID_ErrorHandler_t PID_ErrorHandler={
+            .error_count=0,
+            .error_type=PID_ERROR_NONE,
+        };
 
 
         void PID_ErrorHandle();
+
+        void PID_TrapezoidIntegral();
+
+        void PID_ChangingIntegralRate();
+
+        void PID_IntegralLimit();
+
+        void PID_DerivativeOnMeasurement();
+
+        void PID_OutputFilter();
+
+        void PID_DerivativeFilter();
+
+        void PID_OutputLimit();
+
+        void PID_ProportionLimit();
     };
 
 } /* namespace control */

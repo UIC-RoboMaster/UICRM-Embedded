@@ -140,21 +140,54 @@ namespace control {
 
         if(abs(error_)>dead_band_){
             //比死区大，处理
+            pout_=kp_*error_;
+            iterm_=ki_*error_;
+            dout_=kd_*(error_-last_error_);
+
+            //Trapezoid Intergral
+            if(mode_ & Trapezoid_Intergral){
+                PID_TrapezoidIntegral();
+            }
+            //Changing Integral Rate
+
+            if(mode_ & ChangingIntegralRate){
+                PID_ChangingIntegralRate();
+            }
+            //Integral limit
+
+            if(mode_ & Integral_Limit){
+                PID_IntegralLimit();
+            }
+            //Derivative On Measurement
+
+            if(mode_ & Derivative_On_Measurement){
+                    PID_DerivativeOnMeasurement();
+            }
+            //Derivative filter
+
+            if(mode_ & DerivativeFilter){
+                PID_DerivativeFilter();
+            }
+            iout_+=iterm_;
+            output_=pout_+iout_+dout_;
+            //Output Filter
+
+            if(mode_ & OutputFilter){
+                PID_OutputFilter();
+            }
+            //Output limit
+
+            PID_OutputLimit();
+            //Proportional limit
+
+            PID_ProportionLimit();
         }
 
-
-//        if((error > 0 && cumulated_err_ < 0) || (error < 0 && cumulated_err_ > 0))
-//            cumulated_err_ = 0;
-        if (ki_ != 0) {
-            cumulated_err_ += error;
-            cumulated_err_ = clip<float>(cumulated_err_, -max_iout_ / ki_, max_iout_ / ki_);
-        } else {
-            cumulated_err_ = 0;
-        }
-        float out = kp_ * error + ki_ * cumulated_err_ + kd_ * (error - last_error_);
-        out = clip<float>(out, -max_out_, max_out_);
-        last_error_ = error;
-        return out;
+        last_measure_=measure_;
+        last_output_=output_;
+        last_dout_=dout_;
+        last_error_=error_;
+        return output_;
     }
 
 
@@ -180,7 +213,10 @@ namespace control {
     }
 
     void ConstrainedPID::Reset() {
-        cumulated_err_ = 0;
+        pout_ = 0;
+        iout_ = 0;
+        dout_ = 0;
+        error_ = 0;
         last_error_ = 0;
     }
     void ConstrainedPID::ChangeMax(float max_iout, float max_out) {
@@ -202,6 +238,64 @@ namespace control {
             //200ms 堵转了
             PID_ErrorHandler.error_type=Motor_Blocked;
         }
+    }
+    void ConstrainedPID::PID_ChangingIntegralRate() {
+        if(error_*iout_>0){
+                //符号相同
+                if(abs(error_)<=ScalarB){
+                    return;//满了
+                }
+                if(abs(error_)<=(ScalarA+ScalarB)){
+                    iterm_*=(ScalarA+ScalarB-abs(error_))/ScalarA;
+                }
+                else{
+                    iterm_=0;
+                }
+        }
+    }
+    void ConstrainedPID::PID_TrapezoidIntegral() {
+        iterm_=ki_*(error_+last_error_)/2;
+    }
+    void ConstrainedPID::PID_IntegralLimit() {
+        float temp_Output, temp_Iout;
+        temp_Iout = iout_ + iterm_;
+        temp_Output = pout_ + iout_ + dout_;
+        if (abs(temp_Output) > max_out_)
+        {
+            if (error_ * iout_ > 0)
+            {
+                //Integral still increasing
+                iterm_ = 0;
+            }
+        }
+        
+        if (temp_Iout > max_iout_)
+        {
+            iterm_ = 0;
+            iout_ = max_iout_;
+        }
+        if (temp_Iout < -max_iout_)
+        {
+            iterm_ = 0;
+            iout_ = -max_iout_;
+        }
+    }
+    void ConstrainedPID::PID_DerivativeOnMeasurement() {
+        dout_ = kd_ * (measure_ - last_measure_);
+    }
+    void ConstrainedPID::PID_OutputFilter() {
+        output_ = output_ * Output_Filtering_Coefficient +
+                      last_output_ * (1 - Output_Filtering_Coefficient);
+    }
+    void ConstrainedPID::PID_OutputLimit() {
+        output_ = clip<float>(output_, -max_out_, max_out_);
+    }
+    void ConstrainedPID::PID_DerivativeFilter() {
+        dout_ = dout_ * Derivative_Filtering_Coefficient +
+                      last_dout_ * (1 - Derivative_Filtering_Coefficient);
+    }
+    void ConstrainedPID::PID_ProportionLimit() {
+        pout_ = clip<float>(pout_, -max_out_, max_out_);
     }
 
 } /* namespace control */
