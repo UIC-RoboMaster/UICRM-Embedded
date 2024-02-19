@@ -124,7 +124,7 @@ namespace control {
         output_=0;
     }
 
-    float ConstrainedPID::ComputeOutput(float measure,float target) {
+    float ConstrainedPID::ComputeOutput(float target,float measure) {
         if(mode_ & ErrorHandle){
             //异常处理
             PID_ErrorHandle();
@@ -296,6 +296,10 @@ namespace control {
     }
     void ConstrainedPID::PID_ProportionLimit() {
         pout_ = clip<float>(pout_, -max_out_, max_out_);
+    }
+    void ConstrainedPID::ResetIntegral() {
+        iout_ = 0;
+        iterm_ = 0;
     }
 
 } /* namespace control */

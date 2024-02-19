@@ -204,8 +204,8 @@ namespace control {
             float ki; //积分系数
             float kd; //微分系数
 
-            uint16_t max_out; //输出限幅
-            uint16_t max_iout; //积分输出限幅
+            float max_out; //输出限幅
+            float max_iout; //积分输出限幅
             float deadband; //死区
             //变速积分
             float A; //变速积分所能达到的最大值为A+B
@@ -275,7 +275,7 @@ namespace control {
          *
          * @return output value that could potentially drive the error to 0
          */
-        float ComputeOutput(float measure,float target=0);
+        float ComputeOutput(float target,float measure=0);
 
 
 
@@ -358,7 +358,7 @@ namespace control {
         void ChangeMax(float max_iout, float max_out);
 
 
-
+        void ResetIntegral();
 
       private:
         float target_=0.0f;
