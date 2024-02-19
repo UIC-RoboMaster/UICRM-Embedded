@@ -162,6 +162,11 @@ namespace control {
         arm_pid_instance_f32 pid_f32_;
     };
 
+
+
+
+
+
     /**
      * @brief 带有积分输出限制的PID控制器
      */
@@ -170,6 +175,45 @@ namespace control {
      */
     class ConstrainedPID {
       public:
+
+        enum pid_mode {
+            NONE = 0X00,                        //无
+            Integral_Limit = 0x01,              //积分限幅
+            Derivative_On_Measurement = 0x02,   //微分先行
+            Trapezoid_Intergral = 0x04,         //梯形积分
+            Proportional_On_Measurement = 0x08, //该系列不涉及
+            OutputFilter = 0x10,                //输出滤波
+            ChangingIntegralRate = 0x20,        //变积分
+            DerivativeFilter = 0x40,            //微分滤波
+            ErrorHandle = 0x80,                 //异常处理
+        };
+
+        enum pid_error_type {
+            PID_ERROR_NONE = 0x00U,
+            Motor_Blocked = 0x01U
+        };
+
+        typedef struct
+        {
+            uint64_t error_count;
+            pid_error_type error_type;
+        } PID_ErrorHandler_t;
+
+        typedef struct{
+            uint16_t max_out;
+            uint16_t max_iout;
+            float deadband;
+            float kp;
+            float ki;
+            float kd;
+            float A;
+            float B;
+            float output_filtering_coefficient;
+            float derivative_filtering_coefficient;
+            uint8_t mode;
+        } PID_Init_t;
+
+
         /**
          * @brief PID控制器默认构造函数
          */
@@ -213,6 +257,8 @@ namespace control {
          */
         ConstrainedPID(float* param, float max_iout, float max_out);
 
+        ConstrainedPID(PID_Init_t pid_init);
+
         /**
          * @brief 根据当前误差计算输出
          *
@@ -227,21 +273,9 @@ namespace control {
          *
          * @return output value that could potentially drive the error to 0
          */
-        float ComputeOutput(float error);
+        float ComputeOutput(float measure,float target=0);
 
-        /**
-         * @brief 根据当前误差计算输出，并且其他传感器已经给出准确微分值
-         * @param error 系统的误差，即（目标值 - 实际值）
-         * @param omega 系统的微分值
-         * @return 可以将误差驱动到0的输出值
-         */
-        /**
-         * @brief compute output base on current error and accurate derivative
-         * @param error error of the system, i.e. (target - actual)
-         * @param omega derivative of the system
-         * @return output value that could potentially drive the error to 0
-         */
-        float ComputeOutputWithOmega(float error, float omega);
+
 
         /**
          * @brief 根据当前误差计算输出，但输出值被限制在DJI电机的范围内（适用于DJI电机输出）
@@ -257,14 +291,7 @@ namespace control {
          */
         int16_t ComputeConstrainedOutput(float error);
 
-        /**
-         * @brief
-         * 根据当前误差计算输出，但输出值被限制在DJI电机的范围内（适用于DJI电机输出），并且其他传感器已经给出准确微分值
-         * @param error 系统的误差，即（目标值 - 实际值）
-         * @param omega 系统的微分值
-         * @return 可以将误差驱动到0的输出值，被限制在-30000到30000之间
-         */
-        int16_t ComputeConstrainedOutputWithOmega(float error, float omega);
+
 
         /**
          * @brief 重新初始化PID控制器，但不清除当前状态
@@ -328,17 +355,52 @@ namespace control {
          */
         void ChangeMax(float max_iout, float max_out);
 
-        float kp_;
-        float ki_;
-        float kd_;
 
-        float cumulated_err_;
+
 
       private:
-        float last_err_;
+        float target_=0.0f;
+        float last_none_zero_target_=0.0f;
+        float kp_=0.0f;
+        float ki_=0.0f;
+        float kd_=0.0f;
 
-        float max_iout_;
-        float max_out_;
+        float pout_=0.0f;
+        float iout_=0.0f;
+        float dout_=0.0f;
+        float iterm_=0.0f;
+
+        float measure_=0.0f;
+        float last_measure_=0.0f;
+
+        float error_=0.0f;
+        float last_error_=0.0f;
+
+        float output_=0.0f;
+        float last_output_=0.0f;
+        float last_dout_=0.0f;
+
+        float max_iout_=0.0f;
+        float max_out_=0.0f;
+        float dead_band_=0.0f;
+        float control_period_=0.0f;
+        float max_error_=0.0f;
+
+        float ScalarA=0.0f; //For Changing Integral
+        float ScalarB=0.0f; //ITerm = Err*((A-abs(err)+B)/A)  when B<|err|<A+B
+        float Output_Filtering_Coefficient=0.0f;
+        float Derivative_Filtering_Coefficient=0.0f;
+
+        uint32_t thistime=0;
+        uint32_t lasttime=0;
+        uint8_t dtime=0;
+
+        uint8_t mode_=0x00;
+
+        PID_ErrorHandler_t PID_ErrorHandler;
+
+
+        void PID_ErrorHandle();
     };
 
 } /* namespace control */
