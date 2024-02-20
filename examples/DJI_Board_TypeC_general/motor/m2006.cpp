@@ -43,17 +43,17 @@ void RM_RTOS_Init() {
         .kd = 0,
         .max_out = 10000,
         .max_iout = 4000,
-        .deadband = 0, //死区
-        .A = 2500, //变速积分所能达到的最大值为A+B
-        .B = 1500, //启动变速积分的死区
-        .output_filtering_coefficient = 0.1, //输出滤波系数
-        .derivative_filtering_coefficient = 0, //微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit| // 积分限幅
-                control::ConstrainedPID::OutputFilter| // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral| // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate, // 变速积分
+        .deadband = 0,                          // 死区
+        .A = 2500,                              // 变速积分所能达到的最大值为A+B
+        .B = 1500,                              // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    motor1->ReInitPID(omega_pid_init,driver::MotorCANBase::OMEGA);
+    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     motor1->SetMode(driver::MotorCANBase::OMEGA);
 
     // Snail need to be run at idle throttle for some
@@ -76,7 +76,7 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetTarget(15*PI);
+                motor1->SetTarget(15 * PI);
             } else {
                 current = 0;
                 motor1->SetTarget(0);

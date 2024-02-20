@@ -311,7 +311,7 @@ namespace driver {
     class Motor6020 : public MotorCANBase {
       public:
         /* constructor wrapper over MotorCANBase */
-        Motor6020(bsp::CAN* can, uint16_t rx_id,bool current_ctl = false);
+        Motor6020(bsp::CAN* can, uint16_t rx_id,uint16_t tx_id=0x00);
         /* implements data update callback */
         void UpdateData(const uint8_t data[]) override final;
         /* implements data printout */
@@ -328,6 +328,36 @@ namespace driver {
         volatile uint8_t raw_temperature_ = 0;
         static const int16_t MAX_OUT=25000;
         static const int16_t MAX_OUT_C = 16383;
+    };
+
+
+    /**
+     * @brief DM4310电机的标准类
+     */
+    /**
+     * @brief DM4310 motor class
+     */
+    class MotorDM4310 : public MotorCANBase {
+      public:
+        /* constructor wrapper over MotorCANBase */
+        MotorDM4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id);
+        /* implements data update callback */
+        void UpdateData(const uint8_t data[]) override final;
+        /* implements data printout */
+        void PrintData() const override final;
+        /* override base implementation with max current protection */
+        void SetOutput(int16_t val) override final;
+
+        int16_t GetCurr() const override final;
+
+        uint16_t GetTemp() const override final;
+
+      private:
+        volatile int16_t raw_current_get_ = 0;
+        volatile uint8_t raw_temperature_ = 0;
+        volatile uint8_t raw_temperature_esc_ = 0;
+        static const int16_t MAX_OUT=32767;
+
     };
 
 
