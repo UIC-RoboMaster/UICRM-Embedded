@@ -101,27 +101,9 @@ namespace control {
     }
 
     ConstrainedPID::ConstrainedPID(ConstrainedPID::PID_Init_t pid_init) {
-        kp_ = pid_init.kp;
-        ki_ = pid_init.ki;
-        kd_ = pid_init.kd;
-        iterm_=0;
-        max_out_ = pid_init.max_out;
-        max_iout_ = pid_init.max_iout;
-        dead_band_ = pid_init.deadband;
-        target_=0;
-
-        ScalarA=pid_init.A;
-        ScalarB=pid_init.B;
-
-        Output_Filtering_Coefficient=pid_init.output_filtering_coefficient;
-        Derivative_Filtering_Coefficient = pid_init.derivative_filtering_coefficient;
-
-        mode_ = pid_init.mode;
-
-        PID_ErrorHandler.error_count=0;
-        PID_ErrorHandler.error_type=PID_ERROR_NONE;
-
-        output_=0;
+        Reinit(pid_init);
+        Reset();
+        ResetIntegral();
     }
 
     float ConstrainedPID::ComputeOutput(float target,float measure) {
@@ -300,6 +282,29 @@ namespace control {
     void ConstrainedPID::ResetIntegral() {
         iout_ = 0;
         iterm_ = 0;
+    }
+    void ConstrainedPID::Reinit(ConstrainedPID::PID_Init_t pid_init) {
+        kp_ = pid_init.kp;
+        ki_ = pid_init.ki;
+        kd_ = pid_init.kd;
+        iterm_=0;
+        max_out_ = pid_init.max_out;
+        max_iout_ = pid_init.max_iout;
+        dead_band_ = pid_init.deadband;
+        target_=0;
+
+        ScalarA=pid_init.A;
+        ScalarB=pid_init.B;
+
+        Output_Filtering_Coefficient=pid_init.output_filtering_coefficient;
+        Derivative_Filtering_Coefficient = pid_init.derivative_filtering_coefficient;
+
+        mode_ = pid_init.mode;
+
+        PID_ErrorHandler.error_count=0;
+        PID_ErrorHandler.error_type=PID_ERROR_NONE;
+
+        output_=0;
     }
 
 } /* namespace control */

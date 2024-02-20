@@ -337,6 +337,10 @@ namespace control {
          */
         void Reinit(float* param, float max_iout, float max_out);
 
+
+
+        void Reinit(PID_Init_t pid_init);
+
         /**
          * @brief 清除PID控制器的状态
          */

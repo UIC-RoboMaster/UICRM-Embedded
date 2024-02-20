@@ -8,6 +8,10 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m2006
     TARGET ${BOARD_NAME}
     SOURCES m2006.cpp)
 
+uicrm_add_arm_executable(${PROJECT_NAME}_m2006_theta
+        TARGET ${BOARD_NAME}
+        SOURCES m2006_theta.cpp)
+
 uicrm_add_arm_executable(${PROJECT_NAME}_m3508
         TARGET ${BOARD_NAME}
         SOURCES m3508.cpp)
