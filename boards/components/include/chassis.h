@@ -129,7 +129,6 @@ namespace control {
         chassis_model_t model_;
 
         // pids and current speeds for each motor on the chassis
-        ConstrainedPID pids_[MAX_WHEEL_NUM];
         PowerLimit* power_limit_ = nullptr;
         float* speeds_ = nullptr;
 
