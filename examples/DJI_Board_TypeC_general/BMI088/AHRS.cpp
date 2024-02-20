@@ -79,7 +79,7 @@ void RM_RTOS_Init(void) {
         .is_DMA = true,
     };
     bmi088 = new imu::BMI088(bmi088Init);
-    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
 
     ist8310_rst = new bsp::GPIO(GPIOG, GPIO_PIN_6);
     ist8310_int = new bsp::GPIT(DRDY_IST8310_Pin);

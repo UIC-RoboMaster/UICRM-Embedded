@@ -71,7 +71,7 @@ void RM_RTOS_Init() {
     motor1->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
                     driver::MotorCANBase::ABSOLUTE);
 
-    motor1->SetTarget(motor1->GetOutputShaftTheta());
+    motor1->SetTarget(1.0f/2*PI);
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
 }

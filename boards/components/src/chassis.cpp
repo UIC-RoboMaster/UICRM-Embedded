@@ -30,20 +30,25 @@ namespace control {
 
         // data initialization using acquired model
         switch (chassis.model) {
+                // 麦克纳姆轮
             case CHASSIS_MECANUM_WHEEL: {
+
+                // 新建电机关联
                 motors_ = new driver::MotorCANBase*[FourWheel::motor_num];
                 motors_[FourWheel::front_left] = chassis.motors[FourWheel::front_left];
                 motors_[FourWheel::front_right] = chassis.motors[FourWheel::front_right];
                 motors_[FourWheel::back_left] = chassis.motors[FourWheel::back_left];
                 motors_[FourWheel::back_right] = chassis.motors[FourWheel::back_right];
 
-
+                // 功率限制系统
                 power_limit_ = new PowerLimit(FourWheel::motor_num);
 
+                // 速度初始化
                 speeds_ = new float[FourWheel::motor_num];
                 for (int i = 0; i < FourWheel::motor_num; ++i)
                     speeds_[i] = 0;
 
+                // 轮子数
                 wheel_num_ = FourWheel::motor_num;
                 break;
             }
@@ -108,7 +113,14 @@ namespace control {
     void Chassis::Update() {
         if (!chassis_enable_) {
             for (int i = 0; i < wheel_num_; i++) {
-                motors_[i]->SetTarget(0);
+                motors_[i]->Disable();
+            }
+            return;
+        }
+        else{
+            for (int i = 0; i < wheel_num_; i++) {
+                if(!motors_[i]->IsEnable())
+                    motors_[i]->Enable();
             }
         }
 

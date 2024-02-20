@@ -123,6 +123,8 @@ namespace driver {
         outer_wrap_detector_ = new FloatEdgeDetector(0, PI);
 
         target_=0;
+
+        enable_=true;
     }
 
     void MotorCANBase::SetFrequency(uint32_t freq) {
@@ -201,6 +203,13 @@ namespace driver {
         }
     }
     void MotorCANBase::CalcOutput() {
+        if(!enable_){
+            // 如果电机被禁用，则清空PID积分项并输出0
+            SetOutput(0);
+            theta_pid_.ResetIntegral();
+            omega_pid_.ResetIntegral();
+            return;
+        }
         float output = target_;
         if(mode_ & THETA){
             // 如果电机启动了角度环PID，则计算角度环PID输出
@@ -297,6 +306,15 @@ namespace driver {
     float MotorCANBase::GetTarget() const {
         return target_;
     }
+    void MotorCANBase::Enable() {
+        enable_ = true;
+    }
+    void MotorCANBase::Disable() {
+        enable_ = false;
+    }
+    bool MotorCANBase::IsEnable() const {
+        return enable_;
+    }
 
     Motor3508::Motor3508(CAN* can, uint16_t rx_id) : MotorCANBase(can, rx_id) {
         can->RegisterRxCallback(rx_id, can_motor_callback, this);
@@ -340,6 +358,8 @@ namespace driver {
     }
 
     Motor6020::Motor6020(CAN* can, uint16_t rx_id,uint16_t tx_id) : MotorCANBase(can, rx_id, tx_id) {
+        // 绝对位置电机不需要初始化align_angle_
+        align_angle_=0;
         can->RegisterRxCallback(rx_id, can_motor_callback, this);
     }
 
@@ -421,6 +441,8 @@ namespace driver {
 
 
     MotorDM4310::MotorDM4310(CAN* can, uint16_t rx_id, uint16_t tx_id) : MotorCANBase(can, rx_id, tx_id) {
+        // 绝对位置电机不需要初始化align_angle_
+        align_angle_=0;
         can->RegisterRxCallback(rx_id, can_motor_callback, this);
 
 

@@ -75,7 +75,6 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(19);
 
-
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
@@ -98,7 +97,7 @@ void RM_RTOS_Default_Task(const void* args) {
 
     while (true) {
         const float ratio = 1.0f / 660.0f * 6 * PI;
-        chassis->SetSpeed(dbus->ch0*ratio, dbus->ch1*ratio, dbus->ch2*ratio);
+        chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
 
         // Kill switch
         if (dbus->swl == remote::UP || dbus->swl == remote::DOWN) {

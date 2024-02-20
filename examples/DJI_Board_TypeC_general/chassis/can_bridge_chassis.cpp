@@ -43,6 +43,39 @@ void RM_RTOS_Init() {
     bl_motor = new driver::Motor3508(can1, 0x203);
     br_motor = new driver::Motor3508(can1, 0x204);
 
+    control::ConstrainedPID::PID_Init_t omega_pid_init = {
+        .kp = 2500,
+        .ki = 3,
+        .kd = 0,
+        .max_out = 30000,
+        .max_iout = 10000,
+        .deadband = 0,                          // 死区
+        .A = 6000,                              // 变速积分所能达到的最大值为A+B
+        .B = 4000,                              // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+
+    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fl_motor->SetTransmissionRatio(19);
+
+    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fr_motor->SetTransmissionRatio(19);
+
+    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    bl_motor->SetTransmissionRatio(19);
+
+    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    br_motor->SetMode(driver::MotorCANBase::OMEGA);
+    br_motor->SetTransmissionRatio(19);
+
     can_bridge = new communication::CanBridge(can2, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];

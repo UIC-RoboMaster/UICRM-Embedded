@@ -179,34 +179,47 @@ namespace driver {
 
         volatile bool connection_flag_ = false;
 
+        void Enable();
+
+        void Disable();
+
+        bool IsEnable() const;
+
 
       protected:
         volatile float theta_;
         volatile float omega_;
-        uint16_t tx_id_;
 
+        bool enable_;
+
+        // angle control
+        float align_angle_=0;  /* 对齐角度，开机时的角度，单位为[rad] */
+        float motor_angle_=0;  /* 当前电机相比于开机的角度的旋转的角度，单位为[rad] */
+        float offset_angle_=0; /* cumulative offset angle of motor shaft, range between
+                                                  [0, 2PI] in [rad] */
+        float servo_angle_=0;  /* 电机输出轴的角度，单位为[rad]，范围为[0, 2PI] */
+        float cumulated_angle_=0; /* 累积角度，单位为[rad] */
+        FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
+        FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
+
+        float transmission_ratio_=1; /* 电机的减速比例 */
 
       private:
         bsp::CAN* can_;
         uint16_t rx_id_;
+        uint16_t tx_id_;
 
         uint8_t mode_=0;
         control::ConstrainedPID omega_pid_;
         control::ConstrainedPID theta_pid_;
         float target_;
 
-        float transmission_ratio_=1;
 
-        // angle control
 
-        float align_angle_=0;  /* 对齐角度，开机时的角度，单位为[rad] */
-        float motor_angle_=0;  /* 当前电机相比于开机的角度的旋转的角度，单位为[rad] */
-        float offset_angle_=0; /* cumulative offset angle of motor shaft, range between
-                                [0, 2PI] in [rad] */
-        float servo_angle_=0;  /* 电机输出轴的角度，单位为[rad]，范围为[0, 2PI] */
-        float cumulated_angle_=0; /* 累积角度，单位为[rad] */
-        FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
-        FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
+
+
+
+
 
         /**
          * @brief 发送CAN消息以设置电机输出
