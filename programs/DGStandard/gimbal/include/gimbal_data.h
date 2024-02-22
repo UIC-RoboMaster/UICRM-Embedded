@@ -25,19 +25,12 @@
 // basic information of gimbal
 const control::gimbal_data_t gimbal_init_data = {
     .pitch_offset_ = 5.1910f,
-    .yaw_offset_ = 4.8474f,
+    .yaw_offset_ = 3.0511f,
     .pitch_max_ = 0.5116f,
     .yaw_max_ = PI,
     .yaw_circle_ = true,
     .pitch_inverted = false,
     .yaw_inverted = true,
     .pitch_eposition = 0,
-    .yaw_eposition = 0.001f,
+    .yaw_eposition = 0,
 };
-// basic information of gimbal
-extern control::gimbal_pid_t gimbalBasicPID;
-void init_gimbalBasicData();
-
-// Spin PID of gimbal
-extern control::gimbal_pid_t gimbalSpinPID;
-void init_gimbalSpinData();

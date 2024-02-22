@@ -24,6 +24,10 @@
 #include "dbus.h"
 #include "main.h"
 
+#ifndef PI
+#define PI 3.14159265358979f
+#endif
+
 static bsp::CAN* can1 = nullptr;
 static remote::DBUS* dbus = nullptr;
 static communication::CanBridge* can_bridge = nullptr;
@@ -46,6 +50,7 @@ void RM_RTOS_Default_Task(const void* args) {
     communication::can_bridge_ext_id_t ext_id;
     communication::can_bridge_data_t can_bridge_data;
     while (true) {
+        const float ratio = 1.0f / 660.0f * 6 * PI;
         ext_id.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
         ext_id.data.rx_id = 0x52;
         if (dbus->swr == remote::DOWN) {
@@ -63,8 +68,8 @@ void RM_RTOS_Default_Task(const void* args) {
         {
             ext_id.data.reg = 0x70;
 
-            can_bridge_data.data_two_float.data[0] = (float)dbus->ch0;
-            can_bridge_data.data_two_float.data[1] = (float)dbus->ch1;
+            can_bridge_data.data_two_float.data[0] = (float)dbus->ch0 * ratio;
+            can_bridge_data.data_two_float.data[1] = (float)dbus->ch1 * ratio;
 
             can_bridge->Send(ext_id, can_bridge_data);
             osDelay(1);
@@ -73,7 +78,7 @@ void RM_RTOS_Default_Task(const void* args) {
             ext_id.data.reg = 0x71;
 
             can_bridge_data.data_two_float.data[0] = (float)1;
-            can_bridge_data.data_two_float.data[1] = (float)dbus->ch2;
+            can_bridge_data.data_two_float.data[1] = (float)dbus->ch2 * ratio;
 
             can_bridge->Send(ext_id, can_bridge_data);
             osDelay(1);

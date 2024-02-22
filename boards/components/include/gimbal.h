@@ -36,32 +36,20 @@ namespace control {
      * @note except for proximity is determined by user, these should be obtained
      * by reading encoder values through uart/gdb
      */
-    typedef struct {
-        float pitch_offset_;     /* pitch offset angle (angle when muzzle is at vertical
+    struct gimbal_data_t{
+        float pitch_offset_=0.0f;     /* pitch offset angle (angle when muzzle is at vertical
                                     center) */
-        float yaw_offset_;       /* yaw offset angle (angle when muzzle is at horizontal
+        float yaw_offset_=0.0f;       /* yaw offset angle (angle when muzzle is at horizontal
                                     center) */
-        float pitch_max_;        /* maximum pitch angle the gimbal can turn from center */
-        float yaw_max_;          /* maximum yaw angle the gimbal can turn from center      */
+        float pitch_max_=0.0f;        /* maximum pitch angle the gimbal can turn from center */
+        float yaw_max_=0.0f;          /* maximum yaw angle the gimbal can turn from center      */
         bool yaw_circle_ = true; /* yaw angle can circle or not */
         bool pitch_inverted = false;
         bool yaw_inverted = false;
         float pitch_eposition = 0;
         float yaw_eposition = 0;
-    } gimbal_data_t;
+    };
 
-    /**
-     * @brief 云台PID参数
-     */
-    /**
-     * @brief the pid of gimbal.
-     */
-    typedef struct {
-        ConstrainedPID* pitch_theta_pid;
-        ConstrainedPID* yaw_theta_pid;
-        ConstrainedPID* pitch_omega_pid;
-        ConstrainedPID* yaw_omega_pid;
-    } gimbal_pid_t;
 
     /**
      * @brief 标准云台结构体
@@ -73,7 +61,6 @@ namespace control {
         driver::MotorCANBase* pitch_motor; /* pitch motor instance */
         driver::MotorCANBase* yaw_motor;   /* yaw motor instance   */
         gimbal_data_t data;                /* gimbal related constants */
-        gimbal_pid_t pid;
     } gimbal_t;
 
     /**
@@ -118,15 +105,6 @@ namespace control {
          */
         gimbal_data_t* GetData();
 
-        /**
-         * @brief 更新云台的PID参数
-         * @param pid 新的PID参数
-         */
-        /**
-         * @brief update the pid of the gimbal
-         * @param pid the new PID of the gimbal
-         */
-        void SetPID(gimbal_pid_t pid);
 
         /**
          * @brief 计算当前云台的输出
@@ -177,19 +155,6 @@ namespace control {
          */
         void TargetRel(float new_pitch, float new_yaw);
 
-        /**
-         * @brief 将云台指向新的方向，是绝对于车身零点的角度，并且忽略自身偏移量
-         *
-         * @param abs_pitch 新的pitch角度
-         * @param abs_yaw 新的yaw角度
-         */
-        /**
-         * @brief set motors to point to a new orientation
-         *
-         * @param abs_pitch new pitch max angle
-         * @param abs_yaw   new yaw max angle
-         */
-        void TargetAbsWOffset(float abs_pitch, float abs_yaw);
 
         /**
          * @brief 更新云台的偏移量
@@ -213,11 +178,6 @@ namespace control {
         // pitch and yaw constants
         gimbal_data_t data_;
 
-        // pitch and yaw pid
-        ConstrainedPID* pitch_theta_pid_ = nullptr; /* pitch theta pid */
-        ConstrainedPID* pitch_omega_pid_ = nullptr; /* pitch omega pid */
-        ConstrainedPID* yaw_theta_pid_ = nullptr;   /* yaw theta pid   */
-        ConstrainedPID* yaw_omega_pid_ = nullptr;   /* yaw omega pid   */
 
         // pitch and yaw angle
         float pitch_angle_; /* current gimbal pitch angle */
@@ -229,9 +189,7 @@ namespace control {
         float yaw_lower_limit_;   /* yaw lower limit   */
         float yaw_upper_limit_;   /* yaw upper limit   */
 
-        // state detectors
-        BoolEdgeDetector pitch_detector_; /* pitch pid mode toggle detector */
-        BoolEdgeDetector yaw_detector_;   /* yaw pid mode toggle detector   */
+
     };
 
 }  // namespace control

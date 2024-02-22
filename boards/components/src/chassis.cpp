@@ -24,33 +24,31 @@
 
 namespace control {
 
-    Chassis::Chassis(const chassis_t chassis) : pids_() {
+    Chassis::Chassis(const chassis_t chassis)  {
         // acquired from user
         model_ = chassis.model;
 
         // data initialization using acquired model
         switch (chassis.model) {
+                // 麦克纳姆轮
             case CHASSIS_MECANUM_WHEEL: {
+
+                // 新建电机关联
                 motors_ = new driver::MotorCANBase*[FourWheel::motor_num];
                 motors_[FourWheel::front_left] = chassis.motors[FourWheel::front_left];
                 motors_[FourWheel::front_right] = chassis.motors[FourWheel::front_right];
                 motors_[FourWheel::back_left] = chassis.motors[FourWheel::back_left];
                 motors_[FourWheel::back_right] = chassis.motors[FourWheel::back_right];
 
-                float* pid_param = new float[3]{40, 3, 0};
-                float motor_max_iout = 2000;
-                float motor_max_out = 30000;
-                pids_[FourWheel::front_left].Reinit(pid_param, motor_max_iout, motor_max_out);
-                pids_[FourWheel::front_right].Reinit(pid_param, motor_max_iout, motor_max_out);
-                pids_[FourWheel::back_left].Reinit(pid_param, motor_max_iout, motor_max_out);
-                pids_[FourWheel::back_right].Reinit(pid_param, motor_max_iout, motor_max_out);
-
+                // 功率限制系统
                 power_limit_ = new PowerLimit(FourWheel::motor_num);
 
+                // 速度初始化
                 speeds_ = new float[FourWheel::motor_num];
                 for (int i = 0; i < FourWheel::motor_num; ++i)
                     speeds_[i] = 0;
 
+                // 轮子数
                 wheel_num_ = FourWheel::motor_num;
                 break;
             }
@@ -115,8 +113,14 @@ namespace control {
     void Chassis::Update() {
         if (!chassis_enable_) {
             for (int i = 0; i < wheel_num_; i++) {
-                motors_[i]->SetOutput(0);
-                pids_[i].Reset();
+                motors_[i]->Disable();
+            }
+            return;
+        }
+        else{
+            for (int i = 0; i < wheel_num_; i++) {
+                if(!motors_[i]->IsEnable())
+                    motors_[i]->Enable();
             }
         }
 
@@ -133,30 +137,16 @@ namespace control {
 
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
-                float PID_output[FourWheel::motor_num];
                 float output[FourWheel::motor_num];
 
-                PID_output[FourWheel::front_left] = pids_[FourWheel::front_left].ComputeOutput(
-                    motors_[FourWheel::front_left]->GetOmegaDelta(speeds_[FourWheel::front_left]));
-                PID_output[FourWheel::back_left] = pids_[FourWheel::back_left].ComputeOutput(
-                    motors_[FourWheel::back_left]->GetOmegaDelta(speeds_[FourWheel::back_left]));
-                PID_output[FourWheel::front_right] = pids_[FourWheel::front_right].ComputeOutput(
-                    motors_[FourWheel::front_right]->GetOmegaDelta(
-                        speeds_[FourWheel::front_right]));
-                PID_output[FourWheel::back_right] = pids_[FourWheel::back_right].ComputeOutput(
-                    motors_[FourWheel::back_right]->GetOmegaDelta(speeds_[FourWheel::back_right]));
 
                 power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
-                                     current_chassis_power_buffer_, PID_output, output);
+                                     current_chassis_power_buffer_, speeds_, output);
 
-                motors_[FourWheel::front_left]->SetOutput(
-                    control::ClipMotorRange(output[FourWheel::front_left]));
-                motors_[FourWheel::back_left]->SetOutput(
-                    control::ClipMotorRange(output[FourWheel::back_left]));
-                motors_[FourWheel::front_right]->SetOutput(
-                    control::ClipMotorRange(output[FourWheel::front_right]));
-                motors_[FourWheel::back_right]->SetOutput(
-                    control::ClipMotorRange(output[FourWheel::back_right]));
+                motors_[FourWheel::front_left]->SetTarget(output[FourWheel::front_left]);
+                motors_[FourWheel::front_right]->SetTarget(output[FourWheel::front_right]);
+                motors_[FourWheel::back_left]->SetTarget(output[FourWheel::back_left]);
+                motors_[FourWheel::back_right]->SetTarget(output[FourWheel::back_right]);
                 break;
             }
 

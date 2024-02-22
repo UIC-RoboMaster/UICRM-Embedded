@@ -36,6 +36,14 @@ namespace driver {
      */
     class MotorCANBase : public MotorBase {
       public:
+        enum motor_mode {
+            NONE = 0x00,
+            CURRENT = 0x01,
+            OMEGA = 0x02,
+            THETA = 0x04,
+            ABSOLUTE = 0x80,
+        };
+
         /**
          * @brief 基础构造函数
          *
@@ -64,7 +72,7 @@ namespace driver {
          *
          * @param data[]  raw data bytes
          */
-        virtual void UpdateData(const uint8_t data[]) = 0;
+        virtual void UpdateData(const uint8_t data[]);
 
         /**
          * @brief 打印电机数据
@@ -85,6 +93,13 @@ namespace driver {
          * @return radian angle, range between [0, 2PI]
          */
         virtual float GetTheta() const;
+
+        /**
+         * @brief 获得电机的输出轴角度，格式为[rad]
+         *
+         * @return 电机的弧度角度，范围为[0, 2PI]
+         */
+        virtual float GetOutputShaftTheta() const;
 
         /**
          * @brief 获得电机的角度与目标角度的角度差，格式为[rad]
@@ -115,6 +130,13 @@ namespace driver {
         virtual float GetOmega() const;
 
         /**
+         * @brief 获得电机的输出轴角速度，格式为[rad / s]
+         *
+         * @return 电机的角速度
+         */
+        virtual float GetOutputShaftOmega() const;
+
+        /**
          * @brief 获得电机的角速度与目标角速度的角速度差，格式为[rad / s]
          *
          * @param target 目标角速度，格式为[rad / s]
@@ -134,9 +156,17 @@ namespace driver {
 
         virtual uint16_t GetTemp() const;
 
-        virtual void CalcOutput() {};
+        virtual void CalcOutput();
 
+        virtual void SetTarget(float target);
 
+        virtual float GetTarget() const;
+
+        virtual void ReInitPID(control::ConstrainedPID::PID_Init_t pid_init,uint8_t mode);
+
+        void SetMode(uint8_t mode);
+
+        void SetTransmissionRatio(float ratio);
 
         /**
          * @brief 设置ServoMotor为MotorCANBase的友元，因为它们需要使用MotorCANBase的许多私有参数。
@@ -149,14 +179,47 @@ namespace driver {
 
         volatile bool connection_flag_ = false;
 
+        void Enable();
+
+        void Disable();
+
+        bool IsEnable() const;
+
 
       protected:
         volatile float theta_;
         volatile float omega_;
-        uint16_t tx_id_;
+
+        bool enable_;
+
+        // angle control
+        float align_angle_=0;  /* 对齐角度，开机时的角度，单位为[rad] */
+        float motor_angle_=0;  /* 当前电机相比于开机的角度的旋转的角度，单位为[rad] */
+        float offset_angle_=0; /* cumulative offset angle of motor shaft, range between
+                                                  [0, 2PI] in [rad] */
+        float servo_angle_=0;  /* 电机输出轴的角度，单位为[rad]，范围为[0, 2PI] */
+        float cumulated_angle_=0; /* 累积角度，单位为[rad] */
+        FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
+        FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
+
+        float transmission_ratio_=1; /* 电机的减速比例 */
+
       private:
         bsp::CAN* can_;
         uint16_t rx_id_;
+        uint16_t tx_id_;
+
+        uint8_t mode_=0;
+        control::ConstrainedPID omega_pid_;
+        control::ConstrainedPID theta_pid_;
+        float target_;
+
+
+
+
+
+
+
 
         /**
          * @brief 发送CAN消息以设置电机输出
@@ -188,8 +251,6 @@ namespace driver {
                 .priority = (osPriority_t)osPriorityHigh,
                 .tz_module = 0,
                 .reserved = 0};
-
-
 
         static void CanMotorThread(void* args);
 
@@ -263,7 +324,7 @@ namespace driver {
     class Motor6020 : public MotorCANBase {
       public:
         /* constructor wrapper over MotorCANBase */
-        Motor6020(bsp::CAN* can, uint16_t rx_id,bool current_ctl = false);
+        Motor6020(bsp::CAN* can, uint16_t rx_id,uint16_t tx_id=0x00);
         /* implements data update callback */
         void UpdateData(const uint8_t data[]) override final;
         /* implements data printout */
@@ -280,6 +341,36 @@ namespace driver {
         volatile uint8_t raw_temperature_ = 0;
         static const int16_t MAX_OUT=25000;
         static const int16_t MAX_OUT_C = 16383;
+    };
+
+
+    /**
+     * @brief DM4310电机的标准类
+     */
+    /**
+     * @brief DM4310 motor class
+     */
+    class MotorDM4310 : public MotorCANBase {
+      public:
+        /* constructor wrapper over MotorCANBase */
+        MotorDM4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id);
+        /* implements data update callback */
+        void UpdateData(const uint8_t data[]) override final;
+        /* implements data printout */
+        void PrintData() const override final;
+        /* override base implementation with max current protection */
+        void SetOutput(int16_t val) override final;
+
+        int16_t GetCurr() const override final;
+
+        uint16_t GetTemp() const override final;
+
+      private:
+        volatile int16_t raw_current_get_ = 0;
+        volatile uint8_t raw_temperature_ = 0;
+        volatile uint8_t raw_temperature_esc_ = 0;
+        static const int16_t MAX_OUT=32767;
+
     };
 
 

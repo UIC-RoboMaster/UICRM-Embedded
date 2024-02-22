@@ -70,12 +70,25 @@ void chassisTask(void* arg) {
     BoolEdgeDetector* ch2_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* ch3_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
+
+    const float ratio = 1.0f / 660.0f * 6 * PI;
+
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
             osDelay(CHASSIS_OS_DELAY);
 
             continue;
+        }
+        {
+            if (!fl_motor->IsEnable())
+                fl_motor->Enable();
+            if (!fr_motor->IsEnable())
+                fr_motor->Enable();
+            if (!bl_motor->IsEnable())
+                bl_motor->Enable();
+            if (!br_motor->IsEnable())
+                br_motor->Enable();
         }
         {
             if (selftest.sbus) {
@@ -139,7 +152,7 @@ void chassisTask(void* arg) {
             case REMOTE_MODE_FOLLOW:
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(
                     yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
-                chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);
+                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
                 //                chassis->Update(true,
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
@@ -155,7 +168,7 @@ void chassisTask(void* arg) {
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
                 vz_set = spin_speed;
-                chassis->SetSpeed(vx_set, vy_set, vz_set);
+                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 //                chassis->Update(true,
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
@@ -165,7 +178,7 @@ void chassisTask(void* arg) {
                 break;
             case REMOTE_MODE_ADVANCED:
                 vz_set = offset_yaw;
-                chassis->SetSpeed(vx_set, vy_set, vz_set);
+                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 //                chassis->Update(true,
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
@@ -183,25 +196,62 @@ void chassisTask(void* arg) {
 }
 
 void init_chassis() {
+    // 初始化电机
     fl_motor = new driver::Motor3508(can1, 0x202);
     fr_motor = new driver::Motor3508(can1, 0x201);
     bl_motor = new driver::Motor3508(can1, 0x203);
     br_motor = new driver::Motor3508(can1, 0x204);
 
+    // 初始化电机组
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;
     motors[control::FourWheel::back_right] = br_motor;
 
+    // 底盘电机参数设置
+    control::ConstrainedPID::PID_Init_t omega_pid_init = {
+        .kp = 2500,
+        .ki = 3,
+        .kd = 0,
+        .max_out = 30000,
+        .max_iout = 10000,
+        .deadband = 0,                          // 死区
+        .A = 6000,                              // 变速积分所能达到的最大值为A+B
+        .B = 4000,                              // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+
+    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fl_motor->SetTransmissionRatio(19);
+
+    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fr_motor->SetTransmissionRatio(19);
+
+    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    bl_motor->SetTransmissionRatio(19);
+
+    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    br_motor->SetMode(driver::MotorCANBase::OMEGA);
+    br_motor->SetTransmissionRatio(19);
+
+    // 底盘初始化
     control::chassis_t chassis_data;
     chassis_data.motors = motors;
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
     chassis = new control::Chassis(chassis_data);
 }
 void kill_chassis() {
-    fl_motor->SetOutput(0);
-    fr_motor->SetOutput(0);
-    bl_motor->SetOutput(0);
-    br_motor->SetOutput(0);
+    fl_motor->Disable();
+    fr_motor->Disable();
+    bl_motor->Disable();
+    br_motor->Disable();
 }

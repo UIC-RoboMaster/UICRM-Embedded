@@ -80,6 +80,7 @@ void RM_RTOS_Init(void) {
     driver::heater_init_t heater_init = {
         .pwm = heater_pwm,
         .target_temp = 50.0f,
+        .pid_param = new float[3]{160, 0.1, 0},
     };
     heater = new driver::Heater(heater_init);
 }

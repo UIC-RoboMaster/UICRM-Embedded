@@ -1,22 +1,22 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
- #                                                          #
- # This program is free software: you can redistribute it   #
- # and/or modify it under the terms of the GNU General      #
- # Public License as published by the Free Software         #
- # Foundation, either version 3 of the License, or (at      #
- # your option) any later version.                          #
- #                                                          #
- # This program is distributed in the hope that it will be  #
- # useful, but WITHOUT ANY WARRANTY; without even           #
- # the implied warranty of MERCHANTABILITY or FITNESS       #
- # FOR A PARTICULAR PURPOSE.  See the GNU General           #
- # Public License for more details.                         #
- #                                                          #
- # You should have received a copy of the GNU General       #
- # Public License along with this program.  If not, see     #
- # <https://www.gnu.org/licenses/>.                         #
- ###########################################################*/
+# Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+#                                                          #
+# This program is free software: you can redistribute it   #
+# and/or modify it under the terms of the GNU General      #
+# Public License as published by the Free Software         #
+# Foundation, either version 3 of the License, or (at      #
+# your option) any later version.                          #
+#                                                          #
+# This program is distributed in the hope that it will be  #
+# useful, but WITHOUT ANY WARRANTY; without even           #
+# the implied warranty of MERCHANTABILITY or FITNESS       #
+# FOR A PARTICULAR PURPOSE.  See the GNU General           #
+# Public License for more details.                         #
+#                                                          #
+# You should have received a copy of the GNU General       #
+# Public License along with this program.  If not, see     #
+# <https://www.gnu.org/licenses/>.                         #
+###########################################################*/
 
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
@@ -83,6 +83,9 @@ void chassisTask(void* arg) {
     BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
 
     chassis->Enable();
+
+    const float ratio = 1.0f / 660.0f * 6 * PI;
+
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
@@ -206,7 +209,7 @@ void chassisTask(void* arg) {
                     yaw_pid_error = 0;
                 }
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);
-                chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);
+                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
                 osDelay(1);
                 chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
@@ -221,7 +224,7 @@ void chassisTask(void* arg) {
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
                 vz_set = spin_speed;
-                chassis->SetSpeed(vx_set, vy_set, vz_set);
+                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 osDelay(1);
                 chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
@@ -235,7 +238,7 @@ void chassisTask(void* arg) {
                     offset_yaw = 0;
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
-                chassis->SetSpeed(vx_set_org, vy_set_org, vz_set);
+                chassis->SetSpeed(vx_set_org * ratio, vy_set_org * ratio, vz_set * ratio);
                 osDelay(1);
                 chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,

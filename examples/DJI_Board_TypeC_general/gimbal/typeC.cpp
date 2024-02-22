@@ -192,34 +192,106 @@ void RM_RTOS_Init(void) {
 
     pitch_motor = new driver::Motor6020(can1, 0x206);
     yaw_motor = new driver::Motor6020(can1, 0x205);
+
+    pitch_motor->SetTransmissionRatio(1);
+    control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {
+        .kp = 20,
+        .ki = 0,
+        .kd = 0,
+        .max_out = 6 * PI,
+        .max_iout = 0,
+        .deadband = 0,                                 // 死区
+        .A = 0,                                        // 变速积分所能达到的最大值为A+B
+        .B = 0,                                        // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .derivative_filtering_coefficient = 0,         // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
+    };
+    pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
+    control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
+        .kp = 200,
+        .ki = 1,
+        .kd = 0,
+        .max_out = 16384,
+        .max_iout = 2000,
+        .deadband = 0,                          // 死区
+        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+    pitch_motor->ReInitPID(pitch_omega_pid_init, driver::MotorCANBase::OMEGA);
+    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+                         driver::MotorCANBase::ABSOLUTE);
+
+    yaw_motor->SetTransmissionRatio(1);
+    control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
+        .kp = 20,
+        .ki = 0,
+        .kd = 0,
+        .max_out = 6 * PI,
+        .max_iout = 0,
+        .deadband = 0,                                 // 死区
+        .A = 0,                                        // 变速积分所能达到的最大值为A+B
+        .B = 0,                                        // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .derivative_filtering_coefficient = 0,         // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
+    };
+    yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
+    control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
+        .kp = 200,
+        .ki = 1,
+        .kd = 0,
+        .max_out = 16384,
+        .max_iout = 2000,
+        .deadband = 0,                          // 死区
+        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+    yaw_motor->ReInitPID(yaw_omega_pid_init, driver::MotorCANBase::OMEGA);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+                       driver::MotorCANBase::ABSOLUTE);
+
     control::gimbal_t gimbal_data;
     gimbal_data.data = gimbal_init_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;
-    control::gimbal_pid_t gimbalBasicPID;
-    {
-        float pitch_theta_max_iout = 0;
-        float pitch_theta_max_out = 10;
-        float pitch_omega_max_iout = 10000;
-        float pitch_omega_max_out = 30000;
-        float yaw_theta_max_iout = 0;
-        float yaw_theta_max_out = 10;
-        float yaw_omega_max_iout = 5000;  // 10000
-        float yaw_omega_max_out = 30000;
-        float* pitch_theta_pid_param = new float[3]{15, 0, 0};
-        float* pitch_omega_pid_param = new float[3]{1000, 100, 0};
-        float* yaw_theta_pid_param = new float[3]{15, 0, 0};
-        float* yaw_omega_pid_param = new float[3]{1000, 100, 0};
-        gimbalBasicPID.pitch_theta_pid = new control::ConstrainedPID(
-            pitch_theta_pid_param, pitch_theta_max_iout, pitch_theta_max_out);
-        gimbalBasicPID.pitch_omega_pid = new control::ConstrainedPID(
-            pitch_omega_pid_param, pitch_omega_max_iout, pitch_omega_max_out);
-        gimbalBasicPID.yaw_theta_pid =
-            new control::ConstrainedPID(yaw_theta_pid_param, yaw_theta_max_iout, yaw_theta_max_out);
-        gimbalBasicPID.yaw_omega_pid =
-            new control::ConstrainedPID(yaw_omega_pid_param, yaw_omega_max_iout, yaw_omega_max_out);
-    }
-    gimbal_data.pid = gimbalBasicPID;
+    //    control::gimbal_pid_t gimbalBasicPID;
+    //    {
+    //        float pitch_theta_max_iout = 0;
+    //        float pitch_theta_max_out = 10;
+    //        float pitch_omega_max_iout = 10000;
+    //        float pitch_omega_max_out = 30000;
+    //        float yaw_theta_max_iout = 0;
+    //        float yaw_theta_max_out = 10;
+    //        float yaw_omega_max_iout = 5000;  // 10000
+    //        float yaw_omega_max_out = 30000;
+    //        float* pitch_theta_pid_param = new float[3]{15, 0, 0};
+    //        float* pitch_omega_pid_param = new float[3]{1000, 100, 0};
+    //        float* yaw_theta_pid_param = new float[3]{15, 0, 0};
+    //        float* yaw_omega_pid_param = new float[3]{1000, 100, 0};
+    //        gimbalBasicPID.pitch_theta_pid = new control::ConstrainedPID(
+    //            pitch_theta_pid_param, pitch_theta_max_iout, pitch_theta_max_out);
+    //        gimbalBasicPID.pitch_omega_pid = new control::ConstrainedPID(
+    //            pitch_omega_pid_param, pitch_omega_max_iout, pitch_omega_max_out);
+    //        gimbalBasicPID.yaw_theta_pid =
+    //            new control::ConstrainedPID(yaw_theta_pid_param, yaw_theta_max_iout,
+    //            yaw_theta_max_out);
+    //        gimbalBasicPID.yaw_omega_pid =
+    //            new control::ConstrainedPID(yaw_omega_pid_param, yaw_omega_max_iout,
+    //            yaw_omega_max_out);
+    //    }
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
 }

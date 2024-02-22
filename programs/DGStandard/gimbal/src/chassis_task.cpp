@@ -83,6 +83,9 @@ void chassisTask(void* arg) {
     BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
 
     chassis->Enable();
+
+    const float ratio = 1.0f / 660.0f * 12 * PI;
+
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
@@ -206,9 +209,9 @@ void chassisTask(void* arg) {
                     yaw_pid_error = 0;
                 }
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);
-                chassis->SetSpeed(vx_set, vy_set, manual_mode_pid_output);
+                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
@@ -221,9 +224,9 @@ void chassisTask(void* arg) {
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
                 vz_set = spin_speed;
-                chassis->SetSpeed(vx_set, vy_set, vz_set);
+                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
@@ -235,9 +238,9 @@ void chassisTask(void* arg) {
                     offset_yaw = 0;
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
-                chassis->SetSpeed(vx_set_org, vy_set_org, vz_set);
+                chassis->SetSpeed(vx_set_org * ratio, vy_set_org * ratio, vz_set * ratio);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);

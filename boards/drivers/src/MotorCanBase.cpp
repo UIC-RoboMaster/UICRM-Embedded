@@ -50,6 +50,7 @@ namespace driver {
 
     MotorCANBase::MotorCANBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
         : theta_(0), omega_(0), can_(can), rx_id_(rx_id) {
+        // 大疆的电机，自动识别TX_ID
         if(tx_id == 0x00){
             constexpr uint16_t GROUP_SIZE = 4;
             constexpr uint16_t RX1_ID_START = 0x201;
@@ -72,7 +73,8 @@ namespace driver {
                 tx_id_ = tx_id;
         }
 
-        if(is_init_==false){
+        // 如果是第一次初始化，需要创建一个后台线程以固定频率输出电机指令
+        if(!is_init_){
             is_init_=true;
             bsp::thread_init_t thread_init = {
                 .func = CanMotorThread,
@@ -86,6 +88,7 @@ namespace driver {
             group_cnt_=0;
             memset(motor_cnt_,0,sizeof(motor_cnt_));
         }
+        // 如果已经初始化，需要检查是否有重复的ID，如果没有则加入到数组以使后台线程能够持续给电机输出数据
         for(uint8_t i=0;i<10;i++){
             if(tx_id_==id_[i] && can_to_index_[i]==can_){
                 if(motor_cnt_[i]<4){
@@ -105,10 +108,29 @@ namespace driver {
                 break;
             }
         }
+
+        // 默认PID参数
+        omega_pid_ = control::ConstrainedPID();
+        theta_pid_ = control::ConstrainedPID();
+
+
+        align_angle_ = -1;  // Wait for Update to initialize
+        motor_angle_ = 0;
+        offset_angle_ = 0;
+        servo_angle_ = 0;
+        cumulated_angle_ = 0;
+        inner_wrap_detector_ = new FloatEdgeDetector(0, PI);
+        outer_wrap_detector_ = new FloatEdgeDetector(0, PI);
+
+        target_=0;
+
+        enable_=true;
     }
 
     void MotorCANBase::SetFrequency(uint32_t freq) {
+        // 频率设置必须在电机初始化之前
         RM_ASSERT_FALSE(is_init_, "Frequency should be set before motor initialization");
+        // 通过频率设置每秒输出时的延迟时间
         delay_time = 1000 / freq;
     }
 
@@ -117,6 +139,7 @@ namespace driver {
 
         RM_ASSERT_GT(num_motors, 0, "Meaningless empty can motor transmission");
         RM_ASSERT_LE(num_motors, 4, "Exceeding maximum of 4 motor commands per CAN message");
+        //获取输出的数据到缓冲区
         for (uint8_t i = 0; i < num_motors; ++i) {
             RM_ASSERT_EQ(motors[i]->tx_id_, motors[0]->tx_id_, "tx id mismatch");
             RM_ASSERT_EQ(motors[i]->can_, motors[0]->can_, "can line mismatch");
@@ -125,7 +148,7 @@ namespace driver {
             data[2 * motor_idx] = output >> 8;
             data[2 * motor_idx + 1] = output & 0xff;
         }
-
+        // 发送数据
         motors[0]->can_->Transmit(motors[0]->tx_id_, data, 8);
     }
 
@@ -154,16 +177,143 @@ namespace driver {
     }
     void MotorCANBase::CanMotorThread(void* args) {
         UNUSED(args);
+        // 后台线程，用于持续输出电机指令
         while(1){
+            // 遍历所有的电机组，对每个组的电机进行输出
             for(uint8_t i=0;i<group_cnt_;i++){
+                // 计算每个组的电机的PID输出
                 for(uint8_t j=0;j<motor_cnt_[i];j++){
                     motors_[i][j]->CalcOutput();
                 }
+                // 输出电机指令
                 TransmitOutput(motors_[i],motor_cnt_[i]);
             }
             osDelay(delay_time);
         }
 
+    }
+    void MotorCANBase::SetTarget(float target) {
+        // 设置目标值
+        // 目标值的单位取决于电机的模式
+        // 如果电机启动了角度环PID，则目标值为角度，单位为Rad
+        // 如果电机没启动角度环PID的情况下启动了速度环PID，则目标值为角速度，单位为Rad/s
+        target_ = target;
+        if((mode_ & THETA) && (mode_ & ABSOLUTE)){
+            target_ = wrap<float>(target_,0,2*PI);
+        }
+    }
+    void MotorCANBase::CalcOutput() {
+        if(!enable_){
+            // 如果电机被禁用，则清空PID积分项并输出0
+            SetOutput(0);
+            theta_pid_.ResetIntegral();
+            omega_pid_.ResetIntegral();
+            return;
+        }
+        float output = target_;
+        if(mode_ & THETA){
+            // 如果电机启动了角度环PID，则计算角度环PID输出
+            float theta = GetOutputShaftTheta();
+            if(mode_ & ABSOLUTE){
+                // 如果电机启动了绝对控制模式，则直接使用角度环PID输出
+                if(abs(output-theta)>PI){
+                    // 超过半圈，反方向走
+                    output = output>theta?output-2*PI:output+2*PI;
+                }
+                output = theta_pid_.ComputeOutput(output, theta);
+            }else{
+                output = theta_pid_.ComputeOutput(output,theta);
+            }
+
+        }
+        if(mode_ & OMEGA){
+            output = omega_pid_.ComputeOutput(output, GetOutputShaftOmega());
+        }
+        if(mode_ != NONE){
+            SetOutput((int16_t)output);
+        }
+
+    }
+    void MotorCANBase::ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode) {
+        if(mode & OMEGA){
+                omega_pid_.Reinit(pid_init);
+        }
+        else if(mode & THETA){
+                theta_pid_.Reinit(pid_init);
+        }
+    }
+    void MotorCANBase::SetMode(uint8_t mode) {
+        mode_ = mode;
+    }
+    void MotorCANBase::UpdateData(const uint8_t* data) {
+        UNUSED(data);
+
+
+            // 角度速度环控制且非绝对控制模式时，需要使用统计总角度值
+            // 获取初始化时的角度值
+            if (align_angle_ < 0)
+                align_angle_ = theta_;
+
+            // 如果电机角度从接近 2PI 跳到接近 0，则回绕检测器将检测到下降沿，这意味着电机在穿过编码器边界时正向正方向转动。 反之亦然，电机角度从接近 0 跃升至接近 2PI
+
+            motor_angle_ = theta_ - align_angle_;
+            if(transmission_ratio_!=1) {
+                // 获得实际的电机屁股角度
+                inner_wrap_detector_->input(motor_angle_);
+                // 输入电机屁股的角度到边界检测器
+                if (inner_wrap_detector_->negEdge())
+                    // 检测到下降沿，代表电机正向转动了一整圈
+                    offset_angle_ =
+                        wrap<float>(offset_angle_ + 2 * PI / transmission_ratio_, 0, 2 * PI);
+                // 更新实际的输出轴角度偏差
+                else if (inner_wrap_detector_->posEdge())
+                    // 检测到上升沿，代表电机反向转动了一整圈
+                    offset_angle_ =
+                        wrap<float>(offset_angle_ - 2 * PI / transmission_ratio_, 0, 2 * PI);
+                // 更新实际的输出轴角度偏差
+
+                servo_angle_ =
+                    wrap<float>(offset_angle_ + motor_angle_ / transmission_ratio_, 0, 2 * PI);
+            }else{
+                servo_angle_ = wrap<float>(motor_angle_,0,2*PI);
+            }
+            // 更新实际输出轴角度
+            outer_wrap_detector_->input(servo_angle_);
+            // 输入实际输出轴角度到边界检测器
+
+            // 绝对模式下不需要累积角度
+            if(!(mode_ & ABSOLUTE)) {
+                if (outer_wrap_detector_->negEdge())
+                    cumulated_angle_ += 2 * PI;
+                // 检测到下降沿，代表电机输出轴正向转动了一整圈
+                else if (outer_wrap_detector_->posEdge())
+                    cumulated_angle_ -= 2 * PI;
+                // 检测到上升沿，代表电机输出轴反向转动了一整圈
+            }
+
+    }
+    void MotorCANBase::SetTransmissionRatio(float ratio) {
+        // 设置电机的传动比
+        // 这里的传动比不是电机的实际传动比，而是电机与编码器的传动比
+        transmission_ratio_ = ratio;
+    }
+    float MotorCANBase::GetOutputShaftTheta() const {
+        return (servo_angle_+cumulated_angle_);
+    }
+    float MotorCANBase::GetOutputShaftOmega() const {
+        return omega_/transmission_ratio_;
+    }
+    float MotorCANBase::GetTarget() const {
+        return target_;
+    }
+    void MotorCANBase::Enable() {
+        enable_ = true;
+    }
+    void MotorCANBase::Disable() {
+        enable_ = false;
+    }
+    bool MotorCANBase::IsEnable() const {
+        return enable_;
     }
 
     Motor3508::Motor3508(CAN* can, uint16_t rx_id) : MotorCANBase(can, rx_id) {
@@ -182,11 +332,14 @@ namespace driver {
         omega_ = raw_omega * OMEGA_SCALE;
 
         connection_flag_ = true;
+        MotorCANBase::UpdateData(data);
     }
 
     void Motor3508::PrintData() const {
         print("theta: % .4f ", GetTheta());
+        print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
+        print("output shaft omega: % .4f ", GetOutputShaftOmega());
         print("raw temperature: %3d ", raw_temperature_);
         print("raw current get: % d \r\n", raw_current_get_);
     }
@@ -204,11 +357,10 @@ namespace driver {
         return raw_temperature_;
     }
 
-    Motor6020::Motor6020(CAN* can, uint16_t rx_id,bool current_ctl) : MotorCANBase(can, rx_id) {
+    Motor6020::Motor6020(CAN* can, uint16_t rx_id,uint16_t tx_id) : MotorCANBase(can, rx_id, tx_id) {
+        // 绝对位置电机不需要初始化align_angle_
+        align_angle_=0;
         can->RegisterRxCallback(rx_id, can_motor_callback, this);
-        if(current_ctl){
-            tx_id_--;
-        }
     }
 
     void Motor6020::UpdateData(const uint8_t data[]) {
@@ -223,11 +375,14 @@ namespace driver {
         omega_ = raw_omega * OMEGA_SCALE;
 
         connection_flag_ = true;
+        MotorCANBase::UpdateData(data);
     }
 
     void Motor6020::PrintData() const {
         print("theta: % .4f ", GetTheta());
+        print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
+        print("output shaft omega: % .4f ", GetOutputShaftOmega());
         print("raw temperature: %3d ", raw_temperature_);
         print("raw current get: % d \r\n", raw_current_get_);
     }
@@ -263,11 +418,14 @@ namespace driver {
         omega_ = raw_omega * OMEGA_SCALE;
 
         connection_flag_ = true;
+        MotorCANBase::UpdateData(data);
     }
 
     void Motor2006::PrintData() const {
         print("theta: % .4f ", GetTheta());
+        print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
+        print("output shaft omega: % .4f ", GetOutputShaftOmega());
         print("raw current get: % d \r\n", raw_current_get_);
     }
 
@@ -280,6 +438,53 @@ namespace driver {
         return raw_current_get_;
     }
 
+
+
+    MotorDM4310::MotorDM4310(CAN* can, uint16_t rx_id, uint16_t tx_id) : MotorCANBase(can, rx_id, tx_id) {
+        // 绝对位置电机不需要初始化align_angle_
+        align_angle_=0;
+        can->RegisterRxCallback(rx_id, can_motor_callback, this);
+
+
+    }
+
+    void MotorDM4310::UpdateData(const uint8_t data[]) {
+        const int16_t raw_theta = data[0] << 8 | data[1];
+        const int16_t raw_omega = data[2] << 8 | data[3];
+        raw_current_get_ = data[4] << 8 | data[5];
+        raw_temperature_ = data[6];
+        raw_temperature_esc_ = data[7];
+
+        constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
+        constexpr float OMEGA_SCALE = 2 * PI / 60 / 100;    // rpm -> rad / sec
+        theta_ = raw_theta * THETA_SCALE;
+        omega_ = raw_omega * OMEGA_SCALE;
+
+        connection_flag_ = true;
+        MotorCANBase::UpdateData(data);
+    }
+
+    void MotorDM4310::PrintData() const {
+        print("theta: % .4f ", GetTheta());
+        print("output shaft theta: % .4f ", GetOutputShaftTheta());
+        print("omega: % .4f ", GetOmega());
+        print("output shaft omega: % .4f ", GetOutputShaftOmega());
+        print("raw temperature: %3d ", raw_temperature_);
+        print("raw current get: % d \r\n", raw_current_get_);
+    }
+
+    void MotorDM4310::SetOutput(int16_t val) {
+        constexpr int16_t MAX_ABS_CURRENT = 12288;  // ~20A
+        output_ = clip<int16_t>(val, -MAX_ABS_CURRENT, MAX_ABS_CURRENT);
+    }
+
+    int16_t MotorDM4310::GetCurr() const {
+        return raw_current_get_;
+    }
+
+    uint16_t MotorDM4310::GetTemp() const {
+        return raw_temperature_;
+    }
 
 
     /**
