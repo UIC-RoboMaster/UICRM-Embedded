@@ -58,8 +58,8 @@ void RM_RTOS_Init() {
         .max_out = 16384,
         .max_iout = 2000,
         .deadband = 0,                          // 死区
-        .A = 1.5*PI,                              // 变速积分所能达到的最大值为A+B
-        .B = 1*PI,                              // 启动变速积分的死区
+        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
@@ -71,7 +71,7 @@ void RM_RTOS_Init() {
     motor1->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
                     driver::MotorCANBase::ABSOLUTE);
 
-    motor1->SetTarget(1.0f/2*PI);
+    motor1->SetTarget(1.0f / 2 * PI);
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
 }

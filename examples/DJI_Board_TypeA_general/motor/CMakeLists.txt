@@ -5,16 +5,21 @@ uicrm_add_arm_executable(${PROJECT_NAME}_pwm
     SOURCES pwm.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_m2006
-    TARGET ${BOARD_NAME}
-    SOURCES m2006.cpp)
+        TARGET ${BOARD_NAME}
+        SOURCES m2006.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_m2006_theta
+        TARGET ${BOARD_NAME}
+        SOURCES m2006_theta.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_m3508
         TARGET ${BOARD_NAME}
         SOURCES m3508.cpp)
 
-uicrm_add_arm_executable(${PROJECT_NAME}_m3508_flywheel
+uicrm_add_arm_executable(${PROJECT_NAME}_m3508_theta
         TARGET ${BOARD_NAME}
-        SOURCES m3508_flywheel.cpp)
+        SOURCES m3508_theta.cpp)
+
 
 uicrm_add_arm_executable(${PROJECT_NAME}_m2305
         TARGET ${BOARD_NAME}
@@ -23,6 +28,10 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m2305
 uicrm_add_arm_executable(${PROJECT_NAME}_m6020
         TARGET ${BOARD_NAME}
         SOURCES m6020.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_m6020_theta
+        TARGET ${BOARD_NAME}
+        SOURCES m6020_theta.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
         TARGET ${BOARD_NAME}
