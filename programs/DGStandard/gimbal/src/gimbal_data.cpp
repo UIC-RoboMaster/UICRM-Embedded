@@ -23,6 +23,3 @@
 //
 
 #include "gimbal_data.h"
-
-
-

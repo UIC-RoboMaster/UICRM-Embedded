@@ -42,8 +42,10 @@ void gimbalTask(void* arg) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);
         }
-        if(!pitch_motor->IsEnable())pitch_motor->Enable();
-        if(!yaw_motor->IsEnable())yaw_motor->Enable();
+        if (!pitch_motor->IsEnable())
+            pitch_motor->Enable();
+        if (!yaw_motor->IsEnable())
+            yaw_motor->Enable();
 
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
@@ -78,8 +80,10 @@ void gimbalTask(void* arg) {
             osDelay(GIMBAL_OS_DELAY);
             continue;
         }
-        if(!pitch_motor->IsEnable())pitch_motor->Enable();
-        if(!yaw_motor->IsEnable())yaw_motor->Enable();
+        if (!pitch_motor->IsEnable())
+            pitch_motor->Enable();
+        if (!yaw_motor->IsEnable())
+            yaw_motor->Enable();
 
         pitch_curr = ahrs->INS_angle[2];
         yaw_curr = ahrs->INS_angle[0];
@@ -143,9 +147,7 @@ void gimbalTask(void* arg) {
 }
 
 void init_gimbal() {
-
-
-    pitch_motor = new driver::Motor6020(can2, 0x20A,0x2FE);
+    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 20,
@@ -168,21 +170,21 @@ void init_gimbal() {
         .max_out = 16384,
         .max_iout = 4000,
         .deadband = 0,                          // 死区
-        .A = 1.5*PI,                              // 变速积分所能达到的最大值为A+B
-        .B = 1*PI,                              // 启动变速积分的死区
+        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate|  // 变速积分
-        control::ConstrainedPID::Derivative_On_Measurement| // 微分在测量值上
-            control::ConstrainedPID::DerivativeFilter // 微分在测量值上
+        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
+                control::ConstrainedPID::OutputFilter |               // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
+                control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
+                control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
                          driver::MotorCANBase::ABSOLUTE);
-    yaw_motor = new driver::Motor6020(can1, 0x209,0x2FE);
+    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
         .kp = 20,
@@ -204,17 +206,17 @@ void init_gimbal() {
         .kd = 100,
         .max_out = 16384,
         .max_iout = 2000,
-        .deadband = 0,                          // 死区
-        .A = 0.5*PI,                              // 变速积分所能达到的最大值为A+B
-        .B = 0.5*PI,                              // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .deadband = 0,                            // 死区
+        .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,      // 输出滤波系数
         .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate|  // 变速积分
-                control::ConstrainedPID::Derivative_On_Measurement| // 微分在测量值上
-                control::ConstrainedPID::DerivativeFilter // 微分在测量值上
+        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
+                control::ConstrainedPID::OutputFilter |               // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
+                control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
+                control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
