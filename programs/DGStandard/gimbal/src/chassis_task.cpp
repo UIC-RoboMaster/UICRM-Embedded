@@ -84,7 +84,7 @@ void chassisTask(void* arg) {
 
     chassis->Enable();
 
-    const float ratio = 1.0f / 660.0f * 8 * PI;
+    const float ratio = 1.0f / 660.0f * 12 * PI;
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
@@ -211,7 +211,7 @@ void chassisTask(void* arg) {
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
@@ -226,7 +226,7 @@ void chassisTask(void* arg) {
                 vz_set = spin_speed;
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
@@ -240,7 +240,7 @@ void chassisTask(void* arg) {
                 }
                 chassis->SetSpeed(vx_set_org * ratio, vy_set_org * ratio, vz_set * ratio);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);

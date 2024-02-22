@@ -30,10 +30,3 @@ const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 0.9750f,
                                                  .yaw_circle_ = true,
                                                  .pitch_inverted = true,
                                                  .yaw_inverted = true};
-// basic information of gimbal
-extern control::gimbal_pid_t gimbalBasicPID;
-void init_gimbalBasicData();
-
-// Spin PID of gimbal
-extern control::gimbal_pid_t gimbalSpinPID;
-void init_gimbalSpinData();
