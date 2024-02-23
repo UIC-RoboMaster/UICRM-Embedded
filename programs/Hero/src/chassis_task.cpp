@@ -84,7 +84,7 @@ void chassisTask(void* arg) {
 
     chassis->Enable();
 
-    const float ratio = 1.0f / 660.0f * 6 * PI;
+    const float ratio = 1.0f / 660.0f * 10 * PI;
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {

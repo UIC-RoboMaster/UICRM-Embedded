@@ -210,6 +210,8 @@ namespace control {
             pid_error_type error_type;
         } PID_ErrorHandler_t;
 
+        typedef void (*PID_ErrorCallback_t)(void* instance, PID_ErrorHandler_t error);
+
         /**
          * @brief PID控制器的初始化结构体
          * @details 用于初始化PID控制器
@@ -355,6 +357,9 @@ namespace control {
          */
         void ResetIntegral();
 
+
+        void RegisterErrorCallcack(PID_ErrorCallback_t callback,void* instance);
+
       private:
         float target_=0.0f; /// 目标值
         float last_none_zero_target_=0.0f; /// 上一次非零目标值
@@ -399,6 +404,8 @@ namespace control {
             .error_type=PID_ERROR_NONE,
         };
 
+        PID_ErrorCallback_t error_callback_ =[](void* instance, PID_ErrorHandler_t error){ UNUSED(instance);UNUSED(error);};
+        void* error_callback_instance_ =nullptr;
 
         void PID_ErrorHandle();
 

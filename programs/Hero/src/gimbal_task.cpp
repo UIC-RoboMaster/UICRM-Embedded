@@ -161,8 +161,8 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
-        .kp = 1000,
-        .ki = 100,
+        .kp = 3000,
+        .ki = 50,
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,

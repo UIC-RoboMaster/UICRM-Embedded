@@ -197,9 +197,12 @@ namespace driver {
         // 目标值的单位取决于电机的模式
         // 如果电机启动了角度环PID，则目标值为角度，单位为Rad
         // 如果电机没启动角度环PID的情况下启动了速度环PID，则目标值为角速度，单位为Rad/s
+        if(mode_ & INVERTED){
+            target = -target;
+        }
         target_ = target;
         if((mode_ & THETA) && (mode_ & ABSOLUTE)){
-            target_ = wrap<float>(target_,0,2*PI);
+            target_ = wrap<float>(target_,-PI,PI);
         }
     }
     void MotorCANBase::CalcOutput() {
@@ -291,6 +294,23 @@ namespace driver {
                 // 检测到上升沿，代表电机输出轴反向转动了一整圈
             }
 
+
+            if(mode_ & THETA){
+                if(!(mode_ & ABSOLUTE)) {
+                    if (!holding_ && abs(target_ - GetOutputShaftTheta()) <= proximity_in_) {
+                        holding_ = true;
+                    }else if (holding_ && abs(target_ - GetOutputShaftTheta()) > proximity_out_) {
+                        holding_ = false;
+                    }
+                }else{
+                    if (!holding_ && abs(wrap<float>(target_ - GetOutputShaftTheta(),-PI,PI)) <= proximity_in_) {
+                        holding_ = true;
+                    }else if (holding_ && abs(wrap<float>(target_ - GetOutputShaftTheta(),-PI,PI)) > proximity_out_) {
+                        holding_ = false;
+                    }
+                }
+            }
+
     }
     void MotorCANBase::SetTransmissionRatio(float ratio) {
         // 设置电机的传动比
@@ -314,6 +334,27 @@ namespace driver {
     }
     bool MotorCANBase::IsEnable() const {
         return enable_;
+    }
+    void MotorCANBase::RegisterErrorCallback(MotorCANBase::error_callback_t callback,
+                                             void* instance) {
+        error_callback_ = callback;
+        error_callback_instance_ = instance;
+        if( !(mode_ & OMEGA)){
+            // 角度环才需要注册错误回调
+            RM_ASSERT_TRUE(false,"Only theta mode motor can register error callback");
+        }
+        else{
+                omega_pid_.RegisterErrorCallcack(ErrorCallbackWrapper, this);
+        }
+    }
+    void MotorCANBase::ErrorCallbackWrapper(void* instance,
+                                            control::ConstrainedPID::PID_ErrorHandler_t type) {
+        UNUSED(type);
+        MotorCANBase* motor = reinterpret_cast<MotorCANBase*>(instance);
+        if (motor->error_callback_ != nullptr) motor->error_callback_(motor);
+    }
+    bool MotorCANBase::IsHolding() const {
+        return holding_;
     }
 
     Motor3508::Motor3508(CAN* can, uint16_t rx_id) : MotorCANBase(can, rx_id) {

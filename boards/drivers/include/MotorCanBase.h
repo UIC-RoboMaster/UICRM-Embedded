@@ -41,8 +41,17 @@ namespace driver {
             CURRENT = 0x01,
             OMEGA = 0x02,
             THETA = 0x04,
+            INVERTED = 0x40,
             ABSOLUTE = 0x80,
         };
+
+        /**
+            * @brief 堵转回调函数模板
+         */
+        /**
+            * @brief jam callback template
+         */
+        typedef void (*error_callback_t)(void * instance);
 
         /**
          * @brief 基础构造函数
@@ -185,6 +194,11 @@ namespace driver {
 
         bool IsEnable() const;
 
+        void RegisterErrorCallback(error_callback_t callback,void* instance);
+
+        static void ErrorCallbackWrapper(void* instance,control::ConstrainedPID::PID_ErrorHandler_t type);
+
+        bool IsHolding() const;
 
       protected:
         volatile float theta_;
@@ -204,6 +218,12 @@ namespace driver {
 
         float transmission_ratio_=1; /* 电机的减速比例 */
 
+        float proximity_in_ = 0.05;  /* 电机进入保持状态的临界角度差 */
+
+        float proximity_out_ = 0.15; /* 电机退出保持状态的临界角度差 */
+
+        bool holding_ = true;       /* 电机是否进入保持状态 */
+
       private:
         bsp::CAN* can_;
         uint16_t rx_id_;
@@ -215,7 +235,8 @@ namespace driver {
         float target_;
 
 
-
+        error_callback_t error_callback_=[](void* instance){ UNUSED(instance); };
+        void* error_callback_instance_;
 
 
 
