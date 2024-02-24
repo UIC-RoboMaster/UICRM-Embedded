@@ -204,6 +204,22 @@ namespace driver {
         if((mode_ & THETA) && (mode_ & ABSOLUTE)){
             target_ = wrap<float>(target_,-PI,PI);
         }
+
+        if(mode_ & THETA){
+            if(!(mode_ & ABSOLUTE)) {
+                if (!holding_ && abs(target_ - GetOutputShaftTheta()) <= proximity_in_) {
+                    holding_ = true;
+                }else if (holding_ && abs(target_ - GetOutputShaftTheta()) > proximity_out_) {
+                    holding_ = false;
+                }
+            }else{
+                if (!holding_ && abs(wrap<float>(target_ - GetOutputShaftTheta(),-PI,PI)) <= proximity_in_) {
+                    holding_ = true;
+                }else if (holding_ && abs(wrap<float>(target_ - GetOutputShaftTheta(),-PI,PI)) > proximity_out_) {
+                    holding_ = false;
+                }
+            }
+        }
     }
     void MotorCANBase::CalcOutput() {
         if(!enable_){

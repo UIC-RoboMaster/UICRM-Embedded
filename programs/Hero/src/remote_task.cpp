@@ -40,9 +40,9 @@ void remoteTask(void* arg) {
     bool mode_switch = false;
     bool shoot_fric_switch = false;
     bool shoot_switch = false;
-    bool shoot_burst_switch = false;
+//    bool shoot_burst_switch = false;
     bool shoot_stop_switch = false;
-    uint32_t shoot_burst_timestamp = 0;
+//    uint32_t shoot_burst_timestamp = 0;
     remote::switch_t last_state_r = remote::MID;
     remote::switch_t last_state_l = remote::MID;
     remote::keyboard_t last_keyboard;
@@ -156,13 +156,14 @@ void remoteTask(void* arg) {
                 case remote::DOWN:
                     if (last_state_l == remote::MID && selftest.dbus) {
                         shoot_switch = true;
-                        shoot_burst_timestamp = 0;
-                    } else if (last_state_l == remote::DOWN && selftest.dbus) {
-                        shoot_burst_timestamp++;
-                        if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
-                            shoot_burst_switch = true;
-                        }
+//                        shoot_burst_timestamp = 0;
                     }
+//                    else if (last_state_l == remote::DOWN && selftest.dbus) {
+//                        shoot_burst_timestamp++;
+//                        if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
+//                            shoot_burst_switch = true;
+//                        }
+//                    }
                     break;
                 case remote::MID:
                     switch (last_state_l) {
@@ -177,12 +178,12 @@ void remoteTask(void* arg) {
                             }
                             if (mouse_left_edge->posEdge()) {
                                 shoot_switch = true;
-                                shoot_burst_timestamp = 0;
+//                                shoot_burst_timestamp = 0;
                             } else if (mouse_left_edge->get()) {
-                                shoot_burst_timestamp++;
-                                if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
-                                    shoot_burst_switch = true;
-                                }
+//                                shoot_burst_timestamp++;
+//                                if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
+//                                    shoot_burst_switch = true;
+//                                }
                             } else if (mouse_left_edge->negEdge()) {
                                 shoot_stop_switch = true;
                             } else {
@@ -214,17 +215,17 @@ void remoteTask(void* arg) {
                 }
             }
             // 射出连发子弹
-            if (shoot_burst_switch) {
-                if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
-                    // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
-                    if (shoot_mode == SHOOT_MODE_PREPARED || shoot_mode == SHOOT_MODE_SINGLE) {
-                        shoot_mode = SHOOT_MODE_BURST;
-                        shoot_burst_switch = false;
-                    }
-                } else {
-                    shoot_burst_switch = false;
-                }
-            }
+//            if (shoot_burst_switch) {
+//                if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
+//                    // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
+//                    if (shoot_mode == SHOOT_MODE_PREPARED || shoot_mode == SHOOT_MODE_SINGLE) {
+//                        shoot_mode = SHOOT_MODE_BURST;
+//                        shoot_burst_switch = false;
+//                    }
+//                } else {
+//                    shoot_burst_switch = false;
+//                }
+//            }
             // 停止射击
             if (shoot_stop_switch) {
                 shoot_stop_switch = false;

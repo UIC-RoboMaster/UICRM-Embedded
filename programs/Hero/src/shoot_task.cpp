@@ -172,9 +172,9 @@ void shootTask(void* arg) {
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
-                    if (!steering_motor->IsHolding()) {
-                        steering_motor->SetTarget(steering_motor->GetTheta());
-                    }
+//                    if (!steering_motor->IsHolding()) {
+//                        steering_motor->SetTarget(steering_motor->GetTheta());
+//                    }
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
@@ -183,12 +183,6 @@ void shootTask(void* arg) {
                             steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5);
                         }
                         shoot_mode = SHOOT_MODE_PREPARED;
-                    }
-                    break;
-                case SHOOT_MODE_BURST:
-                    // 连发子弹
-                    if (steering_motor->IsHolding()) {
-                        steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5);
                     }
                     break;
                 case SHOOT_MODE_STOP:
@@ -294,7 +288,7 @@ void init_shoot() {
         .kp = 20,
         .ki = 0,
         .kd = 0,
-        .max_out = 15 * PI,
+        .max_out = 4*PI,
         .max_iout = 0,
         .deadband = 0,                                   // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
@@ -325,7 +319,7 @@ void init_shoot() {
     steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
-    // steering_motor->RegisterErrorCallback(jam_callback,steering_motor);
+     steering_motor->RegisterErrorCallback(jam_callback,steering_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
