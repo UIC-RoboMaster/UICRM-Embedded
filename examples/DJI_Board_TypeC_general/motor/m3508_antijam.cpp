@@ -32,7 +32,6 @@
 static bsp::CAN* can1 = nullptr;
 static driver::Motor3508* motor1 = nullptr;
 
-
 void jam_callback(void* args) {
     driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
     float target = motor->GetTarget();
@@ -51,14 +50,14 @@ void RM_RTOS_Init() {
         .kp = 20,
         .ki = 0,
         .kd = 0,
-        .max_out =  PI,
+        .max_out = PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter // 输出滤波
+        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
 
     };
     motor1->ReInitPID(theta_pid_init, driver::MotorCANBase::THETA);
@@ -73,22 +72,20 @@ void RM_RTOS_Init() {
         .B = 2 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate|  // 变速积分
-                control::ConstrainedPID::ErrorHandle,       // 错误处理
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
+                control::ConstrainedPID::ErrorHandle,            // 错误处理
     };
     motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     motor1->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
-    motor1->RegisterErrorCallback(jam_callback,motor1);
+    motor1->RegisterErrorCallback(jam_callback, motor1);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
 }
-
-
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
@@ -103,7 +100,7 @@ void RM_RTOS_Default_Task(const void* args) {
             while (key.Read() == 0) {
                 osDelay(30);
             }
-            motor1->SetTarget(motor1->GetTarget() + 2 * PI/5);
+            motor1->SetTarget(motor1->GetTarget() + 2 * PI / 5);
             osDelay(20);
         }
         motor1->PrintData();

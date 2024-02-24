@@ -25,7 +25,6 @@ driver::Motor3508* flywheel_right = nullptr;
 
 driver::Motor3508* steering_motor = nullptr;
 
-
 void jam_callback(void* args) {
     driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
     float target = motor->GetTarget();
@@ -58,7 +57,6 @@ void shootTask(void* arg) {
     //    uint8_t servo_back = 0;
     //    bool can_shoot_click = false;
 
-
     ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
     while (true) {
@@ -72,14 +70,14 @@ void shootTask(void* arg) {
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
-        if(!steering_motor->IsEnable()){
-                steering_motor->Enable();
+        if (!steering_motor->IsEnable()) {
+            steering_motor->Enable();
         }
-        if(!flywheel_left->IsEnable()){
-                flywheel_left->Enable();
+        if (!flywheel_left->IsEnable()) {
+            flywheel_left->Enable();
         }
-        if(!flywheel_right->IsEnable()){
-                flywheel_right->Enable();
+        if (!flywheel_right->IsEnable()) {
+            flywheel_right->Enable();
         }
         //                if (referee->bullet_remaining.bullet_remaining_num_17mm == 0){
         //                    //没子弹了
@@ -172,9 +170,9 @@ void shootTask(void* arg) {
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
-//                    if (!steering_motor->IsHolding()) {
-//                        steering_motor->SetTarget(steering_motor->GetTheta());
-//                    }
+                    //                    if (!steering_motor->IsHolding()) {
+                    //                        steering_motor->SetTarget(steering_motor->GetTheta());
+                    //                    }
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
@@ -249,7 +247,6 @@ void shootTask(void* arg) {
         //        }
         // 计算输出，由于拔弹电机的输出系统由云台托管，不需要再次处理can的传输
 
-
         osDelay(SHOOT_OS_DELAY);
     }
 }
@@ -288,14 +285,14 @@ void init_shoot() {
         .kp = 20,
         .ki = 0,
         .kd = 0,
-        .max_out = 4*PI,
+        .max_out = 4 * PI,
         .max_iout = 0,
-        .deadband = 0,                                   // 死区
+        .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter // 输出滤波
+        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
 
     };
     steering_motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
@@ -310,16 +307,16 @@ void init_shoot() {
         .B = 2 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate|  // 变速积分
-                control::ConstrainedPID::ErrorHandle,       // 错误处理
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
+                control::ConstrainedPID::ErrorHandle,            // 错误处理
     };
     steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
-     steering_motor->RegisterErrorCallback(jam_callback,steering_motor);
+    steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {

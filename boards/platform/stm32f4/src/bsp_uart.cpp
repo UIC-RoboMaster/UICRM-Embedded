@@ -257,10 +257,9 @@ namespace bsp {
                 length = tx_size_;
             /* directly write into the read buffer and start transmission */
             memcpy(tx_read_, data, length);
-            if(tx_dma_){
+            if (tx_dma_) {
                 HAL_UART_Transmit_DMA(huart_, tx_read_, length);
-            }
-            else{
+            } else {
                 HAL_UART_Transmit_IT(huart_, tx_read_, length);
             }
         }
@@ -288,7 +287,7 @@ namespace bsp {
             tx_read_ = tx_write_;
             tx_write_ = tmp;
             /* initiate new transmission call for pending data */
-            if(tx_dma_)
+            if (tx_dma_)
                 HAL_UART_Transmit_DMA(huart_, tx_read_, tx_pending_);
             else
                 HAL_UART_Transmit_IT(huart_, tx_read_, tx_pending_);
@@ -299,9 +298,9 @@ namespace bsp {
     }
 
     void UART::RxCompleteCallback() {
-        if (rx_ptr_!=nullptr) {
+        if (rx_ptr_ != nullptr) {
             *rx_len_ = this->Read<true>(rx_ptr_);
-            if(callback_!=nullptr)
+            if (callback_ != nullptr)
                 callback_(callback_args_);
         }
     }

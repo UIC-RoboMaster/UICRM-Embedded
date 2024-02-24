@@ -24,8 +24,7 @@ namespace imu {
     WITUART::WITUART(bsp::UART* uart) {
         uart_ = uart;
 
-        uart_->SetupRxData(&read_ptr_,&read_len_);
-
+        uart_->SetupRxData(&read_ptr_, &read_len_);
 
         bsp::thread_init_t thread_init = {
             .func = callback_thread_func_,
@@ -33,12 +32,12 @@ namespace imu {
             .attr = callback_thread_attr_,
         };
         callback_thread_ = new bsp::EventThread(thread_init);
-        uart_->RegisterCallback(CallbackWrapper,this);
+        uart_->RegisterCallback(CallbackWrapper, this);
     }
 
     void WITUART::Update() {
-        uint8_t* data= read_ptr_;
-        uint32_t length= read_len_;
+        uint8_t* data = read_ptr_;
+        uint32_t length = read_len_;
 
         if (length < 11) {
             return;
@@ -120,7 +119,7 @@ namespace imu {
         WITUART* wituart = reinterpret_cast<WITUART*>(arg);
         wituart->Update();
     }
-    WITUART::~WITUART(){
+    WITUART::~WITUART() {
         delete callback_thread_;
     }
 

@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include "main.h"
-#include "bsp_pwm.h"
 #include "MotorBase.h"
+#include "bsp_pwm.h"
+#include "main.h"
 namespace driver {
     /**
      * @brief PWM电机的标准类，用于一帧为20ms的通用PWM的电机与伺服
@@ -88,4 +88,4 @@ namespace driver {
         /* override base implementation with max current protection */
         void SetOutput(int16_t val) override final;
     };
-}
+}  // namespace driver

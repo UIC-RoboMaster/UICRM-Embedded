@@ -33,7 +33,6 @@ static bsp::CAN* can2 = nullptr;
 static driver::Motor3508* motor1 = nullptr;
 static driver::Motor3508* motor2 = nullptr;
 
-
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
     can2 = new bsp::CAN(&hcan2, false);
@@ -84,8 +83,8 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetTarget(80*2 * PI);
-                motor2->SetTarget(80*2 * PI);
+                motor1->SetTarget(80 * 2 * PI);
+                motor2->SetTarget(80 * 2 * PI);
             } else {
                 current = 0;
                 motor1->SetTarget(0);
