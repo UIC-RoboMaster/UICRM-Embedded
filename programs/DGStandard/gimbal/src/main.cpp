@@ -58,8 +58,8 @@ void RM_RTOS_Threads_Init(void) {
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
     selftestTaskHandle = osThreadNew(selftestTask, nullptr, &selftestTaskAttribute);
-        if (ENABLE_UI)
-            uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
+    if (ENABLE_UI)
+        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {

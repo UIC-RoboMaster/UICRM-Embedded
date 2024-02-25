@@ -62,12 +62,9 @@ void chassisTask(void* arg) {
     float current_speed_offset = speed_offset_boost;
     remote::keyboard_t keyboard;
     remote::keyboard_t last_keyboard;
-    RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2,
-                                         0.01);
-    RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2,
-                                         0.01);
-    RampSource* vz_ramp = new RampSource(0, -chassis_vz_max / 2, chassis_vz_max / 2,
-                                         0.01);
+    RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2, 0.01);
+    RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2, 0.01);
+    RampSource* vz_ramp = new RampSource(0, -chassis_vz_max / 2, chassis_vz_max / 2, 0.01);
     BoolEdgeDetector* w_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* s_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* a_edge = new BoolEdgeDetector(false);
