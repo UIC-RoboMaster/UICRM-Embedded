@@ -80,6 +80,10 @@ void gimbalTask(void* arg) {
             osDelay(GIMBAL_OS_DELAY);
             continue;
         }
+        if (!pitch_motor->IsEnable())
+            pitch_motor->Enable();
+        if (!yaw_motor->IsEnable())
+            yaw_motor->Enable();
         pitch_curr = -imu->INS_angle[2];
         yaw_curr = -imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];

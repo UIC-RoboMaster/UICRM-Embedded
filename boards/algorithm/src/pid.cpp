@@ -209,7 +209,7 @@ namespace control {
         if (output_ < max_out_ * 0.02f) {
             return;
         }
-        if (abs(target_ - measure_) / target_ > 0.98f) {
+        if (abs(target_ - measure_) / target_ > 0.97f) {
             PID_ErrorHandler.error_count++;
         } else {
             PID_ErrorHandler.error_count = 0;

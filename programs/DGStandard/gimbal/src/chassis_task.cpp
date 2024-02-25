@@ -51,7 +51,7 @@ void chassisTask(void* arg) {
     float sin_yaw, cos_yaw, vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
     float offset_yaw = 0;
     float spin_speed = 350;
-    float manual_mode_yaw_pid_args[3] = {200, 0.5, 0};
+    float manual_mode_yaw_pid_args[3] = {200, 0.5, 20};
     float manual_mode_yaw_pid_max_iout = 100;
     float manual_mode_yaw_pid_max_out = 350;
     control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
@@ -59,15 +59,15 @@ void chassisTask(void* arg) {
     manual_mode_pid->Reset();
     float yaw_pid_error = 0;
     float manual_mode_pid_output = 0;
-    float current_speed_offset = speed_offset;
+    float current_speed_offset = speed_offset_boost;
     remote::keyboard_t keyboard;
     remote::keyboard_t last_keyboard;
     RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
+                                         0.01);
     RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
+                                         0.01);
     RampSource* vz_ramp = new RampSource(0, -chassis_vz_max / 2, chassis_vz_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
+                                         0.01);
     BoolEdgeDetector* w_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* s_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* a_edge = new BoolEdgeDetector(false);

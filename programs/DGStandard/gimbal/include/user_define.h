@@ -27,4 +27,4 @@
 #define DETECT_OS_DELAY 30
 #define UI_OS_DELAY 40
 #define SHOOT_REFEREE 0
-#define ENABLE_UI 1
+#define ENABLE_UI 0
