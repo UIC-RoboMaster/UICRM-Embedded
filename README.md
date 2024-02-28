@@ -40,8 +40,7 @@ building the source code and flashing the embedded chips.
 ### Install CMake
 1. Go to the [official download page](https://cmake.org/download/) for CMake.
 
-### Install Mingw-w64 (Windows only)
-1. Go to the [official download page](https://sourceforge.net/projects/mingw-w64/files/) for Mingw-w64.
+> If you are using Clion, this step is not required.
    
 ### Install Ninja (Windows only)
 1. Go to the [official download page](https://ninja-build.org)
