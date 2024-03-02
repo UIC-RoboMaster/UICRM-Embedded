@@ -34,24 +34,40 @@
 #include "selftest_task.h"
 #include "shoot_task.h"
 #include "ui_task.h"
+/**
+ * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
+ */
 
 void RM_RTOS_Init(void) {
+    // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
     bsp::SetHighresClockTimer(&htim7);
+    // 初始化调试串口，使print()函数能够输出调试信息
     print_use_uart(&huart8, true, 921600);
+    // 初始化can总线，can在各个进程中都需要被使用所以在这里独立初始化
     init_can();
+    // 初始化IMU
     init_imu();
+    // 初始化蜂鸣器，蜂鸣器在需要的时候会在后台播放音乐
     init_buzzer();
+    // 初始化模块在线检测，此类会在后续更新
     init_selftest();
+    // 初始化裁判系统，裁判系统类能够读取裁判系统的数据
     init_referee();
+    // 初始化遥控器与远程模式选择，遥控器类能够读取遥控器的数据
     init_remote();
+    // 初始化发射机构，发射机构类能够控制发射机构的动作
     init_shoot();
+    // 初始化云台，云台类能够控制云台的动作
     init_gimbal();
+    // 初始化底盘，底盘类能够控制底盘的动作
     init_chassis();
+    // 初始化用户界面，用户界面类能够在图传上显示实时状态
     init_ui();
 }
 
 void RM_RTOS_Threads_Init(void) {
-    extimuTaskHandle = osThreadNew(extimuTask, nullptr, &extimuTaskAttribute);
+    //    extimuTaskHandle = osThreadNew(extimuTask, nullptr, &extimuTaskAttribute);
+    // 分别启动每个任务
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
