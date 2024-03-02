@@ -55,7 +55,7 @@ namespace imu {
         // setup interrupt callback
         spi_device_->RegisterCallback(SPITxRxCpltCallbackWrapper, this);
         // initialize magnetometer
-        if(use_mag_)
+        if (use_mag_)
             IST8310Init();
         // enable imu interrupt
         WriteReg(MPU6500_INT_ENABLE, 0x01);
@@ -93,10 +93,10 @@ namespace imu {
     void MPU6500::UpdateData() {
         spi_device_->PrepareTransmit();
         io_buff_[0] = MPU6500_ACCEL_XOUT_H | 0x80;
-        if(use_mag_)
+        if (use_mag_)
             spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA + 1);
         else
-            spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA+1-6);
+            spi_->TransmitReceive(spi_device_, io_buff_, io_buff_, MPU6500_SIZEOF_DATA + 1 - 6);
     }
 
     void MPU6500::Reset() {
@@ -149,7 +149,7 @@ namespace imu {
         gyro_[0] = DEG2RAD((float)array[4] / MPU6500_GYRO_FACTOR);
         gyro_[1] = DEG2RAD((float)array[5] / MPU6500_GYRO_FACTOR);
         gyro_[2] = DEG2RAD((float)array[6] / MPU6500_GYRO_FACTOR);
-        if(use_mag_){
+        if (use_mag_) {
             mag_[0] = (float)array[7];
             mag_[1] = (float)array[8];
             mag_[2] = (float)array[9];
@@ -179,7 +179,7 @@ namespace imu {
 
     void MPU6500::callback_thread_func_(void* arg) {
         MPU6500* mpu6500 = reinterpret_cast<MPU6500*>(arg);
-        if(mpu6500->callback_ != nullptr)
+        if (mpu6500->callback_ != nullptr)
             mpu6500->callback_();
     }
     MPU6500::~MPU6500() {

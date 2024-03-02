@@ -33,6 +33,7 @@
 #include "remote_task.h"
 #include "selftest_task.h"
 #include "shoot_task.h"
+#include "ui_task.h"
 
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim7);
@@ -46,7 +47,7 @@ void RM_RTOS_Init(void) {
     init_shoot();
     init_gimbal();
     init_chassis();
-    // init_ui();
+    init_ui();
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -57,8 +58,8 @@ void RM_RTOS_Threads_Init(void) {
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
     selftestTaskHandle = osThreadNew(selftestTask, nullptr, &selftestTaskAttribute);
-    //    if (ENABLE_UI)
-    //        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
+    if (ENABLE_UI)
+        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {

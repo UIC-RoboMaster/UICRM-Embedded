@@ -19,11 +19,10 @@
  ###########################################################*/
 
 #pragma once
-#include "main.h"
 #include "cmsis_os2.h"
+#include "main.h"
 
 namespace bsp {
-
 
     typedef void (*thread_func_t)(void* args);
 
@@ -31,7 +30,7 @@ namespace bsp {
         thread_func_t func;
         void* args;
         osThreadAttr_t attr;
-    }thread_init_t;
+    } thread_init_t;
 
     class Thread {
       public:
@@ -47,7 +46,7 @@ namespace bsp {
 
         void Resume();
 
-        void Wait(uint32_t millisec=0, uint32_t signal = 0);
+        void Wait(uint32_t millisec = 0, uint32_t signal = 0);
 
         void Set(uint32_t signal = 0);
 
@@ -61,13 +60,14 @@ namespace bsp {
         static const uint32_t rx_signal_ = 1 << 0;
     };
 
-    class EventThread: public Thread {
+    class EventThread : public Thread {
       public:
         EventThread(thread_init_t init);
 
         void Start() override final;
+
       private:
         static void ThreadFunc(void* args);
     };
 
-}
+}  // namespace bsp

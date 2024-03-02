@@ -100,12 +100,12 @@ void gimbalTask(void* arg) {
         //    }
         if (selftest.dbus) {
             if (dbus->mouse.y != 0) {
-                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
+                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 3.0f;
             } else {
                 pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
             }
             if (dbus->mouse.x != 0) {
-                yaw_ratio = dbus->mouse.x / 32767.0 * 7.5 / 7.0;
+                yaw_ratio = dbus->mouse.x / 32767.0 * 7.5 / 3.0f;
             } else {
                 yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
             }
@@ -187,9 +187,9 @@ void init_gimbal() {
     yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 20,
+        .kp = 10,
         .ki = 0,
-        .kd = 0,
+        .kd = 20,
         .max_out = 3 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区

@@ -22,10 +22,8 @@
 
 #include <cinttypes>
 
-#include "usart.h"
-
-
 #include "bsp_uart.h"
+#include "usart.h"
 
 extern bsp::UART* print_uart;
 

@@ -24,7 +24,7 @@
 
 namespace control {
 
-    Chassis::Chassis(const chassis_t chassis)  {
+    Chassis::Chassis(const chassis_t chassis) {
         // acquired from user
         model_ = chassis.model;
 
@@ -32,7 +32,6 @@ namespace control {
         switch (chassis.model) {
                 // 麦克纳姆轮
             case CHASSIS_MECANUM_WHEEL: {
-
                 // 新建电机关联
                 motors_ = new driver::MotorCANBase*[FourWheel::motor_num];
                 motors_[FourWheel::front_left] = chassis.motors[FourWheel::front_left];
@@ -116,10 +115,9 @@ namespace control {
                 motors_[i]->Disable();
             }
             return;
-        }
-        else{
+        } else {
             for (int i = 0; i < wheel_num_; i++) {
-                if(!motors_[i]->IsEnable())
+                if (!motors_[i]->IsEnable())
                     motors_[i]->Enable();
             }
         }
@@ -138,7 +136,6 @@ namespace control {
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
                 float output[FourWheel::motor_num];
-
 
                 power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
                                      current_chassis_power_buffer_, speeds_, output);

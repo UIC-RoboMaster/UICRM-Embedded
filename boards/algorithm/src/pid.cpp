@@ -106,86 +106,86 @@ namespace control {
         ResetIntegral();
     }
 
-    float ConstrainedPID::ComputeOutput(float target,float measure) {
-        if(mode_ & ErrorHandle){
-            //异常处理
+    float ConstrainedPID::ComputeOutput(float target, float measure) {
+        if (mode_ & ErrorHandle) {
+            // 异常处理
             PID_ErrorHandle();
-            if(PID_ErrorHandler.error_type!=PID_ERROR_NONE){
-                //发现问题
+            if (PID_ErrorHandler.error_type != PID_ERROR_NONE) {
+                // 发现问题
+                error_callback_(error_callback_instance_, PID_ErrorHandler);
+                // 清除问题
+                PID_ErrorHandler.error_type = PID_ERROR_NONE;
+                PID_ErrorHandler.error_count = 0;
                 return 0;
             }
         }
 
-        target_=target;
-        measure_=measure;
-        error_=target_-measure_;
+        target_ = target;
+        measure_ = measure;
+        error_ = target_ - measure_;
 
-        if(abs(error_)>dead_band_){
-            //比死区大，处理
-            pout_=kp_*error_;
-            iterm_=ki_*error_;
-            dout_=kd_*(error_-last_error_);
+        if (abs(error_) > dead_band_) {
+            // 比死区大，处理
+            pout_ = kp_ * error_;
+            iterm_ = ki_ * error_;
+            dout_ = kd_ * (error_ - last_error_);
 
-            //Trapezoid Intergral
-            if(mode_ & Trapezoid_Intergral){
+            // Trapezoid Intergral
+            if (mode_ & Trapezoid_Intergral) {
                 PID_TrapezoidIntegral();
             }
-            //Changing Integral Rate
+            // Changing Integral Rate
 
-            if(mode_ & ChangingIntegralRate){
+            if (mode_ & ChangingIntegralRate) {
                 PID_ChangingIntegralRate();
             }
-            //Integral limit
+            // Integral limit
 
-            if(mode_ & Integral_Limit){
+            if (mode_ & Integral_Limit) {
                 PID_IntegralLimit();
             }
-            //Derivative On Measurement
+            // Derivative On Measurement
 
-            if(mode_ & Derivative_On_Measurement){
-                    PID_DerivativeOnMeasurement();
+            if (mode_ & Derivative_On_Measurement) {
+                PID_DerivativeOnMeasurement();
             }
-            //Derivative filter
+            // Derivative filter
 
-            if(mode_ & DerivativeFilter){
+            if (mode_ & DerivativeFilter) {
                 PID_DerivativeFilter();
             }
-            iout_+=iterm_;
-            output_=pout_+iout_+dout_;
-            //Output Filter
+            iout_ += iterm_;
+            output_ = pout_ + iout_ + dout_;
+            // Output Filter
 
-            if(mode_ & OutputFilter){
+            if (mode_ & OutputFilter) {
                 PID_OutputFilter();
             }
-            //Output limit
+            // Output limit
 
             PID_OutputLimit();
-            //Proportional limit
+            // Proportional limit
 
             PID_ProportionLimit();
         }
 
-        last_measure_=measure_;
-        last_output_=output_;
-        last_dout_=dout_;
-        last_error_=error_;
+        last_measure_ = measure_;
+        last_output_ = output_;
+        last_dout_ = dout_;
+        last_error_ = error_;
         return output_;
     }
-
-
 
     int16_t ConstrainedPID::ComputeConstrainedOutput(float error) {
         return (int16_t)ComputeOutput(error);
     }
 
-
-
     void ConstrainedPID::Reinit(float kp, float ki, float kd, float max_iout, float max_out) {
         kp_ = kp;
         ki_ = ki;
         kd_ = kd;
-        if(ki_==0){
-            iout_=0;
+        if (ki_ == 0) {
+            iout_ = 0;
         }
         ChangeMax(max_iout, max_out);
     }
@@ -206,58 +206,53 @@ namespace control {
         max_out_ = max_out;
     }
     void ConstrainedPID::PID_ErrorHandle() {
-        if(output_<max_out_*0.01f){
+        if (output_ < max_out_ * 0.02f) {
             return;
         }
-        if(abs(target_-measure_)/target_>0.9f){
+        if (abs(target_ - measure_) / target_ > 0.97f) {
             PID_ErrorHandler.error_count++;
-        }
-        else{
-            PID_ErrorHandler.error_count=0;
+        } else {
+            PID_ErrorHandler.error_count = 0;
+            PID_ErrorHandler.error_type = PID_ERROR_NONE;
         }
 
-        if(PID_ErrorHandler.error_count>200){
-            //200ms 堵转了
-            PID_ErrorHandler.error_type=Motor_Blocked;
+        if (PID_ErrorHandler.error_count > 1000) {
+            // 1s 堵转了
+            PID_ErrorHandler.error_type = Motor_Blocked;
         }
     }
     void ConstrainedPID::PID_ChangingIntegralRate() {
-        if(error_*iout_>0){
-                //符号相同
-                if(abs(error_)<=ScalarB){
-                    return;//满了
-                }
-                if(abs(error_)<=(ScalarA+ScalarB)){
-                    iterm_*=(ScalarA+ScalarB-abs(error_))/ScalarA;
-                }
-                else{
-                    iterm_=0;
-                }
+        if (error_ * iout_ > 0) {
+            // 符号相同
+            if (abs(error_) <= ScalarB) {
+                return;  // 满了
+            }
+            if (abs(error_) <= (ScalarA + ScalarB)) {
+                iterm_ *= (ScalarA + ScalarB - abs(error_)) / ScalarA;
+            } else {
+                iterm_ = 0;
+            }
         }
     }
     void ConstrainedPID::PID_TrapezoidIntegral() {
-        iterm_=ki_*(error_+last_error_)/2;
+        iterm_ = ki_ * (error_ + last_error_) / 2;
     }
     void ConstrainedPID::PID_IntegralLimit() {
         float temp_Output, temp_Iout;
         temp_Iout = iout_ + iterm_;
         temp_Output = pout_ + iout_ + dout_;
-        if (abs(temp_Output) > max_out_)
-        {
-            if (error_ * iout_ > 0)
-            {
-                //Integral still increasing
+        if (abs(temp_Output) > max_out_) {
+            if (error_ * iout_ > 0) {
+                // Integral still increasing
                 iterm_ = 0;
             }
         }
-        
-        if (temp_Iout > max_iout_)
-        {
+
+        if (temp_Iout > max_iout_) {
             iterm_ = 0;
             iout_ = max_iout_;
         }
-        if (temp_Iout < -max_iout_)
-        {
+        if (temp_Iout < -max_iout_) {
             iterm_ = 0;
             iout_ = -max_iout_;
         }
@@ -267,14 +262,14 @@ namespace control {
     }
     void ConstrainedPID::PID_OutputFilter() {
         output_ = output_ * Output_Filtering_Coefficient +
-                      last_output_ * (1 - Output_Filtering_Coefficient);
+                  last_output_ * (1 - Output_Filtering_Coefficient);
     }
     void ConstrainedPID::PID_OutputLimit() {
         output_ = clip<float>(output_, -max_out_, max_out_);
     }
     void ConstrainedPID::PID_DerivativeFilter() {
         dout_ = dout_ * Derivative_Filtering_Coefficient +
-                      last_dout_ * (1 - Derivative_Filtering_Coefficient);
+                last_dout_ * (1 - Derivative_Filtering_Coefficient);
     }
     void ConstrainedPID::PID_ProportionLimit() {
         pout_ = clip<float>(pout_, -max_out_, max_out_);
@@ -287,24 +282,29 @@ namespace control {
         kp_ = pid_init.kp;
         ki_ = pid_init.ki;
         kd_ = pid_init.kd;
-        iterm_=0;
+        iterm_ = 0;
         max_out_ = pid_init.max_out;
         max_iout_ = pid_init.max_iout;
         dead_band_ = pid_init.deadband;
-        target_=0;
+        target_ = 0;
 
-        ScalarA=pid_init.A;
-        ScalarB=pid_init.B;
+        ScalarA = pid_init.A;
+        ScalarB = pid_init.B;
 
-        Output_Filtering_Coefficient=pid_init.output_filtering_coefficient;
+        Output_Filtering_Coefficient = pid_init.output_filtering_coefficient;
         Derivative_Filtering_Coefficient = pid_init.derivative_filtering_coefficient;
 
         mode_ = pid_init.mode;
 
-        PID_ErrorHandler.error_count=0;
-        PID_ErrorHandler.error_type=PID_ERROR_NONE;
+        PID_ErrorHandler.error_count = 0;
+        PID_ErrorHandler.error_type = PID_ERROR_NONE;
 
-        output_=0;
+        output_ = 0;
+    }
+    void ConstrainedPID::RegisterErrorCallcack(ConstrainedPID::PID_ErrorCallback_t callback,
+                                               void* instance) {
+        error_callback_ = callback;
+        error_callback_instance_ = instance;
     }
 
 } /* namespace control */

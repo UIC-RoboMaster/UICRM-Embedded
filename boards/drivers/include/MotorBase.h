@@ -42,4 +42,4 @@ namespace driver {
       protected:
         int16_t output_;
     };
-};
+};  // namespace driver

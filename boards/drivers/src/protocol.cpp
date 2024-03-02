@@ -87,10 +87,10 @@ namespace communication {
         append_crc16_check_sum(data, length);
     }
 
-    UARTProtocol::UARTProtocol(bsp::UART* uart): Protocol() {
+    UARTProtocol::UARTProtocol(bsp::UART* uart) : Protocol() {
         uart_ = uart;
-        uart_->SetupRxData(&read_ptr_,&read_len_);
-        uart_->RegisterCallback(CallbackWrapper,this);
+        uart_->SetupRxData(&read_ptr_, &read_len_);
+        uart_->RegisterCallback(CallbackWrapper, this);
         bsp::thread_init_t thread_init = {
             .func = callback_thread_func_,
             .args = this,
@@ -104,7 +104,8 @@ namespace communication {
     }
     void UARTProtocol::callback_thread_func_(void* args) {
         UARTProtocol* uart_protocol_ = reinterpret_cast<UARTProtocol*>(args);
-        uart_protocol_->Receive(communication::package_t{uart_protocol_->read_ptr_,(int)uart_protocol_->read_len_ });
+        uart_protocol_->Receive(
+            communication::package_t{uart_protocol_->read_ptr_, (int)uart_protocol_->read_len_});
     }
     UARTProtocol::~UARTProtocol() {
         delete callback_thread_;
@@ -115,8 +116,7 @@ namespace communication {
         return package;
     }
 
-    Referee::Referee(bsp::UART* uart): UARTProtocol(uart) {
-
+    Referee::Referee(bsp::UART* uart) : UARTProtocol(uart) {
     }
 
     bool Referee::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
@@ -222,7 +222,7 @@ namespace communication {
             default:
                 data_len = -1;
         }
-        if(data_len>0)
+        if (data_len > 0)
             uart_->Write(data, data_len);
         return data_len;
     }
@@ -266,6 +266,5 @@ namespace communication {
         }
         return data_len;
     }
-
 
 } /* namespace communication */

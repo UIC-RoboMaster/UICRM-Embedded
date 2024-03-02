@@ -146,7 +146,7 @@ namespace bsp {
          * @brief register a callback function to be called when the spi receives data
          * @param callback the function will be called
          */
-        void RegisterCallback(spi_rx_callback_t callback,void* args);
+        void RegisterCallback(spi_rx_callback_t callback, void* args);
 
         /**
          * @brief 检测是否使用DMA
@@ -171,7 +171,7 @@ namespace bsp {
       protected:
         SPI_HandleTypeDef* hspi_;
         spi_mode_e mode_;
-        spi_rx_callback_t callback_ = [](void * args) { UNUSED(args); };
+        spi_rx_callback_t callback_ = [](void* args) { UNUSED(args); };
         void* callback_args_ = NULL;
         uint8_t rx_size_;
         uint8_t* rx_buffer_;

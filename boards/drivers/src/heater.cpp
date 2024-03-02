@@ -22,18 +22,20 @@
 namespace driver {
 
     Heater::Heater(heater_init_t init) {
-        control::ConstrainedPID::PID_Init_t pid_init={
+        control::ConstrainedPID::PID_Init_t pid_init = {
             .kp = init.pid_param[0],
             .ki = init.pid_param[1],
             .kd = init.pid_param[2],
             .max_out = init.heater_output_limit,
             .max_iout = init.heater_I_limit,
-            .deadband = 0, //死区
-            .A = 0, //变速积分所能达到的最大值为A+B
-            .B = 0, //启动变速积分的死区
-            .output_filtering_coefficient = 0.1, //输出滤波系数
-            .derivative_filtering_coefficient = 0, //微分滤波系数
-            .mode = control::ConstrainedPID::Integral_Limit|control::ConstrainedPID::OutputFilter|control::ConstrainedPID::Trapezoid_Intergral,
+            .deadband = 0,                          // 死区
+            .A = 0,                                 // 变速积分所能达到的最大值为A+B
+            .B = 0,                                 // 启动变速积分的死区
+            .output_filtering_coefficient = 0.1,    // 输出滤波系数
+            .derivative_filtering_coefficient = 0,  // 微分滤波系数
+            .mode = control::ConstrainedPID::Integral_Limit |
+                    control::ConstrainedPID::OutputFilter |
+                    control::ConstrainedPID::Trapezoid_Intergral,
         };
         pid_ = control::ConstrainedPID(pid_init);
         temp_ = init.target_temp;
@@ -46,7 +48,7 @@ namespace driver {
     }
 
     float Heater::Update(float real_temp) {
-        float output = pid_.ComputeOutput(temp_,real_temp);
+        float output = pid_.ComputeOutput(temp_, real_temp);
         output = output > 0 ? output : 0;
         if (real_temp > temp_ + 0.5)
             output = 0;

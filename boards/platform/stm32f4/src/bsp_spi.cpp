@@ -118,7 +118,7 @@ namespace bsp {
         HAL_SPI_Abort_IT(hspi_);
     }
 
-    void SPI::RegisterCallback(spi_rx_callback_t callback,void* args) {
+    void SPI::RegisterCallback(spi_rx_callback_t callback, void* args) {
         callback_ = callback;
         callback_args_ = args;
     }
@@ -168,10 +168,9 @@ namespace bsp {
         callback_(args_);
     }
 
-
     SPIMaster::SPIMaster(spi_master_init_t init) {
         spi_ = init.spi;
-        spi_->RegisterCallback(this->CallbackWrapper,this);
+        spi_->RegisterCallback(this->CallbackWrapper, this);
     }
 
     SPIMaster::~SPIMaster() {

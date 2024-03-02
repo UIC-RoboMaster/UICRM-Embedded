@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "MotorPWMBase.h"
+
 #include "utils.h"
 
 namespace driver {
@@ -39,4 +40,4 @@ namespace driver {
         constexpr int16_t MAX_OUTPUT = 700;
         MotorPWMBase::SetOutput(clip<int16_t>(val, MIN_OUTPUT, MAX_OUTPUT));
     }
-}
+}  // namespace driver
