@@ -59,6 +59,10 @@ namespace control {
         power_limit_on_ = chassis.power_limit_on;
         if(power_limit_on_)
             driver::MotorCANBase::RegisterPreOutputCallback(UpdatePowerLimitWrapper, this);
+        if(chassis.has_super_capacitor){
+            has_super_capacitor_ = true;
+            super_capacitor_ = chassis.super_capacitor;
+        }
     }
 
     Chassis::~Chassis() {
@@ -104,7 +108,7 @@ namespace control {
     }
 
     void Chassis::SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                           float chassis_power_buffer) {
+                           float chassis_power_buffer, bool enable_supercap) {
         if(!power_limit_on_ && power_limit_on){
             driver::MotorCANBase::RegisterPreOutputCallback(UpdatePowerLimitWrapper, this);
         }else if(power_limit_on_ && !power_limit_on){
@@ -116,6 +120,15 @@ namespace control {
         power_limit_info_.WARNING_power_buff = 50;
         current_chassis_power_ = chassis_power;
         current_chassis_power_buffer_ = chassis_power_buffer;
+        if(has_super_capacitor_){
+            if(enable_supercap && !super_capacitor_enable_) {
+                super_capacitor_enable_ = true;
+            }else if(!enable_supercap && super_capacitor_enable_){
+                super_capacitor_enable_ = false;
+            }
+            super_capacitor_->SetPowerTotal(chassis_power);
+            super_capacitor_->UpdateCurrentBuffer(chassis_power_buffer);
+        }
     }
 
     void Chassis::Update() {
@@ -155,6 +168,10 @@ namespace control {
 
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
+        }
+
+        if(has_super_capacitor_){
+            super_capacitor_->TransmitSettings();
         }
     }
 
@@ -222,8 +239,8 @@ namespace control {
                 return;
             }
         }
-        float is_enable = data.data_two_float.data[0];
-        if (is_enable > 0.1f) {
+        bool is_enable = data.data_eight_uint8.data[0];
+        if (is_enable) {
             if(!power_limit_on_){
                 driver::MotorCANBase::RegisterPreOutputCallback(UpdatePowerLimitWrapper, this);
             }
@@ -234,8 +251,17 @@ namespace control {
             }
             power_limit_on_ = false;
         }
+        bool enable_supercap = data.data_eight_uint8.data[1];
+        if(enable_supercap && has_super_capacitor_) {
+            super_capacitor_enable_ = true;
+        }else{
+            super_capacitor_enable_ = false;
+        }
         power_limit_info_.power_limit = data.data_two_float.data[1];
         power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
+        if(has_super_capacitor_){
+            super_capacitor_->SetPowerTotal(power_limit_info_.power_limit);
+        }
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
                                                    communication::can_bridge_data_t data) {
@@ -246,6 +272,9 @@ namespace control {
         }
         current_chassis_power_ = data.data_two_float.data[0];
         current_chassis_power_buffer_ = data.data_two_float.data[1];
+        if(has_super_capacitor_) {
+            super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
+        }
     }
     void Chassis::CanBridgeSetTxId(uint8_t tx_id) {
         can_bridge_tx_id_ = tx_id;
@@ -261,8 +290,24 @@ namespace control {
                 float output[FourWheel::motor_num];
                 for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
                     input[i] = motors_[i]->GetOutput();
-                power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
-                                     current_chassis_power_buffer_, input, output);
+                if(!super_capacitor_enable_) {
+                    power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
+                                         current_chassis_power_buffer_, input, output);
+                }else{
+                    power_limit_t power_limit_info = power_limit_info_;
+                    float supercap_percent = super_capacitor_->GetPercentage();
+                    if(supercap_percent<0.25f){
+                        power_limit_info.power_limit = (0.9f+supercap_percent)*power_limit_info.power_limit;
+                        power_limit_info.WARNING_power = power_limit_info.power_limit * 0.9f;
+                        power_limit_->Output(power_limit_on_, power_limit_info, current_chassis_power_,
+                                             current_chassis_power_buffer_, input, output);
+                    }
+                    else{
+                        for(uint8_t i = 0; i < FourWheel::motor_num; ++i)
+                            output[i] = input[i];
+                    }
+                }
+
                 for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
                     motors_[i]->SetOutput((int16_t)output[i]);
                 break;
@@ -320,18 +365,16 @@ namespace control {
         }
     }
     void ChassisCanBridgeSender::SetPower(bool power_limit_on, float power_limit,
-                                          float chassis_power, float chassis_power_buffer,
+                                          float chassis_power, float chassis_power_buffer,bool enable_supercap,
                                           bool force_update) {
         if (chassis_enable_) {
             if (power_limit_on != chassis_power_limit_on_ || power_limit != chassis_power_limit_ ||
+                enable_supercap!=chassis_super_capacitor_enable_||
                 force_update) {
                 chassis_power_limit_on_ = power_limit_on;
                 chassis_power_limit_ = power_limit;
-                if (power_limit_on) {
-                    data_.data_two_float.data[0] = 1.0f;
-                } else {
-                    data_.data_two_float.data[0] = 0.0f;
-                }
+                data_.data_eight_uint8.data[0] = power_limit_on;
+                data_.data_eight_uint8.data[1] = enable_supercap;
                 data_.data_two_float.data[1] = power_limit;
                 rx_id_.data.reg = chassis_power_limit_reg_id_;
                 can_bridge_->Send(rx_id_, data_);

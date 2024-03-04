@@ -22,6 +22,7 @@
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "main.h"
+#include "supercap.h"
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -29,6 +30,8 @@ driver::MotorCANBase* fl_motor = nullptr;
 driver::MotorCANBase* fr_motor = nullptr;
 driver::MotorCANBase* bl_motor = nullptr;
 driver::MotorCANBase* br_motor = nullptr;
+
+driver::SuperCap* super_cap = nullptr;
 
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
@@ -76,6 +79,23 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(14);
 
+
+    driver::supercap_init_t supercap_init = {
+        .can=can1,
+        .tx_id = 0x02e,
+        .tx_settings_id = 0x02f,
+        .rx_id = 0x030,
+    };
+    super_cap = new driver::SuperCap(supercap_init);
+
+    super_cap->SetMaxVoltage(26.0f);
+    super_cap->SetPowerTotal(120.0f);
+    super_cap->SetMaxChargePower(150.0f);
+    super_cap->SetMaxDischargePower(250.0f);
+    super_cap->SetPerferBuffer(40.0f);
+    super_cap->Enable();
+    super_cap->TransmitSettings();
+
     can_bridge = new communication::CanBridge(can2, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
@@ -87,6 +107,8 @@ void RM_RTOS_Init() {
     control::chassis_t chassis_data;
     chassis_data.motors = motors;
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
+    chassis_data.has_super_capacitor = true;
+    chassis_data.super_capacitor = super_cap;
     chassis = new control::Chassis(chassis_data);
 
     chassis->CanBridgeSetTxId(0x51);
