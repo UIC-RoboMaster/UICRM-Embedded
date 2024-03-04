@@ -18,11 +18,12 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "main.h"
+
 #include "bsp_print.h"
 #include "bsp_uart.h"
 #include "bsp_usb.h"
 #include "cmsis_os.h"
-#include "main.h"
 
 #define RX_SIGNAL (1 << 0)
 
@@ -32,9 +33,9 @@ static uint8_t* usb_data;
 
 static uint32_t usb_len;
 
-void usbReply(void* arg){
+void usbReply(void* arg) {
     UNUSED(arg);
-    USB->Write<true>(usb_data,usb_len);
+    USB->Write<true>(usb_data, usb_len);
 }
 
 void RM_RTOS_Init(void) {
@@ -45,13 +46,10 @@ void RM_RTOS_Init(void) {
 
     USB->SetupTx(200);
     USB->SetupRx(200);
-    USB->SetupRxData(&usb_data,&usb_len);
+    USB->SetupRxData(&usb_data, &usb_len);
 
     USB->RegisterCallback(usbReply, nullptr);
-
 }
-
-
 
 void RM_RTOS_Threads_Init(void) {
 }
@@ -61,7 +59,6 @@ void RM_RTOS_Default_Task(const void* arg) {
     while (true) {
         set_cursor(0, 0);
         clear_screen();
-
 
         osDelay(50);
     }

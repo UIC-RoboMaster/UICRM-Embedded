@@ -79,7 +79,6 @@ namespace bsp {
 
     template <bool FromISR>
     uint32_t VirtualUSB::Read(uint8_t** data) {
-
         UBaseType_t isrflags;
         if (FromISR) {
             isrflags = taskENTER_CRITICAL_FROM_ISR();

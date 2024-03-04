@@ -178,7 +178,6 @@ namespace driver {
 
         void SetTransmissionRatio(float ratio);
 
-
         /**
          * @brief 设置ServoMotor为MotorCANBase的友元，因为它们需要使用MotorCANBase的许多私有参数。
          */

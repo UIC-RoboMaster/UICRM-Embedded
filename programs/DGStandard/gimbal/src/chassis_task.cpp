@@ -226,7 +226,7 @@ void chassisTask(void* arg) {
                 // 当前底盘功率限制
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer,true);
+                                  referee->power_heat_data.chassis_power_buffer, true);
                 osDelay(1);
                 break;
             case REMOTE_MODE_SPIN:
@@ -242,7 +242,7 @@ void chassisTask(void* arg) {
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer,true);
+                                  referee->power_heat_data.chassis_power_buffer, true);
                 osDelay(1);
                 break;
             case REMOTE_MODE_ADVANCED:
@@ -257,7 +257,7 @@ void chassisTask(void* arg) {
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer,true);
+                                  referee->power_heat_data.chassis_power_buffer, true);
                 osDelay(1);
                 break;
             default:

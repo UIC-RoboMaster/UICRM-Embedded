@@ -240,7 +240,6 @@ namespace driver {
          */
         supercap_status_t GetStatus() const;
 
-
         void SetMaxVoltage(float voltage);
 
         float GetPercentage() const;

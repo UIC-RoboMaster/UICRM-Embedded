@@ -49,8 +49,8 @@ namespace driver {
     bsp::Thread* MotorCANBase::can_motor_thread_ = nullptr;
     uint32_t MotorCANBase::delay_time = 1;
 
-    MotorCANBase::callback_t MotorCANBase::pre_output_callback_ = [](void* args) {UNUSED(args);};
-    MotorCANBase::callback_t MotorCANBase::post_output_callback_ = [](void* args) {UNUSED(args);};
+    MotorCANBase::callback_t MotorCANBase::pre_output_callback_ = [](void* args) { UNUSED(args); };
+    MotorCANBase::callback_t MotorCANBase::post_output_callback_ = [](void* args) { UNUSED(args); };
     void* MotorCANBase::pre_output_callback_instance_ = nullptr;
     void* MotorCANBase::post_output_callback_instance_ = nullptr;
 
@@ -187,7 +187,7 @@ namespace driver {
                 }
             }
             pre_output_callback_(pre_output_callback_instance_);
-            for(uint8_t i = 0; i < group_cnt_; i++) {
+            for (uint8_t i = 0; i < group_cnt_; i++) {
                 // 输出电机指令
                 TransmitOutput(motors_[i], motor_cnt_[i]);
             }
@@ -354,8 +354,7 @@ namespace driver {
     bool MotorCANBase::IsEnable() const {
         return enable_;
     }
-    void MotorCANBase::RegisterErrorCallback(MotorCANBase::callback_t callback,
-                                             void* instance) {
+    void MotorCANBase::RegisterErrorCallback(MotorCANBase::callback_t callback, void* instance) {
         error_callback_ = callback;
         error_callback_instance_ = instance;
         if (!(mode_ & OMEGA)) {

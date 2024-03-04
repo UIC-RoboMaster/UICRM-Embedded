@@ -214,7 +214,6 @@ namespace bsp {
         uint8_t* tx_write_;
         uint8_t* tx_read_;
 
-
         /* new rx callback */
         uint8_t** rx_ptr_ = nullptr;
         uint32_t* rx_len_ = nullptr;

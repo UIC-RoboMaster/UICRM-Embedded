@@ -101,6 +101,6 @@ namespace driver {
         cap_voltage_max_ = voltage;
     }
     float SuperCap::GetPercentage() const {
-        return (cap_voltage_*cap_voltage_)/(cap_voltage_max_*cap_voltage_max_);
+        return (cap_voltage_ * cap_voltage_) / (cap_voltage_max_ * cap_voltage_max_);
     }
 }  // namespace driver

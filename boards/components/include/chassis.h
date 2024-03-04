@@ -21,10 +21,10 @@
 #pragma once
 
 #include "MotorCanBase.h"
-#include "supercap.h"
 #include "can_bridge.h"
 #include "pid.h"
 #include "power_limit.h"
+#include "supercap.h"
 
 #define MAX_WHEEL_NUM 8
 
@@ -38,7 +38,7 @@ namespace control {
     /**
      * @brief structure used when chassis instance is initialized
      */
-    struct chassis_t{
+    struct chassis_t {
         driver::MotorCANBase** motors; /* motor instances of all chassis motors */
         chassis_model_t model;         /* chassis model                         */
         float offset = 0;
@@ -46,7 +46,6 @@ namespace control {
         bool has_super_capacitor = false;
         driver::SuperCap* super_capacitor = nullptr;
     };
-
 
     /**
      * @brief motor configs for four wheel vehicles
@@ -90,7 +89,7 @@ namespace control {
          * @param chassis_power_buffer Current chassis power buffer, in [J]
          */
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                      float chassis_power_buffer,bool enable_supercap = false);
+                      float chassis_power_buffer, bool enable_supercap = false);
 
         /**
          * @brief calculate the output of the motors under current configuration
@@ -194,7 +193,8 @@ namespace control {
          * @param chassis_power_buffer Current chassis power buffer, in [J]
          */
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                      float chassis_power_buffer,bool enable_csupercap=false, bool force_update = false);
+                      float chassis_power_buffer, bool enable_csupercap = false,
+                      bool force_update = false);
 
       private:
         communication::CanBridge* can_bridge_;
