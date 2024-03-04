@@ -37,11 +37,13 @@ namespace control {
     /**
      * @brief structure used when chassis instance is initialized
      */
-    typedef struct {
+    struct chassis_t{
         driver::MotorCANBase** motors; /* motor instances of all chassis motors */
         chassis_model_t model;         /* chassis model                         */
         float offset = 0;
-    } chassis_t;
+        bool power_limit_on = false;
+    };
+
 
     /**
      * @brief motor configs for four wheel vehicles
@@ -122,6 +124,10 @@ namespace control {
 
         void CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
                                               communication::can_bridge_data_t data);
+
+        static void UpdatePowerLimitWrapper(void* args);
+
+        void UpdatePowerLimit();
 
       private:
         // acquired from user

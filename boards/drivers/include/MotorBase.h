@@ -39,6 +39,10 @@ namespace driver {
             output_ = val;
         }
 
+        virtual int16_t GetOutput() {
+            return output_;
+        }
+
       protected:
         int16_t output_;
     };

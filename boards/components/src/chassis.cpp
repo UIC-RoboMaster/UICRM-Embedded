@@ -56,9 +56,13 @@ namespace control {
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
         chassis_offset_ = chassis.offset;
+        power_limit_on_ = chassis.power_limit_on;
+        if(power_limit_on_)
+            driver::MotorCANBase::RegisterPreOutputCallback(UpdatePowerLimitWrapper, this);
     }
 
     Chassis::~Chassis() {
+        driver::MotorCANBase::RegisterPreOutputCallback([](void* args){ UNUSED(args);}, nullptr);
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
                 motors_[FourWheel::front_left] = nullptr;
@@ -101,6 +105,11 @@ namespace control {
 
     void Chassis::SetPower(bool power_limit_on, float power_limit, float chassis_power,
                            float chassis_power_buffer) {
+        if(!power_limit_on_ && power_limit_on){
+            driver::MotorCANBase::RegisterPreOutputCallback(UpdatePowerLimitWrapper, this);
+        }else if(power_limit_on_ && !power_limit_on){
+            driver::MotorCANBase::RegisterPreOutputCallback([](void* args){ UNUSED(args);}, nullptr);
+        }
         power_limit_on_ = power_limit_on;
         power_limit_info_.power_limit = power_limit;
         power_limit_info_.WARNING_power = power_limit * 0.9;
@@ -135,15 +144,12 @@ namespace control {
 
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL: {
-                float output[FourWheel::motor_num];
 
-                power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
-                                     current_chassis_power_buffer_, speeds_, output);
 
-                motors_[FourWheel::front_left]->SetTarget(output[FourWheel::front_left]);
-                motors_[FourWheel::front_right]->SetTarget(output[FourWheel::front_right]);
-                motors_[FourWheel::back_left]->SetTarget(output[FourWheel::back_left]);
-                motors_[FourWheel::back_right]->SetTarget(output[FourWheel::back_right]);
+                motors_[FourWheel::front_left]->SetTarget(speeds_[FourWheel::front_left]);
+                motors_[FourWheel::front_right]->SetTarget(speeds_[FourWheel::front_right]);
+                motors_[FourWheel::back_left]->SetTarget(speeds_[FourWheel::back_left]);
+                motors_[FourWheel::back_right]->SetTarget(speeds_[FourWheel::back_right]);
                 break;
             }
 
@@ -218,8 +224,14 @@ namespace control {
         }
         float is_enable = data.data_two_float.data[0];
         if (is_enable > 0.1f) {
+            if(!power_limit_on_){
+                driver::MotorCANBase::RegisterPreOutputCallback(UpdatePowerLimitWrapper, this);
+            }
             power_limit_on_ = true;
         } else {
+            if(power_limit_on_){
+                driver::MotorCANBase::RegisterPreOutputCallback([](void* args){ UNUSED(args);}, nullptr);
+            }
             power_limit_on_ = false;
         }
         power_limit_info_.power_limit = data.data_two_float.data[1];
@@ -237,6 +249,29 @@ namespace control {
     }
     void Chassis::CanBridgeSetTxId(uint8_t tx_id) {
         can_bridge_tx_id_ = tx_id;
+    }
+    void Chassis::UpdatePowerLimitWrapper(void* args) {
+        Chassis* chassis = reinterpret_cast<Chassis*>(args);
+        chassis->UpdatePowerLimit();
+    }
+    void Chassis::UpdatePowerLimit() {
+        switch (model_) {
+            case CHASSIS_MECANUM_WHEEL: {
+                float input[FourWheel::motor_num];
+                float output[FourWheel::motor_num];
+                for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
+                    input[i] = motors_[i]->GetOutput();
+                power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
+                                     current_chassis_power_buffer_, input, output);
+                for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
+                    motors_[i]->SetOutput((int16_t)output[i]);
+                break;
+            }
+            default:
+                break;
+        }
+
+
     }
 
     ChassisCanBridgeSender::ChassisCanBridgeSender(communication::CanBridge* can_bridge,
