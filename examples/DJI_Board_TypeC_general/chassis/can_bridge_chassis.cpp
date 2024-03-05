@@ -18,10 +18,10 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_print.h"
-#include "chassis.h"
 #include "MotorCanBase.h"
 #include "bsp_can.h"
+#include "bsp_print.h"
+#include "chassis.h"
 #include "cmsis_os.h"
 #include "main.h"
 #include "supercap.h"
@@ -98,7 +98,6 @@ void RM_RTOS_Init() {
     super_cap->SetMaxDischargePower(250.0f);
     super_cap->SetPerferBuffer(40.0f);
 
-
     can_bridge = new communication::CanBridge(can2, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
@@ -119,7 +118,6 @@ void RM_RTOS_Init() {
     can_bridge->RegisterRxCallback(0x71, chassis->CanBridgeUpdateEventTurnWrapper, chassis);
     can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
     can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
-
 
     HAL_Delay(300);
 }
