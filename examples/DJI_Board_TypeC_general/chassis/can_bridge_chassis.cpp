@@ -20,6 +20,8 @@
 
 #include "bsp_print.h"
 #include "chassis.h"
+#include "MotorCanBase.h"
+#include "bsp_can.h"
 #include "cmsis_os.h"
 #include "main.h"
 #include "supercap.h"
@@ -37,7 +39,7 @@ control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
 
 void RM_RTOS_Init() {
-    HAL_Delay(200);
+    HAL_Delay(1000);
     print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan2, false);
     can2 = new bsp::CAN(&hcan1, true);
@@ -86,14 +88,16 @@ void RM_RTOS_Init() {
         .rx_id = 0x030,
     };
     super_cap = new driver::SuperCap(supercap_init);
-
-    super_cap->SetMaxVoltage(26.0f);
+    super_cap->Disable();
+    super_cap->TransmitSettings();
+    super_cap->Enable();
+    super_cap->TransmitSettings();
+    super_cap->SetMaxVoltage(23.5f);
     super_cap->SetPowerTotal(120.0f);
     super_cap->SetMaxChargePower(150.0f);
     super_cap->SetMaxDischargePower(250.0f);
     super_cap->SetPerferBuffer(40.0f);
-    super_cap->Enable();
-    super_cap->TransmitSettings();
+
 
     can_bridge = new communication::CanBridge(can2, 0x52);
 
@@ -111,11 +115,11 @@ void RM_RTOS_Init() {
     chassis = new control::Chassis(chassis_data);
 
     chassis->CanBridgeSetTxId(0x51);
-
     can_bridge->RegisterRxCallback(0x70, chassis->CanBridgeUpdateEventXYWrapper, chassis);
     can_bridge->RegisterRxCallback(0x71, chassis->CanBridgeUpdateEventTurnWrapper, chassis);
     can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
     can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
+
 
     HAL_Delay(300);
 }
@@ -123,7 +127,7 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
 
-    osDelay(500);  // DBUS initialization needs time
+    osDelay(500);
 
     while (true) {
         chassis->Update();

@@ -168,10 +168,6 @@ namespace control {
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
-
-        if (has_super_capacitor_) {
-            super_capacitor_->TransmitSettings();
-        }
     }
 
     void Chassis::CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id,
@@ -261,6 +257,7 @@ namespace control {
         power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
         if (has_super_capacitor_) {
             super_capacitor_->SetPowerTotal(power_limit_info_.power_limit);
+            super_capacitor_->TransmitSettings();
         }
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
@@ -272,7 +269,7 @@ namespace control {
         }
         current_chassis_power_ = data.data_two_float.data[0];
         current_chassis_power_buffer_ = data.data_two_float.data[1];
-        if (has_super_capacitor_) {
+        if (has_super_capacitor_ && chassis_enable_) {
             super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
         }
     }
