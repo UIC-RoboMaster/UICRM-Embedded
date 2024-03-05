@@ -77,8 +77,14 @@ namespace bsp {
         rx_read_ = new uint8_t[rx_buffer_size];
     }
 
+    template <bool FromISR>
     uint32_t VirtualUSB::Read(uint8_t** data) {
-        taskENTER_CRITICAL();
+        UBaseType_t isrflags;
+        if (FromISR) {
+            isrflags = taskENTER_CRITICAL_FROM_ISR();
+        } else {
+            taskENTER_CRITICAL();
+        }
         uint32_t length = rx_pending_;
         *data = rx_write_;
         /* swap read / write buffer */
@@ -86,12 +92,24 @@ namespace bsp {
         rx_write_ = rx_read_;
         rx_read_ = tmp;
         rx_pending_ = 0;
-        taskEXIT_CRITICAL();
+        if (FromISR) {
+            taskEXIT_CRITICAL_FROM_ISR(isrflags);
+        } else {
+            taskEXIT_CRITICAL();
+        }
         return length;
     }
+    template uint32_t VirtualUSB::Read<true>(uint8_t** data);
+    template uint32_t VirtualUSB::Read<false>(uint8_t** data);
 
+    template <bool FromISR>
     uint32_t VirtualUSB::Write(uint8_t* data, uint32_t length) {
-        taskENTER_CRITICAL();
+        UBaseType_t isrflags;
+        if (FromISR) {
+            isrflags = taskENTER_CRITICAL_FROM_ISR();
+        } else {
+            taskENTER_CRITICAL();
+        }
         if (length > tx_size_)
             length = tx_size_;
         /* try to transmit the data */
@@ -105,9 +123,16 @@ namespace bsp {
             memcpy(tx_write_ + tx_pending_, data, length);
             tx_pending_ += length;
         }
-        taskEXIT_CRITICAL();
+        if (FromISR) {
+            taskEXIT_CRITICAL_FROM_ISR(isrflags);
+        } else {
+            taskEXIT_CRITICAL();
+        }
         return length;
     }
+
+    template uint32_t VirtualUSB::Write<true>(uint8_t* data, uint32_t length);
+    template uint32_t VirtualUSB::Write<false>(uint8_t* data, uint32_t length);
 
     void VirtualUSB::TxCompleteCallback() {
         uint8_t* tmp;
@@ -127,6 +152,11 @@ namespace bsp {
     }
 
     void VirtualUSB::RxCompleteCallback() {
+        if (rx_ptr_ != nullptr) {
+            *rx_len_ = this->Read<true>(rx_ptr_);
+            if (callback_ != nullptr)
+                callback_(callback_args_);
+        }
     }
 
     uint32_t VirtualUSB::QueueUpRxData(const uint8_t* data, uint32_t length) {
@@ -147,6 +177,14 @@ namespace bsp {
     void RxCompleteCallbackWrapper(uint8_t* data, uint32_t length) {
         usb->QueueUpRxData(data, length);
         usb->RxCompleteCallback();
+    }
+    void VirtualUSB::RegisterCallback(usb_rx_callback_t callback, void* args) {
+        callback_ = callback;
+        callback_args_ = args;
+    }
+    void VirtualUSB::SetupRxData(uint8_t** rx_ptr, uint32_t* rx_len) {
+        rx_ptr_ = rx_ptr;
+        rx_len_ = rx_len;
     }
 
 } /* namespace bsp */

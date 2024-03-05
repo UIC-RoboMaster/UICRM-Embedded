@@ -121,22 +121,25 @@ void uiTask(void* arg) {
     BoolEdgeDetector* imu_temp_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
+        // 通过两个云台电机的角度
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
         pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
+        // 更新底盘转速码表
         chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max,
                            relative_angle);
         osDelay(UI_OS_DELAY);
 
+        // 更新电源百分比（后期是超级电容剩余点亮
         power_percent = 1.0f;
 
         batteryGUI->Update(power_percent);
         osDelay(UI_OS_DELAY);
 
-        // Update Gimbal GUI
+        // 更新云台小坦克
         gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle, true);
         osDelay(UI_OS_DELAY);
 
-        // Update current mode GUI
+        // 更新运行模式
         if (remote_mode != last_mode) {
             char modeStr[30];
             switch (remote_mode) {
@@ -166,7 +169,7 @@ void uiTask(void* arg) {
             osDelay(UI_OS_DELAY);
         }
 
-        // Update wheel status GUI
+        // 更新摩擦轮状态显示
         if (last_fric_mode != shoot_fric_mode) {
             char* wheelStr = shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
             uint32_t wheelColor =
@@ -183,7 +186,7 @@ void uiTask(void* arg) {
         last_mode = remote_mode;
         last_fric_mode = shoot_fric_mode;
 
-        // Update self-diagnosis messages
+        // 离线信息
         {
             fl_motor_check_edge->input(selftest.fl_motor);
             fr_motor_check_edge->input(selftest.fr_motor);
@@ -237,7 +240,7 @@ void uiTask(void* arg) {
             }
         }
 
-        // clear self-diagnosis messages
+        // v键清理UI
         if (selftest.dbus) {
             v_edge->input(dbus->keyboard.bit.V);
         } else {
@@ -294,6 +297,7 @@ void uiTask(void* arg) {
             osDelay(110);
             continue;
         }
+        // c键清理消息
         if (selftest.dbus) {
             c_edge->input(dbus->keyboard.bit.C);
         } else {

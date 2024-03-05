@@ -29,8 +29,10 @@ driver::ServoMotor* load_servo = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
+// 堵转回调函数
 void jam_callback(driver::ServoMotor* servo, const driver::servo_jam_t data) {
     UNUSED(data);
+    // 反向旋转
     float servo_target = servo->GetTarget();
     if (servo_target > servo->GetTheta()) {
         float prev_target = servo->GetTarget() - 2 * PI / 8;
@@ -52,6 +54,7 @@ void shootTask(void* arg) {
         osDelay(SHOOT_OS_DELAY);
     }
 
+    // 初始化摩擦轮转速斜坡和各状态
     //    int last_state = remote::MID;
     //    int last_state_2 = remote::MID;
     //    uint8_t shoot_state = 0;
@@ -66,6 +69,7 @@ void shootTask(void* arg) {
     RampSource ramp_1 = RampSource(0, 0, 800, 0.001);
     RampSource ramp_2 = RampSource(0, 0, 800, 0.001);
 
+    // 拨弹电机锁原位
     load_servo->SetTarget(load_servo->GetTheta(), true);
     load_servo->CalcOutput();
 
@@ -94,86 +98,38 @@ void shootTask(void* arg) {
         //                    osDelay(SHOOT_OS_DELAY);
         //                    continue;
         //                }
-        //         检测开关状态，向上来回打即启动拔弹
-        //        if (can_shoot_click) {
-        //            if (dbus->keyboard.bit.CTRL == 1) {
-        //                if (shoot_state == 0) {
-        //                    shoot_state = 1;
-        //                } else {
-        //                    shoot_state = 0;
-        //                    shoot_state_2 = 0;
-        //                }
-        //            }
-        //            if (shoot_state != 0) {
-        //                if (dbus->mouse.l == 1) {
-        //                    shoot_state_2 = 2;
-        //                } else if (dbus->mouse.l == 0) {
-        //                    shoot_state_2 = 0;
-        //                }
-        //            }
-        //        }
-        //        if (dbus->keyboard.bit.CTRL == 0) {
-        //            can_shoot_click = true;
-        //        } else {
-        //            can_shoot_click = false;
-        //        }
-        //        if (dbus->swl == remote::UP) {
-        //            if (last_state == remote::MID)
-        //                last_state = remote::UP;
-        //        } else if (dbus->swl == remote::MID) {
-        //            if (last_state == remote::UP) {
-        //                last_state = remote::MID;
-        //                if (shoot_state == 0) {
-        //                    shoot_state = 1;
-        //                } else {
-        //                    shoot_state = 0;
-        //                    shoot_state_2 = 0;
-        //                }
-        //            }
-        //        }
-        //        switch (shoot_state) {
-        //            case 0:
-        //                shoot_flywheel_offset = -200;
-        //
-        //                break;
-        //            case 1:
-        //            case 2:
-        //                shoot_flywheel_offset = 200;
-        //                if (servo_back == 0) {
-        //                    load_servo->SetTarget(load_servo->GetTheta() - 2 * PI / 32, true);
-        //                    servo_back = 1;
-        //                }
-        //                break;
-        //        }
-        //        if (shoot_state == 1 && ramp_1.Get() == ramp_1.GetMax() &&
-        //            ramp_2.Get() == ramp_2.GetMax()) {
-        //            shoot_state = 2;
-        //        }
+        //   检测摩擦轮模式
         switch (shoot_fric_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
             case SHOOT_FRIC_MODE_PREPARED:
+                // 摩擦轮加速或者保持满速度
                 shoot_flywheel_offset = 400;
                 // laser->SetOutput(255);
                 break;
             case SHOOT_FRIC_MODE_STOP:
+                // 摩擦轮减速或者停止
                 shoot_flywheel_offset = -400;
                 // laser->SetOutput(0);
                 break;
             case SHOOT_FRIC_SPEEDUP:
+                // 摩擦轮加速
                 ramp_1.SetMax(min(900.0f, ramp_1.GetMax() + 25));
                 ramp_2.SetMax(min(900.0f, ramp_2.GetMax() + 25));
                 shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
                 break;
             case SHOOT_FRIC_SPEEDDOWN:
+                // 摩擦轮减速
                 ramp_1.SetMax(max(500.0f, ramp_1.GetMax() - 25));
                 ramp_2.SetMax(max(500.0f, ramp_2.GetMax() - 25));
                 shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
                 break;
             default:
+                // 摩擦轮强制停止
                 shoot_flywheel_offset = -1000;
                 // laser->SetOutput(0);
                 break;
         }
+        // 计算斜坡函数，摩擦轮输出
         flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
         flywheel_right->SetOutput(ramp_2.Calc(shoot_flywheel_offset));
         if (ramp_1.Get() == ramp_1.GetMax() && ramp_2.Get() == ramp_2.GetMax() &&
@@ -182,6 +138,7 @@ void shootTask(void* arg) {
             shoot_fric_mode = SHOOT_FRIC_MODE_PREPARED;
         }
         if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
+            // 如果摩擦轮准备就绪，则检测发射模式
             shoot_state_key = shoot_key->Read();
             switch (shoot_mode) {
                 case SHOOT_MODE_PREPARING:
@@ -241,61 +198,7 @@ void shootTask(void* arg) {
             }
         }
         last_shoot_mode = shoot_mode;
-        //        // 启动拔弹电机后的操作
-        //        if (shoot_state == 2) {
-        //            // 检测是否已装填子弹
-        //
-        //            // 检测是否需要发射子弹
-        //
-        //                if (dbus->swl == remote::DOWN) {
-        //                    if (last_state_2 == remote::MID) {
-        //                        last_state_2 = remote::DOWN;
-        //                        if (shoot_state_2 == 0) {
-        //                            shoot_state_2 = 1;
-        //                        }
-        //                        shoot_time_count = 0;
-        //                    }
-        //                    shoot_time_count++;
-        //                    if (shoot_time_count > 1000 / SHOOT_OS_DELAY) {
-        //                        shoot_state_2 = 2;
-        //                    }
-        //                } else if (dbus->swl == remote::MID) {
-        //                    if (last_state_2 == remote::DOWN) {
-        //                        last_state_2 = remote::MID;
-        //                    }
-        //                    shoot_state_2 = 0;
-        //                }
-        //            // 发射子弹
-        //            if (shoot_state_2 == 1) {
-        //                // 检测是否已经发射完毕
-        //                if (last_shoot_key == 0 && shoot_state_key == 1) {
-        //                    last_shoot_key = 1;
-        //                } else if (last_shoot_key == 1 && shoot_state_key == 0) {
-        //                    last_shoot_key = 0;
-        //                    shoot_state_2 = 0;
-        //                }
-        //                // 如果发射未完成，则需要发射子弹
-        //                if (shoot_state_2 == 1) {
-        //                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-        //                } else {
-        //                    if (!load_servo->Holding()) {
-        //                        load_servo->SetTarget(load_servo->GetTheta(), true);
-        //                    }
-        //                }
-        //            } else if (shoot_state_2 == 2) {
-        //                // 连续发射
-        //                load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-        //            } else if (shoot_state_key == 1) {
-        //                // 不需要发射子弹，但是未装弹完毕，则需要装填子弹
-        //                load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-        //            } else {
-        //                // 不需要发射子弹，且装弹完毕，则需要锁定拔弹电机
-        //                if (!load_servo->Holding()) {
-        //                    load_servo->SetTarget(load_servo->GetTheta(), true);
-        //                }
-        //            }
-        //        }
-        // 计算输出
+
         load_servo->CalcOutput();
         osDelay(SHOOT_OS_DELAY);
     }

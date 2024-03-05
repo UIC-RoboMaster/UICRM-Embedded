@@ -24,6 +24,7 @@
 #include "can_bridge.h"
 #include "pid.h"
 #include "power_limit.h"
+#include "supercap.h"
 
 #define MAX_WHEEL_NUM 8
 
@@ -37,11 +38,14 @@ namespace control {
     /**
      * @brief structure used when chassis instance is initialized
      */
-    typedef struct {
+    struct chassis_t {
         driver::MotorCANBase** motors; /* motor instances of all chassis motors */
         chassis_model_t model;         /* chassis model                         */
         float offset = 0;
-    } chassis_t;
+        bool power_limit_on = false;
+        bool has_super_capacitor = false;
+        driver::SuperCap* super_capacitor = nullptr;
+    };
 
     /**
      * @brief motor configs for four wheel vehicles
@@ -85,7 +89,7 @@ namespace control {
          * @param chassis_power_buffer Current chassis power buffer, in [J]
          */
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                      float chassis_power_buffer);
+                      float chassis_power_buffer, bool enable_supercap = false);
 
         /**
          * @brief calculate the output of the motors under current configuration
@@ -123,6 +127,10 @@ namespace control {
         void CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
                                               communication::can_bridge_data_t data);
 
+        static void UpdatePowerLimitWrapper(void* args);
+
+        void UpdatePowerLimit();
+
       private:
         // acquired from user
         driver::MotorCANBase** motors_ = nullptr;
@@ -155,6 +163,10 @@ namespace control {
         float can_bridge_vt_ = 0;
 
         bool chassis_enable_ = true;
+
+        bool has_super_capacitor_ = false;
+        bool super_capacitor_enable_ = false;
+        driver::SuperCap* super_capacitor_ = nullptr;
     };
 
     class ChassisCanBridgeSender {
@@ -181,12 +193,14 @@ namespace control {
          * @param chassis_power_buffer Current chassis power buffer, in [J]
          */
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                      float chassis_power_buffer, bool force_update = false);
+                      float chassis_power_buffer, bool enable_csupercap = false,
+                      bool force_update = false);
 
       private:
         communication::CanBridge* can_bridge_;
         bool chassis_enable_ = true;
         bool chassis_power_limit_on_ = false;
+        bool chassis_super_capacitor_enable_ = false;
         float chassis_power_limit_ = 120;
         uint8_t device_rx_id_ = 0x00;
         uint8_t chassis_xy_reg_id_ = 0x00;

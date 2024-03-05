@@ -33,6 +33,7 @@ control::ChassisCanBridgeSender* chassis = nullptr;
 
 void chassisTask(void* arg) {
     UNUSED(arg);
+    // 开机关闭底盘
     kill_chassis();
     osDelay(1000);
 
@@ -45,8 +46,10 @@ void chassisTask(void* arg) {
         osDelay(1);
     }
 
+    // 初始化与云台的相对角度
     float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
+    // 初始化各变量和状态机
     // float last_speed = 0;
     float sin_yaw, cos_yaw, vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
     float offset_yaw = 0;
@@ -79,11 +82,14 @@ void chassisTask(void* arg) {
     BoolEdgeDetector* ch3_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
 
+    // 开底盘
     chassis->Enable();
 
-    const float ratio = 1.0f / 660.0f * 12 * PI;
+    // 速度转换比例，660=>16PI
+    const float ratio = 1.0f / 660.0f * 16 * PI;
 
     while (true) {
+        // 离线杀底盘
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
             while (remote_mode == REMOTE_MODE_KILL) {
@@ -92,6 +98,7 @@ void chassisTask(void* arg) {
             chassis->Enable();
             continue;
         }
+        // 更新状态机
         {
             last_keyboard = keyboard;
             if (selftest.dbus) {
@@ -121,10 +128,13 @@ void chassisTask(void* arg) {
             x_edge->input(keyboard.bit.X);
         }
 
+        // 更新云台角度
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
+        // 计算角度的sin/cos
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
+        // 检测到shift，切换速度模式
         if (shift_edge->posEdge()) {
             if (chassis_boost_flag) {
                 chassis_boost_flag = false;
@@ -146,6 +156,7 @@ void chassisTask(void* arg) {
                 current_speed_offset = speed_offset_boost;
             }
         }
+        // 平移速度控制
         if (ch0_edge->get()) {
             vx_set_org = dbus->ch0;
         } else if (ch0_edge->negEdge() || x_edge->posEdge()) {
@@ -162,6 +173,7 @@ void chassisTask(void* arg) {
                 vx_set_org = vx_ramp->Calc(current_speed_offset);
             }
         }
+        // 前进速度控制
         if (ch1_edge->get()) {
             vy_set_org = dbus->ch1;
         } else if (ch1_edge->negEdge() || x_edge->posEdge()) {
@@ -178,6 +190,7 @@ void chassisTask(void* arg) {
                 vy_set_org = vy_ramp->Calc(current_speed_offset);
             }
         }
+        // 旋转速度控制（如果需要）
         if (ch4_edge->get()) {
             offset_yaw = dbus->ch4;
         } else if (ch4_edge->negEdge() || x_edge->posEdge()) {
@@ -194,6 +207,7 @@ void chassisTask(void* arg) {
                 offset_yaw = vz_ramp->Calc(current_speed_offset);
             }
         }
+        // 计算实际速度
         chassis_vx = vx_set_org;
         chassis_vy = vy_set_org;
         chassis_vz = offset_yaw;
@@ -201,6 +215,7 @@ void chassisTask(void* arg) {
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
+                // 云台跟随模式，底盘跟随云台前进
                 yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
                 if (fabs(yaw_pid_error) < 0.01f) {
                     yaw_pid_error = 0;
@@ -208,14 +223,16 @@ void chassisTask(void* arg) {
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
                 osDelay(1);
-                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
+                // 当前底盘功率限制
+                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
+                                  referee->power_heat_data.chassis_power_buffer, true);
                 osDelay(1);
                 break;
             case REMOTE_MODE_SPIN:
-
+                // 小陀螺模式
                 if (offset_yaw != 0) {
+                    // 旋转速度叠加
                     spin_speed = spin_speed + offset_yaw;
                     offset_yaw = 0;
                     spin_speed = clip<float>(spin_speed, -660, 660);
@@ -223,12 +240,13 @@ void chassisTask(void* arg) {
                 vz_set = spin_speed;
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 osDelay(1);
-                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
+                                  referee->power_heat_data.chassis_power_buffer, true);
                 osDelay(1);
                 break;
             case REMOTE_MODE_ADVANCED:
+                // 高级模式，底盘速度直接为绝对值，不受云台角度影响
                 vz_set = offset_yaw;
                 if (offset_yaw != 0) {
                     spin_speed = spin_speed + offset_yaw;
@@ -237,9 +255,9 @@ void chassisTask(void* arg) {
                 }
                 chassis->SetSpeed(vx_set_org * ratio, vy_set_org * ratio, vz_set * ratio);
                 osDelay(1);
-                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
+                                  referee->power_heat_data.chassis_power_buffer, true);
                 osDelay(1);
                 break;
             default:
@@ -252,8 +270,11 @@ void chassisTask(void* arg) {
 }
 
 void init_chassis() {
+    // 添加can bridge，注册本机ID
     can_bridge = new communication::CanBridge(can1, 0x51);
+    // 添加can bridge的底盘控制器
     chassis = new control::ChassisCanBridgeSender(can_bridge, 0x52);
+    // 设置底盘各目标的寄存器id
     chassis->SetChassisRegId(0x70, 0x71, 0x72, 0x73);
     chassis->Disable();
 }

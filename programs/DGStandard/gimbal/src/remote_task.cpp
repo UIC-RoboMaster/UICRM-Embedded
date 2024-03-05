@@ -31,12 +31,14 @@ ShootMode shoot_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
 
 void init_dbus() {
+    // 初始化遥控器
     dbus = new remote::DBUS(&huart1);
 }
 osThreadId_t remoteTaskHandle;
 void remoteTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
+    // 开机后初始化各状态机
     bool mode_switch = false;
     bool shoot_fric_switch = false;
     bool shoot_switch = false;
@@ -63,16 +65,18 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     while (1) {
-        // Offline Detection && Security Check
+        // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
-        // Kill Detection
+        // 通过裁判系统检测是否死亡或者没有子弹
         //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
         //        is_shoot_available =
         //            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+        // 一般调试模式下，机器人永不死亡，子弹永远有
         is_robot_dead = false;
         is_shoot_available = true;
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
+                // 如果遥控器离线或者机器人死亡，则进入安全模式
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
                 shoot_mode = SHOOT_MODE_DISABLE;
@@ -80,7 +84,9 @@ void remoteTask(void* arg) {
             }
         } else {
             if (is_killed) {
+                // 如果遥控器重新连接或者机器人复活，则恢复上一次的遥控模式
                 remote_mode = last_remote_mode;
+                // 恢复的时候关闭所有的射击模式
                 shoot_mode = SHOOT_MODE_STOP;
                 is_killed = false;
             }
@@ -91,12 +97,12 @@ void remoteTask(void* arg) {
             continue;
         }
 
-        // Update Last State
+        // 更新last状态机
         last_state_r = state_r;
         last_state_l = state_l;
         last_keyboard = keyboard;
         last_mouse = mouse;
-        // Update State
+        // 更新now状态机
         if (selftest.dbus) {
             state_r = dbus->swr;
             state_l = dbus->swl;
@@ -109,12 +115,12 @@ void remoteTask(void* arg) {
             mouse = refereerc->remote_control.mouse;
         }
 
-        // Update Timestamp
         z_edge->input(keyboard.bit.Z);
         ctrl_edge->input(keyboard.bit.CTRL);
         mouse_left_edge->input(mouse.l);
         mouse_right_edge->input(mouse.r);
 
+        // 调节摩擦轮转速（如果需要）
         if (last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
             shoot_fric_mode = SHOOT_FRIC_SPEEDUP;
         }
@@ -122,7 +128,7 @@ void remoteTask(void* arg) {
             shoot_fric_mode = SHOOT_FRIC_SPEEDDOWN;
         }
 
-        // remote mode switch
+        // 判断行动模式切换
         switch (state_r) {
             case remote::UP:
                 if (last_state_r == remote::MID && selftest.dbus) {
@@ -145,7 +151,7 @@ void remoteTask(void* arg) {
             }
             remote_mode = next_mode;
         }
-        // shoot mode switch
+        // 判断射击模式
         if (is_shoot_available == true || SHOOT_REFEREE == 0) {
             switch (state_l) {
                 case remote::UP:

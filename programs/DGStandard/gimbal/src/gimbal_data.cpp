@@ -23,3 +23,5 @@
 //
 
 #include "gimbal_data.h"
+
+// 此文件已经废弃，不再使用
