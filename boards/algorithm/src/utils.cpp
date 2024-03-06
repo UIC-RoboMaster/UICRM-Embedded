@@ -56,12 +56,8 @@ BoolEdgeDetector::BoolEdgeDetector(bool initial) {
 }
 
 void BoolEdgeDetector::input(bool signal) {
-    posEdge_ = false;
-    negEdge_ = false;
-    if (!prev_ && signal)
-        posEdge_ = true;
-    else if (prev_ && !signal)
-        negEdge_ = true;
+    posEdge_ = !prev_ && signal;
+    negEdge_ = prev_ && !signal;
     prev_ = signal;
 }
 
@@ -87,13 +83,9 @@ FloatEdgeDetector::FloatEdgeDetector(float initial, float threshold) {
 }
 
 void FloatEdgeDetector::input(float signal) {
-    posEdge_ = false;
-    negEdge_ = false;
     float diff = signal - prev_;
-    if (diff > threshold_)
-        posEdge_ = true;
-    else if (diff < -threshold_)
-        negEdge_ = true;
+    posEdge_ = diff > threshold_;
+    negEdge_ = diff < -threshold_;
     prev_ = signal;
 }
 
