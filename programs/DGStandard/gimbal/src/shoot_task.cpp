@@ -149,7 +149,7 @@ void shootTask(void* arg) {
         //            ramp_2.Get() == ramp_2.GetMax()) {
         //            shoot_state = 2;
         //        }
-        switch (shoot_fric_mode) {
+        switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
             case SHOOT_FRIC_MODE_PREPARED:
                 shoot_flywheel_offset = 400;
@@ -162,12 +162,12 @@ void shootTask(void* arg) {
             case SHOOT_FRIC_SPEEDUP:
                 ramp_1.SetMax(min(900.0f, ramp_1.GetMax() + 25));
                 ramp_2.SetMax(min(900.0f, ramp_2.GetMax() + 25));
-                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
                 break;
             case SHOOT_FRIC_SPEEDDOWN:
                 ramp_1.SetMax(max(500.0f, ramp_1.GetMax() - 25));
                 ramp_2.SetMax(max(500.0f, ramp_2.GetMax() - 25));
-                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
                 break;
             default:
                 shoot_flywheel_offset = -1000;
@@ -177,13 +177,13 @@ void shootTask(void* arg) {
         flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
         flywheel_right->SetOutput(ramp_2.Calc(shoot_flywheel_offset));
         if (ramp_1.Get() == ramp_1.GetMax() && ramp_2.Get() == ramp_2.GetMax() &&
-            shoot_fric_mode == SHOOT_FRIC_MODE_PREPARING) {
+            shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING) {
             // 准备就绪判断
-            shoot_fric_mode = SHOOT_FRIC_MODE_PREPARED;
+            shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
         }
-        if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             shoot_state_key = shoot_key->Read();
-            switch (shoot_mode) {
+            switch (shoot_feed_mode) {
                 case SHOOT_MODE_PREPARING:
                     // 发射准备就绪检测
                     if (servo_back == 0) {
@@ -193,7 +193,7 @@ void shootTask(void* arg) {
                     }
                     if (shoot_state_key == 1) {
                         // 检测到准备就绪，转换模式与锁定拔弹电机
-                        shoot_mode = SHOOT_MODE_PREPARED;
+                        shoot_feed_mode = SHOOT_MODE_PREPARED;
                         if (!load_servo->Holding()) {
                             load_servo->SetTarget(load_servo->GetTheta(), true);
                         }
@@ -207,7 +207,7 @@ void shootTask(void* arg) {
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
                     shoot_state_key_storage = 0;
                     if (shoot_state_key == 0) {
-                        shoot_mode = SHOOT_MODE_PREPARING;
+                        shoot_feed_mode = SHOOT_MODE_PREPARING;
                         break;
                     }
                     if (!load_servo->Holding()) {
@@ -220,7 +220,7 @@ void shootTask(void* arg) {
                         shoot_state_key_storage = 1;
                     } else if (shoot_state_key_storage == 1 && shoot_state_key == 1) {
                         shoot_state_key_storage = 0;
-                        shoot_mode = SHOOT_MODE_PREPARED;
+                        shoot_feed_mode = SHOOT_MODE_PREPARED;
                         break;
                     }
                     if (last_shoot_mode != SHOOT_MODE_SINGLE)
@@ -240,7 +240,7 @@ void shootTask(void* arg) {
                     break;
             }
         }
-        last_shoot_mode = shoot_mode;
+        last_shoot_mode = shoot_feed_mode;
         //        // 启动拔弹电机后的操作
         //        if (shoot_state == 2) {
         //            // 检测是否已装填子弹

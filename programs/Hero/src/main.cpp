@@ -93,7 +93,7 @@ void RM_RTOS_Default_Task(const void* arg) {
                 break;
         }
         print("Mode:%s\r\n", s);
-        //        switch (shoot_fric_mode) {
+        //        switch (shoot_flywheel_mode) {
         //            case SHOOT_FRIC_MODE_PREPARING:
         //                strcpy(s, "PREPARE");
         //                break;
@@ -108,7 +108,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         //                break;
         //        }
         //        print("Shoot Fric Mode:%s\r\n", s);
-        switch (shoot_mode) {
+        switch (shoot_feed_mode) {
             case SHOOT_MODE_PREPARING:
                 strcpy(s, "PREPARE");
                 break;
