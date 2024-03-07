@@ -88,6 +88,9 @@ void RM_RTOS_Default_Task(const void *argument);
 #define SPI1_CS_GPIO_Port GPIOE
 #define BUZZER_Pin GPIO_PIN_15
 #define BUZZER_GPIO_Port GPIOB
+#define KEY_Pin GPIO_PIN_15
+#define KEY_GPIO_Port GPIOA
+#define KEY_EXTI_IRQn EXTI15_10_IRQn
 #define DBUS_Pin GPIO_PIN_2
 #define DBUS_GPIO_Port GPIOD
 

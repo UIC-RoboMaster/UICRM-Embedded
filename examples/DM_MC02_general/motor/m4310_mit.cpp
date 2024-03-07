@@ -33,7 +33,7 @@ static driver::DMMotor4310* motor1 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart5);
-    can1 = new bsp::CAN(&hcan1, true);
+    can1 = new bsp::CAN(&hfdcan1);
     motor1 = new driver::DMMotor4310(can1, 0x30, 0x31, driver::MIT);
 
     // Snail need to be run at idle throttle for some
@@ -43,7 +43,7 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-    bsp::GPIO power_output(Power_OUT1_EN_GPIO_Port, Power_OUT1_EN_Pin);
+    bsp::GPIO power_output(POWER_EN1_GPIO_Port, POWER_EN1_Pin);
     osDelay(1000);
     power_output.High();
     osDelay(5000);

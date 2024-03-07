@@ -29,7 +29,7 @@
 
 // Refer to typeA datasheet for channel detail
 #define LEFT_MOTOR_PWM_CHANNEL 1
-#define RIGHT_MOTOR_PWM_CHANNEL 2
+#define RIGHT_MOTOR_PWM_CHANNEL 3
 #define TIM_CLOCK_FREQ 1000000
 #define MOTOR_OUT_FREQ 500
 #define SNAIL_IDLE_THROTTLE 1080
@@ -38,10 +38,10 @@ driver::MotorPWMBase* motor1;
 driver::MotorPWMBase* motor2;
 
 void RM_RTOS_Init() {
-    print_use_uart(&huart4);
-    motor1 = new driver::MotorPWMBase(&htim8, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+    print_use_uart(&huart1);
+    motor1 = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
                                       MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
-    motor2 = new driver::MotorPWMBase(&htim8, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+    motor2 = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
                                       MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
     motor1->SetOutput(0);
     motor2->SetOutput(0);
@@ -52,7 +52,7 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-    bsp::GPIO power_output(Power_5V_EN_GPIO_Port, Power_5V_EN_Pin);
+    bsp::GPIO power_output(POWER_EN1_GPIO_Port, POWER_EN1_Pin);
     osDelay(1000);
     power_output.High();
 

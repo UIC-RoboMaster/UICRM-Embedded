@@ -211,7 +211,7 @@ namespace bsp {
 #ifdef BOARD_HAS_UART_DMA_DOUBLE_BUFFER
         // hardware multi buffer switch
         __HAL_DMA_SET_COUNTER(huart_->hdmarx, rx_size_);
-        ((DMA_Stream_TypeDef   *)huart_->hdmarx->Instance)->CR ^= DMA_SxCR_CT;
+        ((DMA_Stream_TypeDef*)huart_->hdmarx->Instance)->CR ^= DMA_SxCR_CT;
         __HAL_DMA_ENABLE(huart_->hdmarx);
 #else
         // software double buffer

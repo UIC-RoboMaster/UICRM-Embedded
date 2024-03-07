@@ -33,11 +33,11 @@ remote::DBUS* dbus = nullptr;
 float load_step_angle = 2 * PI / 8;
 
 void RM_RTOS_Init() {
-    bsp::SetHighresClockTimer(&htim5);
+    bsp::SetHighresClockTimer(&htim24);
     HAL_Delay(200);
-    print_use_uart(&huart4);
-    dbus = new remote::DBUS(&huart3);
-    can2 = new bsp::CAN(&hcan2, false);
+    print_use_uart(&huart1);
+    dbus = new remote::DBUS(&huart5);
+    can2 = new bsp::CAN(&hfdcan2, false);
     motor1 = new driver::Motor2006(can2, 0x207);
     driver::servo_t servo_data;
 

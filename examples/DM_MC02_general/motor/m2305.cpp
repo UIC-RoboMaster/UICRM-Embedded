@@ -31,7 +31,7 @@
 
 // Refer to typeA datasheet for channel detail
 #define LEFT_MOTOR_PWM_CHANNEL 1
-#define RIGHT_MOTOR_PWM_CHANNEL 2
+#define RIGHT_MOTOR_PWM_CHANNEL 3
 #define TIM_CLOCK_FREQ 1000000
 #define MOTOR_OUT_FREQ 500
 #define SNAIL_IDLE_THROTTLE 1080
@@ -41,11 +41,11 @@ driver::MotorPWMBase* motor2;
 remote::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init() {
-    dbus = new remote::DBUS(&huart3);
-    print_use_uart(&huart4);
-    motor1 = new driver::MotorPWMBase(&htim8, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+    dbus = new remote::DBUS(&huart5);
+    print_use_uart(&huart1);
+    motor1 = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
                                       MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
-    motor2 = new driver::MotorPWMBase(&htim8, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+    motor2 = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
                                       MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
     motor1->SetOutput(0);
     motor2->SetOutput(0);

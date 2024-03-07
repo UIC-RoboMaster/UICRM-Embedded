@@ -29,16 +29,21 @@
 #define KEY_GPIO_PIN KEY_Pin
 
 // Refer to typeA datasheet for channel detail
-static bsp::CAN* can1 = nullptr;
+static bsp::CAN* can2 = nullptr;
 static driver::Motor3508* motor1 = nullptr;
+static driver::Motor3508* motor2 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hfdcan1);
-    motor1 = new driver::Motor3508(can1, 0x201);
-    motor1->SetTransmissionRatio(19);
+    can2 = new bsp::CAN(&hfdcan2, false);
+    motor1 = new driver::Motor3508(can2, 0x201);
+    motor2 = new driver::Motor3508(can2, 0x202);
+
+    motor1->SetTransmissionRatio(1);
+    motor2->SetTransmissionRatio(1);
+
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 2500,
+        .kp = 500,
         .ki = 3,
         .kd = 0,
         .max_out = 30000,
@@ -54,7 +59,9 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     motor1->SetMode(driver::MotorCANBase::OMEGA);
+    motor2->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
@@ -76,15 +83,19 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetTarget(15 * PI);
+                motor1->SetTarget(80 * 2 * PI);
+                motor2->SetTarget(80 * 2 * PI);
             } else {
                 current = 0;
                 motor1->SetTarget(0);
+                motor2->SetTarget(0);
             }
 
             osDelay(20);
         }
         motor1->PrintData();
+        motor2->PrintData();
+
         osDelay(20);
     }
 }

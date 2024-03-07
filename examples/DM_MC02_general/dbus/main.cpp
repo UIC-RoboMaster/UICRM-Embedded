@@ -28,7 +28,7 @@ static remote::DBUS* dbus;
 
 void RM_RTOS_Init(void) {
     print_use_usb();
-    dbus = new remote::DBUS(&huart3);
+    dbus = new remote::DBUS(&huart5);
 }
 
 void RM_RTOS_Default_Task(const void* arguments) {

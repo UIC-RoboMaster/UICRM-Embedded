@@ -59,22 +59,22 @@ using Note = driver::BuzzerNote;
 static driver::BuzzerNoteDelayed DJI[] = {
     {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
-//static driver::BuzzerNoteDelayed Laohu[] = {
-//    {Note::Do1M, 500},  {Note::Re2M, 500},   {Note::Mi3M, 500}, {Note::Do1M, 450},
-//    {Note::Silent, 50}, {Note::Do1M, 500},   {Note::Re2M, 500}, {Note::Mi3M, 500},
-//    {Note::Do1M, 450},  {Note::Silent, 50},  {Note::Mi3M, 500}, {Note::Fa4M, 500},
-//    {Note::So5M, 500},  {Note::Silent, 500}, {Note::Mi3M, 500}, {Note::Fa4M, 500},
-//    {Note::So5M, 500},  {Note::Silent, 500}, {Note::So5M, 250}, {Note::La6M, 250},
-//    {Note::So5M, 250},  {Note::Fa4M, 250},   {Note::Mi3M, 500}, {Note::Do1M, 500},
-//    {Note::So5M, 250},  {Note::La6M, 250},   {Note::So5M, 250}, {Note::Fa4M, 250},
-//    {Note::Mi3M, 500},  {Note::Do1M, 500},   {Note::Re2M, 500}, {Note::Si7L, 500},
-//    {Note::Do1M, 500},  {Note::Silent, 500}, {Note::Re2M, 500}, {Note::Si7L, 500},
-//    {Note::Do1M, 500},  {Note::Silent, 500}, {Note::Finish, 0}};
+// static driver::BuzzerNoteDelayed Laohu[] = {
+//     {Note::Do1M, 500},  {Note::Re2M, 500},   {Note::Mi3M, 500}, {Note::Do1M, 450},
+//     {Note::Silent, 50}, {Note::Do1M, 500},   {Note::Re2M, 500}, {Note::Mi3M, 500},
+//     {Note::Do1M, 450},  {Note::Silent, 50},  {Note::Mi3M, 500}, {Note::Fa4M, 500},
+//     {Note::So5M, 500},  {Note::Silent, 500}, {Note::Mi3M, 500}, {Note::Fa4M, 500},
+//     {Note::So5M, 500},  {Note::Silent, 500}, {Note::So5M, 250}, {Note::La6M, 250},
+//     {Note::So5M, 250},  {Note::Fa4M, 250},   {Note::Mi3M, 500}, {Note::Do1M, 500},
+//     {Note::So5M, 250},  {Note::La6M, 250},   {Note::So5M, 250}, {Note::Fa4M, 250},
+//     {Note::Mi3M, 500},  {Note::Do1M, 500},   {Note::Re2M, 500}, {Note::Si7L, 500},
+//     {Note::Do1M, 500},  {Note::Silent, 500}, {Note::Re2M, 500}, {Note::Si7L, 500},
+//     {Note::Do1M, 500},  {Note::Silent, 500}, {Note::Finish, 0}};
 
 void RM_RTOS_Init(void) {
     driver::Buzzer buzzer(&htim12, 2, 1000000);
     buzzer.SingSong(DJI);
     HAL_Delay(500);
-//    buzzer.SingSong(Laohu);
+    //    buzzer.SingSong(Laohu);
     HAL_Delay(1000);
 }

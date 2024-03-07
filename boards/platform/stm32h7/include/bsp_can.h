@@ -68,8 +68,8 @@ namespace bsp {
          * @brief constructor for bsp CAN instance
          *
          * @param hfdcan     HAL can handle
-         * @param is_master whether this is the master node, set to true if hfdcan is hfdcan1, otherwise
-         * false
+         * @param is_master whether this is the master node, set to true if hfdcan is hfdcan1,
+         * otherwise false
          */
         CAN(FDCAN_HandleTypeDef* hfdcan, bool is_master = true, uint8_t ext_id_suffix = 8);
         /**
@@ -215,7 +215,7 @@ namespace bsp {
         static std::unordered_map<FDCAN_HandleTypeDef*, CAN*> ptr_map;
         static CAN* FindInstance(FDCAN_HandleTypeDef* hfdcan);
         static bool HandleExists(FDCAN_HandleTypeDef* hfdcan);
-        static void RxFIFO0MessagePendingCallback(FDCAN_HandleTypeDef* hfdcan,uint32_t RxFifo0ITs);
+        static void RxFIFO0MessagePendingCallback(FDCAN_HandleTypeDef* hfdcan, uint32_t RxFifo0ITs);
     };
 
 } /* namespace bsp */

@@ -177,29 +177,7 @@ SECTIONS
     . = ALIGN(8);
   } >DTCMRAM
 
-  ._D1_Area :
-  {
-    . = ALIGN(4);
-    . = ALIGN(4);
-  } >RAM_D1
-
-  ._D2_Area :
-    {
-      . = ALIGN(4);
-      . = ALIGN(4);
-    } >RAM_D2
-
-  ._D3_Area :
-    {
-      . = ALIGN(4);
-      . = ALIGN(4);
-    } >RAM_D3
-
-  ._ITCMRAM_Area :
-    {
-      . = ALIGN(4);
-        . = ALIGN(4);
-    } >ITCMRAM
+  
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

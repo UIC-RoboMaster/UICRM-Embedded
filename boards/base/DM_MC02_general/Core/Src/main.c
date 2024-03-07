@@ -134,9 +134,11 @@ int main(void)
   MX_OCTOSPI2_Init();
   MX_TIM12_Init();
   MX_ADC1_Init();
-  MX_UART5_Init();
+  MX_SPI3_Init();
+  MX_TIM23_Init();
+  MX_TIM24_Init();
   /* USER CODE BEGIN 2 */
-
+  RM_UART5_Init();
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -232,10 +234,10 @@ void PeriphCommonClock_Config(void)
   /** Initializes the peripherals clock
   */
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_ADC
-                              |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_SPI2
-                              |RCC_PERIPHCLK_SPI1|RCC_PERIPHCLK_FDCAN
-                              |RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART10
-                              |RCC_PERIPHCLK_UART9;
+                              |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_SPI3
+                              |RCC_PERIPHCLK_SPI2|RCC_PERIPHCLK_SPI1
+                              |RCC_PERIPHCLK_FDCAN|RCC_PERIPHCLK_USART1
+                              |RCC_PERIPHCLK_USART10|RCC_PERIPHCLK_UART9;
   PeriphClkInitStruct.PLL2.PLL2M = 24;
   PeriphClkInitStruct.PLL2.PLL2N = 168;
   PeriphClkInitStruct.PLL2.PLL2P = 1;
