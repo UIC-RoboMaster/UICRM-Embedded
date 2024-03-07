@@ -29,7 +29,7 @@
 #define WS2812_SPI_5M25_LowLevel 0xC0   // Low
 #define WS2812_SPI_5M25_HighLevel 0xFC  // High
 
-namespace driver {
+namespace display {
     struct ws2812_init_t {
         bsp::SPI* spi;
         uint16_t led_num;
@@ -40,10 +40,11 @@ namespace driver {
     class WS2812 {
       public:
         WS2812(const ws2812_init_t& init);
+        ~WS2812();
         void SetColor(uint16_t index, uint8_t r, uint8_t g, uint8_t b);
         void SetColor(uint16_t index, uint32_t aRGB);
         void SetColor(uint8_t r, uint8_t g, uint8_t b);
-        void SetColor(uint32_t color);
+        void SetColor(uint32_t aRGB);
         void Update();
         void Clear();
 
