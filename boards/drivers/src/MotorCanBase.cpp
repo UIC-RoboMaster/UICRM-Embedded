@@ -604,9 +604,9 @@ namespace driver {
         }
     }
 
-    void ServoMotor::Hold() {
+    void ServoMotor::Hold(bool override) {
         if (!Holding()) {
-            SetTarget(GetTheta(), true);
+            SetTarget(GetTheta(), override);
         }
     }
 

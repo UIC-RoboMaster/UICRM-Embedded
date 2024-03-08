@@ -27,13 +27,16 @@ RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMO
 const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-ShootMode shoot_feed_mode = SHOOT_MODE_STOP;
+ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
 
 void init_dbus() {
     dbus = new remote::DBUS(&huart1);
 }
 osThreadId_t remoteTaskHandle;
+
+// #define HAS_REFEREE
+
 void remoteTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
@@ -60,23 +63,26 @@ void remoteTask(void* arg) {
     while (1) {
         // Offline Detection && Security Check
         is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
+#ifdef HAS_REFEREE
         // Kill Detection
-        //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        //        is_shoot_available =
-        //            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+                is_robot_dead = referee->game_robot_status.remain_HP == 0;
+                is_shoot_available =
+                    referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+#else
         is_robot_dead = false;
         is_shoot_available = true;
+#endif
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
-                shoot_feed_mode = SHOOT_MODE_DISABLE;
+                shoot_load_mode = SHOOT_MODE_DISABLE;
                 is_killed = true;
             }
         } else {
             if (is_killed) {
                 remote_mode = last_remote_mode;
-                shoot_feed_mode = SHOOT_MODE_STOP;
+                shoot_load_mode = SHOOT_MODE_STOP;
                 is_killed = false;
             }
         }
@@ -108,13 +114,6 @@ void remoteTask(void* arg) {
         keyboard_G_edge->input(keyboard.bit.G);
         keyboard_B_edge->input(keyboard.bit.B);
 
-        if (keyboard_G_edge->posEdge()) {
-            shoot_flywheel_mode = SHOOT_FRIC_SPEEDUP;
-        }
-        if (keyboard_B_edge->posEdge()) {
-            shoot_flywheel_mode = SHOOT_FRIC_SPEEDDOWN;
-        }
-
         // remote mode switch
         static BoolEdgeDetector* mode_switch_edge = new BoolEdgeDetector(false);
         mode_switch_edge->input(state_r == remote::UP);
@@ -127,9 +126,15 @@ void remoteTask(void* arg) {
             remote_mode = next_mode;
         }
 
+        /*
+         * 射击模式控制
+         * shoot_flywheel_mode：设置PREPARING/STOP控制摩擦轮启停，就绪后由shoot_task转为PREPARED
+         * shoot_load_mode：设置SINGLE/BURST/STOP切换发射模式（供弹模式）
+         * */
+
         if (!is_shoot_available)
         {
-            shoot_feed_mode = SHOOT_MODE_STOP;
+            shoot_load_mode = SHOOT_MODE_STOP;
             shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
         }
 
@@ -142,11 +147,11 @@ void remoteTask(void* arg) {
 
             if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-                shoot_feed_mode = SHOOT_MODE_PREPARING;
+                shoot_load_mode = SHOOT_MODE_IDLE;
             } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
                        shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {  // 原来转则停止
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-                shoot_feed_mode = SHOOT_MODE_STOP;
+                shoot_load_mode = SHOOT_MODE_STOP;
             }
         }
 
@@ -154,7 +159,7 @@ void remoteTask(void* arg) {
         static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
         shoot_switch_edge->input(state_l == remote::DOWN);
         if (shoot_switch_edge->posEdge()) {
-            shoot_feed_mode = SHOOT_MODE_SINGLE;
+            shoot_load_mode = SHOOT_MODE_SINGLE;
             shoot_burst_timestamp = 0;
         }
 
@@ -165,12 +170,12 @@ void remoteTask(void* arg) {
         static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);
         shoot_burst_switch_edge->input(shoot_burst_timestamp > 500 * REMOTE_OS_DELAY);
         if (shoot_burst_switch_edge->posEdge()) {
-            shoot_feed_mode = SHOOT_MODE_BURST;
+            shoot_load_mode = SHOOT_MODE_BURST;
         }
 
         // 不发射
         if (shoot_switch_edge->negEdge()) {
-            shoot_feed_mode = SHOOT_MODE_STOP;
+            shoot_load_mode = SHOOT_MODE_STOP;
             shoot_burst_timestamp = 0;
         }
         osDelay(REMOTE_OS_DELAY);

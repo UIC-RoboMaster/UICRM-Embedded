@@ -150,7 +150,7 @@ void shootTask(void* arg) {
                 flywheel1->SetSpeed(500.0f / 6 * 5 * PI);
                 flywheel2->SetSpeed(500.0f / 6 * 5 * PI);
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
-                shoot_feed_mode = SHOOT_MODE_PREPARED;
+                shoot_load_mode = SHOOT_MODE_PREPARED;
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;
@@ -165,7 +165,7 @@ void shootTask(void* arg) {
                 break;
         }
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
-            switch (shoot_feed_mode) {
+            switch (shoot_load_mode) {
                 case SHOOT_MODE_PREPARING:
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
@@ -178,7 +178,7 @@ void shootTask(void* arg) {
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 5, true);
-                        shoot_feed_mode = SHOOT_MODE_PREPARED;
+                        shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
                     break;
                 case SHOOT_MODE_BURST:
@@ -192,7 +192,7 @@ void shootTask(void* arg) {
                     break;
             }
         }
-        last_shoot_mode = shoot_feed_mode;
+        last_shoot_mode = shoot_load_mode;
         //        // 启动拔弹电机后的操作
         //        if (shoot_state == 2) {
         //            // 检测是否已装填子弹

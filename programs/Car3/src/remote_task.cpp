@@ -27,7 +27,7 @@ RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMO
 const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-ShootMode shoot_feed_mode = SHOOT_MODE_STOP;
+ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
 
 void init_dbus() {
@@ -63,13 +63,13 @@ void remoteTask(void* arg) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
-                shoot_feed_mode = SHOOT_MODE_DISABLE;
+                shoot_load_mode = SHOOT_MODE_DISABLE;
                 is_killed = true;
             }
         } else {
             if (is_killed) {
                 remote_mode = last_remote_mode;
-                shoot_feed_mode = SHOOT_MODE_STOP;
+                shoot_load_mode = SHOOT_MODE_STOP;
                 is_killed = false;
             }
         }
@@ -126,29 +126,29 @@ void remoteTask(void* arg) {
                 shoot_fric_switch = false;
                 if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
                     shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-                    shoot_feed_mode = SHOOT_MODE_PREPARING;
+                    shoot_load_mode = SHOOT_MODE_PREPARING;
                 } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ||
                            shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING) {  // 原来转则停止
                     shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-                    shoot_feed_mode = SHOOT_MODE_STOP;
+                    shoot_load_mode = SHOOT_MODE_STOP;
                 }
             }
             // 射出单颗子弹
             if (shoot_switch) {
                 shoot_switch = false;
-                if (shoot_feed_mode == SHOOT_MODE_PREPARED &&
+                if (shoot_load_mode == SHOOT_MODE_PREPARED &&
                     shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
                     // 摩擦轮与拔弹系统准备就绪则发射子弹
-                    shoot_feed_mode = SHOOT_MODE_SINGLE;
+                    shoot_load_mode = SHOOT_MODE_SINGLE;
                 }
             }
             // 射出连发子弹
             if (shoot_burst_switch) {
                 if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
                     // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
-                    if (shoot_feed_mode == SHOOT_MODE_PREPARED ||
-                        shoot_feed_mode == SHOOT_MODE_SINGLE) {
-                        shoot_feed_mode = SHOOT_MODE_BURST;
+                    if (shoot_load_mode == SHOOT_MODE_PREPARED ||
+                        shoot_load_mode == SHOOT_MODE_SINGLE) {
+                        shoot_load_mode = SHOOT_MODE_BURST;
                         shoot_burst_switch = false;
                     }
                 } else {
@@ -158,13 +158,13 @@ void remoteTask(void* arg) {
             // 停止射击
             if (shoot_stop_switch) {
                 shoot_stop_switch = false;
-                if (shoot_feed_mode == SHOOT_MODE_BURST) {
-                    shoot_feed_mode = SHOOT_MODE_PREPARED;
+                if (shoot_load_mode == SHOOT_MODE_BURST) {
+                    shoot_load_mode = SHOOT_MODE_PREPARED;
                 }
             }
         } else {
             // 没有子弹了，则停止射击
-            shoot_feed_mode = SHOOT_MODE_STOP;
+            shoot_load_mode = SHOOT_MODE_STOP;
             shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
         }
         osDelay(REMOTE_OS_DELAY);
