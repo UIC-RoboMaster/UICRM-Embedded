@@ -63,7 +63,12 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
+    bsp::GPIO en1(POWER_EN1_GPIO_Port, POWER_EN1_Pin);
+    bsp::GPIO en2(POWER_EN2_GPIO_Port, POWER_EN2_Pin);
+    en1.High();
+    en2.High();
     int current = 0;
+    osDelay(1000);
     while (true) {
         set_cursor(0, 0);
         clear_screen();
@@ -76,7 +81,7 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetTarget(15 * PI);
+                motor1->SetTarget(14 * PI);
             } else {
                 current = 0;
                 motor1->SetTarget(0);

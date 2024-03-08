@@ -70,10 +70,10 @@ void RM_RTOS_Default_Task(const void *argument);
 #define POWER_EN2_GPIO_Port GPIOC
 #define POWER_5V_Pin GPIO_PIN_15
 #define POWER_5V_GPIO_Port GPIOC
-#define SPI2_CS1_Pin GPIO_PIN_0
-#define SPI2_CS1_GPIO_Port GPIOC
-#define SPI2_CS2_Pin GPIO_PIN_3
-#define SPI2_CS2_GPIO_Port GPIOC
+#define Accel_CS_Pin GPIO_PIN_0
+#define Accel_CS_GPIO_Port GPIOC
+#define Gyro_CS_Pin GPIO_PIN_3
+#define Gyro_CS_GPIO_Port GPIOC
 #define DCMI_PWRDOWN_Pin GPIO_PIN_5
 #define DCMI_PWRDOWN_GPIO_Port GPIOC
 #define IMU_TEMP_Pin GPIO_PIN_1

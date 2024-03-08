@@ -5,7 +5,7 @@ project(${CURRENT_DIR_NAME} C ASM)
 set(MCU_LINE STM32H723xx)
 set(MCU_ARCH cortex-m7)
 set(MCU_FLOAT_ABI hard)
-set(MCU_FPU fpv4-sp-d16)
+set(MCU_FPU fpv5-d16)
 set(MCU_LINKER_SCRIPT STM32H723VGTX_FLASH.ld)
 set(MCU_OPTIONS -mcpu=${MCU_ARCH} -mthumb -mthumb-interwork
         -mfpu=${MCU_FPU} -mfloat-abi=${MCU_FLOAT_ABI})
