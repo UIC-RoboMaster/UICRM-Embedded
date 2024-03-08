@@ -604,6 +604,12 @@ namespace driver {
         }
     }
 
+    void ServoMotor::Hold() {
+        if (!Holding()) {
+            SetTarget(GetTheta(), true);
+        }
+    }
+
     bool ServoMotor::Holding() const {
         return hold_;
     }
