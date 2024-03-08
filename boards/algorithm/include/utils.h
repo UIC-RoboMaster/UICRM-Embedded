@@ -532,12 +532,33 @@ class RampSource {
     float step_;
 };
 
+
+/**
+ * @brief 线性缓动算法
+ * @details 设置了新的目标后，每次Calc()将会向目标改变step的距离
+ */
 class Ease {
   public:
     Ease(float initial, float step);
+    /**
+     * @brief 设置新的目标
+     * @param target 指定新的目标
+     */
     void SetTarget(float target);
+    /**
+     * @brief 设置新的目标，并计算下一个周期的输出值
+     * @param target 指定新的目标值
+     * @return 下一周期的值
+     */
     float Calc(float target);
+    /**
+     * @brief 使用旧的目标计算下一个周期的输出值
+     * @return 下一周期的值
+     */
     float Calc();
+    /**
+     * @brief 获取上次计算得到的当前周期输出值
+     */
     float GetOutput();
     float GetTarget();
     bool IsAtTarget();

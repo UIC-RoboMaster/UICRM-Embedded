@@ -293,8 +293,6 @@ namespace driver {
 
     }
     void MotorCANBase::SetTransmissionRatio(float ratio) {
-        // 设置电机的传动比
-        // 这里的传动比不是电机的实际传动比，而是电机与编码器的传动比
         transmission_ratio_ = ratio;
     }
     float MotorCANBase::GetOutputShaftTheta() const {

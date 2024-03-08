@@ -230,13 +230,6 @@ namespace control {
             uint8_t mode; /// PID控制器的模式
         } PID_Init_t;
 
-
-        /**
-         * @brief PID控制器默认构造函数
-         */
-        /**
-         * @brief PID controller default constructor
-         */
         ConstrainedPID();
         /**
          * @brief PID控制器构造函数

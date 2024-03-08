@@ -102,7 +102,7 @@ void gimbalTask(void* arg) {
 
     int i = 0;
     while (i < 2000 || !imu->DataReady()) {
-        gimbal->TargetAbs(0, 0);
+        gimbal->SetAbsTarget(0, 0);
         gimbal->Update();
         osDelay(1);
         ++i;
@@ -113,7 +113,7 @@ void gimbalTask(void* arg) {
 
     i = 0;
     while (!imu->DataReady() || !imu->CaliDone()) {
-        gimbal->TargetAbs(0, 0);
+        gimbal->SetAbsTarget(0, 0);
         gimbal->Update();
         osDelay(1);
         ++i;
@@ -150,7 +150,7 @@ void gimbalTask(void* arg) {
         pitch_curr = imu->INS_angle[2];
         yaw_curr = imu->INS_angle[0];
 
-        gimbal->TargetRel(pitch_diff, yaw_diff);
+        gimbal->SetRelTarget(pitch_diff, yaw_diff);
 
         gimbal->UpdateIMU(pitch_curr, yaw_curr);
         osDelay(1);

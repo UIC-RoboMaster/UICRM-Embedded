@@ -49,7 +49,7 @@ void gimbalTask(void* arg) {
         if (!yaw_motor->IsEnable())
             yaw_motor->Enable();
 
-        gimbal->TargetAbs(0, 0);
+        gimbal->SetAbsTarget(0, 0);
         gimbal->Update();
 
         osDelay(GIMBAL_OS_DELAY);
@@ -61,7 +61,7 @@ void gimbalTask(void* arg) {
     imu->Calibrate();
     i = 0;
     while (!imu->DataReady() || !imu->CaliDone()) {
-        gimbal->TargetAbs(0, 0);
+        gimbal->SetAbsTarget(0, 0);
         gimbal->Update();
 
         osDelay(1);
@@ -85,7 +85,7 @@ void gimbalTask(void* arg) {
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
         //    if (dbus->swr == remote::UP) {
-        //      gimbal->TargetAbs(0, 0);
+        //      gimbal->SetAbsTarget(0, 0);
         //      gimbal->Update();
         //      pitch_target = pitch_curr;
         //      yaw_target = yaw_curr;
@@ -126,11 +126,11 @@ void gimbalTask(void* arg) {
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
-                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->SetRelTarget(pitch_diff, yaw_diff);
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
             case REMOTE_MODE_ADVANCED:
-                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->SetRelTarget(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
             default:

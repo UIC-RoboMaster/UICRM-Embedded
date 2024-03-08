@@ -124,7 +124,7 @@ void gimbalTask(void* arg) {
 
     int i = 0;
     while (i < 2000 || mpu6500->temperature_ < 49.0f) {
-        gimbal->TargetAbs(0, 0);
+        gimbal->SetAbsTarget(0, 0);
         gimbal->Update();
 
         osDelay(1);
@@ -136,7 +136,7 @@ void gimbalTask(void* arg) {
 
     i = 0;
     while (!ahrs->IsCailbrated()) {
-        gimbal->TargetAbs(0, 0);
+        gimbal->SetAbsTarget(0, 0);
         gimbal->Update();
 
         osDelay(1);
@@ -174,7 +174,7 @@ void gimbalTask(void* arg) {
         pitch_curr = ahrs->INS_angle[2];
         yaw_curr = ahrs->INS_angle[0];
 
-        gimbal->TargetRel(pitch_diff, yaw_diff);
+        gimbal->SetRelTarget(pitch_diff, yaw_diff);
 
         gimbal->UpdateIMU(pitch_curr, yaw_curr);
 

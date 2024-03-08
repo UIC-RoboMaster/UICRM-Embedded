@@ -166,6 +166,10 @@ namespace driver {
 
         void SetMode(uint8_t mode);
 
+        /**
+         * @brief 设置电机的传动比
+         * @note 这里的传动比不是电机的实际传动比，而是电机与编码器的传动比
+         */
         void SetTransmissionRatio(float ratio);
 
         /**

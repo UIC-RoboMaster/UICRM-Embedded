@@ -73,41 +73,29 @@ namespace control {
     class Gimbal {
       public:
         /**
-         * @brief 构造函数
-         *
          * @param gimbal 用于初始化云台的结构体，参考gimbal_t
          */
         /**
-         * @brief constructor for gimbal
-         *
-         * @param gimbal structure that used to initialize gimbal, refer to type
+]        * @param gimbal structure that used to initialize gimbal, refer to type
          * gimbal_t
          */
         Gimbal(gimbal_t gimbal);
 
-        /**
-         * @brief 析构函数
-         */
-        /**
-         * @brief destructor for gimbal
-         */
         ~Gimbal();
 
         /**
-         * @brief 获取云台相关常量
-         *
+         * @brief 获取云台相关参数
          * @return 参考gimbal_data_t
          */
         /**
          * @brief get gimbal related constants
-         *
          * @return refer to gimbal_data_t
          */
         gimbal_data_t* GetData();
 
 
         /**
-         * @brief 计算当前云台的输出
+         * @brief 根据目标角度计算控制电机的输出
          * @note 不会立即控制电机
          */
         /**
@@ -116,8 +104,9 @@ namespace control {
          */
         void Update();
 
+
         /**
-         * @brief 基于当前传感器数据更新云台的输出
+         * @brief 根据目标角度和传入的IMU数据计算控制电机的输出
          * @param pitch 陀螺仪测量的pitch角度，范围为[-pi, pi]
          * @param yaw 陀螺仪测量的yaw角度，范围为[-pi, pi]
          */
@@ -128,32 +117,37 @@ namespace control {
          */
         void UpdateIMU(float pitch, float yaw);
 
-        /**
-         * @brief 将云台指向新的方向，是绝对于车身零点的角度
-         * @param new_pitch 新的pitch角度
-         * @param new_yaw 新的yaw角度
-         */
-        /**
-         * @brief set motors to point to a new orientation
-         *
-         * @param new_pitch new pitch angled
-         * @param new_yaw   new yaw angled
-         */
-        void TargetAbs(float new_pitch, float new_yaw);
 
         /**
-         * @brief 将云台指向新的方向，是相对于当前方向的角度
+         * @brief 设置新的绝对目标角度
+         * @note 仅设置目标角度变量pitch_angle_和yaw_angle_
          *
-         * @param new_pitch 新的pitch角度
-         * @param new_yaw 新的yaw角度
+         * @param abs_pitch 新的pitch角度，范围为[-pi, pi]
+         * @param abs_yaw 新的yaw角度，范围为[-pi, pi]
          */
         /**
          * @brief set motors to point to a new orientation
          *
-         * @param new_pitch new pitch angled
-         * @param new_yaw   new yaw angled
+         * @param abs_pitch new pitch angled, range is [-pi, pi]
+         * @param abs_yaw   new yaw angled, range is [-pi, pi]
          */
-        void TargetRel(float new_pitch, float new_yaw);
+        void SetAbsTarget(float new_pitch, float new_yaw);
+
+
+        /**
+         * @brief 相对当前目标角度，设置新的目标角度
+         * @note 仅设置目标角度变量pitch_angle_和yaw_angle_
+         *
+         * @param rel_pitch 新的pitch角度，范围为[-pi, pi]
+         * @param rel_yaw 新的yaw角度，范围为[-pi, pi]
+         */
+        /**
+         * @brief set motors to point to a new orientation
+         *
+         * @param rel_pitch new pitch angled, range is [-pi, pi]
+         * @param rel_yaw   new yaw angled, range is [-pi, pi]
+         */
+        void SetRelTarget(float new_pitch, float new_yaw);
 
 
         /**
@@ -180,16 +174,14 @@ namespace control {
 
 
         // pitch and yaw angle
-        float pitch_angle_; /* current gimbal pitch angle */
-        float yaw_angle_;   /* current gimbal yaw angle   */
+        float target_pitch_; /* current gimbal pitch angle */
+        float target_yaw_;   /* current gimbal yaw angle   */
 
         // pitch and yaw limit
         float pitch_lower_limit_; /* pitch lower limit */
         float pitch_upper_limit_; /* pitch upper limit */
         float yaw_lower_limit_;   /* yaw lower limit   */
         float yaw_upper_limit_;   /* yaw upper limit   */
-
-
     };
 
 }  // namespace control

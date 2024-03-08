@@ -35,8 +35,6 @@ void init_dbus() {
 }
 osThreadId_t remoteTaskHandle;
 
-// #define HAS_REFEREE
-
 void remoteTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
@@ -49,9 +47,6 @@ void remoteTask(void* arg) {
 
     memset(&keyboard, 0, sizeof(keyboard));
     memset(&mouse, 0, sizeof(mouse));
-    bool is_dbus_offline;
-    bool is_robot_dead;
-    bool is_shoot_available;
 
     BoolEdgeDetector* keyboard_Z_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* keyboard_ctrl_edge = new BoolEdgeDetector(false);
@@ -62,15 +57,15 @@ void remoteTask(void* arg) {
 
     while (1) {
         // Offline Detection && Security Check
-        is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
+        bool is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
 #ifdef HAS_REFEREE
         // Kill Detection
-                is_robot_dead = referee->game_robot_status.remain_HP == 0;
-                is_shoot_available =
-                    referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+        bool is_robot_dead = referee->game_robot_status.remain_HP == 0;
+        bool is_shoot_available =
+            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
 #else
-        is_robot_dead = false;
-        is_shoot_available = true;
+        bool is_robot_dead = false;
+        bool is_shoot_available = true;
 #endif
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
@@ -128,8 +123,6 @@ void remoteTask(void* arg) {
 
         /*
          * 射击模式控制
-         * shoot_flywheel_mode：设置PREPARING/STOP控制摩擦轮启停，就绪后由shoot_task转为PREPARED
-         * shoot_load_mode：设置SINGLE/BURST/STOP切换发射模式（供弹模式）
          * */
 
         if (!is_shoot_available)
@@ -173,7 +166,7 @@ void remoteTask(void* arg) {
             shoot_load_mode = SHOOT_MODE_BURST;
         }
 
-        // 不发射
+        // 停止发射
         if (shoot_switch_edge->negEdge()) {
             shoot_load_mode = SHOOT_MODE_STOP;
             shoot_burst_timestamp = 0;
