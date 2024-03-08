@@ -18,11 +18,17 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "main.h"
+
 #include "bsp_print.h"
+
+#include "cmsis_os.h"
+#include "task.h"
 
 #include "bsp_uart.h"
 #include "bsp_usb.h"
-#include "main.h"
+
+
 #include "printf.h"  // third party tiny-printf implemnetations
 
 #define MAX_PRINT_LEN 1024
@@ -56,12 +62,16 @@ void print_use_usb() {
 }
 #endif
 
+
+
 int32_t print(const char* format, ...) {
 #ifdef NDEBUG
     UNUSED(format);
     UNUSED(print_buffer);
     return 0;
 #else  // == #ifdef DEBUG
+    // STM32H7 性能太强了，不设置灵界区会导致HardFault
+    taskENTER_CRITICAL();
     va_list args;
     int length;
 
@@ -69,6 +79,8 @@ int32_t print(const char* format, ...) {
     length = vsnprintf(print_buffer, MAX_PRINT_LEN, format, args);
     va_end(args);
 
+
+    taskEXIT_CRITICAL();
     if (print_uart)
         return print_uart->Write((uint8_t*)print_buffer, length);
 #ifndef NO_USB

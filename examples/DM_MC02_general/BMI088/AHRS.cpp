@@ -43,40 +43,19 @@ static bsp::GPIO* bmi088_gyro_cs = nullptr;
 static bsp::GPIT* bmi088_accel_int = nullptr;
 static bsp::GPIT* bmi088_gyro_int = nullptr;
 
-const osThreadAttr_t imuUpdateTaskAttribute = {.name = "imuUpdateTask",
-                                               .attr_bits = osThreadDetached,
-                                               .cb_mem = nullptr,
-                                               .cb_size = 0,
-                                               .stack_mem = nullptr,
-                                               .stack_size = 256 * 4,
-                                               .priority = (osPriority_t)osPriorityNormal,
-                                               .tz_module = 0,
-                                               .reserved = 0};
 
-osThreadId_t imuUpdateTaskHandle;
 
 void BMI088ReceiveDone() {
-    osThreadFlagsSet(imuUpdateTaskHandle, RX_SIGNAL);
+    ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
+                 bmi088->accel_[1], bmi088->accel_[2]);
+    heater->Update(bmi088->temperature_);
 }
 
-void imuUpdateTask(void* arguments) {
-    UNUSED(arguments);
-    while (true) {
-        uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
-        if (flags & RX_SIGNAL) {
-            // ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
-            // bmi088->accel_[1], bmi088->accel_[2], ist8310->mag_[0], ist8310->mag_[1],
-            // ist8310->mag_[2]);
-            ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
-                         bmi088->accel_[1], bmi088->accel_[2]);
-            heater->Update(bmi088->temperature_);
-        }
-    }
-}
+
 
 void RM_RTOS_Init(void) {
     HAL_Delay(500);
-    print_use_uart(&huart1);
+    print_use_uart(&huart1, true, 921600);
     bsp::spi_init_t spiInit = {
         .hspi = &hspi2,
         .mode = bsp::SPI_MODE_DMA,
@@ -90,6 +69,7 @@ void RM_RTOS_Init(void) {
     bmi088_gyro_cs = new bsp::GPIO(Gyro_CS_GPIO_Port, Gyro_CS_Pin);
     bmi088_accel_int = new bsp::GPIT(Accel_INT_Pin);
     bmi088_gyro_int = new bsp::GPIT(Gyro_INT_Pin);
+
     imu::BMI088_init_t bmi088Init = {
         .spi_master = spi2_master,
         .CS_ACCEL = bmi088_accel_cs,
@@ -101,19 +81,18 @@ void RM_RTOS_Init(void) {
     bmi088 = new imu::BMI088(bmi088Init);
 
     ahrs = new control::AHRS(false);
-    heater_pwm = new bsp::PWM(&htim3, 2, 1000000, 2000, 0);
+     heater_pwm = new bsp::PWM(&htim3, 4, 1000000, 500, 0);
     driver::heater_init_t heater_init = {
         .pwm = heater_pwm,
         .target_temp = 45.0f,
-        .pid_param = new float[3]{160.0f, 0.01f, 0.01f},
-        .heater_I_limit = 100.0f,
-        .heater_output_limit = 300.0f,
+        .pid_param = new float[3]{40.0f, 0.01f, 0.0f},
+        .heater_I_limit = 30.0f,
+        .heater_output_limit = 100.0f,
     };
     heater = new driver::Heater(heater_init);
 }
 
 void RM_RTOS_Threads_Init(void) {
-    imuUpdateTaskHandle = osThreadNew(imuUpdateTask, nullptr, &imuUpdateTaskAttribute);
 }
 void RM_RTOS_Default_Task(const void* arguments) {
     UNUSED(arguments);

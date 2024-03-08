@@ -110,6 +110,9 @@ namespace bsp {
     }
 
     int CAN::Transmit(uint16_t id, const uint8_t data[], uint32_t length) {
+        if(length==8){
+            length = FDCAN_DLC_BYTES_8;
+        }
         RM_EXPECT_TRUE(IS_FDCAN_DLC(length), "CAN tx data length exceeds limit");
         if (!IS_FDCAN_DLC(length))
             return -1;
@@ -117,7 +120,7 @@ namespace bsp {
         FDCAN_TxHeaderTypeDef header = {.Identifier = id,
                                         .IdType = FDCAN_STANDARD_ID,
                                         .TxFrameType = FDCAN_DATA_FRAME,
-                                        .DataLength = length << 16,
+                                        .DataLength = FDCAN_DLC_BYTES_8,
                                         .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
                                         .BitRateSwitch = FDCAN_BRS_OFF,
                                         .FDFormat = FDCAN_CLASSIC_CAN,
@@ -135,6 +138,9 @@ namespace bsp {
     }
 
     int CAN::TransmitExtend(uint32_t id, const uint8_t data[], uint32_t length) {
+        if(length==8){
+            length = FDCAN_DLC_BYTES_8;
+        }
         RM_EXPECT_TRUE(IS_FDCAN_DLC(length), "CAN tx data length exceeds limit");
         if (!IS_FDCAN_DLC(length))
             return -1;
@@ -142,7 +148,7 @@ namespace bsp {
         FDCAN_TxHeaderTypeDef header = {.Identifier = id,
                                         .IdType = FDCAN_EXTENDED_ID,
                                         .TxFrameType = FDCAN_DATA_FRAME,
-                                        .DataLength = length << 16,
+                                        .DataLength = length,
                                         .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
                                         .BitRateSwitch = FDCAN_BRS_OFF,
                                         .FDFormat = FDCAN_CLASSIC_CAN,
