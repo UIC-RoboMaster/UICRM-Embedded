@@ -531,3 +531,19 @@ class RampSource {
     float max_;
     float step_;
 };
+
+class Ease {
+  public:
+    Ease(float initial, float step);
+    void SetTarget(float target);
+    float Calc(float target);
+    float Calc();
+    float GetOutput();
+    float GetTarget();
+    bool IsAtTarget();
+
+  private:
+    float current_;
+    float target_;
+    float step_;
+};

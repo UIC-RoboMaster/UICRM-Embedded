@@ -146,3 +146,40 @@ void RampSource::SetMin(float min) {
 void RampSource::SetCurrent(float current) {
     output_ = current;
 }
+
+Ease::Ease(float initial, float step) {
+    current_ = initial;
+    step_ = step;
+}
+
+void Ease::SetTarget(float target) {
+    target_ = target;
+}
+
+float Ease::Calc(){
+    return Calc(target_);
+}
+
+float Ease::Calc(float target){
+   target_ = target;
+    if (current_ < target_){
+        current_ += step_;
+        current_ = min(current_, target_);
+    } else if (current_ > target_){
+        current_ -= step_;
+        current_ = max(current_, target_);
+    }
+    return current_;
+}
+
+float Ease::GetOutput() {
+    return current_;
+}
+
+float Ease::GetTarget() {
+    return target_;
+}
+
+bool Ease::IsAtTarget() {
+    return current_ == target_;
+}
