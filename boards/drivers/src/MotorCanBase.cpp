@@ -304,6 +304,9 @@ namespace driver {
             // 检测到上升沿，代表电机输出轴反向转动了一整圈
         }
 
+        output_shaft_theta_ = servo_angle_ + cumulated_angle_;
+        output_shaft_omega_ = omega_ / transmission_ratio_;
+
         if (mode_ & THETA) {
             if (!(mode_ & ABSOLUTE)) {
                 if (!holding_ && abs(target_ - GetOutputShaftTheta()) <= proximity_in_) {
@@ -328,10 +331,10 @@ namespace driver {
         transmission_ratio_ = ratio;
     }
     float MotorCANBase::GetOutputShaftTheta() const {
-        return (servo_angle_ + cumulated_angle_);
+        return output_shaft_theta_;
     }
     float MotorCANBase::GetOutputShaftOmega() const {
-        return omega_ / transmission_ratio_;
+        return output_shaft_omega_;
     }
     float MotorCANBase::GetTarget() const {
         return target_;
