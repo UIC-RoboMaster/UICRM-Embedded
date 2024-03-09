@@ -216,8 +216,8 @@ namespace driver {
         volatile float motor_angle_ = 0; /* 当前电机相比于开机的角度的旋转的角度，单位为[rad] */
         volatile float offset_angle_ = 0; /* cumulative offset angle of motor shaft, range between
                                                     [0, 2PI] in [rad] */
-        volatile float servo_angle_ = 0;  /* 电机输出轴的角度，单位为[rad]，范围为[0, 2PI] */
-        volatile float cumulated_angle_ = 0;              /* 累积角度，单位为[rad] */
+        volatile float servo_angle_ = 0; /* 电机输出轴的角度，单位为[rad]，范围为[0, 2PI] */
+        volatile float cumulated_angle_ = 0;     /* 累积角度，单位为[rad] */
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
         FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
 

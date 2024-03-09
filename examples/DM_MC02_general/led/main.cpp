@@ -18,9 +18,10 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "cmsis_os.h"
 #include "main.h"
+
 #include "bsp_spi.h"
+#include "cmsis_os.h"
 #include "ws2812b_spi.h"
 
 static display::WS2812* led = nullptr;
@@ -28,7 +29,7 @@ static bsp::SPI* spi = nullptr;
 
 void RM_RTOS_Init(void) {
     bsp::spi_init_t spi_init = {
-        .hspi= &hspi6,
+        .hspi = &hspi6,
         .mode = bsp::SPI_MODE_INTURRUPT,
     };
     spi = new bsp::SPI(spi_init);
@@ -80,7 +81,7 @@ void RM_RTOS_Default_Task(const void* args) {
 
             aRGB = ((uint32_t)(alpha)) << 24 | ((uint32_t)(red)) << 16 | ((uint32_t)(green)) << 8 |
                    ((uint32_t)(blue)) << 0;
-            led->SetColor(0,aRGB);
+            led->SetColor(0, aRGB);
             led->Update();
             osDelay(1);
         }

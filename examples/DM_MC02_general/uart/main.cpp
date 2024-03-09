@@ -33,32 +33,32 @@ static uint8_t* uart_data;
 static uint32_t uart_len;
 
 void uartReply(void* arg) {
-   UNUSED(arg);
-   UART->Write<true>(uart_data, uart_len);
+    UNUSED(arg);
+    UART->Write<true>(uart_data, uart_len);
 }
 
 void RM_RTOS_Init(void) {
-   /// because imu occupies uart1, no other UART can be used, so we need to use UART to print
-   // print_use_uart(&huart1);
+    /// because imu occupies uart1, no other UART can be used, so we need to use UART to print
+    // print_use_uart(&huart1);
 
-   UART = new bsp::UART(&huart1);
+    UART = new bsp::UART(&huart1);
 
-   UART->SetupTx(200);
-   UART->SetupRx(200);
-   UART->SetupRxData(&uart_data, &uart_len);
+    UART->SetupTx(200);
+    UART->SetupRx(200);
+    UART->SetupRxData(&uart_data, &uart_len);
 
-   UART->RegisterCallback(uartReply, nullptr);
+    UART->RegisterCallback(uartReply, nullptr);
 }
 
 void RM_RTOS_Threads_Init(void) {
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
-   UNUSED(arg);
-   while (true) {
-       set_cursor(0, 0);
-       clear_screen();
+    UNUSED(arg);
+    while (true) {
+        set_cursor(0, 0);
+        clear_screen();
 
-       osDelay(50);
-   }
+        osDelay(50);
+    }
 }

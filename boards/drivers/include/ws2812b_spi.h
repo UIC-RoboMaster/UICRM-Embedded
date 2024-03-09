@@ -55,4 +55,4 @@ namespace display {
         uint8_t high_level_;
         uint8_t low_level_;
     };
-}  // namespace driver
+}  // namespace display

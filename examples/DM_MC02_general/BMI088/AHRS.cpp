@@ -43,15 +43,11 @@ static bsp::GPIO* bmi088_gyro_cs = nullptr;
 static bsp::GPIT* bmi088_accel_int = nullptr;
 static bsp::GPIT* bmi088_gyro_int = nullptr;
 
-
-
 void BMI088ReceiveDone() {
     ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
                  bmi088->accel_[1], bmi088->accel_[2]);
     heater->Update(bmi088->temperature_);
 }
-
-
 
 void RM_RTOS_Init(void) {
     HAL_Delay(500);
@@ -81,7 +77,7 @@ void RM_RTOS_Init(void) {
     bmi088 = new imu::BMI088(bmi088Init);
 
     ahrs = new control::AHRS(false);
-     heater_pwm = new bsp::PWM(&htim3, 4, 1000000, 500, 0);
+    heater_pwm = new bsp::PWM(&htim3, 4, 1000000, 500, 0);
     driver::heater_init_t heater_init = {
         .pwm = heater_pwm,
         .target_temp = 45.0f,

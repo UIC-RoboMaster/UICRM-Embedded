@@ -110,7 +110,7 @@ namespace bsp {
     }
 
     int CAN::Transmit(uint16_t id, const uint8_t data[], uint32_t length) {
-        if(length==8){
+        if (length == 8) {
             length = FDCAN_DLC_BYTES_8;
         }
         RM_EXPECT_TRUE(IS_FDCAN_DLC(length), "CAN tx data length exceeds limit");
@@ -138,7 +138,7 @@ namespace bsp {
     }
 
     int CAN::TransmitExtend(uint32_t id, const uint8_t data[], uint32_t length) {
-        if(length==8){
+        if (length == 8) {
             length = FDCAN_DLC_BYTES_8;
         }
         RM_EXPECT_TRUE(IS_FDCAN_DLC(length), "CAN tx data length exceeds limit");
