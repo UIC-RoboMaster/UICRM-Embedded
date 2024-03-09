@@ -93,6 +93,9 @@ void MX_DMA_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
-
+void RM_DMA_UART5_INIT(void){
+  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
+}
 /* USER CODE END 2 */
 

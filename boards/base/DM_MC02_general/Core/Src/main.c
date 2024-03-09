@@ -127,6 +127,7 @@ int main(void)
   MX_TIM23_Init();
   MX_TIM24_Init();
   /* USER CODE BEGIN 2 */
+  RM_DMA_UART5_INIT();
   RM_UART5_Init();
   /* USER CODE END 2 */
 

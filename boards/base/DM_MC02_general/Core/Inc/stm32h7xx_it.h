@@ -90,7 +90,7 @@ void USART10_IRQHandler(void);
 void FDCAN3_IT0_IRQHandler(void);
 void FDCAN3_IT1_IRQHandler(void);
 /* USER CODE BEGIN EFP */
-
+void UART5_IRQHandler(void);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

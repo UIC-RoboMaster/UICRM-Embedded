@@ -52,7 +52,7 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern UART_HandleTypeDef huart5;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -711,5 +711,14 @@ void FDCAN3_IT1_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+void UART5_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART7_IRQn 0 */
+  RM_UART_IRQHandler(&huart5);
+  /* USER CODE END UART7_IRQn 0 */
+  HAL_UART_IRQHandler(&huart5);
+  /* USER CODE BEGIN UART7_IRQn 1 */
 
+  /* USER CODE END UART7_IRQn 1 */
+}
 /* USER CODE END 1 */
