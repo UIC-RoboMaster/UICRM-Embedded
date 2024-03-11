@@ -21,7 +21,6 @@
 #pragma once
 
 #include "MotorCanBase.h"
-#include "can.h"
 #include "pid.h"
 #include "utils.h"
 

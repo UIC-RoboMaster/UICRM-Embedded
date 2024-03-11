@@ -165,6 +165,11 @@ SECTIONS
     _eccmram = .;       /* create a global symbol at ccmram end */
   } >CCMRAM AT> FLASH
 
+  ._CCMRAM_Area :
+  {
+    . = ALIGN(4);
+    . = ALIGN(4);
+  } >CCMRAM
   
   /* Uninitialized data section */
   . = ALIGN(4);
@@ -192,8 +197,6 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
-
-  
 
   /* Remove information from the standard libraries */
   /DISCARD/ :
