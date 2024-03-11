@@ -19,12 +19,13 @@
  ###########################################################*/
 
 #pragma once
+#include <unordered_map>
+
 #include "MotorBase.h"
 #include "bsp_can.h"
+#include "bsp_thread.h"
 #include "pid.h"
 #include "utils.h"
-#include <unordered_map>
-#include "bsp_thread.h"
 
 namespace driver {
 
@@ -56,9 +57,9 @@ namespace driver {
          * @param can    CAN instance
          * @param rx_id  CAN rx id
          */
-        MotorCANBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id=0x00);
+        MotorCANBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
 
-        static void SetFrequency(uint32_t freq=1000);
+        static void SetFrequency(uint32_t freq = 1000);
 
         /**
          * @brief 更新电机的反馈数据
@@ -162,7 +163,7 @@ namespace driver {
 
         virtual float GetTarget() const;
 
-        virtual void ReInitPID(control::ConstrainedPID::PID_Init_t pid_init,uint8_t mode);
+        virtual void ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode);
 
         void SetMode(uint8_t mode);
 
@@ -185,7 +186,6 @@ namespace driver {
 
         bool IsEnable() const;
 
-
       protected:
         volatile float theta_;
         volatile float omega_;
@@ -193,33 +193,26 @@ namespace driver {
         bool enable_;
 
         // angle control
-        float align_angle_=0;  /* 对齐角度，开机时的角度，单位为[rad] */
-        float motor_angle_=0;  /* 当前电机相比于开机的角度的旋转的角度，单位为[rad] */
-        float offset_angle_=0; /* cumulative offset angle of motor shaft, range between
-                                                  [0, 2PI] in [rad] */
-        float servo_angle_=0;  /* 电机输出轴的角度，单位为[rad]，范围为[0, 2PI] */
-        float cumulated_angle_=0; /* 累积角度，单位为[rad] */
+        float align_angle_ = 0; /* 对齐角度，开机时的角度，单位为[rad] */
+        float motor_angle_ = 0; /* 当前电机相比于开机的角度的旋转的角度，单位为[rad] */
+        float offset_angle_ = 0; /* cumulative offset angle of motor shaft, range between
+                                                    [0, 2PI] in [rad] */
+        float servo_angle_ = 0;  /* 电机输出轴的角度，单位为[rad]，范围为[0, 2PI] */
+        float cumulated_angle_ = 0;              /* 累积角度，单位为[rad] */
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
         FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
 
-        float transmission_ratio_=1; /* 电机的减速比例 */
+        float transmission_ratio_ = 1; /* 电机的减速比例 */
 
       private:
         bsp::CAN* can_;
         uint16_t rx_id_;
         uint16_t tx_id_;
 
-        uint8_t mode_=0;
+        uint8_t mode_ = 0;
         control::ConstrainedPID omega_pid_;
         control::ConstrainedPID theta_pid_;
         float target_;
-
-
-
-
-
-
-
 
         /**
          * @brief 发送CAN消息以设置电机输出
@@ -234,23 +227,21 @@ namespace driver {
          */
         static void TransmitOutput(MotorCANBase* motors[], uint8_t num_motors);
 
-
-        static const int16_t MAX_OUT=32767;
+        static const int16_t MAX_OUT = 32767;
 
         static bool is_init_;
 
         static bsp::Thread* can_motor_thread_;
-        static constexpr osThreadAttr_t can_motor_thread_attr_=
-            {
-                .name = "MotorUpdateTask",
-                .attr_bits = osThreadDetached,
-                .cb_mem = nullptr,
-                .cb_size = 0,
-                .stack_mem = nullptr,
-                .stack_size = 256 * 4,
-                .priority = (osPriority_t)osPriorityHigh,
-                .tz_module = 0,
-                .reserved = 0};
+        static constexpr osThreadAttr_t can_motor_thread_attr_ = {
+            .name = "MotorUpdateTask",
+            .attr_bits = osThreadDetached,
+            .cb_mem = nullptr,
+            .cb_size = 0,
+            .stack_mem = nullptr,
+            .stack_size = 256 * 4,
+            .priority = (osPriority_t)osPriorityHigh,
+            .tz_module = 0,
+            .reserved = 0};
 
         static void CanMotorThread(void* args);
 
@@ -260,7 +251,6 @@ namespace driver {
         static MotorCANBase* motors_[10][4];
         static uint8_t motor_cnt_[10];
         static uint32_t delay_time;
-
     };
 
     /**
@@ -284,7 +274,7 @@ namespace driver {
 
       private:
         volatile int16_t raw_current_get_ = 0;
-        static const int16_t MAX_OUT=10000;
+        static const int16_t MAX_OUT = 10000;
     };
 
     /**
@@ -311,8 +301,7 @@ namespace driver {
       private:
         volatile int16_t raw_current_get_ = 0;
         volatile uint8_t raw_temperature_ = 0;
-        static const int16_t MAX_OUT=32767;
-
+        static const int16_t MAX_OUT = 32767;
     };
 
     /**
@@ -324,7 +313,7 @@ namespace driver {
     class Motor6020 : public MotorCANBase {
       public:
         /* constructor wrapper over MotorCANBase */
-        Motor6020(bsp::CAN* can, uint16_t rx_id,uint16_t tx_id=0x00);
+        Motor6020(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
         /* implements data update callback */
         void UpdateData(const uint8_t data[]) override final;
         /* implements data printout */
@@ -339,10 +328,9 @@ namespace driver {
       private:
         volatile int16_t raw_current_get_ = 0;
         volatile uint8_t raw_temperature_ = 0;
-        static const int16_t MAX_OUT=25000;
+        static const int16_t MAX_OUT = 25000;
         static const int16_t MAX_OUT_C = 16383;
     };
-
 
     /**
      * @brief DM4310电机的标准类
@@ -369,11 +357,8 @@ namespace driver {
         volatile int16_t raw_current_get_ = 0;
         volatile uint8_t raw_temperature_ = 0;
         volatile uint8_t raw_temperature_esc_ = 0;
-        static const int16_t MAX_OUT=32767;
-
+        static const int16_t MAX_OUT = 32767;
     };
-
-
 
     /**
      * @brief 伺服电机旋转模式，用于DJI的CAN协议电机

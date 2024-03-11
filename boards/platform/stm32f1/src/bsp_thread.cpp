@@ -20,13 +20,13 @@
 
 #include "bsp_thread.h"
 
-namespace bsp{
+namespace bsp {
 
     Thread::Thread(thread_init_t init) {
         func_ = init.func;
         args_ = init.args;
         attr_ = init.attr;
-        thread_handle_ =NULL;
+        thread_handle_ = NULL;
     }
     Thread::~Thread() {
         osThreadTerminate(thread_handle_);
@@ -43,18 +43,18 @@ namespace bsp{
     void Thread::Resume() {
         osThreadResume(thread_handle_);
     }
-    void Thread::Wait(uint32_t millisec,uint32_t signal) {
-        if(signal == 0){
+    void Thread::Wait(uint32_t millisec, uint32_t signal) {
+        if (signal == 0) {
             signal = rx_signal_;
         }
-        if(millisec==0){
+        if (millisec == 0) {
             osThreadFlagsWait(signal, osFlagsWaitAny, osWaitForever);
         }
         osThreadFlagsWait(signal, osFlagsWaitAny, millisec);
     }
 
     void Thread::Set(uint32_t signal) {
-        if(signal == 0){
+        if (signal == 0) {
             signal = rx_signal_;
         }
         osThreadFlagsSet(thread_handle_, signal);
@@ -73,10 +73,10 @@ namespace bsp{
     void EventThread::ThreadFunc(void* args) {
         EventThread* instance = reinterpret_cast<EventThread*>(args);
         void* user_instance = reinterpret_cast<EventThread*>(instance)->GetArgs();
-        while(true){
+        while (true) {
             osThreadFlagsWait(rx_signal_, osFlagsWaitAny, osWaitForever);
             instance->func_(user_instance);
         }
     }
 
-}
+}  // namespace bsp

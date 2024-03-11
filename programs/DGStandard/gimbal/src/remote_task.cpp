@@ -65,9 +65,9 @@ void remoteTask(void* arg) {
         is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
 #ifdef HAS_REFEREE
         // Kill Detection
-                is_robot_dead = referee->game_robot_status.remain_HP == 0;
-                is_shoot_available =
-                    referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+        is_robot_dead = referee->game_robot_status.remain_HP == 0;
+        is_shoot_available =
+            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
 #else
         is_robot_dead = false;
         is_shoot_available = true;
@@ -118,7 +118,7 @@ void remoteTask(void* arg) {
         static BoolEdgeDetector* mode_switch_edge = new BoolEdgeDetector(false);
         mode_switch_edge->input(state_r == remote::UP);
 
-        if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge()){
+        if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge()) {
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
             if ((int8_t)next_mode > (int8_t)remote_mode_max) {
                 next_mode = (RemoteMode)remote_mode_min;
@@ -132,8 +132,7 @@ void remoteTask(void* arg) {
          * shoot_load_mode：设置SINGLE/BURST/STOP切换发射模式（供弹模式）
          * */
 
-        if (!is_shoot_available)
-        {
+        if (!is_shoot_available) {
             shoot_load_mode = SHOOT_MODE_STOP;
             shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
         }
@@ -142,9 +141,7 @@ void remoteTask(void* arg) {
         static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
         flywheel_switch_edge->input(state_l == remote::UP);
         keyboard_Z_edge->input(keyboard.bit.Z);
-        if (flywheel_switch_edge->posEdge() ||
-            keyboard_Z_edge->posEdge()) {
-
+        if (flywheel_switch_edge->posEdge() || keyboard_Z_edge->posEdge()) {
             if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
                 shoot_load_mode = SHOOT_MODE_IDLE;

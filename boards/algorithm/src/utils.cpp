@@ -156,16 +156,16 @@ void Ease::SetTarget(float target) {
     target_ = target;
 }
 
-float Ease::Calc(){
+float Ease::Calc() {
     return Calc(target_);
 }
 
-float Ease::Calc(float target){
-   target_ = target;
-    if (current_ < target_){
+float Ease::Calc(float target) {
+    target_ = target;
+    if (current_ < target_) {
         current_ += step_;
         current_ = min(current_, target_);
-    } else if (current_ > target_){
+    } else if (current_ > target_) {
         current_ -= step_;
         current_ = max(current_, target_);
     }

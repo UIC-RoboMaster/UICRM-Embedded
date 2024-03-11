@@ -26,7 +26,6 @@
 
 namespace bsp {
 
-
     typedef void (*uart_rx_callback_t)(void* args);
 
     /**
@@ -181,7 +180,7 @@ namespace bsp {
         /* new rx callback */
         uint8_t** rx_ptr_ = nullptr;
         uint32_t* rx_len_ = nullptr;
-        uart_rx_callback_t callback_= [](void* args){ UNUSED(args);};
+        uart_rx_callback_t callback_ = [](void* args) { UNUSED(args); };
         void* callback_args_ = nullptr;
         /* tx */
         uint32_t tx_size_;

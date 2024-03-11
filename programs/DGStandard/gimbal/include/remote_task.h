@@ -50,10 +50,10 @@ enum ShootFricMode {
 extern ShootFricMode shoot_flywheel_mode;
 enum ShootMode {
     SHOOT_MODE_DISABLE = -1,
-    SHOOT_MODE_STOP = 0, // 停止供弹
-    SHOOT_MODE_IDLE = 1, // 连续供弹直到检测到弹丸
-    SHOOT_MODE_SINGLE = 2, // 单发，用于通知shoot_task，发射后由shoot_task设置回IDLE
-    SHOOT_MODE_BURST = 3, // 连发
+    SHOOT_MODE_STOP = 0,    // 停止供弹
+    SHOOT_MODE_IDLE = 1,    // 连续供弹直到检测到弹丸
+    SHOOT_MODE_SINGLE = 2,  // 单发，用于通知shoot_task，发射后由shoot_task设置回IDLE
+    SHOOT_MODE_BURST = 3,   // 连发
 };
 extern ShootMode shoot_load_mode;
 extern osThreadId_t remoteTaskHandle;

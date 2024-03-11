@@ -76,25 +76,23 @@ namespace imu {
 
       private:
         bsp::UART* uart_;
-        wit_read_callback_t read_callback_=[](){};
+        wit_read_callback_t read_callback_ = []() {};
         uint16_t* read_reg_data_ = nullptr;
 
-        uint8_t* read_ptr_= nullptr;
-        uint32_t read_len_=0;
+        uint8_t* read_ptr_ = nullptr;
+        uint32_t read_len_ = 0;
 
         bsp::EventThread* callback_thread_ = nullptr;
 
-        const osThreadAttr_t callback_thread_attr_=
-            {
-                .name = "witIMUUpdateTask",
-                .attr_bits = osThreadDetached,
-                .cb_mem = nullptr,
-                .cb_size = 0,
-                .stack_mem = nullptr,
-                .stack_size = 128 * 4,
-                .priority = (osPriority_t)osPriorityRealtime,
-                .tz_module = 0,
-                .reserved = 0};
+        const osThreadAttr_t callback_thread_attr_ = {.name = "witIMUUpdateTask",
+                                                      .attr_bits = osThreadDetached,
+                                                      .cb_mem = nullptr,
+                                                      .cb_size = 0,
+                                                      .stack_mem = nullptr,
+                                                      .stack_size = 128 * 4,
+                                                      .priority = (osPriority_t)osPriorityRealtime,
+                                                      .tz_module = 0,
+                                                      .reserved = 0};
 
         static void callback_thread_func_(void* arg);
     };

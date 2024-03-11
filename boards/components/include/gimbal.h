@@ -36,20 +36,19 @@ namespace control {
      * @note except for proximity is determined by user, these should be obtained
      * by reading encoder values through uart/gdb
      */
-    struct gimbal_data_t{
-        float pitch_offset_=0.0f;     /* pitch offset angle (angle when muzzle is at vertical
-                                    center) */
-        float yaw_offset_=0.0f;       /* yaw offset angle (angle when muzzle is at horizontal
-                                    center) */
-        float pitch_max_=0.0f;        /* maximum pitch angle the gimbal can turn from center */
-        float yaw_max_=0.0f;          /* maximum yaw angle the gimbal can turn from center      */
-        bool yaw_circle_ = true; /* yaw angle can circle or not */
+    struct gimbal_data_t {
+        float pitch_offset_ = 0.0f; /* pitch offset angle (angle when muzzle is at vertical
+                                  center) */
+        float yaw_offset_ = 0.0f;   /* yaw offset angle (angle when muzzle is at horizontal
+                                  center) */
+        float pitch_max_ = 0.0f;    /* maximum pitch angle the gimbal can turn from center */
+        float yaw_max_ = 0.0f;      /* maximum yaw angle the gimbal can turn from center      */
+        bool yaw_circle_ = true;    /* yaw angle can circle or not */
         bool pitch_inverted = false;
         bool yaw_inverted = false;
         float pitch_eposition = 0;
         float yaw_eposition = 0;
     };
-
 
     /**
      * @brief 标准云台结构体
@@ -105,7 +104,6 @@ namespace control {
          */
         gimbal_data_t* GetData();
 
-
         /**
          * @brief 计算当前云台的输出
          * @note 不会立即控制电机
@@ -155,7 +153,6 @@ namespace control {
          */
         void TargetRel(float new_pitch, float new_yaw);
 
-
         /**
          * @brief 更新云台的偏移量
          *
@@ -178,7 +175,6 @@ namespace control {
         // pitch and yaw constants
         gimbal_data_t data_;
 
-
         // pitch and yaw angle
         float pitch_angle_; /* current gimbal pitch angle */
         float yaw_angle_;   /* current gimbal yaw angle   */
@@ -188,8 +184,6 @@ namespace control {
         float pitch_upper_limit_; /* pitch upper limit */
         float yaw_lower_limit_;   /* yaw lower limit   */
         float yaw_upper_limit_;   /* yaw upper limit   */
-
-
     };
 
 }  // namespace control
