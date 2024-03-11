@@ -29,8 +29,10 @@ driver::ServoMotor* load_servo = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
+// 堵转回调函数
 void jam_callback(driver::ServoMotor* servo, const driver::servo_jam_t data) {
     UNUSED(data);
+    // 反向旋转
     float servo_target = servo->GetTarget();
     if (servo_target > servo->GetTheta()) {
         float prev_target = servo->GetTarget() - 2 * PI / 8;

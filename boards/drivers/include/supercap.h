@@ -240,6 +240,10 @@ namespace driver {
          */
         supercap_status_t GetStatus() const;
 
+        void SetMaxVoltage(float voltage);
+
+        float GetPercentage() const;
+
         /**
          * @brief 更新超级电容的数据与状态
          * @note 本函数会在CAN总线接收到数据时被调用，不应该在其他地方调用
@@ -274,13 +278,14 @@ namespace driver {
         uint16_t tx_settings_id_;
         uint16_t rx_id_;
 
+        float cap_voltage_max_ = 26.0f;
         float cap_voltage_ = 0.0f;
         float cap_power_ = 0.0f;
         float output_power_ = 0.0f;
         float output_voltage_ = 0.0f;
         supercap_status_t status_ = {0};
 
-        float power_total_ = 0.0f;
+        float power_total_ = 30.0f;
         float max_charge_power_ = 150.0f;
         float max_discharge_power_ = 250.0f;
         float perfer_buffer_ = 45.0f;

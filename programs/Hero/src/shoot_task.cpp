@@ -20,23 +20,17 @@
 
 #include "shoot_task.h"
 
-static driver::Motor3508* flywheel_left = nullptr;
-static driver::Motor3508* flywheel_right = nullptr;
-static float* pid1_param = nullptr;
-static float* pid2_param = nullptr;
-static driver::FlyWheelMotor* flywheel1 = nullptr;
-static driver::FlyWheelMotor* flywheel2 = nullptr;
+driver::Motor3508* flywheel_left = nullptr;
+driver::Motor3508* flywheel_right = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::Motor3508* steering_motor = nullptr;
 
-driver::ServoMotor* load_servo = nullptr;
-
-void jam_callback(driver::ServoMotor* servo, const driver::servo_jam_t data) {
-    UNUSED(data);
-    float servo_target = servo->GetTarget();
-    if (servo_target > servo->GetTheta()) {
-        float prev_target = servo->GetTarget() - 2 * PI / 5;
-        servo->SetTarget(prev_target, true);
+void jam_callback(void* args) {
+    driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
+    float target = motor->GetTarget();
+    if (target > motor->GetOutputShaftTheta()) {
+        float prev_target = motor->GetTarget() - 2 * PI / 5;
+        motor->SetTarget(prev_target);
     }
 }
 
@@ -63,9 +57,6 @@ void shootTask(void* arg) {
     //    uint8_t servo_back = 0;
     //    bool can_shoot_click = false;
 
-    load_servo->SetTarget(load_servo->GetTheta(), true);
-    load_servo->CalcOutput();
-
     ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
     while (true) {
@@ -78,6 +69,15 @@ void shootTask(void* arg) {
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
+        }
+        if (!steering_motor->IsEnable()) {
+            steering_motor->Enable();
+        }
+        if (!flywheel_left->IsEnable()) {
+            flywheel_left->Enable();
+        }
+        if (!flywheel_right->IsEnable()) {
+            flywheel_right->Enable();
         }
         //                if (referee->bullet_remaining.bullet_remaining_num_17mm == 0){
         //                    //没子弹了
@@ -147,16 +147,16 @@ void shootTask(void* arg) {
         //        }
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
-                flywheel1->SetSpeed(500.0f / 6 * 5 * PI);
-                flywheel2->SetSpeed(500.0f / 6 * 5 * PI);
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
-                shoot_load_mode = SHOOT_MODE_PREPARED;
+                flywheel_left->SetTarget(600.0f / 6 * 2 * PI);
+                flywheel_right->SetTarget(600.0f / 6 * 2 * PI);
+                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARED;
+                shoot_mode = SHOOT_MODE_PREPARED;
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;
             case SHOOT_FRIC_MODE_STOP:
-                flywheel1->SetSpeed(0);
-                flywheel2->SetSpeed(0);
+                flywheel_left->SetTarget(0);
+                flywheel_right->SetTarget(0);
                 // laser->SetOutput(0);
                 break;
             default:
@@ -170,20 +170,18 @@ void shootTask(void* arg) {
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
-                    if (!load_servo->Holding()) {
-                        load_servo->SetTarget(load_servo->GetTheta(), false);
-                    }
+                    //                    if (!steering_motor->IsHolding()) {
+                    //                        steering_motor->SetTarget(steering_motor->GetTheta());
+                    //                    }
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
-                        load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 5, true);
-                        shoot_load_mode = SHOOT_MODE_PREPARED;
+                        if (steering_motor->IsHolding()) {
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5);
+                        }
+                        shoot_mode = SHOOT_MODE_PREPARED;
                     }
-                    break;
-                case SHOOT_MODE_BURST:
-                    // 连发子弹
-                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 5, false);
                     break;
                 case SHOOT_MODE_STOP:
                     // 停止发射
@@ -248,9 +246,6 @@ void shootTask(void* arg) {
         //            }
         //        }
         // 计算输出，由于拔弹电机的输出系统由云台托管，不需要再次处理can的传输
-        load_servo->CalcOutput();
-        flywheel1->CalcOutput();
-        flywheel2->CalcOutput();
 
         osDelay(SHOOT_OS_DELAY);
     }
@@ -259,46 +254,73 @@ void shootTask(void* arg) {
 void init_shoot() {
     flywheel_left = new driver::Motor3508(can2, 0x201);
     flywheel_right = new driver::Motor3508(can2, 0x202);
-    pid1_param = new float[3]{150, 1, 0.15};
-    pid2_param = new float[3]{150, 1, 0.15};
-    driver::flywheel_t flywheel1_data = {
-        .motor = flywheel_left,
-        .max_speed = 400 * PI,
-        .omega_pid_param = pid1_param,
-        .is_inverted = false,
+    flywheel_left->SetTransmissionRatio(1);
+    flywheel_right->SetTransmissionRatio(1);
+
+    control::ConstrainedPID::PID_Init_t omega_pid_init = {
+        .kp = 500,
+        .ki = 3,
+        .kd = 0,
+        .max_out = 30000,
+        .max_iout = 10000,
+        .deadband = 0,                          // 死区
+        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    driver::flywheel_t flywheel2_data = {
-        .motor = flywheel_right,
-        .max_speed = 400 * PI,
-        .omega_pid_param = pid2_param,
-        .is_inverted = true,
-    };
-    flywheel1 = new driver::FlyWheelMotor(flywheel1_data);
-    flywheel2 = new driver::FlyWheelMotor(flywheel2_data);
-    flywheel1->SetSpeed(0);
-    flywheel2->SetSpeed(0);
+    flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    flywheel_left->SetMode(driver::MotorCANBase::OMEGA);
+    flywheel_right->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
 
     steering_motor = new driver::Motor3508(can1, 0x202);
 
-    driver::servo_t servo_data;
-    servo_data.motor = steering_motor;
-    servo_data.max_speed = 2.5 * PI;
-    servo_data.max_acceleration = 16 * PI;
-    servo_data.transmission_ratio = M3508P19_RATIO;
-    servo_data.omega_pid_param = new float[3]{6000, 80, 0.3};
-    servo_data.max_iout = 4000;
-    servo_data.max_out = 10000;
-    servo_data.hold_pid_param = new float[3]{150, 2, 0.01};
-    servo_data.hold_max_iout = 2000;
-    servo_data.hold_max_out = 10000;
+    steering_motor->SetTransmissionRatio(19);
+    control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
+        .kp = 20,
+        .ki = 0,
+        .kd = 0,
+        .max_out = 2 * PI,
+        .max_iout = 0,
+        .deadband = 0,                                 // 死区
+        .A = 0,                                        // 变速积分所能达到的最大值为A+B
+        .B = 0,                                        // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .derivative_filtering_coefficient = 0,         // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
 
-    load_servo = new driver::ServoMotor(servo_data);
-    load_servo->SetTarget(load_servo->GetTheta(), true);
-    load_servo->RegisterJamCallback(jam_callback, 0.6);
+    };
+    steering_motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
+    control::ConstrainedPID::PID_Init_t steering_omega_pid_init = {
+        .kp = 2500,
+        .ki = 3,
+        .kd = 0,
+        .max_out = 30000,
+        .max_iout = 10000,
+        .deadband = 0,                          // 死区
+        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
+                control::ConstrainedPID::ErrorHandle,            // 错误处理
+    };
+    steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
+    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+
+    steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
-    steering_motor->SetOutput(0);
-    flywheel_left->SetOutput(0);
-    flywheel_right->SetOutput(0);
+    steering_motor->Disable();
+    flywheel_left->Disable();
+    flywheel_right->Disable();
 }

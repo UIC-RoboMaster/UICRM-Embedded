@@ -97,4 +97,10 @@ namespace driver {
     supercap_status_t SuperCap::GetStatus() const {
         return status_;
     }
+    void SuperCap::SetMaxVoltage(float voltage) {
+        cap_voltage_max_ = voltage;
+    }
+    float SuperCap::GetPercentage() const {
+        return (cap_voltage_ * cap_voltage_) / (cap_voltage_max_ * cap_voltage_max_);
+    }
 }  // namespace driver

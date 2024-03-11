@@ -27,6 +27,8 @@
 
 namespace bsp {
 
+    typedef void (*usb_rx_callback_t)(void* args);
+
     /**
      * @brief USB虚拟串口类
      * @details 用于USB虚拟串口的数据收发
@@ -102,6 +104,7 @@ namespace bsp {
          * @note memory is not copied for optimal performance, so second call to this
          *       method will invalidate the buffer produced by the previous call
          */
+        template <bool FromISR = false>
         uint32_t Read(uint8_t** data);
 
         /**
@@ -127,7 +130,12 @@ namespace bsp {
          * buffer to fill up, so remember to check return value for the actual number
          *       of bytes successfully transmitted
          */
+        template <bool FromISR = false>
         uint32_t Write(uint8_t* data, uint32_t length);
+
+        void RegisterCallback(usb_rx_callback_t callback, void* args);
+
+        void SetupRxData(uint8_t** rx_ptr, uint32_t* rx_len);
 
       protected:
         /**
@@ -205,6 +213,12 @@ namespace bsp {
         uint32_t tx_pending_;
         uint8_t* tx_write_;
         uint8_t* tx_read_;
+
+        /* new rx callback */
+        uint8_t** rx_ptr_ = nullptr;
+        uint32_t* rx_len_ = nullptr;
+        usb_rx_callback_t callback_ = [](void* args) { UNUSED(args); };
+        void* callback_args_ = nullptr;
     };
 
 } /* namespace bsp */

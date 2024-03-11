@@ -18,47 +18,48 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "selftest_task.h"
+#include "main.h"
 
-osThreadId_t selftestTaskHandle;
+#include "bsp_print.h"
+#include "bsp_uart.h"
+#include "bsp_usb.h"
+#include "cmsis_os.h"
 
-selftest_t selftest;
+#define RX_SIGNAL (1 << 0)
 
-void selftestTask(void* arg) {
+static bsp::VirtualUSB* USB = nullptr;
+
+static uint8_t* usb_data;
+
+static uint32_t usb_len;
+
+void usbReply(void* arg) {
     UNUSED(arg);
-    uint8_t i = 0;
-    while (true) {
-        // Test Can Motor
-
-        // 将连接状态设置为false，等待更新
-        yaw_motor->connection_flag_ = false;
-        pitch_motor->connection_flag_ = false;
-        steering_motor->connection_flag_ = false;
-        // Test DBUS
-        dbus->connection_flag_ = false;
-        // Test Referee
-        referee->connection_flag_ = false;
-        if (i == 0)
-            refereerc->connection_flag_ = false;
-        osDelay(DETECT_OS_DELAY);
-
-        // 获取最新连接状态
-        selftest.yaw_motor = yaw_motor->connection_flag_;
-        selftest.pitch_motor = pitch_motor->connection_flag_;
-        selftest.steering_motor = steering_motor->connection_flag_;
-        selftest.dbus = dbus->connection_flag_;
-        selftest.referee = referee->connection_flag_;
-        // 图传串口的传输速率较慢，所以每三次检测一次
-        if (i == 2)
-            selftest.refereerc = refereerc->connection_flag_;
-
-        osDelay(DETECT_OS_DELAY);
-        i++;
-        if (i == 3) {
-            i = 0;
-        }
-    }
+    USB->Write<true>(usb_data, usb_len);
 }
 
-void init_selftest() {
+void RM_RTOS_Init(void) {
+    /// because imu occupies uart1, no other UART can be used, so we need to use USB to print
+    print_use_uart(&huart1);
+
+    USB = new bsp::VirtualUSB();
+
+    USB->SetupTx(200);
+    USB->SetupRx(200);
+    USB->SetupRxData(&usb_data, &usb_len);
+
+    USB->RegisterCallback(usbReply, nullptr);
+}
+
+void RM_RTOS_Threads_Init(void) {
+}
+
+void RM_RTOS_Default_Task(const void* arg) {
+    UNUSED(arg);
+    while (true) {
+        set_cursor(0, 0);
+        clear_screen();
+
+        osDelay(50);
+    }
 }

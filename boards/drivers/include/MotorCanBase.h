@@ -42,8 +42,17 @@ namespace driver {
             CURRENT = 0x01,
             OMEGA = 0x02,
             THETA = 0x04,
+            INVERTED = 0x40,
             ABSOLUTE = 0x80,
         };
+
+        /**
+         * @brief 堵转回调函数模板
+         */
+        /**
+         * @brief jam callback template
+         */
+        typedef void (*callback_t)(void* instance);
 
         /**
          * @brief 基础构造函数
@@ -186,6 +195,17 @@ namespace driver {
 
         bool IsEnable() const;
 
+        void RegisterErrorCallback(callback_t callback, void* instance);
+
+        static void ErrorCallbackWrapper(void* instance,
+                                         control::ConstrainedPID::PID_ErrorHandler_t type);
+
+        static void RegisterPreOutputCallback(callback_t callback, void* instance);
+
+        static void RegisterPostOutputCallback(callback_t callback, void* instance);
+
+        bool IsHolding() const;
+
       protected:
         volatile float theta_;
         volatile float omega_;
@@ -204,6 +224,11 @@ namespace driver {
 
         float transmission_ratio_ = 1; /* 电机的减速比例 */
 
+        float proximity_in_ = 0.05; /* 电机进入保持状态的临界角度差 */
+
+        float proximity_out_ = 0.15; /* 电机退出保持状态的临界角度差 */
+
+        bool holding_ = true; /* 电机是否进入保持状态 */
       private:
         bsp::CAN* can_;
         uint16_t rx_id_;
@@ -213,6 +238,9 @@ namespace driver {
         control::ConstrainedPID omega_pid_;
         control::ConstrainedPID theta_pid_;
         float target_;
+
+        callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
+        void* error_callback_instance_ = nullptr;
 
         /**
          * @brief 发送CAN消息以设置电机输出
@@ -251,6 +279,11 @@ namespace driver {
         static MotorCANBase* motors_[10][4];
         static uint8_t motor_cnt_[10];
         static uint32_t delay_time;
+
+        static callback_t pre_output_callback_;
+        static void* pre_output_callback_instance_;
+        static callback_t post_output_callback_;
+        static void* post_output_callback_instance_;
     };
 
     /**

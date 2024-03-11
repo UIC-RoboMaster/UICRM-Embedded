@@ -80,6 +80,10 @@ void gimbalTask(void* arg) {
             osDelay(GIMBAL_OS_DELAY);
             continue;
         }
+        if (!pitch_motor->IsEnable())
+            pitch_motor->Enable();
+        if (!yaw_motor->IsEnable())
+            yaw_motor->Enable();
         pitch_curr = -imu->INS_angle[2];
         yaw_curr = -imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
@@ -161,8 +165,8 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
-        .kp = 1000,
-        .ki = 100,
+        .kp = 3000,
+        .ki = 50,
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,

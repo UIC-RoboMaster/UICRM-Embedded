@@ -31,6 +31,7 @@ ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
 
 void init_dbus() {
+    // 初始化遥控器
     dbus = new remote::DBUS(&huart1);
 }
 osThreadId_t remoteTaskHandle;
@@ -61,7 +62,7 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* keyboard_B_edge = new BoolEdgeDetector(false);
 
     while (1) {
-        // Offline Detection && Security Check
+        // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
 #ifdef HAS_REFEREE
         // Kill Detection
@@ -74,6 +75,7 @@ void remoteTask(void* arg) {
 #endif
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
+                // 如果遥控器离线或者机器人死亡，则进入安全模式
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
                 shoot_load_mode = SHOOT_MODE_DISABLE;
@@ -81,6 +83,7 @@ void remoteTask(void* arg) {
             }
         } else {
             if (is_killed) {
+                // 如果遥控器重新连接或者机器人复活，则恢复上一次的遥控模式
                 remote_mode = last_remote_mode;
                 shoot_load_mode = SHOOT_MODE_STOP;
                 is_killed = false;

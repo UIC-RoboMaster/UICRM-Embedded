@@ -112,6 +112,10 @@ namespace control {
             PID_ErrorHandle();
             if (PID_ErrorHandler.error_type != PID_ERROR_NONE) {
                 // 发现问题
+                error_callback_(error_callback_instance_, PID_ErrorHandler);
+                // 清除问题
+                PID_ErrorHandler.error_type = PID_ERROR_NONE;
+                PID_ErrorHandler.error_count = 0;
                 return 0;
             }
         }
@@ -202,17 +206,18 @@ namespace control {
         max_out_ = max_out;
     }
     void ConstrainedPID::PID_ErrorHandle() {
-        if (output_ < max_out_ * 0.01f) {
+        if (output_ < max_out_ * 0.02f) {
             return;
         }
-        if (abs(target_ - measure_) / target_ > 0.9f) {
+        if (abs(target_ - measure_) / target_ > 0.97f) {
             PID_ErrorHandler.error_count++;
         } else {
             PID_ErrorHandler.error_count = 0;
+            PID_ErrorHandler.error_type = PID_ERROR_NONE;
         }
 
-        if (PID_ErrorHandler.error_count > 200) {
-            // 200ms 堵转了
+        if (PID_ErrorHandler.error_count > 1000) {
+            // 1s 堵转了
             PID_ErrorHandler.error_type = Motor_Blocked;
         }
     }
@@ -295,6 +300,11 @@ namespace control {
         PID_ErrorHandler.error_type = PID_ERROR_NONE;
 
         output_ = 0;
+    }
+    void ConstrainedPID::RegisterErrorCallcack(ConstrainedPID::PID_ErrorCallback_t callback,
+                                               void* instance) {
+        error_callback_ = callback;
+        error_callback_instance_ = instance;
     }
 
 } /* namespace control */
