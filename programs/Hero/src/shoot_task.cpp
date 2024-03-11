@@ -149,8 +149,8 @@ void shootTask(void* arg) {
             case SHOOT_FRIC_MODE_PREPARING:
                 flywheel_left->SetTarget(600.0f / 6 * 2 * PI);
                 flywheel_right->SetTarget(600.0f / 6 * 2 * PI);
-                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARED;
-                shoot_mode = SHOOT_MODE_PREPARED;
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
+                shoot_load_mode = SHOOT_MODE_PREPARED;
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;
@@ -180,7 +180,7 @@ void shootTask(void* arg) {
                         if (steering_motor->IsHolding()) {
                             steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5);
                         }
-                        shoot_mode = SHOOT_MODE_PREPARED;
+                        shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
                     break;
                 case SHOOT_MODE_STOP:
