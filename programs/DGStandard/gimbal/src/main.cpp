@@ -165,6 +165,8 @@ void RM_RTOS_Default_Task(const void* arg) {
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
+              ahrs->INS_angle[2]);
         osDelay(100);
         // print("\r\n");
         // yaw_motor->PrintData();
