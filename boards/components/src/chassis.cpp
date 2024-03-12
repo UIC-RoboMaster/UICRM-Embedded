@@ -216,10 +216,10 @@ namespace control {
         }
         can_bridge_vt_ = data.data_two_float.data[1];
         float is_enable = data.data_two_float.data[0];
-        if (is_enable > 0.1f) {
-            chassis_enable_ = true;
-        } else {
-            chassis_enable_ = false;
+        if (is_enable > 0.1f && !chassis_enable_) {
+            Enable();
+        } else if (is_enable < 0.1f && chassis_enable_) {
+            Disable();
         }
         if (chassis_enable_) {
             SetSpeed(can_bridge_vx_, can_bridge_vy_, can_bridge_vt_);
@@ -312,6 +312,20 @@ namespace control {
             }
             default:
                 break;
+        }
+    }
+    void Chassis::Enable() {
+        chassis_enable_ = true;
+        if (has_super_capacitor_) {
+            super_capacitor_->Enable();
+            super_capacitor_->TransmitSettings();
+        }
+    }
+    void Chassis::Disable() {
+        chassis_enable_ = false;
+        if (has_super_capacitor_) {
+            super_capacitor_->Disable();
+            super_capacitor_->TransmitSettings();
         }
     }
 

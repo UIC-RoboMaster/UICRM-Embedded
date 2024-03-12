@@ -91,6 +91,10 @@ namespace control {
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
                       float chassis_power_buffer, bool enable_supercap = false);
 
+        void Enable();
+
+        void Disable();
+
         /**
          * @brief calculate the output of the motors under current configuration
          * @note does not command the motor immediately
@@ -193,7 +197,7 @@ namespace control {
          * @param chassis_power_buffer Current chassis power buffer, in [J]
          */
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                      float chassis_power_buffer, bool enable_csupercap = false,
+                      float chassis_power_buffer, bool enable_supercap = false,
                       bool force_update = false);
 
       private:

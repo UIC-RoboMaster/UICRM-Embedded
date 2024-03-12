@@ -231,12 +231,12 @@ void chassisTask(void* arg) {
                 break;
             case REMOTE_MODE_SPIN:
                 // 小陀螺模式
-                if (offset_yaw != 0) {
-                    // 旋转速度叠加
-                    spin_speed = spin_speed + offset_yaw;
-                    offset_yaw = 0;
-                    spin_speed = clip<float>(spin_speed, -660, 660);
-                }
+                //                if (offset_yaw != 0) {
+                //                    // 旋转速度叠加
+                //                    spin_speed = spin_speed + offset_yaw;
+                //                    offset_yaw = 0;
+                //                    spin_speed = clip<float>(spin_speed, -660, 660);
+                //                }
                 vz_set = spin_speed;
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 osDelay(1);
