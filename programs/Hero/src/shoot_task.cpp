@@ -145,12 +145,12 @@ void shootTask(void* arg) {
         //            ramp_2.Get() == ramp_2.GetMax()) {
         //            shoot_state = 2;
         //        }
-        switch (shoot_fric_mode) {
+        switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
                 flywheel_left->SetTarget(600.0f / 6 * 2 * PI);
                 flywheel_right->SetTarget(600.0f / 6 * 2 * PI);
-                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARED;
-                shoot_mode = SHOOT_MODE_PREPARED;
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
+                shoot_load_mode = SHOOT_MODE_PREPARED;
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;
@@ -164,8 +164,8 @@ void shootTask(void* arg) {
                 // laser->SetOutput(0);
                 break;
         }
-        if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
-            switch (shoot_mode) {
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+            switch (shoot_load_mode) {
                 case SHOOT_MODE_PREPARING:
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
@@ -180,7 +180,7 @@ void shootTask(void* arg) {
                         if (steering_motor->IsHolding()) {
                             steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5);
                         }
-                        shoot_mode = SHOOT_MODE_PREPARED;
+                        shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
                     break;
                 case SHOOT_MODE_STOP:
@@ -190,7 +190,7 @@ void shootTask(void* arg) {
                     break;
             }
         }
-        last_shoot_mode = shoot_mode;
+        last_shoot_mode = shoot_load_mode;
         //        // 启动拔弹电机后的操作
         //        if (shoot_state == 2) {
         //            // 检测是否已装填子弹

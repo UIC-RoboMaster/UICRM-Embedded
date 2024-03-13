@@ -26,8 +26,8 @@ RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
 const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
-ShootFricMode shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
-ShootMode shoot_mode = SHOOT_MODE_STOP;
+ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
+ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
 
 void init_dbus() {
@@ -35,74 +35,68 @@ void init_dbus() {
     dbus = new remote::DBUS(&huart1);
 }
 osThreadId_t remoteTaskHandle;
+
+// #define HAS_REFEREE
+
 void remoteTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
-    // 开机后初始化各状态机
-    bool mode_switch = false;
-    bool shoot_fric_switch = false;
-    bool shoot_switch = false;
-    bool shoot_burst_switch = false;
-    bool shoot_stop_switch = false;
     uint32_t shoot_burst_timestamp = 0;
-    remote::switch_t last_state_r = remote::MID;
-    remote::switch_t last_state_l = remote::MID;
-    remote::keyboard_t last_keyboard;
-    remote::mouse_t last_mouse;
+
     remote::switch_t state_r = remote::MID;
     remote::switch_t state_l = remote::MID;
     remote::keyboard_t keyboard;
     remote::mouse_t mouse;
+
     memset(&keyboard, 0, sizeof(keyboard));
     memset(&mouse, 0, sizeof(mouse));
-    memset(&last_keyboard, 0, sizeof(last_keyboard));
-    memset(&last_mouse, 0, sizeof(last_mouse));
     bool is_dbus_offline;
     bool is_robot_dead;
     bool is_shoot_available;
-    BoolEdgeDetector* z_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* ctrl_edge = new BoolEdgeDetector(false);
+
+    BoolEdgeDetector* keyboard_Z_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* keyboard_ctrl_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* keyboard_G_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* keyboard_B_edge = new BoolEdgeDetector(false);
+
     while (1) {
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
-        // 通过裁判系统检测是否死亡或者没有子弹
-        //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        //        is_shoot_available =
-        //            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
-        // 一般调试模式下，机器人永不死亡，子弹永远有
+#ifdef HAS_REFEREE
+        // Kill Detection
+        is_robot_dead = referee->game_robot_status.remain_HP == 0;
+        is_shoot_available =
+            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+#else
         is_robot_dead = false;
         is_shoot_available = true;
+#endif
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 // 如果遥控器离线或者机器人死亡，则进入安全模式
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
-                shoot_mode = SHOOT_MODE_DISABLE;
+                shoot_load_mode = SHOOT_MODE_DISABLE;
                 is_killed = true;
             }
         } else {
             if (is_killed) {
                 // 如果遥控器重新连接或者机器人复活，则恢复上一次的遥控模式
                 remote_mode = last_remote_mode;
-                // 恢复的时候关闭所有的射击模式
-                shoot_mode = SHOOT_MODE_STOP;
+                shoot_load_mode = SHOOT_MODE_STOP;
                 is_killed = false;
             }
         }
+
         // when in kill
         if (is_killed) {
             osDelay(REMOTE_OS_DELAY);
             continue;
         }
 
-        // 更新last状态机
-        last_state_r = state_r;
-        last_state_l = state_l;
-        last_keyboard = keyboard;
-        last_mouse = mouse;
-        // 更新now状态机
+        // Update State
         if (selftest.dbus) {
             state_r = dbus->swr;
             state_l = dbus->swl;
@@ -115,133 +109,74 @@ void remoteTask(void* arg) {
             mouse = refereerc->remote_control.mouse;
         }
 
-        z_edge->input(keyboard.bit.Z);
-        ctrl_edge->input(keyboard.bit.CTRL);
+        // Update Timestamp
         mouse_left_edge->input(mouse.l);
         mouse_right_edge->input(mouse.r);
+        keyboard_ctrl_edge->input(keyboard.bit.CTRL);
 
-        // 调节摩擦轮转速（如果需要）
-        if (last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
-            shoot_fric_mode = SHOOT_FRIC_SPEEDUP;
-        }
-        if (last_keyboard.bit.B == 1 && keyboard.bit.B == 0) {
-            shoot_fric_mode = SHOOT_FRIC_SPEEDDOWN;
-        }
+        keyboard_G_edge->input(keyboard.bit.G);
+        keyboard_B_edge->input(keyboard.bit.B);
 
-        // 判断行动模式切换
-        switch (state_r) {
-            case remote::UP:
-                if (last_state_r == remote::MID && selftest.dbus) {
-                    mode_switch = true;
-                }
-                break;
-            case remote::MID:
-                if (ctrl_edge->posEdge()) {
-                    mode_switch = true;
-                }
-                break;
-            case remote::DOWN:
-                break;
-        }
-        if (mode_switch) {
-            mode_switch = false;
+        // remote mode switch
+        static BoolEdgeDetector* mode_switch_edge = new BoolEdgeDetector(false);
+        mode_switch_edge->input(state_r == remote::UP);
+
+        if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge()) {
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
             if ((int8_t)next_mode > (int8_t)remote_mode_max) {
                 next_mode = (RemoteMode)remote_mode_min;
             }
             remote_mode = next_mode;
         }
-        // 判断射击模式
-        if (is_shoot_available == true || SHOOT_REFEREE == 0) {
-            switch (state_l) {
-                case remote::UP:
-                    if (last_state_l == remote::MID && selftest.dbus) {
-                        shoot_fric_switch = true;
-                    }
-                    break;
-                case remote::DOWN:
-                    if (last_state_l == remote::MID && selftest.dbus) {
-                        shoot_switch = true;
-                        shoot_burst_timestamp = 0;
-                    } else if (last_state_l == remote::DOWN && selftest.dbus) {
-                        shoot_burst_timestamp++;
-                        if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
-                            shoot_burst_switch = true;
-                        }
-                    }
-                    break;
-                case remote::MID:
-                    switch (last_state_l) {
-                        case remote::DOWN:
-                            shoot_stop_switch = true;
-                            break;
-                        case remote::UP:
-                            break;
-                        case remote::MID:
-                            if (z_edge->posEdge()) {
-                                shoot_fric_switch = true;
-                            }
-                            if (mouse_left_edge->posEdge()) {
-                                shoot_switch = true;
-                                shoot_burst_timestamp = 0;
-                            } else if (mouse_left_edge->get()) {
-                                shoot_burst_timestamp++;
-                                if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
-                                    shoot_burst_switch = true;
-                                }
-                            } else if (mouse_left_edge->negEdge()) {
-                                shoot_stop_switch = true;
-                            } else {
-                                shoot_stop_switch = true;
-                            }
-                            break;
-                    }
-                    break;
+
+        /*
+         * 射击模式控制
+         * shoot_flywheel_mode：设置PREPARING/STOP控制摩擦轮启停，就绪后由shoot_task转为PREPARED
+         * shoot_load_mode：设置SINGLE/BURST/STOP切换发射模式（供弹模式）
+         * */
+
+        if (!is_shoot_available) {
+            shoot_load_mode = SHOOT_MODE_STOP;
+            shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
+        }
+
+        // 切换摩擦轮
+        static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
+        flywheel_switch_edge->input(state_l == remote::UP);
+        keyboard_Z_edge->input(keyboard.bit.Z);
+        if (flywheel_switch_edge->posEdge() || keyboard_Z_edge->posEdge()) {
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+                shoot_load_mode = SHOOT_MODE_IDLE;
+            } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
+                       shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {  // 原来转则停止
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
+                shoot_load_mode = SHOOT_MODE_STOP;
             }
-            // 切换摩擦轮模式
-            if (shoot_fric_switch) {
-                shoot_fric_switch = false;
-                if (shoot_fric_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
-                    shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
-                    shoot_mode = SHOOT_MODE_PREPARING;
-                } else if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ||
-                           shoot_fric_mode == SHOOT_FRIC_MODE_PREPARING) {  // 原来转则停止
-                    shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
-                    shoot_mode = SHOOT_MODE_STOP;
-                }
-            }
-            // 射出单颗子弹
-            if (shoot_switch) {
-                shoot_switch = false;
-                if (shoot_mode == SHOOT_MODE_PREPARED &&
-                    shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
-                    // 摩擦轮与拔弹系统准备就绪则发射子弹
-                    shoot_mode = SHOOT_MODE_SINGLE;
-                }
-            }
-            // 射出连发子弹
-            if (shoot_burst_switch) {
-                if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
-                    // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
-                    if (shoot_mode == SHOOT_MODE_PREPARED || shoot_mode == SHOOT_MODE_SINGLE) {
-                        shoot_mode = SHOOT_MODE_BURST;
-                        shoot_burst_switch = false;
-                    }
-                } else {
-                    shoot_burst_switch = false;
-                }
-            }
-            // 停止射击
-            if (shoot_stop_switch) {
-                shoot_stop_switch = false;
-                if (shoot_mode == SHOOT_MODE_BURST) {
-                    shoot_mode = SHOOT_MODE_PREPARED;
-                }
-            }
-        } else {
-            // 没有子弹了，则停止射击
-            shoot_mode = SHOOT_MODE_STOP;
-            shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
+        }
+
+        // 单发
+        static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
+        shoot_switch_edge->input(state_l == remote::DOWN);
+        if (shoot_switch_edge->posEdge()) {
+            shoot_load_mode = SHOOT_MODE_SINGLE;
+            shoot_burst_timestamp = 0;
+        }
+
+        // 连发
+        if (state_l == remote::DOWN) {
+            shoot_burst_timestamp++;
+        }
+        static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);
+        shoot_burst_switch_edge->input(shoot_burst_timestamp > 500 * REMOTE_OS_DELAY);
+        if (shoot_burst_switch_edge->posEdge()) {
+            shoot_load_mode = SHOOT_MODE_BURST;
+        }
+
+        // 不发射
+        if (shoot_switch_edge->negEdge()) {
+            shoot_load_mode = SHOOT_MODE_STOP;
+            shoot_burst_timestamp = 0;
         }
         osDelay(REMOTE_OS_DELAY);
     }
