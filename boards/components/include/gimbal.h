@@ -107,15 +107,15 @@ namespace control {
 
         /**
          * @brief 根据目标角度和传入的IMU数据计算控制电机的输出
-         * @param pitch 陀螺仪测量的pitch角度，范围为[-pi, pi]
-         * @param yaw 陀螺仪测量的yaw角度，范围为[-pi, pi]
+         * @param imu_pitch 陀螺仪测量的pitch角度，范围为[-pi, pi]
+         * @param imu_yaw 陀螺仪测量的yaw角度，范围为[-pi, pi]
          */
         /**
          * @brief update the output of the motors based on current sensor data
-         * @param pitch pitch angle measured by gyroscope, range is [-pi, pi]
-         * @param yaw yaw angle measured by gyroscope, range is [-pi, pi]
+         * @param imu_pitch imu_pitch angle measured by gyroscope, range is [-pi, pi]
+         * @param imu_yaw imu_yaw angle measured by gyroscope, range is [-pi, pi]
          */
-        void UpdateIMU(float pitch, float yaw);
+        void UpdateIMU(float imu_pitch, float imu_yaw);
 
 
         /**

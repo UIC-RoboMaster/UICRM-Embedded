@@ -51,67 +51,35 @@ namespace control {
 
 
     void Gimbal::Update() {
-
         pitch_motor_->SetTarget(target_pitch_);
-
-//        float pt_diff = pitch_motor_->GetThetaDelta(target_pitch_);
-//        pt_diff = wrap<float>(pt_diff, -PI, PI);
-//
-//        if (abs(pt_diff) < data_.pitch_eposition) {
-//            pt_diff = 0;
-//        }
-//        float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
-//
-//        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
-//        float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
-
         yaw_motor_->SetTarget(target_yaw_);
-
-//        float yt_diff = yaw_motor_->GetThetaDelta(target_yaw_);
-//        yt_diff = wrap<float>(yt_diff, -PI, PI);
-//
-//        if (abs(yt_diff) < data_.yaw_eposition) {
-//            yt_diff = 0;
-//        }
-//
-//        float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
-//        float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
-//        float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
-//
-//        pitch_motor_->SetOutput(po_out);
-//        yaw_motor_->SetOutput(yo_out);
     }
 
-    void Gimbal::UpdateIMU(float pitch, float yaw) {
-        // 有：目标角度，当前电机角度，当前IMU角度
-        // 要做的：计算电机输出，使得？
-        float pitch_diff = target_pitch_ - data_.pitch_offset_ - pitch;
-        float actual_pitch = pitch_motor_->GetTheta();
-        float new_pitch_diff = wrapping_clip<float>(
-            pitch_diff + actual_pitch, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
-        new_pitch_diff = new_pitch_diff - actual_pitch;
-        if (pitch_diff != new_pitch_diff) {
-            target_pitch_ = wrap<float>(target_pitch_ + new_pitch_diff - pitch_diff, 0, 2 * PI);
+    void Gimbal::UpdateIMU(float imu_pitch, float imu_yaw) {
+        float pitch_diff = target_pitch_ - data_.pitch_offset_ - imu_pitch;
+        float motor_pitch = pitch_motor_->GetTheta();
+        float new_motor_pitch = wrapping_clip<float>(
+            pitch_diff + motor_pitch, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
+        new_motor_pitch = new_motor_pitch - motor_pitch;
+        if (pitch_diff != new_motor_pitch) {
+            target_pitch_ = wrap<float>(target_pitch_ + new_motor_pitch - pitch_diff, 0, 2 * PI);
         }
-        pitch_diff = wrap<float>(new_pitch_diff, -PI, PI);
+        pitch_diff = wrap<float>(new_motor_pitch, -PI, PI);
 
         if (abs(pitch_diff) < data_.pitch_eposition) {
             pitch_diff = 0;
         }
-        pitch_motor_->SetTarget(actual_pitch + pitch_diff);
 
-//        float pt_out = pitch_theta_pid_->ComputeOutput(pitch_diff);
-//        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
-//        float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
+        // 输出基于电机编码盘的目标
+        pitch_motor_->SetTarget(motor_pitch + pitch_diff);
 
-
-        float yaw_diff = target_yaw_ - data_.yaw_offset_ - yaw;
-        float actual_yaw = yaw_motor_->GetTheta();
+        float yaw_diff = target_yaw_ - data_.yaw_offset_ - imu_yaw;
+        float motor_yaw = yaw_motor_->GetTheta();
         if (!data_.yaw_circle_) {
 
-            float new_yaw_diff = wrapping_clip<float>(yaw_diff + actual_yaw, yaw_lower_limit_,
+            float new_yaw_diff = wrapping_clip<float>(yaw_diff + motor_yaw, yaw_lower_limit_,
                                                       yaw_upper_limit_, 0, 2 * PI);
-            new_yaw_diff = new_yaw_diff - actual_yaw;
+            new_yaw_diff = new_yaw_diff - motor_yaw;
             if (yaw_diff != new_yaw_diff) {
                 target_yaw_ = wrap<float>(target_yaw_ + new_yaw_diff - yaw_diff, 0, 2 * PI);
             }
@@ -124,13 +92,7 @@ namespace control {
             yaw_diff = 0;
         }
 
-        yaw_motor_->SetTarget(actual_yaw + yaw_diff);
-
-//        float yt_out = yaw_theta_pid_->ComputeOutput(yaw_diff);
-//        float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
-//        float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
-//        pitch_motor_->SetOutput(po_out);
-//        yaw_motor_->SetOutput(yo_out);
+        yaw_motor_->SetTarget(motor_yaw + yaw_diff);
     }
 
     void Gimbal::SetAbsTarget(float abs_pitch, float abs_yaw) {
