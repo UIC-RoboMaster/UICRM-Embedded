@@ -33,4 +33,4 @@ typedef struct {
     float pitch;
     float roll;
     float yaw;
-}INS_Angle_t;
+} INS_Angle_t;

@@ -195,7 +195,7 @@ namespace driver {
             osDelay(delay_time);
         }
     }
-    void MotorCANBase::SetTarget(float target,bool override) {
+    void MotorCANBase::SetTarget(float target, bool override) {
         // 设置目标值
         // 目标值的单位取决于电机的模式
         // 如果电机启动了角度环PID，则目标值为角度，单位为Rad
@@ -203,7 +203,7 @@ namespace driver {
         if (mode_ & INVERTED) {
             target = -target;
         }
-        if(override==false && !holding_){
+        if (override == false && !holding_) {
             // 如果电机没有在hold状态，则不修改目标值
             return;
         }

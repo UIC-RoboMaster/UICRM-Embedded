@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "gimbal_task.h"
+
 #include "minipc_task.h"
 
 osThreadId_t gimbalTaskHandle;
@@ -156,7 +157,8 @@ void gimbalTask(void* arg) {
                 gimbal->Update();
                 break;
             case REMOTE_MODE_AUTOAIM:
-                gimbal->TargetReal(minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
+                gimbal->TargetReal(minipc->target_angle.target_pitch,
+                                   minipc->target_angle.target_yaw);
                 gimbal->Update();
                 break;
             default:

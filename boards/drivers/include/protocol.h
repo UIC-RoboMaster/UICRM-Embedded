@@ -357,7 +357,6 @@ namespace communication {
         float standard_5_y;
     } __packed ground_robot_position_t;
 
-
     /* ===== RADAR_MARK 0x020C 1Hz ===== */
 
     typedef struct {
@@ -367,19 +366,19 @@ namespace communication {
         uint8_t mark_standard_4_progress;
         uint8_t mark_standard_5_progress;
         uint8_t mark_sentry_progress;
-    }__packed radar_mark_data_t;
+    } __packed radar_mark_data_t;
 
     /* ===== SENTRY_INFO 0x020D 1Hz ===== */
 
     typedef struct {
         uint32_t sentry_info;
-    }__packed sentry_info_t;
+    } __packed sentry_info_t;
 
     /* ===== RADAR_INFO 0x020E 1Hz ===== */
 
     typedef struct {
         uint32_t radar_info;
-    }__packed radar_info_t;
+    } __packed radar_info_t;
 
     /* ===== INTERACTIVE_DATA 0x0301 ===== */
 
@@ -463,35 +462,31 @@ namespace communication {
     };
 
     /* ===== SENTRY_DECISION 0x0120 ===== */
-    typedef struct
-    {
+    typedef struct {
         uint32_t sentry_cmd;
     } __packed sentry_cmd_t;
 
     /* ===== RADAR_DECISION 0x0121 ===== */
-    typedef struct
-    {
-            uint32_t radar_cmd;
+    typedef struct {
+        uint32_t radar_cmd;
     } __packed radar_cmd_t;
 
     /* ===== End Sub Command ===== */
 
     /* ===== CUSTOM_ROBOT_DATA 0x0302 ===== */
 
-    typedef struct
-    {
+    typedef struct {
         uint8_t data[30];
-    }__packed custom_robot_data_t;
+    } __packed custom_robot_data_t;
 
     /* ===== MAP_COMMAND 0x0303 ===== */
-    typedef struct
-    {
+    typedef struct {
         float target_position_x;
         float target_position_y;
         uint8_t cmd_keyboard;
         uint8_t target_robot_id;
         uint8_t cmd_source;
-    }__packed map_command_t;
+    } __packed map_command_t;
 
     /* ===== REMOTE_CONTROL_DATA 0x0304 30Hz ===== */
     typedef struct {
@@ -501,34 +496,31 @@ namespace communication {
     } __packed remote_control_t;
 
     /* ===== MAP_ROBOT_DATA 0x0305 ===== */
-    typedef struct
-    {
+    typedef struct {
         uint16_t target_robot_id;
         float target_position_x;
         float target_position_y;
-    }__packed map_robot_data_t;
+    } __packed map_robot_data_t;
 
     /* ===== CUSTOM_CLIENT_DATA 0x0306 ===== */
-    typedef struct
-    {
+    typedef struct {
         uint16_t key_value;
-        uint16_t x_position:12;
-        uint16_t mouse_left:4;
-        uint16_t y_position:12;
-        uint16_t mouse_right:4;
+        uint16_t x_position : 12;
+        uint16_t mouse_left : 4;
+        uint16_t y_position : 12;
+        uint16_t mouse_right : 4;
         uint16_t reserved;
-    }__packed custom_client_data_t;
+    } __packed custom_client_data_t;
 
     /* ===== CUSTOM_CLIENT_MAP_COMMAND 0x0307 ===== */
-    typedef struct
-    {
+    typedef struct {
         uint8_t intention;
         uint16_t start_position_x;
         uint16_t start_position_y;
         int8_t delta_x[49];
         int8_t delta_y[49];
         uint16_t sender_id;
-    }__packed custom_client_map_command_t;
+    } __packed custom_client_map_command_t;
 
     /* ===== CUSTOM_INFO 0x0308 ===== */
     typedef struct {
@@ -540,27 +532,27 @@ namespace communication {
     class Referee : public UARTProtocol {
       public:
         Referee(bsp::UART* uart);
-        game_status_t game_status{}; // 0x0001
-        game_result_t game_result{}; // 0x0002
-        game_robot_HP_t game_robot_HP{}; // 0x0003
-        event_data_t event_data{}; // 0x0101
-        supply_projectile_action_t supply_projectile_action{}; // 0x0102
-        referee_warning_t referee_warning{}; // 0x0104
-        dart_remaining_time_t dart_remaining_time{}; // 0x0105
-        game_robot_status_t game_robot_status{}; // 0x0201
-        power_heat_data_t power_heat_data{}; // 0x0202
-        game_robot_pos_t game_robot_pos{}; // 0x0203
-        buff_t buff{}; // 0x0204
-        aerial_robot_energy_t aerial_robot_energy{}; // 0x0205
-        robot_hurt_t robot_hurt{}; // 0x0206
-        shoot_data_t shoot_data{}; // 0x0207
-        bullet_remaining_t bullet_remaining{}; // 0x0208
-        rfid_status_t rfid_status{}; // 0x0209
-        dart_client_cmd_t dart_client_cmd{}; // 0x020A
-        ground_robot_position_t ground_robot_position{}; // 0x020B
-        radar_mark_data_t radar_mark_data{}; // 0x020C
-        sentry_info_t sentry_info{}; // 0x020D
-        radar_info_t radar_info{}; // 0x020E
+        game_status_t game_status{};                            // 0x0001
+        game_result_t game_result{};                            // 0x0002
+        game_robot_HP_t game_robot_HP{};                        // 0x0003
+        event_data_t event_data{};                              // 0x0101
+        supply_projectile_action_t supply_projectile_action{};  // 0x0102
+        referee_warning_t referee_warning{};                    // 0x0104
+        dart_remaining_time_t dart_remaining_time{};            // 0x0105
+        game_robot_status_t game_robot_status{};                // 0x0201
+        power_heat_data_t power_heat_data{};                    // 0x0202
+        game_robot_pos_t game_robot_pos{};                      // 0x0203
+        buff_t buff{};                                          // 0x0204
+        aerial_robot_energy_t aerial_robot_energy{};            // 0x0205
+        robot_hurt_t robot_hurt{};                              // 0x0206
+        shoot_data_t shoot_data{};                              // 0x0207
+        bullet_remaining_t bullet_remaining{};                  // 0x0208
+        rfid_status_t rfid_status{};                            // 0x0209
+        dart_client_cmd_t dart_client_cmd{};                    // 0x020A
+        ground_robot_position_t ground_robot_position{};        // 0x020B
+        radar_mark_data_t radar_mark_data{};                    // 0x020C
+        sentry_info_t sentry_info{};                            // 0x020D
+        radar_info_t radar_info{};                              // 0x020E
 
         graphic_delete_t graphic_delete{};
         graphic_single_t graphic_single{};
@@ -569,14 +561,14 @@ namespace communication {
         graphic_seven_t graphic_seven{};
         graphic_character_t graphic_character{};
 
-        custom_robot_data_t custom_robot_data{}; // 0x0302
-        map_command_t map_command{}; // 0x0303
-        remote_control_t remote_control{}; // 0x0304
-        map_robot_data_t map_robot_data{}; // 0x0305
-        custom_client_data_t custom_client_data{}; // 0x0306
-        custom_client_map_command_t custom_client_map_command{}; // 0x0307
-        custom_info_t custom_info{}; // 0x0308
-        
+        custom_robot_data_t custom_robot_data{};                  // 0x0302
+        map_command_t map_command{};                              // 0x0303
+        remote_control_t remote_control{};                        // 0x0304
+        map_robot_data_t map_robot_data{};                        // 0x0305
+        custom_client_data_t custom_client_data{};                // 0x0306
+        custom_client_map_command_t custom_client_map_command{};  // 0x0307
+        custom_info_t custom_info{};                              // 0x0308
+
         void PrepareUIContent(content graph_content);
 
       private:
@@ -639,8 +631,8 @@ namespace communication {
 
     /* ===== SHOOT_CMD 0x0404 ===== */
     typedef struct {
-        uint8_t shoot_flywheel;  // 0x00 for stop, 0x01 for start
-        uint8_t shoot_cmd;  // 0x00 for stop, 0x01 for shoot
+        uint8_t shoot_flywheel;   // 0x00 for stop, 0x01 for start
+        uint8_t shoot_cmd;        // 0x00 for stop, 0x01 for shoot
         uint16_t flywheel_speed;  // Format RPM
     } __packed shoot_cmd_t;
 
@@ -652,23 +644,23 @@ namespace communication {
     } __packed robot_move_t;
 
     /* ===== ROBOT_STATUS_UPLOAD 0x0501 1Hz ===== */
-        typedef struct {
-            uint8_t robot_id;
-            uint8_t robot_level;
-            uint16_t remain_HP;
-            uint16_t max_HP;
-            uint16_t shooter_cooling_rate;
-            uint16_t shooter_heat_limit;
-            uint16_t chassis_power_limit;
-            float chassis_current_power;
-        } __packed robot_status_upload_t;
+    typedef struct {
+        uint8_t robot_id;
+        uint8_t robot_level;
+        uint16_t remain_HP;
+        uint16_t max_HP;
+        uint16_t shooter_cooling_rate;
+        uint16_t shooter_heat_limit;
+        uint16_t chassis_power_limit;
+        float chassis_current_power;
+    } __packed robot_status_upload_t;
 
     /* ===== GIMBAL_CURRENT_STATUS 0x0502 100Hz ===== */
-        typedef struct {
-            float current_imu_pitch;
-            float current_imu_roll;
-            float current_imu_yaw;
-        } __packed gimbal_current_status_t;
+    typedef struct {
+        float current_imu_pitch;
+        float current_imu_roll;
+        float current_imu_yaw;
+    } __packed gimbal_current_status_t;
 
     class Host : public UARTProtocol {
       public:
@@ -680,7 +672,6 @@ namespace communication {
         robot_move_t robot_move{};
         robot_status_upload_t robot_status_upload{};
         gimbal_current_status_t gimbal_current_status{};
-
 
       private:
         /**

@@ -168,7 +168,7 @@ namespace driver {
 
         virtual void CalcOutput();
 
-        virtual void SetTarget(float target,bool override = true);
+        virtual void SetTarget(float target, bool override = true);
 
         virtual float GetTarget() const;
 

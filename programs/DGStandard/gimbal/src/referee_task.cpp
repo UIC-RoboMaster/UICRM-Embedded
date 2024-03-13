@@ -25,8 +25,6 @@ bsp::UART* refereerc_uart = nullptr;
 communication::Referee* referee = nullptr;
 communication::Referee* refereerc = nullptr;
 
-
-
 void init_referee() {
     // 启动裁判系统
     referee_uart = new bsp::UART(&huart3);
@@ -41,4 +39,3 @@ void init_referee() {
     refereerc_uart->SetupTx(300, false);
     refereerc = new communication::Referee(refereerc_uart);
 }
-

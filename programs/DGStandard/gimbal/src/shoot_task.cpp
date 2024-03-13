@@ -142,7 +142,8 @@ void shootTask(void* arg) {
                     // 发射准备就绪检测
                     if (servo_back == 0) {
                         // 第一次发射需要适当退弹
-                        steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() - 2 * PI / 32);
+                        steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() -
+                                                  2 * PI / 32);
                         servo_back = 1;
                     }
                     if (shoot_state_key == 1) {
@@ -153,7 +154,8 @@ void shootTask(void* arg) {
                         }
                     } else {
                         // 没有准备就绪，则旋转拔弹电机
-                        steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8, false);
+                        steering_motor->SetTarget(
+                            steering_motor->GetOutputShaftTheta() + 2 * PI / 8, false);
                     }
                     break;
                 case SHOOT_MODE_PREPARED:
@@ -178,9 +180,11 @@ void shootTask(void* arg) {
                         break;
                     }
                     if (last_shoot_mode != SHOOT_MODE_SINGLE)
-                        steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
+                        steering_motor->SetTarget(
+                            steering_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
                     else
-                        steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8, false);
+                        steering_motor->SetTarget(
+                            steering_motor->GetOutputShaftTheta() + 2 * PI / 8, false);
                     break;
                 case SHOOT_MODE_BURST:
                     // 连发子弹
@@ -242,21 +246,21 @@ void init_shoot() {
     steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
-//    driver::servo_t servo_data;
-//    servo_data.motor = steering_motor;
-//    servo_data.max_speed = 2.5 * PI;
-//    servo_data.max_acceleration = 16 * PI;
-//    servo_data.transmission_ratio = M2006P36_RATIO;
-//    servo_data.omega_pid_param = new float[3]{6000, 80, 0.3};
-//    servo_data.max_iout = 4000;
-//    servo_data.max_out = 10000;
-//    servo_data.hold_pid_param = new float[3]{150, 2, 0.01};
-//    servo_data.hold_max_iout = 2000;
-//    servo_data.hold_max_out = 10000;
-//
-//    load_servo = new driver::ServoMotor(servo_data);
-//    load_servo->SetTarget(load_servo->GetTheta(), true);
-//    load_servo->RegisterJamCallback(jam_callback, 0.6);
+    //    driver::servo_t servo_data;
+    //    servo_data.motor = steering_motor;
+    //    servo_data.max_speed = 2.5 * PI;
+    //    servo_data.max_acceleration = 16 * PI;
+    //    servo_data.transmission_ratio = M2006P36_RATIO;
+    //    servo_data.omega_pid_param = new float[3]{6000, 80, 0.3};
+    //    servo_data.max_iout = 4000;
+    //    servo_data.max_out = 10000;
+    //    servo_data.hold_pid_param = new float[3]{150, 2, 0.01};
+    //    servo_data.hold_max_iout = 2000;
+    //    servo_data.hold_max_out = 10000;
+    //
+    //    load_servo = new driver::ServoMotor(servo_data);
+    //    load_servo->SetTarget(load_servo->GetTheta(), true);
+    //    load_servo->RegisterJamCallback(jam_callback, 0.6);
 
     shoot_key = new bsp::GPIO(TRIG_KEY_GPIO_Port, TRIG_KEY_Pin);
     // laser = new bsp::Laser(&htim3, 3, 1000000);
