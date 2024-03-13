@@ -27,7 +27,6 @@
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 ADC_HandleTypeDef hadc3;
-DMA_HandleTypeDef hdma_adc1;
 
 /* ADC1 init function */
 void MX_ADC1_Init(void)
@@ -289,25 +288,6 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    /* ADC1 DMA Init */
-    /* ADC1 Init */
-    hdma_adc1.Instance = DMA2_Stream0;
-    hdma_adc1.Init.Channel = DMA_CHANNEL_0;
-    hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_adc1.Init.Mode = DMA_CIRCULAR;
-    hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
-    hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-    if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    __HAL_LINKDMA(adcHandle,DMA_Handle,hdma_adc1);
-
     /* ADC1 interrupt Init */
     HAL_NVIC_SetPriority(ADC_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(ADC_IRQn);
@@ -391,9 +371,6 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     HAL_GPIO_DeInit(OLED_BUTTON_GPIO_Port, OLED_BUTTON_Pin);
 
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1|GPIO_PIN_0);
-
-    /* ADC1 DMA DeInit */
-    HAL_DMA_DeInit(adcHandle->DMA_Handle);
 
     /* ADC1 interrupt Deinit */
   /* USER CODE BEGIN ADC1:ADC_IRQn disable */

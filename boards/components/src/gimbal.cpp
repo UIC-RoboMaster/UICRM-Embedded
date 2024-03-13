@@ -155,5 +155,13 @@ namespace control {
         data_.pitch_offset_ = wrap<float>(pitch_offset + data_.pitch_offset_, 0, 2 * PI);
         data_.yaw_offset_ = wrap<float>(yaw_offset + data_.yaw_offset_, 0, 2 * PI);
     }
+    void Gimbal::TargetReal(float new_pitch, float new_yaw) {
+        if (data_.pitch_inverted)
+            new_pitch = -new_pitch;
+        if (data_.yaw_inverted)
+            new_yaw = -new_yaw;
+        pitch_angle_ = wrap<float>(pitch_motor_->GetTheta() + new_pitch, 0, 2 * PI);
+        yaw_angle_ = wrap<float>(yaw_motor_->GetTheta() + new_yaw, 0, 2 * PI);
+    }
 
 }  // namespace control

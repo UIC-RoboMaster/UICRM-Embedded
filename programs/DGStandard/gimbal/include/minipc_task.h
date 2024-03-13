@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -19,18 +19,7 @@
  ###########################################################*/
 
 #pragma once
+#include "protocol.h"
+extern communication::Host* minipc;
 
-#define SHOOT_OS_DELAY 1
-#define CHASSIS_OS_DELAY 10 - 2
-#define GIMBAL_OS_DELAY 1
-#define REMOTE_OS_DELAY 1
-#define DETECT_OS_DELAY 30
-#define UI_OS_DELAY 40
-#define SHOOT_REFEREE 0
-#define ENABLE_UI 0
-
-typedef struct {
-    float pitch;
-    float roll;
-    float yaw;
-}INS_Angle_t;
+void init_minipc();

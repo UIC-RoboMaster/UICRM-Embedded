@@ -248,6 +248,15 @@ namespace communication {
             case SHOOT_CMD:
                 memcpy(&shoot_cmd, data, length);
                 break;
+            case ROBOT_MOVE_SPEED:
+                memcpy(&robot_move, data, length);
+                break;
+            case ROBOT_STATUS_UPLOAD:
+                memcpy(&robot_status_upload, data, length);
+                break;
+            case ROBOT_POSITION:
+                memcpy(&gimbal_current_status, data, length);
+                break;
             default:
                 return false;
         }
@@ -260,6 +269,30 @@ namespace communication {
             case PACK:
                 data_len = sizeof(pack_t);
                 memcpy(data, &pack, data_len);
+                break;
+            case TARGET_ANGLE:
+                data_len = sizeof(target_angle_t);
+                memcpy(data, &target_angle, data_len);
+                break;
+            case NO_TARGET_FLAG:
+                data_len = sizeof(no_target_flag_t);
+                memcpy(data, &no_target_flag, data_len);
+                break;
+            case SHOOT_CMD:
+                data_len = sizeof(shoot_cmd_t);
+                memcpy(data, &shoot_cmd, data_len);
+                break;
+            case ROBOT_MOVE_SPEED:
+                data_len = sizeof(robot_move_t);
+                memcpy(data, &robot_move, data_len);
+                break;
+            case ROBOT_STATUS_UPLOAD:
+                data_len = sizeof(robot_status_upload_t);
+                memcpy(data, &robot_status_upload, data_len);
+                break;
+            case ROBOT_POSITION:
+                data_len = sizeof(gimbal_current_status_t);
+                memcpy(data, &gimbal_current_status, data_len);
                 break;
             default:
                 data_len = -1;

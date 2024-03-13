@@ -105,7 +105,7 @@ void init_imu() {
 
     HAL_Delay(500);
     // 后面是WIT-IMU的初始化代码，后续版本的程序暂时不会使用到外置陀螺仪
-    //    wituart = new bsp::UART(&huart6);
+    //    wituart = new bsp::UART(&huart7);
     //    /// Some models of wit-imu may need to change baudrate to 921600
     //    wituart->SetBaudrate(921600);
     //    /// Setup Rx and Tx buffer size

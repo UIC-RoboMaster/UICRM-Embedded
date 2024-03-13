@@ -50,5 +50,6 @@ extern driver::MotorCANBase* pitch_motor;
 extern driver::MotorCANBase* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
 extern float pitch_diff, yaw_diff;
+extern INS_Angle_t INS_Angle;
 void init_gimbal();
 void kill_gimbal();

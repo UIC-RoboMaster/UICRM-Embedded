@@ -25,6 +25,8 @@ bsp::UART* refereerc_uart = nullptr;
 communication::Referee* referee = nullptr;
 communication::Referee* refereerc = nullptr;
 
+
+
 void init_referee() {
     // 启动裁判系统
     referee_uart = new bsp::UART(&huart3);
@@ -33,9 +35,10 @@ void init_referee() {
     referee = new communication::Referee(referee_uart);
 
     // 启动裁判系统图传链路
-    refereerc_uart = new bsp::UART(&huart7);
+    refereerc_uart = new bsp::UART(&huart2);
     refereerc_uart->SetupRx(300);
     // UART7没有打开DMA发送，所以这里需要将DMA发送关闭
     refereerc_uart->SetupTx(300, false);
     refereerc = new communication::Referee(refereerc_uart);
 }
+

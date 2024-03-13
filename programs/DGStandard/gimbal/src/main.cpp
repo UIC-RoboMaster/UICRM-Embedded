@@ -30,6 +30,7 @@
 #include "imu_task.h"
 #include "public_port.h"
 #include "referee_task.h"
+#include "minipc_task.h"
 #include "remote_task.h"
 #include "selftest_task.h"
 #include "shoot_task.h"
@@ -54,6 +55,7 @@ void RM_RTOS_Init(void) {
     // 初始化裁判系统，裁判系统类能够读取裁判系统的数据
     init_referee();
     // 初始化遥控器与远程模式选择，遥控器类能够读取遥控器的数据
+    init_minipc();
     init_remote();
     // 初始化发射机构，发射机构类能够控制发射机构的动作
     init_shoot();

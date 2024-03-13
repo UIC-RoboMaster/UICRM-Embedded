@@ -139,7 +139,7 @@ namespace control {
         void TargetAbs(float new_pitch, float new_yaw);
 
         /**
-         * @brief 将云台指向新的方向，是相对于当前方向的角度
+         * @brief 将云台指向新的方向，是相对于当前目标方向的角度
          *
          * @param new_pitch 新的pitch角度
          * @param new_yaw 新的yaw角度
@@ -151,6 +151,13 @@ namespace control {
          * @param new_yaw   new yaw angled
          */
         void TargetRel(float new_pitch, float new_yaw);
+
+        /**
+         * @brief 将云台指向新的方向，是相对于当前云台方向的角度
+         * @param new_pitch
+         * @param new_yaw
+         */
+        void TargetReal(float new_pitch, float new_yaw);
 
         /**
          * @brief 更新云台的偏移量

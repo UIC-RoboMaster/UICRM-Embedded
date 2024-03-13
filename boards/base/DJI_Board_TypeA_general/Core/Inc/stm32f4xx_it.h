@@ -74,7 +74,6 @@ void EXTI15_10_IRQHandler(void);
 void TIM8_BRK_TIM12_IRQHandler(void);
 void SDIO_IRQHandler(void);
 void TIM6_DAC_IRQHandler(void);
-void DMA2_Stream0_IRQHandler(void);
 void DMA2_Stream1_IRQHandler(void);
 void DMA2_Stream2_IRQHandler(void);
 void DMA2_Stream3_IRQHandler(void);

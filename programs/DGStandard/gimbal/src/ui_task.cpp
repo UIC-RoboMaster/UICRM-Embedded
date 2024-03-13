@@ -60,7 +60,7 @@ void uiTask(void* arg) {
     osDelay(110);
 
     // Initialize supercapacitor GUI
-    char batteryStr[15] = "BATTERY";
+    char batteryStr[15] = "SUPERCAP";
     batteryGUI = new communication::CapGUI(UI, batteryStr);
     osDelay(110);
     batteryGUI->InitName();

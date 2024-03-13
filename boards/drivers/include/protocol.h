@@ -614,6 +614,10 @@ namespace communication {
         TARGET_ANGLE = 0x0402,
         NO_TARGET_FLAG = 0x0403,
         SHOOT_CMD = 0x0404,
+        ROBOT_MOVE_SPEED = 0x0405,
+        ROBOT_STATUS_UPLOAD = 0x0501,
+        ROBOT_POSITION = 0x0502
+
     } host_cmd;
 
     /* ===== PACK 0x0401 ===== */
@@ -623,8 +627,9 @@ namespace communication {
 
     /* ===== TARGET_ANGLE 0x0402 ===== */
     typedef struct {
-        float pitch;  // TODO: decide RAD / degree with CV group
-        float yaw;
+        float target_pitch;  // TODO: decide RAD / degree with CV group
+        float target_roll;
+        float target_yaw;
     } __packed target_angle_t;
 
     /* ===== NO_TARGET_FLAG 0x0403 ===== */
@@ -634,8 +639,36 @@ namespace communication {
 
     /* ===== SHOOT_CMD 0x0404 ===== */
     typedef struct {
-        char dummy;  // no actual meaning
+        uint8_t shoot_flywheel;  // 0x00 for stop, 0x01 for start
+        uint8_t shoot_cmd;  // 0x00 for stop, 0x01 for shoot
+        uint16_t flywheel_speed;  // Format RPM
     } __packed shoot_cmd_t;
+
+    /* ===== ROBOT_MOVE_SPEED 0x0405 ===== */
+    typedef struct {
+        float target_x;
+        float target_y;
+        float target_yaw;
+    } __packed robot_move_t;
+
+    /* ===== ROBOT_STATUS_UPLOAD 0x0501 1Hz ===== */
+        typedef struct {
+            uint8_t robot_id;
+            uint8_t robot_level;
+            uint16_t remain_HP;
+            uint16_t max_HP;
+            uint16_t shooter_cooling_rate;
+            uint16_t shooter_heat_limit;
+            uint16_t chassis_power_limit;
+            float chassis_current_power;
+        } __packed robot_status_upload_t;
+
+    /* ===== GIMBAL_CURRENT_STATUS 0x0502 100Hz ===== */
+        typedef struct {
+            float current_imu_pitch;
+            float current_imu_roll;
+            float current_imu_yaw;
+        } __packed gimbal_current_status_t;
 
     class Host : public UARTProtocol {
       public:
@@ -644,6 +677,10 @@ namespace communication {
         target_angle_t target_angle{};
         no_target_flag_t no_target_flag{};
         shoot_cmd_t shoot_cmd{};
+        robot_move_t robot_move{};
+        robot_status_upload_t robot_status_upload{};
+        gimbal_current_status_t gimbal_current_status{};
+
 
       private:
         /**
