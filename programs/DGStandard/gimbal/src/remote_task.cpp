@@ -68,12 +68,12 @@ void remoteTask(void* arg) {
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
         // 通过裁判系统检测是否死亡或者没有子弹
-        //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        //        is_shoot_available =
-        //            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+                is_robot_dead = referee->game_robot_status.remain_HP == 0;
+                is_shoot_available =
+                    referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
         // 一般调试模式下，机器人永不死亡，子弹永远有
-        is_robot_dead = false;
-        is_shoot_available = true;
+//        is_robot_dead = false;
+//        is_shoot_available = true;
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 // 如果遥控器离线或者机器人死亡，则进入安全模式

@@ -377,7 +377,7 @@ namespace communication {
     int UserInterface::GraphRefresh(int cnt, ...) {
         va_list arg;
         va_start(arg, cnt);
-        UI_header_data_t header;
+        robot_interactive_data_header_t header;
         header.sender_ID = Robot_ID_;
         header.receiver_ID = Client_ID_;
         //        int length = -1;
