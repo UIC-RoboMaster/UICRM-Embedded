@@ -29,8 +29,8 @@ float chassis_vx = 0;
 float chassis_vy = 0;
 float chassis_vz = 0;
 bool chassis_boost_flag = true;
-const float speed_offset = 660;
-const float speed_offset_boost = 1320;
+const float max_speed = 660;
+const float max_speed_boost = 1320;
 void chassisTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
@@ -57,7 +57,7 @@ void chassisTask(void* arg) {
         manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
     manual_mode_pid->Reset();
     float manual_mode_pid_output = 0;
-    float current_speed_offset = speed_offset;
+    float current_speed_offset = max_speed;
 
     RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2,
                                          1.0f / (CHASSIS_OS_DELAY * 1000));

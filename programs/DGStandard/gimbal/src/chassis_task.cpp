@@ -23,10 +23,9 @@ osThreadId_t chassisTaskHandle;
 
 float chassis_vx = 0;
 float chassis_vy = 0;
-float chassis_vz = 0;
 bool chassis_boost_flag = true;
-const float speed_offset = 660;
-const float speed_offset_boost = 1320;
+const float max_speed = 660;
+const float max_speed_boost = 1320;
 
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
@@ -48,7 +47,6 @@ void chassisTask(void* arg) {
     float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
     // float last_speed = 0;
-    float sin_yaw, cos_yaw, vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
     float offset_yaw = 0;
     float spin_speed = 350;
     float manual_mode_yaw_pid_args[3] = {200, 0.5, 0};
@@ -59,9 +57,7 @@ void chassisTask(void* arg) {
     manual_mode_pid->Reset();
     float yaw_pid_error = 0;
     float manual_mode_pid_output = 0;
-    float current_speed_offset = speed_offset;
-    remote::keyboard_t keyboard;
-    remote::keyboard_t last_keyboard;
+    float current_speed_offset = max_speed;
     RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2,
                                          1.0f / (CHASSIS_OS_DELAY * 1000));
     RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2,
@@ -95,63 +91,65 @@ void chassisTask(void* arg) {
             chassis->Enable();
             continue;
         }
-        {
-            last_keyboard = keyboard;
-            if (selftest.dbus) {
-                keyboard = dbus->keyboard;
-                ch0_edge->input(dbus->ch0 != 0);
-                ch1_edge->input(dbus->ch1 != 0);
-                ch2_edge->input(dbus->ch2 != 0);
-                ch3_edge->input(dbus->ch3 != 0);
-                ch4_edge->input(dbus->ch4 != 0);
-            } else if (selftest.refereerc) {
+
+        remote::keyboard_t keyboard;
+        if (selftest.dbus) {
+            keyboard = dbus->keyboard;
+        } else if (selftest.refereerc) {
                 keyboard = refereerc->remote_control.keyboard;
-                ch0_edge->input(false);
-                ch1_edge->input(false);
-                ch2_edge->input(false);
-                ch3_edge->input(false);
-                ch4_edge->input(false);
-            }
-        }
-        {
-            w_edge->input(keyboard.bit.W);
-            s_edge->input(keyboard.bit.S);
-            a_edge->input(keyboard.bit.A);
-            d_edge->input(keyboard.bit.D);
-            shift_edge->input(keyboard.bit.SHIFT);
-            q_edge->input(keyboard.bit.Q);
-            e_edge->input(keyboard.bit.E);
-            x_edge->input(keyboard.bit.X);
         }
 
-        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        float yaw_motor_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
-        sin_yaw = arm_sin_f32(relative_angle);
-        cos_yaw = arm_cos_f32(relative_angle);
-        if (shift_edge->posEdge()) {
-            if (chassis_boost_flag) {
-                chassis_boost_flag = false;
-                vx_ramp->SetMax(chassis_vx_max / 2);
-                vy_ramp->SetMax(chassis_vy_max / 2);
-                vz_ramp->SetMax(chassis_vz_max / 2);
-                vx_ramp->SetMin(-chassis_vx_max / 2);
-                vy_ramp->SetMin(-chassis_vy_max / 2);
-                vz_ramp->SetMin(-chassis_vz_max / 2);
-                current_speed_offset = speed_offset;
-            } else {
-                chassis_boost_flag = true;
-                vx_ramp->SetMax(chassis_vx_max);
-                vy_ramp->SetMax(chassis_vy_max);
-                vz_ramp->SetMax(chassis_vz_max);
-                vx_ramp->SetMin(-chassis_vx_max);
-                vy_ramp->SetMin(-chassis_vy_max);
-                vz_ramp->SetMin(-chassis_vz_max);
-                current_speed_offset = speed_offset_boost;
-            }
+        float sin_yaw = arm_sin_f32(yaw_motor_angle);
+        float cos_yaw = arm_cos_f32(yaw_motor_angle);
+
+
+        ch0_edge->input(dbus->ch0 != 0);
+        ch1_edge->input(dbus->ch1 != 0);
+        ch2_edge->input(dbus->ch2 != 0);
+        ch3_edge->input(dbus->ch3 != 0);
+        ch4_edge->input(dbus->ch4 != 0);
+
+        w_edge->input(keyboard.bit.W);
+        s_edge->input(keyboard.bit.S);
+        a_edge->input(keyboard.bit.A);
+        d_edge->input(keyboard.bit.D);
+        shift_edge->input(keyboard.bit.SHIFT);
+        q_edge->input(keyboard.bit.Q);
+        e_edge->input(keyboard.bit.E);
+        x_edge->input(keyboard.bit.X);
+
+
+        float speed = max_speed;
+        chassis_boost_flag = keyboard.bit.SHIFT;
+        if (chassis_boost_flag) {
+            speed = max_speed_boost;
         }
+
+        float curr_vx, curr_vy, curr_vt;
+
+        // 刹车功能
+        if (keyboard.bit.X) {
+            curr_vx = 0;
+            curr_vy = 0;
+            curr_vt = 0;
+        } else if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
+            curr_vx = dbus->ch0;
+            curr_vy = dbus->ch1;
+            curr_vt = dbus->ch2;
+        } else {
+            curr_vx = (keyboard.bit.D - keyboard.bit.A) * speed;
+            curr_vy = (keyboard.bit.W - keyboard.bit.S) * speed;
+            curr_vt = (keyboard.bit.E - keyboard.bit.Q) * speed;
+        }
+
+        float vx_set_org = 0, vy_set_org = 0;
         if (ch0_edge->get()) {
+            // 遥控器有输入
             vx_set_org = dbus->ch0;
         } else if (ch0_edge->negEdge() || x_edge->posEdge()) {
+            // 刹车
             vx_set_org = 0;
             vx_ramp->SetCurrent(0);
         } else if (d_edge->get()) {
@@ -159,6 +157,7 @@ void chassisTask(void* arg) {
         } else if (a_edge->get()) {
             vx_set_org = vx_ramp->Calc(-current_speed_offset);
         } else {
+            // 键盘、遥控器都没有输入
             if (vx_set_org > 0) {
                 vx_set_org = vx_ramp->Calc(-current_speed_offset);
             } else if (vx_set_org < 0) {
@@ -200,8 +199,9 @@ void chassisTask(void* arg) {
         chassis_vx = vx_set_org;
         chassis_vy = vy_set_org;
         chassis_vz = offset_yaw;
-        vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
-        vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
+        float vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
+        float vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
+        float vz_set = 0;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
                 yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
@@ -210,10 +210,6 @@ void chassisTask(void* arg) {
                 }
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
-                osDelay(1);
-                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
                 break;
             case REMOTE_MODE_SPIN:
@@ -226,10 +222,6 @@ void chassisTask(void* arg) {
                 vz_set = spin_speed;
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 osDelay(1);
-                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
-                osDelay(1);
                 break;
             case REMOTE_MODE_ADVANCED:
                 vz_set = offset_yaw;
@@ -240,16 +232,14 @@ void chassisTask(void* arg) {
                 }
                 chassis->SetSpeed(vx_set_org * ratio, vy_set_org * ratio, vz_set * ratio);
                 osDelay(1);
-                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
-                osDelay(1);
                 break;
             default:
                 // Not Support
                 kill_chassis();
         }
-        chassis_vz = vz_set;
+        chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
+                          referee->power_heat_data.chassis_power,
+                          referee->power_heat_data.chassis_power_buffer);
         osDelay(CHASSIS_OS_DELAY);
     }
 }

@@ -25,8 +25,8 @@ float chassis_vx = 0;
 float chassis_vy = 0;
 float chassis_vz = 0;
 bool chassis_boost_flag = true;
-const float speed_offset = 660;
-const float speed_offset_boost = 1320;
+const float max_speed = 660;
+const float max_speed_boost = 1320;
 
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
@@ -59,7 +59,7 @@ void chassisTask(void* arg) {
     manual_mode_pid->Reset();
     float yaw_pid_error = 0;
     float manual_mode_pid_output = 0;
-    float current_speed_offset = speed_offset;
+    float current_speed_offset = max_speed;
     remote::keyboard_t keyboard;
     remote::keyboard_t last_keyboard;
     RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2,
@@ -137,7 +137,7 @@ void chassisTask(void* arg) {
                 vx_ramp->SetMin(-chassis_vx_max / 2);
                 vy_ramp->SetMin(-chassis_vy_max / 2);
                 vz_ramp->SetMin(-chassis_vz_max / 2);
-                current_speed_offset = speed_offset;
+                current_speed_offset = max_speed;
             } else {
                 chassis_boost_flag = true;
                 vx_ramp->SetMax(chassis_vx_max);
@@ -146,7 +146,7 @@ void chassisTask(void* arg) {
                 vx_ramp->SetMin(-chassis_vx_max);
                 vy_ramp->SetMin(-chassis_vy_max);
                 vz_ramp->SetMin(-chassis_vz_max);
-                current_speed_offset = speed_offset_boost;
+                current_speed_offset = max_speed_boost;
             }
         }
         if (ch0_edge->get()) {

@@ -170,6 +170,8 @@ namespace control {
          * @param x_speed chassis speed on x-direction
          * @param y_speed chassis speed on y-direction
          * @param turn_speed chassis clockwise turning speed
+         *
+         * @note
          */
         void SetSpeed(const float x_speed, const float y_speed = 0, const float turn_speed = 0);
 
