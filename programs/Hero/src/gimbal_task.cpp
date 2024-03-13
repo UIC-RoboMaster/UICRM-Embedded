@@ -129,7 +129,7 @@ void gimbalTask(void* arg) {
                 gimbal->SetRelTarget(pitch_diff, yaw_diff);
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
-            case REMOTE_MODE_ADVANCED:
+            case REMOTE_MODE_MANUAL:
                 gimbal->SetRelTarget(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;

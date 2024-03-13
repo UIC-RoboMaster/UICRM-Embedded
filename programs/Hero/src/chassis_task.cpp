@@ -231,7 +231,7 @@ void chassisTask(void* arg) {
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
                 break;
-            case REMOTE_MODE_ADVANCED:
+            case REMOTE_MODE_MANUAL:
                 vz_set = offset_yaw;
                 if (offset_yaw != 0) {
                     spin_speed = spin_speed + offset_yaw;

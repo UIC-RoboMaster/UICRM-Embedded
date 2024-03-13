@@ -21,9 +21,9 @@
 #include "remote_task.h"
 
 remote::DBUS* dbus = nullptr;
-RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
-RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
+RemoteMode remote_mode = REMOTE_MODE_MANUAL;
+RemoteMode last_remote_mode = REMOTE_MODE_MANUAL;
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_MANUAL};
 const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;

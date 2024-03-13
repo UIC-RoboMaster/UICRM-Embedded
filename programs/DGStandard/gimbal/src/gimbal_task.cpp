@@ -37,7 +37,7 @@ void gimbalTask(void* arg) {
         osDelay(GIMBAL_OS_DELAY);
     }
     int i = 0;
-    while (i < 5000) {
+    while (i < 2000) {
         while (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);
@@ -134,7 +134,7 @@ void gimbalTask(void* arg) {
                 gimbal->SetRelTarget(pitch_diff, yaw_diff);
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
-            case REMOTE_MODE_ADVANCED:
+            case REMOTE_MODE_MANUAL:
                 gimbal->SetRelTarget(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;

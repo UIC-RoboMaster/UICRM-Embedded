@@ -176,7 +176,7 @@ void chassisTask(void* arg) {
                 chassis->SetPower(false, 30, 20, 100);
                 chassis->Update();
                 break;
-            case REMOTE_MODE_ADVANCED:
+            case REMOTE_MODE_MANUAL:
                 vz_set = offset_yaw;
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
                 //                chassis->Update(true,
