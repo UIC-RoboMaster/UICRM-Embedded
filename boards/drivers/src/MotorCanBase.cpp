@@ -674,6 +674,12 @@ namespace driver {
         }
     }
 
+    void ServoMotor::Hold(bool override) {
+        if (!Holding()) {
+            SetTarget(GetTheta(), override);
+        }
+    }
+
     bool ServoMotor::Holding() const {
         return hold_;
     }

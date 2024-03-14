@@ -49,7 +49,7 @@ enum ShootFricMode {
     SHOOT_FRIC_SPEEDUP = 3,
     SHOOT_FRIC_SPEEDDOWN = 4,
 };
-extern ShootFricMode shoot_fric_mode;
+extern ShootFricMode shoot_flywheel_mode;
 enum ShootMode {
     SHOOT_MODE_DISABLE = -1,
     SHOOT_MODE_STOP = 0,
@@ -58,7 +58,7 @@ enum ShootMode {
     SHOOT_MODE_SINGLE = 3,
     SHOOT_MODE_BURST = 4,
 };
-extern ShootMode shoot_mode;
+extern ShootMode shoot_load_mode;
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
                                             .attr_bits = osThreadDetached,

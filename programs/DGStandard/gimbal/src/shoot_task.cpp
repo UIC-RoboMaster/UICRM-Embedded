@@ -52,154 +52,65 @@ void shootTask(void* arg) {
         osDelay(SHOOT_OS_DELAY);
     }
 
-    // 初始化摩擦轮转速斜坡和各状态
-    //    int last_state = remote::MID;
-    //    int last_state_2 = remote::MID;
-    //    uint8_t shoot_state = 0;
-    int shoot_flywheel_offset = 0;
-    //    uint8_t shoot_state_2 = 0;
-    //    uint8_t last_shoot_key = 0;
-    uint8_t shoot_state_key = 0;
-    uint8_t shoot_state_key_storage = 0;  // 射击状态保存
-    //    uint16_t shoot_time_count = 0;
-    uint8_t servo_back = 0;
-    //    bool can_shoot_click = false;
-    RampSource ramp_1 = RampSource(0, 0, 800, 0.001);
-    RampSource ramp_2 = RampSource(0, 0, 800, 0.001);
+    load_servo->SetTarget(load_servo->GetTheta(), true);
+    load_servo->CalcOutput();
 
-    // 拨弹电机锁原位
-    steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
-
-    ShootMode last_shoot_mode = SHOOT_MODE_STOP;
+    Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             // 死了
-            shoot_flywheel_offset = -5000;
-            ramp_1.Calc(shoot_flywheel_offset);
-            ramp_2.Calc(shoot_flywheel_offset);
-            //            shoot_state = 0;
-            //            shoot_state_2 = 0;
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
-        //                if (referee->bullet_remaining.bullet_remaining_num_17mm == 0){
-        //                    //没子弹了
-        //                    shoot_flywheel_offset = -200;
-        //                    flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
-        //                    flywheel_right->SetOutput(ramp_2.Calc(shoot_flywheel_offset));
-        //                    shoot_state = 0;
-        //                    shoot_state_2 = 0;
-        //                    kill_shoot();
-        //                    osDelay(SHOOT_OS_DELAY);
-        //                    continue;
-        //                }
-        //   检测摩擦轮模式
-        switch (shoot_fric_mode) {
-            case SHOOT_FRIC_MODE_PREPARING:
-            case SHOOT_FRIC_MODE_PREPARED:
-                // 摩擦轮加速或者保持满速度
-                shoot_flywheel_offset = 400;
-                // laser->SetOutput(255);
-                break;
-            case SHOOT_FRIC_MODE_STOP:
-                // 摩擦轮减速或者停止
-                shoot_flywheel_offset = -400;
-                // laser->SetOutput(0);
-                break;
-            case SHOOT_FRIC_SPEEDUP:
-                // 摩擦轮加速
-                ramp_1.SetMax(min(900.0f, ramp_1.GetMax() + 25));
-                ramp_2.SetMax(min(900.0f, ramp_2.GetMax() + 25));
-                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
-                break;
-            case SHOOT_FRIC_SPEEDDOWN:
-                // 摩擦轮减速
-                ramp_1.SetMax(max(500.0f, ramp_1.GetMax() - 25));
-                ramp_2.SetMax(max(500.0f, ramp_2.GetMax() - 25));
-                shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
-                break;
-            default:
-                // 摩擦轮强制停止
-                shoot_flywheel_offset = -1000;
-                // laser->SetOutput(0);
-                break;
+
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
+            shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+            flywheel_speed_ease->SetTarget(400);
+        } else {
+            flywheel_speed_ease->SetTarget(0);
         }
-        // 计算斜坡函数，摩擦轮输出
-        flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
-        flywheel_right->SetOutput(ramp_2.Calc(shoot_flywheel_offset));
-        if (ramp_1.Get() == ramp_1.GetMax() && ramp_2.Get() == ramp_2.GetMax() &&
-            shoot_fric_mode == SHOOT_FRIC_MODE_PREPARING) {
-            // 准备就绪判断
-            shoot_fric_mode = SHOOT_FRIC_MODE_PREPARED;
+        flywheel_speed_ease->Calc();
+        flywheel_left->SetOutput(flywheel_speed_ease->GetOutput());
+        flywheel_right->SetOutput(flywheel_speed_ease->GetOutput());
+
+        // 检测摩擦轮是否就绪
+        // 由shoot_task切换到SHOOT_FRIC_MODE_PREPARED
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING && flywheel_speed_ease->IsAtTarget()) {
+            shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
         }
-        if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
-            // 如果摩擦轮准备就绪，则检测发射模式
-            shoot_state_key = shoot_key->Read();
-            switch (shoot_mode) {
-                case SHOOT_MODE_PREPARING:
-                    // 发射准备就绪检测
-                    if (servo_back == 0) {
-                        // 第一次发射需要适当退弹
-                        steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() -
-                                                  2 * PI / 32);
-                        servo_back = 1;
-                    }
-                    if (shoot_state_key == 1) {
-                        // 检测到准备就绪，转换模式与锁定拔弹电机
-                        shoot_mode = SHOOT_MODE_PREPARED;
-                        if (!steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta(), true);
-                        }
-                    } else {
-                        // 没有准备就绪，则旋转拔弹电机
-                        steering_motor->SetTarget(
-                            steering_motor->GetOutputShaftTheta() + 2 * PI / 8, false);
-                    }
-                    break;
-                case SHOOT_MODE_PREPARED:
-                    // 准备就绪，未发射状态
-                    // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
-                    shoot_state_key_storage = 0;
-                    if (shoot_state_key == 0) {
-                        shoot_mode = SHOOT_MODE_PREPARING;
-                        break;
-                    }
-                    if (!steering_motor->IsHolding()) {
-                        steering_motor->SetTarget(steering_motor->GetOutputShaftTheta(), true);
-                    }
-                    break;
-                case SHOOT_MODE_SINGLE:
-                    // 发射一枚子弹
-                    if (shoot_state_key_storage == 0 && shoot_state_key == 0) {
-                        shoot_state_key_storage = 1;
-                    } else if (shoot_state_key_storage == 1 && shoot_state_key == 1) {
-                        shoot_state_key_storage = 0;
-                        shoot_mode = SHOOT_MODE_PREPARED;
-                        break;
-                    }
-                    if (last_shoot_mode != SHOOT_MODE_SINGLE)
-                        steering_motor->SetTarget(
-                            steering_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
-                    else
-                        steering_motor->SetTarget(
-                            steering_motor->GetOutputShaftTheta() + 2 * PI / 8, false);
-                    break;
-                case SHOOT_MODE_BURST:
-                    // 连发子弹
-                    steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI, true);
-                    shoot_state_key_storage = 0;
-                    break;
-                case SHOOT_MODE_STOP:
-                    // 停止发射
-                    break;
-                default:
-                    break;
+        if (shoot_flywheel_mode != SHOOT_FRIC_MODE_PREPARED) {
+            load_servo->Hold();
+            load_servo->CalcOutput();
+            osDelay(SHOOT_OS_DELAY);
+            continue;
+        }
+        /* 摩擦轮就绪后执行以下部分 */
+
+        if (shoot_load_mode == SHOOT_MODE_STOP) {
+            load_servo->Hold(true);
+            // todo: 这里为什么要是true才能停下？target_angel为什么会超过范围？
+        }
+        if (shoot_load_mode == SHOOT_MODE_IDLE) {
+            uint8_t loaded = shoot_key->Read();
+            if (loaded) {
+                load_servo->Hold();
+            } else {
+                // 没有准备就绪，则旋转拔弹电机
+                load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
             }
         }
-        last_shoot_mode = shoot_mode;
+        if (shoot_load_mode == SHOOT_MODE_SINGLE) {
+            load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, true);
+            shoot_load_mode = SHOOT_MODE_IDLE;
+        }
+        if (shoot_load_mode == SHOOT_MODE_BURST) {
+            load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, true);
+        }
 
+        // 计算输出
+        load_servo->CalcOutput();
         osDelay(SHOOT_OS_DELAY);
     }
 }
