@@ -41,9 +41,9 @@ void RM_RTOS_Init(void) {
     /// because imu occupies uart1, no other UART can be used, so we need to use UART to print
     // print_use_uart(&huart1);
 
-    UART = new bsp::UART(&huart1);
+    UART = new bsp::UART(&huart10);
 
-    UART->SetupTx(200);
+    UART->SetupTx(200, false);
     UART->SetupRx(200);
     UART->SetupRxData(&uart_data, &uart_len);
 

@@ -50,7 +50,7 @@ namespace bsp {
             HAL_DMAEx_MultiBufferStart(huart->hdmarx, (uint32_t)&huart->Instance->RDR,
                                        (uint32_t)data0, (uint32_t)data1, size);
 #else
-            HAL_DMA_Start(huart->hdmarx, (uint32_t)&huart->Instance->DR, (uint32_t)data0, size);
+            HAL_DMA_Start(huart->hdmarx, (uint32_t)&huart->Instance->RDR, (uint32_t)data0, size);
 #endif
 
             /* Clear the Overrun flag just before enabling the DMA Rx request */
@@ -216,7 +216,7 @@ namespace bsp {
 #else
         // software double buffer
         HAL_DMA_Abort(huart_->hdmarx);
-        HAL_DMA_Start(huart_->hdmarx, (uint32_t)&huart_->Instance->DR,
+        HAL_DMA_Start(huart_->hdmarx, (uint32_t)&huart_->Instance->RDR,
                       (uint32_t)rx_data_[rx_index_], rx_size_);
 #endif
 

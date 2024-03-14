@@ -74,6 +74,8 @@ void RM_RTOS_Default_Task(const void *argument);
 #define Accel_CS_GPIO_Port GPIOC
 #define Gyro_CS_Pin GPIO_PIN_3
 #define Gyro_CS_GPIO_Port GPIOC
+#define WS2812B_SPI_Pin GPIO_PIN_7
+#define WS2812B_SPI_GPIO_Port GPIOA
 #define DCMI_PWRDOWN_Pin GPIO_PIN_5
 #define DCMI_PWRDOWN_GPIO_Port GPIOC
 #define IMU_TEMP_Pin GPIO_PIN_1

@@ -15,8 +15,7 @@ set(MCU_OPTIONS -mcpu=${MCU_ARCH} -mthumb -mthumb-interwork
 ######################################################
 add_library(${PROJECT_NAME}_interface INTERFACE)
 target_compile_definitions(${PROJECT_NAME}_interface INTERFACE ${MCU_LINE}
-        ARM_MATH_CM7
-        BOARD_HAS_UART_DMA_DOUBLE_BUFFER)
+        ARM_MATH_CM7)
 target_compile_options(${PROJECT_NAME}_interface INTERFACE ${MCU_OPTIONS})
 target_link_options(${PROJECT_NAME}_interface INTERFACE
         ${MCU_OPTIONS} -T${CMAKE_CURRENT_SOURCE_DIR}/${MCU_LINKER_SCRIPT})

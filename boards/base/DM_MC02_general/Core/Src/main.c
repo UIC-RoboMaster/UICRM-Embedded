@@ -106,7 +106,6 @@ int main(void)
   MX_I2C2_Init();
   MX_SPI1_Init();
   MX_SPI2_Init();
-  MX_SPI6_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
@@ -121,14 +120,16 @@ int main(void)
   MX_OCTOSPI2_Init();
   MX_TIM12_Init();
   MX_ADC1_Init();
-  MX_SPI3_Init();
   MX_FDCAN1_Init();
   MX_FDCAN2_Init();
   MX_TIM23_Init();
   MX_TIM24_Init();
+  MX_SPI3_Init();
+  MX_SPI6_Init();
   /* USER CODE BEGIN 2 */
   RM_DMA_UART5_INIT();
   RM_UART5_Init();
+  // RM_SPI6_Init();
   /* USER CODE END 2 */
 
   /* Init scheduler */
