@@ -66,7 +66,7 @@ void gimbalTask(void* arg) {
         ++i;
     }
     Buzzer_Sing(SingCaliDone);
-    float pitch_ratio, yaw_ratio;
+    float pitch_ratio=0, yaw_ratio=0;
     float pitch_curr, yaw_curr;
     pitch_curr = imu->INS_angle[2];
     yaw_curr = imu->INS_angle[0];
@@ -98,6 +98,10 @@ void gimbalTask(void* arg) {
             else
                 yaw_ratio = 0;
 
+        }
+        if (pitch_ratio == 0 && yaw_ratio == 0 && selftest.refereerc) {
+            pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 3.0;
+            yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 3.0;
         } else {
             pitch_ratio = 0;
             yaw_ratio = 0;
@@ -134,7 +138,7 @@ void gimbalTask(void* arg) {
 
 void init_gimbal() {
     pitch_motor = new driver::Motor6020(can2, 0x205);
-    yaw_motor = new driver::Motor6020(can2, 0x206);
+    yaw_motor = new driver::Motor6020(can1, 0x206);
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {
@@ -152,7 +156,7 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
-        .kp = 1000,
+        .kp = 2000,
         .ki = 100,
         .kd = 0,
         .max_out = 25000,

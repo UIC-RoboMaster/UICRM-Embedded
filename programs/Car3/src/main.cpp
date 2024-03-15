@@ -42,7 +42,7 @@ void RM_RTOS_Init(void) {
     init_batt();
     init_imu();
     init_buzzer();
-    // init_referee();
+    init_referee();
     init_remote();
     init_shoot();
     init_gimbal();
