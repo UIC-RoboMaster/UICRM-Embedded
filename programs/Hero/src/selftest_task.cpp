@@ -32,7 +32,7 @@ void selftestTask(void* arg) {
 
         yaw_motor->connection_flag_ = false;
         pitch_motor->connection_flag_ = false;
-        steering_motor->connection_flag_ = false;
+        load_motor->connection_flag_ = false;
         // Test DBUS
         dbus->connection_flag_ = false;
         // Test Referee
@@ -43,7 +43,7 @@ void selftestTask(void* arg) {
 
         selftest.yaw_motor = yaw_motor->connection_flag_;
         selftest.pitch_motor = pitch_motor->connection_flag_;
-        selftest.steering_motor = steering_motor->connection_flag_;
+        selftest.steering_motor = load_motor->connection_flag_;
         selftest.dbus = dbus->connection_flag_;
         selftest.referee = referee->connection_flag_;
         if (i == 2)

@@ -27,7 +27,7 @@ static float* pid2_param = nullptr;
 static driver::FlyWheelMotor* flywheel1 = nullptr;
 static driver::FlyWheelMotor* flywheel2 = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::MotorCANBase* load_motor = nullptr;
 
 driver::ServoMotor* load_servo = nullptr;
 
@@ -277,10 +277,10 @@ void init_shoot() {
     flywheel1->SetSpeed(0);
     flywheel2->SetSpeed(0);
 
-    steering_motor = new driver::Motor2006(can2, 0x203);
+    load_motor = new driver::Motor2006(can2, 0x203);
 
     driver::servo_t servo_data;
-    servo_data.motor = steering_motor;
+    servo_data.motor = load_motor;
     servo_data.max_speed = 2.5 * PI;
     servo_data.max_acceleration = 16 * PI;
     servo_data.transmission_ratio = M2006P36_RATIO;
@@ -297,7 +297,7 @@ void init_shoot() {
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
-    steering_motor->SetOutput(0);
+    load_motor->SetOutput(0);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
 }

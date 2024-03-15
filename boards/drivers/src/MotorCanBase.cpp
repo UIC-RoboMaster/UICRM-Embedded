@@ -381,6 +381,11 @@ namespace driver {
     bool MotorCANBase::IsHolding() const {
         return holding_;
     }
+    void MotorCANBase::Hold(bool override) {
+        if (!IsHolding()) {
+            SetTarget(GetOutputShaftTheta(), override);
+        }
+    }
     void MotorCANBase::RegisterPreOutputCallback(MotorCANBase::callback_t callback,
                                                  void* instance) {
         pre_output_callback_ = callback;

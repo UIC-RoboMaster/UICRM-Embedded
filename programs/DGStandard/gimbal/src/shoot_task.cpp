@@ -23,7 +23,7 @@
 static driver::MotorPWMBase* flywheel_left = nullptr;
 static driver::MotorPWMBase* flywheel_right = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::MotorCANBase* load_motor = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
@@ -52,8 +52,8 @@ void shootTask(void* arg) {
         osDelay(SHOOT_OS_DELAY);
     }
 
-    load_servo->SetTarget(load_servo->GetTheta(), true);
-    load_servo->CalcOutput();
+    load_motor->SetTarget(load_motor->GetTheta(), true);
+    load_motor->CalcOutput();
 
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
@@ -81,36 +81,36 @@ void shootTask(void* arg) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
         }
         if (shoot_flywheel_mode != SHOOT_FRIC_MODE_PREPARED) {
-            load_servo->Hold();
-            load_servo->CalcOutput();
+            load_motor->Hold();
+            load_motor->CalcOutput();
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
         /* 摩擦轮就绪后执行以下部分 */
 
         if (shoot_load_mode == SHOOT_MODE_STOP) {
-            load_servo->Hold(true);
+            load_motor->Hold(true);
             // todo: 这里为什么要是true才能停下？target_angel为什么会超过范围？
         }
         if (shoot_load_mode == SHOOT_MODE_IDLE) {
             uint8_t loaded = shoot_key->Read();
             if (loaded) {
-                load_servo->Hold();
+                load_motor->Hold();
             } else {
                 // 没有准备就绪，则旋转拔弹电机
-                load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+                load_motor->SetTarget(load_motor->GetTarget() + 2 * PI / 8, false);
             }
         }
         if (shoot_load_mode == SHOOT_MODE_SINGLE) {
-            load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, true);
+            load_motor->SetTarget(load_motor->GetTheta() + 2 * PI / 8, true);
             shoot_load_mode = SHOOT_MODE_IDLE;
         }
         if (shoot_load_mode == SHOOT_MODE_BURST) {
-            load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, true);
+            load_motor->SetTarget(load_motor->GetTarget() + 2 * PI / 8, true);
         }
 
         // 计算输出
-        load_servo->CalcOutput();
+        load_motor->CalcOutput();
         osDelay(SHOOT_OS_DELAY);
     }
 }
@@ -121,9 +121,9 @@ void init_shoot() {
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
 
-    steering_motor = new driver::Motor2006(can1, 0x207);
+    load_motor = new driver::Motor2006(can1, 0x207);
 
-    steering_motor->SetTransmissionRatio(36);
+    load_motor->SetTransmissionRatio(36);
     control::ConstrainedPID::PID_Init_t steering_motor_theta_pid_init = {
         .kp = 20,
         .ki = 0,
@@ -137,7 +137,7 @@ void init_shoot() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    load_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
         .kp = 1000,
         .ki = 1,
@@ -154,11 +154,11 @@ void init_shoot() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    load_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+    load_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
     //    driver::servo_t servo_data;
-    //    servo_data.motor = steering_motor;
+    //    servo_data.motor = load_motor;
     //    servo_data.max_speed = 2.5 * PI;
     //    servo_data.max_acceleration = 16 * PI;
     //    servo_data.transmission_ratio = M2006P36_RATIO;
@@ -177,7 +177,7 @@ void init_shoot() {
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
-    steering_motor->SetOutput(0);
+    load_motor->SetOutput(0);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
 }

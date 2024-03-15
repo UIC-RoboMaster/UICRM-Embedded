@@ -33,7 +33,7 @@ void selftestTask(void* arg) {
         // 将连接状态设置为false，等待更新
         yaw_motor->connection_flag_ = false;
         pitch_motor->connection_flag_ = false;
-        steering_motor->connection_flag_ = false;
+        load_motor->connection_flag_ = false;
         // Test DBUS
         dbus->connection_flag_ = false;
         // Test Referee
@@ -45,7 +45,7 @@ void selftestTask(void* arg) {
         // 获取最新连接状态
         selftest.yaw_motor = yaw_motor->connection_flag_;
         selftest.pitch_motor = pitch_motor->connection_flag_;
-        selftest.steering_motor = steering_motor->connection_flag_;
+        selftest.steering_motor = load_motor->connection_flag_;
         selftest.dbus = dbus->connection_flag_;
         selftest.referee = referee->connection_flag_;
         // 图传串口的传输速率较慢，所以每三次检测一次

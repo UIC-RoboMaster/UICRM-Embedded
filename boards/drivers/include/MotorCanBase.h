@@ -206,6 +206,8 @@ namespace driver {
 
         bool IsHolding() const;
 
+        void Hold(bool override = false);
+
       protected:
         volatile float theta_;
         volatile float omega_;
@@ -597,7 +599,7 @@ namespace driver {
         void Hold(bool override = false);
 
         /**
-         * @brief 检测电机是否进入锁定状态
+         * @brief 检测电机是否已经到达设定的目标并进入锁定状态
          *
          * @return true  电机进入锁定状态
          * @return false 电机没有进入锁定状态

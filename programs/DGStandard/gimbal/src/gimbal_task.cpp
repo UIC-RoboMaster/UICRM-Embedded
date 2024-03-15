@@ -260,5 +260,5 @@ void kill_gimbal() {
     // 当杀死云台任务时，需要关闭两个电机
     yaw_motor->Disable();
     pitch_motor->Disable();
-    // steering_motor->SetOutput(0);
+    // load_motor->SetOutput(0);
 }

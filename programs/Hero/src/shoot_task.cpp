@@ -23,7 +23,7 @@
 driver::Motor3508* flywheel_left = nullptr;
 driver::Motor3508* flywheel_right = nullptr;
 
-driver::Motor3508* steering_motor = nullptr;
+driver::Motor3508* load_motor = nullptr;
 
 void jam_callback(void* args) {
     driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
@@ -70,8 +70,8 @@ void shootTask(void* arg) {
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
-        if (!steering_motor->IsEnable()) {
-            steering_motor->Enable();
+        if (!load_motor->IsEnable()) {
+            load_motor->Enable();
         }
         if (!flywheel_left->IsEnable()) {
             flywheel_left->Enable();
@@ -170,15 +170,15 @@ void shootTask(void* arg) {
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
-                    //                    if (!steering_motor->IsHolding()) {
-                    //                        steering_motor->SetTarget(steering_motor->GetTheta());
+                    //                    if (!load_motor->IsHolding()) {
+                    //                        load_motor->SetTarget(load_motor->GetTheta());
                     //                    }
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
-                        if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5);
+                        if (load_motor->IsHolding()) {
+                            load_motor->SetTarget(load_motor->GetTarget() + 2 * PI / 5);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
@@ -278,9 +278,9 @@ void init_shoot() {
     flywheel_left->SetMode(driver::MotorCANBase::OMEGA);
     flywheel_right->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
 
-    steering_motor = new driver::Motor3508(can1, 0x202);
+    load_motor = new driver::Motor3508(can1, 0x202);
 
-    steering_motor->SetTransmissionRatio(19);
+    load_motor->SetTransmissionRatio(19);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
         .kp = 20,
         .ki = 0,
@@ -295,7 +295,7 @@ void init_shoot() {
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
 
     };
-    steering_motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
+    load_motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t steering_omega_pid_init = {
         .kp = 2500,
         .ki = 3,
@@ -313,14 +313,14 @@ void init_shoot() {
                 control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
     };
-    steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    load_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
+    load_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
-    steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
+    load_motor->RegisterErrorCallback(jam_callback, load_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
-    steering_motor->Disable();
+    load_motor->Disable();
     flywheel_left->Disable();
     flywheel_right->Disable();
 }

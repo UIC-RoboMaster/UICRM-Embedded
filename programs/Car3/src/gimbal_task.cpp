@@ -217,5 +217,5 @@ void init_gimbal() {
 void kill_gimbal() {
     yaw_motor->Disable();
     pitch_motor->Disable();
-    // steering_motor->SetOutput(0);
+    // load_motor->SetOutput(0);
 }
