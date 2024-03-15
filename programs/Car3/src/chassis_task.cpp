@@ -29,8 +29,8 @@ float chassis_vx = 0;
 float chassis_vy = 0;
 float chassis_vz = 0;
 bool chassis_boost_flag = true;
-const float speed_offset = 660;
-const float speed_offset_boost = 1320;
+const float speed_offset = 1320;
+const float speed_offset_boost = 2640;
 void chassisTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
@@ -83,7 +83,7 @@ void chassisTask(void* arg) {
     BoolEdgeDetector* ch3_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
 
-    const float ratio = 1.0f / 660.0f * 6 * PI;
+    const float ratio = 1.0f / 660.0f * 12 * PI;
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
