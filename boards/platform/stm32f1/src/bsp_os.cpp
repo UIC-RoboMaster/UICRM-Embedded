@@ -53,4 +53,8 @@ namespace bsp {
         return getRunTimeCounterValue();
     }
 
+
+    uint32_t GetHighresTickMilliSec(void) {
+            return HAL_GetTick();
+    }
 } /* namespace bsp */

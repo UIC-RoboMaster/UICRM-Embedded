@@ -23,7 +23,6 @@
 #include "dbus.h"
 #include "main.h"
 #include "referee_task.h"
-#include "selftest_task.h"
 #include "user_define.h"
 #include "utils.h"
 extern remote::DBUS* dbus;
@@ -39,7 +38,6 @@ enum RemoteMode {
     REMOTE_MODE_FOLLOW = 1,
     REMOTE_MODE_SPIN = 2,
     REMOTE_MODE_ADVANCED = 3,
-    REMOTE_MODE_AUTOAIM = 4,
 };
 extern RemoteMode remote_mode;
 enum ShootFricMode {
@@ -63,8 +61,8 @@ const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
                                             .cb_mem = nullptr,
                                             .cb_size = 0,
                                             .stack_mem = nullptr,
-                                            .stack_size = 512 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh7,
+                                            .stack_size = 768 * 4,
+                                            .priority = (osPriority_t)osPriorityHigh,
                                             .tz_module = 0,
                                             .reserved = 0};
 void remoteTask(void* arg);

@@ -27,7 +27,8 @@
 static remote::DBUS* dbus;
 
 void RM_RTOS_Init(void) {
-    print_use_uart(&huart5);
+    // print_use_uart(&huart5);
+    print_use_usb();
     dbus = new remote::DBUS(&huart3);
 }
 
@@ -39,6 +40,7 @@ void RM_RTOS_Default_Task(const void* arguments) {
     while (true) {
         set_cursor(0, 0);
         clear_screen();
+        print("Online: %s\r\n",(dbus->IsOnline()? "true" : "false"));
         print(
             "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
             "TWL: %d "

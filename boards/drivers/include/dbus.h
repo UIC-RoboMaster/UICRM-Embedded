@@ -22,6 +22,7 @@
 
 #include "bsp_uart.h"
 #include "dbus_package.h"
+#include "connection_driver.h"
 
 namespace remote {
 
@@ -39,7 +40,7 @@ namespace remote {
      * @brief DBUS remote receiver class
      * @note used for DJI DR16 receiver
      */
-    class DBUS : public bsp::UART {
+    class DBUS : public bsp::UART,public driver::ConnectionDriver {
       public:
         /**
          * @brief 构造函数
@@ -112,16 +113,11 @@ namespace remote {
          * @brief 获取键盘的数据，仅限于DT7连接上电脑之后
          */
         keyboard_t keyboard;
-        // timestamp of the update interrupt
-        /**
-         * @brief 获取更新中断的时间戳
-         */
-        uint32_t timestamp;
-
-        volatile bool connection_flag_ = false;
 
         static const int16_t ROCKER_MIN = -660;
         static const int16_t ROCKER_MAX = 660;
+
+        uint32_t timestamp;
     };
 
 } /* namespace remote */

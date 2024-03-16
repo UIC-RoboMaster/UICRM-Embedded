@@ -147,10 +147,10 @@ void shootTask(void* arg) {
         //        }
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
-                flywheel1->SetSpeed(500.0f / 6 * 5 * PI);
-                flywheel2->SetSpeed(500.0f / 6 * 5 * PI);
+                flywheel1->SetSpeed(350.0f / 6 * 5 * PI);
+                flywheel2->SetSpeed(350.0f / 6 * 5 * PI);
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
-                shoot_load_mode = SHOOT_MODE_PREPARED;
+                shoot_mode = SHOOT_MODE_PREPARED;
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;

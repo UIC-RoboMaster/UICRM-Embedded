@@ -101,14 +101,14 @@ void chassisTask(void* arg) {
         // 更新状态机
         {
             last_keyboard = keyboard;
-            if (selftest.dbus) {
+            if (dbus->IsOnline()) {
                 keyboard = dbus->keyboard;
                 ch0_edge->input(dbus->ch0 != 0);
                 ch1_edge->input(dbus->ch1 != 0);
                 ch2_edge->input(dbus->ch2 != 0);
                 ch3_edge->input(dbus->ch3 != 0);
                 ch4_edge->input(dbus->ch4 != 0);
-            } else if (selftest.refereerc) {
+            } else if (refereerc->IsOnline()) {
                 keyboard = refereerc->remote_control.keyboard;
                 ch0_edge->input(false);
                 ch1_edge->input(false);
@@ -269,21 +269,7 @@ void chassisTask(void* arg) {
                                   referee->power_heat_data.chassis_power_buffer, true);
                 osDelay(1);
                 break;
-            case REMOTE_MODE_AUTOAIM:
-                // 高级模式，底盘速度直接为绝对值，不受云台角度影响
-                vz_set = offset_yaw;
-                if (offset_yaw != 0) {
-                    spin_speed = spin_speed + offset_yaw;
-                    offset_yaw = 0;
-                    spin_speed = clip<float>(spin_speed, -660, 660);
-                }
-                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
-                osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer, true);
-                osDelay(1);
-                break;
+
             default:
                 // Not Support
                 kill_chassis();

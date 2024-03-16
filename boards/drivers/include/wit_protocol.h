@@ -25,6 +25,7 @@
 // clang-format on
 #include "bsp_thread.h"
 #include "bsp_uart.h"
+#include "connection_driver.h"
 
 namespace imu {
 
@@ -46,7 +47,7 @@ namespace imu {
         WIT_RX_READ_REG = 0x5F,
     };
 
-    class WITUART {
+    class WITUART :public driver::ConnectionDriver {
       public:
         explicit WITUART(bsp::UART* uart);
         ~WITUART();

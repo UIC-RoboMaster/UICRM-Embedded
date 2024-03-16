@@ -532,6 +532,8 @@ class RampSource {
     float step_;
 };
 
+void EndianSwap(void* data, size_t size);
+
 class Ease {
   public:
     Ease(float initial, float step);

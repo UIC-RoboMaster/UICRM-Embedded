@@ -21,6 +21,7 @@
 #pragma once
 
 #include "bsp_uart.h"
+#include "connection_driver.h"
 
 namespace remote {
 
@@ -32,7 +33,7 @@ namespace remote {
      * @brief DBUS remote receiver class
      * @note used for DJI DR16 receiver
      */
-    class SBUS : public bsp::UART {
+    class SBUS : public bsp::UART,public driver::ConnectionDriver {
       public:
         /**
          * @brief 构造函数
@@ -88,8 +89,6 @@ namespace remote {
          * @brief 获取更新中断的时间戳
          */
         uint32_t timestamp;
-
-        volatile bool connection_flag_ = false;
 
         static const int16_t ROCKER_MIN = -1023;
         static const int16_t ROCKER_MAX = 1023;

@@ -67,6 +67,7 @@ namespace driver {
         can_->TransmitExtend(tx_ext_id, tx_data_, 8);
     }
     void CyberGear::UpdateData(const uint8_t* data, const uint32_t ext_id) {
+        Heartbeat();
         memcpy(&rx_ext_id_, &ext_id, sizeof(ext_id));
         if (rx_ext_id_.id == rx_id_) {
             switch (rx_ext_id_.mode) {

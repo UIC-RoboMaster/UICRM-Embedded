@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,42 +18,36 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_os.h"
+#pragma once
 
-#include "cmsis_os.h"
-#include "task.h"
+#include <stdint.h>
+namespace driver {
 
-static TIM_HandleTypeDef* htim_os = nullptr;
+    class ConnectionDriver {
+      public:
+        ConnectionDriver() = default;
+        explicit ConnectionDriver(uint32_t online_threshold) : online_threshold_(online_threshold) {}
+        virtual ~ConnectionDriver() = default;
 
-/**
- * @brief override FreeRTOS weak function to configure the timer used for
- * generating run-time stats
- */
-extern "C" void configureTimerForRunTimeStats(void) {
-    if (!htim_os)
-        return;
-    __HAL_TIM_SET_AUTORELOAD(htim_os, 0xffffffff);
-    __HAL_TIM_SET_COUNTER(htim_os, 0);
-    __HAL_TIM_ENABLE(htim_os);
-}
+        /**
+         * @brief 判断节点是否在线
+         * @return true 表示当前连接节点在线，false 表示当前节点连接离线
+         */
+        bool IsOnline() const;
 
-extern "C" unsigned long getRunTimeCounterValue(void) {
-    if (!htim_os)
-        return 0;
-    return htim_os->Instance->CNT;
-}
+        uint32_t GetLastUptime();
 
-namespace bsp {
+        void SetThreshold(uint32_t threshold);
 
-    void SetHighresClockTimer(TIM_HandleTypeDef* htim) {
-        htim_os = htim;
-    }
+      protected:
+        /* 节点上一个心跳包的时间 */
+        volatile uint64_t last_uptime_ = 0;
+        /* 判断节点离线的时间 */
+        uint32_t online_threshold_ = 500;
+        /**
+         * @brief 更新心跳包
+         */
+        void Heartbeat();
+    };
 
-    uint64_t GetHighresTickMicroSec(void) {
-        return getRunTimeCounterValue();
-    }
-    uint32_t GetHighresTickMilliSec(void) {
-        return HAL_GetTick();
-    }
-
-} /* namespace bsp */
+}  // namespace driver

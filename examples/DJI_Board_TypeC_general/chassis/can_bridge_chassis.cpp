@@ -113,6 +113,8 @@ void RM_RTOS_Init() {
     chassis_data.super_capacitor = super_cap;
     chassis = new control::Chassis(chassis_data);
 
+    chassis->SetMaxMotorSpeed(2 * PI * 7);
+
     chassis->CanBridgeSetTxId(0x51);
     can_bridge->RegisterRxCallback(0x70, chassis->CanBridgeUpdateEventXYWrapper, chassis);
     can_bridge->RegisterRxCallback(0x71, chassis->CanBridgeUpdateEventTurnWrapper, chassis);

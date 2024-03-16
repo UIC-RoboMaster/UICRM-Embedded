@@ -22,6 +22,7 @@
 #include <unordered_map>
 
 #include "MotorBase.h"
+#include "connection_driver.h"
 #include "bsp_can.h"
 #include "bsp_thread.h"
 #include "pid.h"
@@ -35,7 +36,7 @@ namespace driver {
     /**
      * @brief Basic Interface for DJI Motor with CAN communication
      */
-    class MotorCANBase : public MotorBase {
+    class MotorCANBase : public MotorBase, public ConnectionDriver{
       public:
         enum motor_mode {
             NONE = 0x00,
@@ -186,8 +187,6 @@ namespace driver {
          *        many of the private parameters of MotorCANBase.
          */
         friend class ServoMotor;
-
-        volatile bool connection_flag_ = false;
 
         void Enable();
 

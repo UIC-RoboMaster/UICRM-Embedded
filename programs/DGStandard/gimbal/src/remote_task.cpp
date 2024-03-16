@@ -19,13 +19,14 @@
  ###########################################################*/
 
 #include "remote_task.h"
+#include <string.h>
+#include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
-                                      REMOTE_MODE_AUTOAIM};
-const int8_t remote_mode_max = 4;
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
+const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
@@ -97,13 +98,18 @@ void remoteTask(void* arg) {
             continue;
         }
 
-        // Update State
-        if (selftest.dbus) {
+        // 更新last状态机
+        last_state_r = state_r;
+        last_state_l = state_l;
+        last_keyboard = keyboard;
+        last_mouse = mouse;
+        // 更新now状态机
+        if (dbus->IsOnline()) {
             state_r = dbus->swr;
             state_l = dbus->swl;
             keyboard = dbus->keyboard;
             mouse = dbus->mouse;
-        } else if (selftest.refereerc) {
+        } else if (refereerc->IsOnline()) {
             state_r = remote::MID;
             state_l = remote::MID;
             keyboard = refereerc->remote_control.keyboard;

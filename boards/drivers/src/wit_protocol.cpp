@@ -21,7 +21,7 @@
 #include "wit_protocol.h"
 
 namespace imu {
-    WITUART::WITUART(bsp::UART* uart) {
+    WITUART::WITUART(bsp::UART* uart): driver::ConnectionDriver(100){
         uart_ = uart;
 
         uart_->SetupRxData(&read_ptr_, &read_len_);
@@ -36,6 +36,7 @@ namespace imu {
     }
 
     void WITUART::Update() {
+        Heartbeat();
         uint8_t* data = read_ptr_;
         uint32_t length = read_len_;
 
