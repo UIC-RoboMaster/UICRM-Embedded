@@ -81,7 +81,7 @@ void shootTask(void* arg) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
         }
         if (shoot_flywheel_mode != SHOOT_FRIC_MODE_PREPARED) {
-            load_motor->Hold();
+            load_motor->Hold(true);
             load_motor->CalcOutput();
             osDelay(SHOOT_OS_DELAY);
             continue;
@@ -102,15 +102,13 @@ void shootTask(void* arg) {
             }
         }
         if (shoot_load_mode == SHOOT_MODE_SINGLE) {
-            load_motor->SetTarget(load_motor->GetTheta() + 2 * PI / 8, true);
+            load_motor->SetTarget(load_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
             shoot_load_mode = SHOOT_MODE_IDLE;
         }
         if (shoot_load_mode == SHOOT_MODE_BURST) {
             load_motor->SetTarget(load_motor->GetTarget() + 2 * PI / 8, true);
         }
 
-        // 计算输出
-        load_motor->CalcOutput();
         osDelay(SHOOT_OS_DELAY);
     }
 }

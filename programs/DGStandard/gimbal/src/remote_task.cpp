@@ -176,7 +176,7 @@ void remoteTask(void* arg) {
 
         // 不发射
         if (shoot_switch_edge->negEdge()) {
-            shoot_load_mode = SHOOT_MODE_STOP;
+            shoot_load_mode = SHOOT_MODE_IDLE;
             shoot_burst_timestamp = 0;
         }
         osDelay(REMOTE_OS_DELAY);
