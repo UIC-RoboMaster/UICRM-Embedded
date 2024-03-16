@@ -48,13 +48,6 @@ void remoteTask(void* arg) {
     memset(&keyboard, 0, sizeof(keyboard));
     memset(&mouse, 0, sizeof(mouse));
 
-    BoolEdgeDetector* keyboard_Z_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* keyboard_ctrl_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* keyboard_G_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* keyboard_B_edge = new BoolEdgeDetector(false);
-
     while (1) {
         // Offline Detection && Security Check
         bool is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
@@ -101,18 +94,13 @@ void remoteTask(void* arg) {
             mouse = refereerc->remote_control.mouse;
         }
 
-        // Update Timestamp
-        mouse_left_edge->input(mouse.l);
-        mouse_right_edge->input(mouse.r);
-        keyboard_ctrl_edge->input(keyboard.bit.CTRL);
+        // 更新状态
 
-        keyboard_G_edge->input(keyboard.bit.G);
-        keyboard_B_edge->input(keyboard.bit.B);
-
-        // remote mode switch
+        // 切换控制模式
         static BoolEdgeDetector* mode_switch_edge = new BoolEdgeDetector(false);
         mode_switch_edge->input(state_r == remote::UP);
-
+        static BoolEdgeDetector* keyboard_ctrl_edge = new BoolEdgeDetector(false);
+        keyboard_ctrl_edge->input(keyboard.bit.CTRL);
         if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge()){
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
             if ((int8_t)next_mode > (int8_t)remote_mode_max) {
@@ -134,6 +122,7 @@ void remoteTask(void* arg) {
         // 切换摩擦轮
         static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
         flywheel_switch_edge->input(state_l == remote::UP);
+        static BoolEdgeDetector* keyboard_Z_edge = new BoolEdgeDetector(false);
         keyboard_Z_edge->input(keyboard.bit.Z);
         if (flywheel_switch_edge->posEdge() ||
             keyboard_Z_edge->posEdge()) {
@@ -151,13 +140,16 @@ void remoteTask(void* arg) {
         // 单发
         static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
         shoot_switch_edge->input(state_l == remote::DOWN);
-        if (shoot_switch_edge->posEdge()) {
+        static BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
+        mouse_left_edge->input(mouse.l);
+        if (shoot_switch_edge->posEdge() ||
+            mouse_left_edge->posEdge()) {
             shoot_load_mode = SHOOT_MODE_SINGLE;
             shoot_burst_timestamp = 0;
         }
 
         // 连发
-        if (state_l == remote::DOWN) {
+        if (state_l == remote::DOWN || mouse.l) {
             shoot_burst_timestamp++;
         }
         static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);

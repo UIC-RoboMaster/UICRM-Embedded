@@ -99,15 +99,12 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         if (selftest.dbus) {
-            if (dbus->mouse.y != 0) {
-                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
-            } else {
-                pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
-            }
-            if (dbus->mouse.x != 0) {
-                yaw_ratio = dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-            } else {
+            if (dbus->ch2||dbus->ch3){
                 yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
+                pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
+            } else {
+                yaw_ratio = dbus->mouse.x / 32767.0 * 7.5 / 7.0;
+                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
             }
         } else if (selftest.refereerc) {
             pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 7.0;

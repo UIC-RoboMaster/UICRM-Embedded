@@ -108,18 +108,19 @@ void chassisTask(void* arg) {
         if (remote_mode == REMOTE_MODE_FOLLOW)
         {
             // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向
-            const float angle_threshold = 0.01f;
+            const float angle_threshold = 0.02f;
             float chassis_vt_pid_error = chassis_yaw_diff;
             if (fabs(chassis_vt_pid_error) < angle_threshold) {
                 chassis_vt_pid_error = 0;
             }
             chassis_vt += chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
         }
+
         if (remote_mode == REMOTE_MODE_SPIN)
         {
             // t轴用来控制底盘恒定旋转速度的增减
             static float spin_speed = 660;
-            spin_speed = spin_speed + car_vt;
+            spin_speed = spin_speed + car_vt * 0.05;
             spin_speed = clip<float>(spin_speed, -660, 660);
             chassis_vt = spin_speed;
         }
@@ -127,6 +128,16 @@ void chassisTask(void* arg) {
         chassis_vx*=ratio;
         chassis_vy*=ratio;
         chassis_vt*=ratio;
+
+        static const float move_ease_ratio = 1.5;
+        static const float turn_ease_ratio = 0.8;
+        static Ease chassis_ease_vx(0, move_ease_ratio);
+        static Ease chassis_ease_vy(0, move_ease_ratio);
+        static Ease chassis_ease_vt(0, turn_ease_ratio);
+        chassis_vx = chassis_ease_vx.Calc(chassis_vx);
+        chassis_vy = chassis_ease_vy.Calc(chassis_vy);
+        chassis_vt = chassis_ease_vt.Calc(chassis_vt);
+
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
         osDelay(CHASSIS_OS_DELAY);
