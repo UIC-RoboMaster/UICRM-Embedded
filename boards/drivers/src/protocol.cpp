@@ -33,7 +33,7 @@ static const int BYTE = 8;
 namespace communication {
 
     bool Protocol::Receive(package_t package) {
-        connection_flag_ = true;
+        Heartbeat();
         memcpy(bufferRx, package.data, package.length);
         int start_idx;
         int end_idx = 0;
@@ -117,6 +117,8 @@ namespace communication {
     }
 
     Referee::Referee(bsp::UART* uart) : UARTProtocol(uart) {
+        // 设置100ms离线阈值
+        SetThreshold(100);
     }
 
     bool Referee::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {

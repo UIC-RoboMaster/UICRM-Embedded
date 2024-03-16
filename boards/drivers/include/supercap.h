@@ -21,6 +21,7 @@
 #pragma once
 
 #include "bsp_can.h"
+#include "connection_driver.h"
 
 namespace driver {
     /**
@@ -80,7 +81,7 @@ namespace driver {
      * @note This instance is suitable for the supercapacitor model independently developed by the
      * team, and other models of supercapacitors may not be available
      */
-    class SuperCap {
+    class SuperCap : public ConnectionDriver {
       public:
         /**
          * @brief 构造函数
@@ -291,6 +292,5 @@ namespace driver {
         float perfer_buffer_ = 45.0f;
         supercap_send_flags_t tx_flags_ = {0};
 
-        volatile bool connection_flag_ = false;
     };
 }  // namespace driver

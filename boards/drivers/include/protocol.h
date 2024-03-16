@@ -24,6 +24,7 @@
 #include "bsp_thread.h"
 #include "bsp_uart.h"
 #include "dbus_package.h"
+#include "connection_driver.h"
 
 namespace communication {
 
@@ -34,7 +35,7 @@ namespace communication {
         int length;
     } package_t;
 
-    class Protocol {
+    class Protocol :public driver::ConnectionDriver{
       public:
         /**
          * @brief update the information from referee system
@@ -54,7 +55,6 @@ namespace communication {
             package_t
             Transmit(int cmd_id);
 
-        volatile bool connection_flag_ = false;
 
       protected:
         int seq = 0;

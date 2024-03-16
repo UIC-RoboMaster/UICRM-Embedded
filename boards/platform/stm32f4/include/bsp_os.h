@@ -40,4 +40,12 @@ namespace bsp {
      */
     uint64_t GetHighresTickMicroSec(void);
 
+
+    /**
+     * @brief get the current counter value of the highres timer in [ms]
+     *
+     * @return high res tick in [ms]
+     */
+     uint32_t GetHighresTickMilliSec(void);
+
 } /* namespace bsp */

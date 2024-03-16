@@ -531,3 +531,5 @@ class RampSource {
     float max_;
     float step_;
 };
+
+void EndianSwap(void* data, size_t size);

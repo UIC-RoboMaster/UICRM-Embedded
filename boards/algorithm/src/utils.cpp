@@ -154,3 +154,12 @@ void RampSource::SetMin(float min) {
 void RampSource::SetCurrent(float current) {
     output_ = current;
 }
+
+void EndianSwap(void* data, size_t size) {
+    uint8_t* p = (uint8_t*)data;
+    for (size_t i = 0; i < size / 2; i++) {
+        uint8_t temp = p[i];
+        p[i] = p[size - i - 1];
+        p[size - i - 1] = temp;
+    }
+}
