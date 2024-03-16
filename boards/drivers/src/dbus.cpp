@@ -54,7 +54,7 @@ namespace remote {
     }
 
     void DBUS::RxCompleteCallback() {
-        connection_flag_ = true;
+        Heartbeat();
 
         uint8_t* data;
         // data frame misalignment
@@ -79,7 +79,7 @@ namespace remote {
         memcpy(&this->mouse, &repr->mouse, sizeof(mouse_t));
         memcpy(&this->keyboard, &repr->keyboard, sizeof(keyboard_t));
 
-        this->timestamp = HAL_GetTick();
+        this->timestamp = GetLastUptime();
     }
 
 } /* namespace remote */

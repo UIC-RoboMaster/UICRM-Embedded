@@ -88,8 +88,11 @@ namespace control {
 
     void Chassis::SetSpeed(const float x_speed, const float y_speed, const float turn_speed) {
         switch (model_) {
-            case CHASSIS_MECANUM_WHEEL: {
+            case CHASSIS_MECANUM_WHEEL:
+            case CHASSIS_OMNI_WHEEL: {
                 float scale = 1;
+                float move_sum = fabs(x_speed) + fabs(y_speed) + fabs(turn_speed);
+                scale = move_sum > max_motor_speed_ ? max_motor_speed_ / move_sum : 1;
 
                 speeds_[FourWheel::front_left] =
                     scale * (y_speed + x_speed + turn_speed * (1 - chassis_offset_));  // 2
@@ -157,7 +160,8 @@ namespace control {
         }
 
         switch (model_) {
-            case CHASSIS_MECANUM_WHEEL: {
+            case CHASSIS_MECANUM_WHEEL:
+            case CHASSIS_OMNI_WHEEL: {
                 motors_[FourWheel::front_left]->SetTarget(speeds_[FourWheel::front_left]);
                 motors_[FourWheel::front_right]->SetTarget(speeds_[FourWheel::front_right]);
                 motors_[FourWheel::back_left]->SetTarget(speeds_[FourWheel::back_left]);
@@ -257,7 +261,9 @@ namespace control {
         power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
         if (has_super_capacitor_) {
             super_capacitor_->SetPowerTotal(power_limit_info_.power_limit);
-            super_capacitor_->TransmitSettings();
+            if(super_capacitor_->IsOnline()) {
+                super_capacitor_->TransmitSettings();
+            }
         }
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
@@ -270,7 +276,10 @@ namespace control {
         current_chassis_power_ = data.data_two_float.data[0];
         current_chassis_power_buffer_ = data.data_two_float.data[1];
         if (has_super_capacitor_ && chassis_enable_) {
-            super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
+            if(super_capacitor_->IsOnline()){
+                super_capacitor_->TransmitSettings();
+                super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
+            }
         }
     }
     void Chassis::CanBridgeSetTxId(uint8_t tx_id) {
@@ -282,7 +291,8 @@ namespace control {
     }
     void Chassis::UpdatePowerLimit() {
         switch (model_) {
-            case CHASSIS_MECANUM_WHEEL: {
+            case CHASSIS_MECANUM_WHEEL:
+            case CHASSIS_OMNI_WHEEL:{
                 float input[FourWheel::motor_num];
                 float output[FourWheel::motor_num];
                 for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
@@ -318,15 +328,25 @@ namespace control {
         chassis_enable_ = true;
         if (has_super_capacitor_) {
             super_capacitor_->Enable();
-            super_capacitor_->TransmitSettings();
+            if(super_capacitor_->IsOnline()){
+                super_capacitor_->TransmitSettings();
+
+            }
         }
     }
     void Chassis::Disable() {
         chassis_enable_ = false;
         if (has_super_capacitor_) {
             super_capacitor_->Disable();
-            super_capacitor_->TransmitSettings();
+            if(super_capacitor_->IsOnline()){
+                super_capacitor_->TransmitSettings();
+
+            }
         }
+    }
+
+    void Chassis::SetMaxMotorSpeed(float max_speed) {
+        max_motor_speed_ = max_speed;
     }
 
     ChassisCanBridgeSender::ChassisCanBridgeSender(communication::CanBridge* can_bridge,
@@ -396,5 +416,6 @@ namespace control {
             }
         }
     }
+
 
 } /* namespace control */

@@ -19,13 +19,14 @@
  ###########################################################*/
 
 #include "remote_task.h"
+#include <string.h>
+#include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
-                                      REMOTE_MODE_AUTOAIM};
-const int8_t remote_mode_max = 4;
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
+const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_mode = SHOOT_MODE_STOP;
@@ -67,7 +68,7 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     while (1) {
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
-        is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
+        is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
         // 通过裁判系统检测是否死亡或者没有子弹
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available =
@@ -104,12 +105,12 @@ void remoteTask(void* arg) {
         last_keyboard = keyboard;
         last_mouse = mouse;
         // 更新now状态机
-        if (selftest.dbus) {
+        if (dbus->IsOnline()) {
             state_r = dbus->swr;
             state_l = dbus->swl;
             keyboard = dbus->keyboard;
             mouse = dbus->mouse;
-        } else if (selftest.refereerc) {
+        } else if (refereerc->IsOnline()) {
             state_r = remote::MID;
             state_l = remote::MID;
             keyboard = refereerc->remote_control.keyboard;
@@ -132,7 +133,7 @@ void remoteTask(void* arg) {
         // 判断行动模式切换
         switch (state_r) {
             case remote::UP:
-                if (last_state_r == remote::MID && selftest.dbus) {
+                if (last_state_r == remote::MID && dbus->IsOnline()) {
                     mode_switch = true;
                 }
                 break;
@@ -156,15 +157,15 @@ void remoteTask(void* arg) {
         if (is_shoot_available == true || SHOOT_REFEREE == 0) {
             switch (state_l) {
                 case remote::UP:
-                    if (last_state_l == remote::MID && selftest.dbus) {
+                    if (last_state_l == remote::MID && dbus->IsOnline()) {
                         shoot_fric_switch = true;
                     }
                     break;
                 case remote::DOWN:
-                    if (last_state_l == remote::MID && selftest.dbus) {
+                    if (last_state_l == remote::MID && dbus->IsOnline()) {
                         shoot_switch = true;
                         shoot_burst_timestamp = 0;
-                    } else if (last_state_l == remote::DOWN && selftest.dbus) {
+                    } else if (last_state_l == remote::DOWN && dbus->IsOnline()) {
                         shoot_burst_timestamp++;
                         if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
                             shoot_burst_switch = true;

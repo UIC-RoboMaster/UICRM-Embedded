@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,10 +18,22 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-//
-// Created by yangr on 2023/4/15.
-//
-
-#include "gimbal_data.h"
-
-// 此文件已经废弃，不再使用
+#include "connection_driver.h"
+#include "bsp_os.h"
+namespace driver {
+    bool ConnectionDriver::IsOnline() const {
+        if(last_uptime_==0){
+            return false;
+        }
+        return bsp::GetHighresTickMilliSec() - last_uptime_ < online_threshold_;
+    }
+    void ConnectionDriver::Heartbeat() {
+        last_uptime_ = bsp::GetHighresTickMilliSec();
+    }
+    uint32_t ConnectionDriver::GetLastUptime() {
+        return last_uptime_;
+    }
+    void ConnectionDriver::SetThreshold(uint32_t threshold) {
+        online_threshold_ = threshold;
+    }
+}  // namespace driver

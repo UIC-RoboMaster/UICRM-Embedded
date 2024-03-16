@@ -20,6 +20,7 @@
 
 #include "bsp_can.h"
 #include "main.h"
+#include "connection_driver.h"
 
 namespace driver {
     /*
@@ -79,7 +80,7 @@ namespace driver {
     /**
      * @brief Xiaomi CyberGear motor class
      */
-    class CyberGear {
+    class CyberGear: public driver::ConnectionDriver {
       public:
         /**
          * @brief Construct a new CyberGear object

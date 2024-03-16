@@ -112,7 +112,7 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
-        if (selftest.dbus) {
+        if (dbus->IsOnline()) {
             if (dbus->mouse.y != 0) {
                 pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 3.0f;
             } else {
@@ -123,7 +123,7 @@ void gimbalTask(void* arg) {
             } else {
                 yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
             }
-        } else if (selftest.refereerc) {
+        } else if (refereerc->IsOnline()) {
             pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 3.0;
             yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 3.0;
         } else {
@@ -156,11 +156,11 @@ void gimbalTask(void* arg) {
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
-            case REMOTE_MODE_AUTOAIM:
-                gimbal->TargetReal(minipc->target_angle.target_pitch,
-                                   minipc->target_angle.target_yaw);
-                gimbal->Update();
-                break;
+//            case REMOTE_MODE_AUTOAIM:
+//                gimbal->TargetReal(minipc->target_angle.target_pitch,
+//                                   minipc->target_angle.target_yaw);
+//                gimbal->Update();
+//                break;
             default:
                 kill_gimbal();
         }
