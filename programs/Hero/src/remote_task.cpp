@@ -26,8 +26,8 @@ RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
 const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
-ShootFricMode shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
-ShootMode shoot_mode = SHOOT_MODE_STOP;
+ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
+ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
 
 void init_dbus() {
@@ -75,13 +75,13 @@ void remoteTask(void* arg) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
-                shoot_mode = SHOOT_MODE_DISABLE;
+                shoot_load_mode = SHOOT_MODE_DISABLE;
                 is_killed = true;
             }
         } else {
             if (is_killed) {
                 remote_mode = last_remote_mode;
-                shoot_mode = SHOOT_MODE_STOP;
+                shoot_load_mode = SHOOT_MODE_STOP;
                 is_killed = false;
             }
         }
@@ -116,10 +116,10 @@ void remoteTask(void* arg) {
         mouse_right_edge->input(mouse.r);
 
         if (last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
-            shoot_fric_mode = SHOOT_FRIC_SPEEDUP;
+            shoot_flywheel_mode = SHOOT_FRIC_SPEEDUP;
         }
         if (last_keyboard.bit.B == 1 && keyboard.bit.B == 0) {
-            shoot_fric_mode = SHOOT_FRIC_SPEEDDOWN;
+            shoot_flywheel_mode = SHOOT_FRIC_SPEEDDOWN;
         }
 
         // remote mode switch
@@ -197,22 +197,22 @@ void remoteTask(void* arg) {
             // 切换摩擦轮模式
             if (shoot_fric_switch) {
                 shoot_fric_switch = false;
-                if (shoot_fric_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
-                    shoot_fric_mode = SHOOT_FRIC_MODE_PREPARING;
-                    shoot_mode = SHOOT_MODE_PREPARING;
-                } else if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ||
-                           shoot_fric_mode == SHOOT_FRIC_MODE_PREPARING) {  // 原来转则停止
-                    shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
-                    shoot_mode = SHOOT_MODE_STOP;
+                if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
+                    shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+                    shoot_load_mode = SHOOT_MODE_PREPARING;
+                } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ||
+                           shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING) {  // 原来转则停止
+                    shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
+                    shoot_load_mode = SHOOT_MODE_STOP;
                 }
             }
             // 射出单颗子弹
             if (shoot_switch) {
                 shoot_switch = false;
-                if (shoot_mode == SHOOT_MODE_PREPARED &&
-                    shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
+                if (shoot_load_mode == SHOOT_MODE_PREPARED &&
+                    shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
                     // 摩擦轮与拔弹系统准备就绪则发射子弹
-                    shoot_mode = SHOOT_MODE_SINGLE;
+                    shoot_load_mode = SHOOT_MODE_SINGLE;
                 }
             }
             // 射出连发子弹
@@ -231,14 +231,14 @@ void remoteTask(void* arg) {
             // 停止射击
             if (shoot_stop_switch) {
                 shoot_stop_switch = false;
-                if (shoot_mode == SHOOT_MODE_BURST) {
-                    shoot_mode = SHOOT_MODE_PREPARED;
+                if (shoot_load_mode == SHOOT_MODE_BURST) {
+                    shoot_load_mode = SHOOT_MODE_PREPARED;
                 }
             }
         } else {
             // 没有子弹了，则停止射击
-            shoot_mode = SHOOT_MODE_STOP;
-            shoot_fric_mode = SHOOT_FRIC_MODE_STOP;
+            shoot_load_mode = SHOOT_MODE_STOP;
+            shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
         }
         osDelay(REMOTE_OS_DELAY);
     }

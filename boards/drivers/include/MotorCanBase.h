@@ -593,6 +593,8 @@ namespace driver {
          */
         void CalcOutput();
 
+        void Hold(bool override = false);
+
         /**
          * @brief 检测电机是否进入锁定状态
          *

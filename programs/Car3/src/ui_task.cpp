@@ -168,10 +168,11 @@ void uiTask(void* arg) {
         }
 
         // Update wheel status GUI
-        if (last_fric_mode != shoot_fric_mode) {
-            char* wheelStr = shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
+        if (last_fric_mode != shoot_flywheel_mode) {
+            char* wheelStr =
+                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
             uint32_t wheelColor =
-                shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
+                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }
@@ -182,7 +183,7 @@ void uiTask(void* arg) {
             osDelay(UI_OS_DELAY);
         }
         last_mode = remote_mode;
-        last_fric_mode = shoot_fric_mode;
+        last_fric_mode = shoot_flywheel_mode;
 
         // Update self-diagnosis messages
         {

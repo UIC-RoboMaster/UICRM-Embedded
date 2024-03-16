@@ -533,3 +533,18 @@ class RampSource {
 };
 
 void EndianSwap(void* data, size_t size);
+class Ease {
+  public:
+    Ease(float initial, float step);
+    void SetTarget(float target);
+    float Calc(float target);
+    float Calc();
+    float GetOutput();
+    float GetTarget();
+    bool IsAtTarget();
+
+  private:
+    float current_;
+    float target_;
+    float step_;
+};
