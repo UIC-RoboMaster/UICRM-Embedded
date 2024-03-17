@@ -27,7 +27,6 @@
 
 extern driver::Buzzer* buzzer;
 
-extern osThreadId_t buzzerTaskHandle;
 const osThreadAttr_t buzzerTaskAttribute = {.name = "buzzerTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,

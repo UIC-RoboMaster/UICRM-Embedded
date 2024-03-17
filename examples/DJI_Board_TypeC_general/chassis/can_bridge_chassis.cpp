@@ -82,7 +82,7 @@ void RM_RTOS_Init() {
     br_motor->SetTransmissionRatio(14);
 
     driver::supercap_init_t supercap_init = {
-        .can = can1,
+        .can = can2,
         .tx_id = 0x02e,
         .tx_settings_id = 0x02f,
         .rx_id = 0x030,

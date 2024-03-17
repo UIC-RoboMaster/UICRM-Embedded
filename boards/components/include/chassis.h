@@ -25,6 +25,7 @@
 #include "pid.h"
 #include "power_limit.h"
 #include "supercap.h"
+#include "connection_driver.h"
 
 #define MAX_WHEEL_NUM 8
 
@@ -57,7 +58,7 @@ namespace control {
     /**
      * @brief wrapper class for chassis
      */
-    class Chassis {
+    class Chassis : public driver::ConnectionDriver {
       public:
         /**
          * @brief constructor for chassis
@@ -65,12 +66,12 @@ namespace control {
          * @param chassis structure that used to initialize chassis, refer to type
          * chassis_t
          */
-        Chassis(const chassis_t chassis);
+        explicit Chassis(const chassis_t chassis);
 
         /**
          * @brief destructor for chassis
          */
-        ~Chassis();
+        ~Chassis() override;
 
         /**
          * @brief set the speed for chassis motors
@@ -177,7 +178,6 @@ namespace control {
 
         float max_motor_speed_ = 2 * PI * 10;
 
-        BoolEdgeDetector is_super_capacitor_online_;
 
     };
 

@@ -28,6 +28,9 @@
 #include "pid.h"
 #include "utils.h"
 
+
+#define M3508P19_MAX_OUTPUT 12000.0f
+
 namespace driver {
 
     /**

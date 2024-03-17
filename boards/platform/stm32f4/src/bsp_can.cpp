@@ -101,8 +101,8 @@ namespace bsp {
         if (ext_callback_count_ >= MAX_CAN_DEVICES)
             return -1;
 
-        rx_ext_args_[callback_count_] = args;
-        rx_ext_callbacks_[callback_count_] = callback;
+        rx_ext_args_[ext_callback_count_] = args;
+        rx_ext_callbacks_[ext_callback_count_] = callback;
         ext_to_index_[ext_id_suffix] = ext_callback_count_;
         ext_callback_count_++;
 

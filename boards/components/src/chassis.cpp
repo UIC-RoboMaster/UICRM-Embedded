@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #include "chassis.h"
-
+#include "bsp_os.h"
 #include "bsp_error_handler.h"
 
 namespace control {
@@ -64,8 +64,6 @@ namespace control {
         if (chassis.has_super_capacitor) {
             has_super_capacitor_ = true;
             super_capacitor_ = chassis.super_capacitor;
-            // 超级电容状态机更新
-            is_super_capacitor_online_ = BoolEdgeDetector(false);
         }
     }
 
@@ -92,6 +90,7 @@ namespace control {
     }
 
     void Chassis::SetSpeed(const float x_speed, const float y_speed, const float turn_speed) {
+        Heartbeat();
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
             case CHASSIS_OMNI_WHEEL: {
@@ -129,28 +128,33 @@ namespace control {
         power_limit_info_.WARNING_power_buff = 50;
 
         // 检测功率是否发生变化，如果发生变化则更新超级电容
-        bool power_change_flag= false;
-        if(current_chassis_power_ != chassis_power){
-            power_change_flag = true;
-        }
         current_chassis_power_ = chassis_power;
 
         current_chassis_power_buffer_ = chassis_power_buffer;
-        if (has_super_capacitor_) {
+        if (has_super_capacitor_ && super_capacitor_->IsOnline()) {
             if (enable_supercap && !super_capacitor_enable_) {
                 super_capacitor_enable_ = true;
             } else if (!enable_supercap && super_capacitor_enable_) {
                 super_capacitor_enable_ = false;
             }
-            if(power_change_flag){
-                super_capacitor_->SetPowerTotal(chassis_power);
-                super_capacitor_->TransmitSettings();
-            }
+
+            super_capacitor_->SetPowerTotal(chassis_power);
+            super_capacitor_->TransmitSettings();
             super_capacitor_->UpdateCurrentBuffer(chassis_power_buffer);
         }
     }
 
     void Chassis::Update() {
+        bool need_shutdown = !IsOnline();
+        for(int i = 0; i < wheel_num_; i++){
+            if(!motors_[i]->IsOnline()){
+                need_shutdown = true;
+                break;
+            }
+        }
+        if(need_shutdown){
+            Disable();
+        }
         if (!chassis_enable_) {
             for (int i = 0; i < wheel_num_; i++) {
                 motors_[i]->Disable();
@@ -189,13 +193,7 @@ namespace control {
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
 
-        if(has_super_capacitor_){
-            is_super_capacitor_online_.input(super_capacitor_->IsOnline());
-            // 超级电容离线->在线，发送设置
-                if(is_super_capacitor_online_.posEdge()){
-                    super_capacitor_->TransmitSettings();
-                }
-        }
+
     }
 
     void Chassis::CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id,
@@ -281,15 +279,10 @@ namespace control {
         } else {
             super_capacitor_enable_ = false;
         }
-        float power_limit = data.data_two_float.data[1];
-        bool power_change_flag= false;
-        if(power_limit_info_.power_limit != power_limit){
-            power_change_flag = true;
-        }
         power_limit_info_.power_limit = data.data_two_float.data[1];
         power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
         // 有超级电容且底盘限制功率变化，更新超级电容
-        if (has_super_capacitor_ && power_change_flag) {
+        if (has_super_capacitor_) {
             super_capacitor_->SetPowerTotal(power_limit_info_.power_limit);
             if(super_capacitor_->IsOnline()) {
                 super_capacitor_->TransmitSettings();
@@ -326,7 +319,7 @@ namespace control {
                 float output[FourWheel::motor_num];
                 for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
                     input[i] = motors_[i]->GetOutput();
-                if (!super_capacitor_enable_) {
+                if ((!super_capacitor_enable_) || (!super_capacitor_->IsOnline())) {
                     power_limit_->Output(power_limit_on_, power_limit_info_, current_chassis_power_,
                                          current_chassis_power_buffer_, input, output);
                 } else {
@@ -340,6 +333,7 @@ namespace control {
                                              current_chassis_power_, current_chassis_power_buffer_,
                                              input, output);
                     } else {
+                        int sum_output = 0;
                         for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
                             output[i] = input[i];
                     }
@@ -426,9 +420,10 @@ namespace control {
     void ChassisCanBridgeSender::SetPower(bool power_limit_on, float power_limit,
                                           float chassis_power, float chassis_power_buffer,
                                           bool enable_supercap, bool force_update) {
+        UNUSED(force_update);
         if (chassis_enable_) {
             if (power_limit_on != chassis_power_limit_on_ || power_limit != chassis_power_limit_ ||
-                enable_supercap != chassis_super_capacitor_enable_ || force_update) {
+                enable_supercap != chassis_super_capacitor_enable_) {
                 chassis_power_limit_on_ = power_limit_on;
                 chassis_power_limit_ = power_limit;
                 data_.data_eight_uint8.data[0] = power_limit_on;

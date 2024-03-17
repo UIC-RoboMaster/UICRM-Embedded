@@ -23,7 +23,7 @@
 #include "bsp_thread.h"
 #include "tim.h"
 
-bsp::Thread* buzzer_thread = nullptr;
+bsp::EventThread* buzzer_thread = nullptr;
 const osThreadAttr_t buzzer_thread_attr_ = {.name = "BuzzerTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,
@@ -42,7 +42,6 @@ const bsp::thread_init_t thread_init = {
     .attr = buzzer_thread_attr_,
 };
 
-osThreadId_t buzzerTaskHandle;
 
 driver::Buzzer* buzzer = nullptr;
 const driver::BuzzerNoteDelayed* buzzer_song = nullptr;
@@ -54,26 +53,22 @@ void Buzzer_Delay(uint32_t delay) {
 bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song) {
     if (buzzer_song == nullptr) {
         buzzer_song = song;
-        osThreadFlagsSet(buzzerTaskHandle, BUZZER_SIGNAL);
+        buzzer_thread->Set();
         return true;
     }
     return false;
 }
 void buzzerTask(void* arg) {
     UNUSED(arg);
-    while (1) {
-        uint32_t flags = osThreadFlagsWait(BUZZER_SIGNAL, osFlagsWaitAll, osWaitForever);
-        if (flags & BUZZER_SIGNAL) {
-            if (buzzer_song != nullptr) {
-                buzzer->SingSong(buzzer_song, Buzzer_Delay);
-                buzzer_song = nullptr;
-            }
-        }
+
+    if (buzzer_song != nullptr) {
+        buzzer->SingSong(buzzer_song, Buzzer_Delay);
+        buzzer_song = nullptr;
     }
 }
 
 void init_buzzer() {
     buzzer = new driver::Buzzer(&htim4, 3, 1000000);
-    buzzer_thread = new bsp::Thread(thread_init);
+    buzzer_thread = new bsp::EventThread(thread_init);
     buzzer_thread->Start();
 }

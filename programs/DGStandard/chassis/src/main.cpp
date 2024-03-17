@@ -26,6 +26,8 @@
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "supercap.h"
+#include "buzzer_task.h"
+#include "buzzer_notes.h"
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -93,7 +95,7 @@ void RM_RTOS_Init() {
     super_cap->TransmitSettings();
     super_cap->Enable();
     super_cap->TransmitSettings();
-    super_cap->SetMaxVoltage(23.5f);
+    super_cap->SetMaxVoltage(24.0f);
     super_cap->SetPowerTotal(120.0f);
     super_cap->SetMaxChargePower(150.0f);
     super_cap->SetMaxDischargePower(250.0f);
@@ -123,12 +125,15 @@ void RM_RTOS_Init() {
     can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
 
     HAL_Delay(300);
+    init_buzzer();
+
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
 
     osDelay(500);
+    Buzzer_Sing(Mario);
 
     while (true) {
         chassis->Update();
