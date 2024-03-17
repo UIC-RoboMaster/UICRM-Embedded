@@ -138,9 +138,7 @@ namespace control {
                 super_capacitor_enable_ = false;
             }
 
-            super_capacitor_->SetPowerTotal(chassis_power);
-            super_capacitor_->TransmitSettings();
-            super_capacitor_->UpdateCurrentBuffer(chassis_power_buffer);
+                super_capacitor_->SetPowerTotal(power_limit_info_.power_limit);
         }
     }
 
@@ -155,6 +153,12 @@ namespace control {
         if(need_shutdown){
             Disable();
         }
+
+        if(has_super_capacitor_ && super_capacitor_->IsOnline()){
+            super_capacitor_->TransmitSettings();
+            super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
+        }
+
         if (!chassis_enable_) {
             for (int i = 0; i < wheel_num_; i++) {
                 motors_[i]->Disable();
@@ -192,6 +196,7 @@ namespace control {
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
+
 
 
     }
@@ -281,12 +286,8 @@ namespace control {
         }
         power_limit_info_.power_limit = data.data_two_float.data[1];
         power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
-        // 有超级电容且底盘限制功率变化，更新超级电容
         if (has_super_capacitor_) {
             super_capacitor_->SetPowerTotal(power_limit_info_.power_limit);
-            if(super_capacitor_->IsOnline()) {
-                super_capacitor_->TransmitSettings();
-            }
         }
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
@@ -298,11 +299,6 @@ namespace control {
         }
         current_chassis_power_ = data.data_two_float.data[0];
         current_chassis_power_buffer_ = data.data_two_float.data[1];
-        if (has_super_capacitor_ && chassis_enable_) {
-            if(super_capacitor_->IsOnline()){
-                super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
-            }
-        }
     }
     void Chassis::CanBridgeSetTxId(uint8_t tx_id) {
         can_bridge_tx_id_ = tx_id;
@@ -333,7 +329,6 @@ namespace control {
                                              current_chassis_power_, current_chassis_power_buffer_,
                                              input, output);
                     } else {
-                        int sum_output = 0;
                         for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
                             output[i] = input[i];
                     }
@@ -351,20 +346,12 @@ namespace control {
         chassis_enable_ = true;
         if (has_super_capacitor_) {
             super_capacitor_->Enable();
-            if(super_capacitor_->IsOnline()){
-                super_capacitor_->TransmitSettings();
-
-            }
         }
     }
     void Chassis::Disable() {
         chassis_enable_ = false;
         if (has_super_capacitor_) {
             super_capacitor_->Disable();
-            if(super_capacitor_->IsOnline()){
-                super_capacitor_->TransmitSettings();
-
-            }
         }
     }
 

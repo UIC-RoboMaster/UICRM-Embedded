@@ -160,15 +160,15 @@ namespace control {
                 5000.0f * wheel_num_ / 80.0f * power_limit_info_.power_limit,
         };
 
-        float current_chassis_power_ = 0;
-        float current_chassis_power_buffer_ = 0;
+        volatile float current_chassis_power_ = 0;
+        volatile float current_chassis_power_buffer_ = 0;
 
         float chassis_offset_;
 
         uint8_t can_bridge_tx_id_ = 0x00;
-        float can_bridge_vx_ = 0;
-        float can_bridge_vy_ = 0;
-        float can_bridge_vt_ = 0;
+        volatile float can_bridge_vx_ = 0;
+        volatile float can_bridge_vy_ = 0;
+        volatile float can_bridge_vt_ = 0;
 
         bool chassis_enable_ = true;
 

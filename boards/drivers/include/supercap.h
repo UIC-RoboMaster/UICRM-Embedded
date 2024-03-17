@@ -280,16 +280,16 @@ namespace driver {
         uint16_t rx_id_;
 
         float cap_voltage_max_ = 26.0f;
-        float cap_voltage_ = 0.0f;
-        float cap_power_ = 0.0f;
-        float output_power_ = 0.0f;
-        float output_voltage_ = 0.0f;
+        volatile float cap_voltage_ = 0.0f;
+        volatile float cap_power_ = 0.0f;
+        volatile float output_power_ = 0.0f;
+        volatile float output_voltage_ = 0.0f;
         supercap_status_t status_ = {0};
 
         float power_total_ = 30.0f;
         float max_charge_power_ = 150.0f;
         float max_discharge_power_ = 250.0f;
-        float perfer_buffer_ = 45.0f;
+        volatile float perfer_buffer_ = 45.0f;
         supercap_send_flags_t tx_flags_ = {0};
 
     };
