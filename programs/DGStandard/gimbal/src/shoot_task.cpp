@@ -52,7 +52,6 @@ void shootTask(void* arg) {
         osDelay(SHOOT_OS_DELAY);
     }
 
-
     steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
 
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
@@ -109,7 +108,6 @@ void shootTask(void* arg) {
             steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, true);
         }
 
-
         osDelay(SHOOT_OS_DELAY);
     }
 }
@@ -155,8 +153,6 @@ void init_shoot() {
     };
     steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
-
-
 
     shoot_key = new bsp::GPIO(TRIG_KEY_GPIO_Port, TRIG_KEY_Pin);
     // laser = new bsp::Laser(&htim3, 3, 1000000);

@@ -156,11 +156,11 @@ void gimbalTask(void* arg) {
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
-//            case REMOTE_MODE_AUTOAIM:
-//                gimbal->TargetReal(minipc->target_angle.target_pitch,
-//                                   minipc->target_angle.target_yaw);
-//                gimbal->Update();
-//                break;
+                //            case REMOTE_MODE_AUTOAIM:
+                //                gimbal->TargetReal(minipc->target_angle.target_pitch,
+                //                                   minipc->target_angle.target_yaw);
+                //                gimbal->Update();
+                //                break;
             default:
                 kill_gimbal();
         }

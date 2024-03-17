@@ -19,7 +19,9 @@
  ###########################################################*/
 
 #include "remote_task.h"
+
 #include <string.h>
+
 #include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
@@ -98,9 +100,7 @@ void remoteTask(void* arg) {
             continue;
         }
 
-
         if (dbus->IsOnline()) {
-
             state_r = dbus->swr;
             state_l = dbus->swl;
             keyboard = dbus->keyboard;
@@ -119,7 +119,6 @@ void remoteTask(void* arg) {
 
         keyboard_G_edge->input(keyboard.bit.G);
         keyboard_B_edge->input(keyboard.bit.B);
-
 
         // remote mode switch
         static BoolEdgeDetector* mode_switch_edge = new BoolEdgeDetector(false);
