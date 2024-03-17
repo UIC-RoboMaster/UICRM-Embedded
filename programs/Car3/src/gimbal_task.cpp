@@ -66,7 +66,7 @@ void gimbalTask(void* arg) {
         ++i;
     }
     Buzzer_Sing(SingCaliDone);
-    float pitch_ratio=0, yaw_ratio=0;
+    float pitch_ratio = 0, yaw_ratio = 0;
     float pitch_curr, yaw_curr;
     pitch_curr = imu->INS_angle[2];
     yaw_curr = imu->INS_angle[0];
@@ -90,16 +90,15 @@ void gimbalTask(void* arg) {
         //      osDelay(1);
         //      continue;
         //    }
-        if (selftest.sbus) {
+        if (sbus->IsOnline()) {
             pitch_ratio = sbus->ch3 / 18000.0 / 7.0;
 
             if (sbus->ch6 > 0)
                 yaw_ratio = -sbus->ch4 / 18000.0 / 7.0;
             else
                 yaw_ratio = 0;
-
         }
-        if (pitch_ratio == 0 && yaw_ratio == 0 && selftest.refereerc) {
+        if (pitch_ratio == 0 && yaw_ratio == 0 && refereerc->IsOnline()) {
             pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 3.0;
             yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 3.0;
         } else {

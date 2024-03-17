@@ -103,13 +103,13 @@ void chassisTask(void* arg) {
                 br_motor->Enable();
         }
         {
-            if (selftest.sbus) {
+            if (sbus->IsOnline()) {
                 ch1_edge->input(sbus->ch1 != 0);
                 ch2_edge->input(sbus->ch2 != 0);
                 ch3_edge->input(sbus->ch3 != 0);
                 ch4_edge->input(sbus->ch4 != 0);
             }
-            if(selftest.refereerc){
+            if (refereerc->IsOnline()) {
                 last_keyboard = keyboard;
                 keyboard = refereerc->remote_control.keyboard;
                 w_edge->input(keyboard.bit.W);
@@ -121,7 +121,6 @@ void chassisTask(void* arg) {
                 e_edge->input(keyboard.bit.E);
                 x_edge->input(keyboard.bit.X);
             }
-
         }
 
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
@@ -163,23 +162,22 @@ void chassisTask(void* arg) {
                 vy_set_org = vy_ramp->Calc(current_speed_offset);
             }
         }
-            if (ch4_edge->get() && sbus->ch6 < 0) {
-                offset_yaw = sbus->ch4;
-            } else if (ch4_edge->negEdge()) {
-                offset_yaw = 0;
-                vz_ramp->SetCurrent(0);
-            } else if (e_edge->get()) {
-                offset_yaw = vz_ramp->Calc(current_speed_offset);
-            } else if (q_edge->get()) {
+        if (ch4_edge->get() && sbus->ch6 < 0) {
+            offset_yaw = sbus->ch4;
+        } else if (ch4_edge->negEdge()) {
+            offset_yaw = 0;
+            vz_ramp->SetCurrent(0);
+        } else if (e_edge->get()) {
+            offset_yaw = vz_ramp->Calc(current_speed_offset);
+        } else if (q_edge->get()) {
+            offset_yaw = vz_ramp->Calc(-current_speed_offset);
+        } else {
+            if (offset_yaw > 0) {
                 offset_yaw = vz_ramp->Calc(-current_speed_offset);
-            }else {
-                if (offset_yaw > 0) {
-                    offset_yaw = vz_ramp->Calc(-current_speed_offset);
-                } else if (offset_yaw < 0) {
-                    offset_yaw = vz_ramp->Calc(current_speed_offset);
-                }
+            } else if (offset_yaw < 0) {
+                offset_yaw = vz_ramp->Calc(current_speed_offset);
             }
-
+        }
 
         chassis_vx = vx_set_org;
         chassis_vy = vy_set_org;

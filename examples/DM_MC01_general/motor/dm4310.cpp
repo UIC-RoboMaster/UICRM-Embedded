@@ -33,7 +33,7 @@ static bsp::CAN* can1 = nullptr;
 static driver::MotorDM4310* motor1 = nullptr;
 
 void RM_RTOS_Init() {
-    //print_use_uart(&huart1);
+    // print_use_uart(&huart1);
     print_use_usb();
     can1 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::MotorDM4310(can1, 0x302, 0x3fe);

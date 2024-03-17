@@ -314,6 +314,7 @@ class BoolEdgeDetector {
      * @param initial initial value
      */
     BoolEdgeDetector(bool initial);
+    BoolEdgeDetector();
     /**
      * @brief 输入信号
      * @param signal 信号

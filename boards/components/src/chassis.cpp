@@ -31,7 +31,8 @@ namespace control {
         // data initialization using acquired model
         switch (chassis.model) {
                 // 麦克纳姆轮
-            case CHASSIS_MECANUM_WHEEL: {
+            case CHASSIS_MECANUM_WHEEL:
+            case CHASSIS_OMNI_WHEEL: {
                 // 新建电机关联
                 motors_ = new driver::MotorCANBase*[FourWheel::motor_num];
                 motors_[FourWheel::front_left] = chassis.motors[FourWheel::front_left];
@@ -59,16 +60,20 @@ namespace control {
         power_limit_on_ = chassis.power_limit_on;
         if (power_limit_on_)
             driver::MotorCANBase::RegisterPreOutputCallback(UpdatePowerLimitWrapper, this);
+        // 底盘是否有超级电容
         if (chassis.has_super_capacitor) {
             has_super_capacitor_ = true;
             super_capacitor_ = chassis.super_capacitor;
+            // 超级电容状态机更新
+            is_super_capacitor_online_ = BoolEdgeDetector(false);
         }
     }
 
     Chassis::~Chassis() {
         driver::MotorCANBase::RegisterPreOutputCallback([](void* args) { UNUSED(args); }, nullptr);
         switch (model_) {
-            case CHASSIS_MECANUM_WHEEL: {
+            case CHASSIS_MECANUM_WHEEL:
+            case CHASSIS_OMNI_WHEEL: {
                 motors_[FourWheel::front_left] = nullptr;
                 motors_[FourWheel::front_right] = nullptr;
                 motors_[FourWheel::back_left] = nullptr;
@@ -122,7 +127,14 @@ namespace control {
         power_limit_info_.power_limit = power_limit;
         power_limit_info_.WARNING_power = power_limit * 0.9;
         power_limit_info_.WARNING_power_buff = 50;
+
+        // 检测功率是否发生变化，如果发生变化则更新超级电容
+        bool power_change_flag= false;
+        if(current_chassis_power_ != chassis_power){
+            power_change_flag = true;
+        }
         current_chassis_power_ = chassis_power;
+
         current_chassis_power_buffer_ = chassis_power_buffer;
         if (has_super_capacitor_) {
             if (enable_supercap && !super_capacitor_enable_) {
@@ -130,7 +142,10 @@ namespace control {
             } else if (!enable_supercap && super_capacitor_enable_) {
                 super_capacitor_enable_ = false;
             }
-            super_capacitor_->SetPowerTotal(chassis_power);
+            if(power_change_flag){
+                super_capacitor_->SetPowerTotal(chassis_power);
+                super_capacitor_->TransmitSettings();
+            }
             super_capacitor_->UpdateCurrentBuffer(chassis_power_buffer);
         }
     }
@@ -150,6 +165,7 @@ namespace control {
 
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
+            case CHASSIS_OMNI_WHEEL:
                 power_limit_info_.buffer_total_current_limit = 3500 * FourWheel::motor_num;
                 power_limit_info_.power_total_current_limit =
                     5000 * FourWheel::motor_num / 80.0 * power_limit_info_.power_limit;
@@ -171,6 +187,14 @@ namespace control {
 
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
+        }
+
+        if(has_super_capacitor_){
+            is_super_capacitor_online_.input(super_capacitor_->IsOnline());
+            // 超级电容离线->在线，发送设置
+                if(is_super_capacitor_online_.posEdge()){
+                    super_capacitor_->TransmitSettings();
+                }
         }
     }
 
@@ -257,9 +281,15 @@ namespace control {
         } else {
             super_capacitor_enable_ = false;
         }
+        float power_limit = data.data_two_float.data[1];
+        bool power_change_flag= false;
+        if(power_limit_info_.power_limit != power_limit){
+            power_change_flag = true;
+        }
         power_limit_info_.power_limit = data.data_two_float.data[1];
         power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
-        if (has_super_capacitor_) {
+        // 有超级电容且底盘限制功率变化，更新超级电容
+        if (has_super_capacitor_ && power_change_flag) {
             super_capacitor_->SetPowerTotal(power_limit_info_.power_limit);
             if(super_capacitor_->IsOnline()) {
                 super_capacitor_->TransmitSettings();
@@ -277,7 +307,6 @@ namespace control {
         current_chassis_power_buffer_ = data.data_two_float.data[1];
         if (has_super_capacitor_ && chassis_enable_) {
             if(super_capacitor_->IsOnline()){
-                super_capacitor_->TransmitSettings();
                 super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
             }
         }

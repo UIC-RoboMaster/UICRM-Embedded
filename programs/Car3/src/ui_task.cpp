@@ -187,16 +187,16 @@ void uiTask(void* arg) {
 
         // Update self-diagnosis messages
         {
-            fl_motor_check_edge->input(selftest.fl_motor);
-            fr_motor_check_edge->input(selftest.fr_motor);
-            bl_motor_check_edge->input(selftest.bl_motor);
-            br_motor_check_edge->input(selftest.br_motor);
-            yaw_motor_check_edge->input(selftest.yaw_motor);
-            pitch_motor_check_edge->input(selftest.pitch_motor);
-            steer_motor_check_edge->input(selftest.steering_motor);
-            dbus_edge->input(selftest.sbus);
-            imu_cali_edge->input(selftest.imu_cali);
-            imu_temp_edge->input(selftest.imu_temp);
+            fl_motor_check_edge->input(fl_motor->IsOnline());
+            fr_motor_check_edge->input(fr_motor->IsOnline());
+            bl_motor_check_edge->input(bl_motor->IsOnline());
+            br_motor_check_edge->input(br_motor->IsOnline());
+            yaw_motor_check_edge->input(yaw_motor->IsOnline());
+            pitch_motor_check_edge->input(pitch_motor->IsOnline());
+            steer_motor_check_edge->input(steering_motor->IsOnline());
+            dbus_edge->input(sbus->IsOnline());
+            imu_cali_edge->input(true);
+            imu_temp_edge->input(true);
             if (fl_motor_check_edge->negEdge()) {
                 strcpy(diagStr, "FL MOTOR OFFLINE     ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
@@ -240,11 +240,8 @@ void uiTask(void* arg) {
         }
 
         // clear self-diagnosis messages
-        if (selftest.sbus) {
-            v_edge->input(sbus->ch5 < 0);
-        } else {
-            v_edge->input(refereerc->remote_control.keyboard.bit.V);
-        }
+
+        v_edge->input(refereerc->remote_control.keyboard.bit.V);
 
         if (v_edge->posEdge()) {
             osDelay(110);
@@ -296,11 +293,8 @@ void uiTask(void* arg) {
             osDelay(110);
             continue;
         }
-        if (selftest.sbus) {
-            c_edge->input(sbus->ch5 > 0);
-        } else {
-            c_edge->input(refereerc->remote_control.keyboard.bit.C);
-        }
+
+        c_edge->input(refereerc->remote_control.keyboard.bit.C);
         if (c_edge->posEdge()) {
             diagGUI->Clear(UI_Delay);
         }

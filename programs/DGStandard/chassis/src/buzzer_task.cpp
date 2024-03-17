@@ -18,55 +18,62 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
-#include "cmsis_os2.h"
-#include "dbus.h"
-#include "main.h"
-#include "referee_task.h"
-#include "user_define.h"
-#include "utils.h"
-extern remote::DBUS* dbus;
-/**
- * @brief Dbus Init
- */
-void init_dbus();
+#include "buzzer_task.h"
 
-enum RemoteMode {
-    REMOTE_MODE_PREPARE = -2,
-    REMOTE_MODE_KILL = -1,
-    REMOTE_MODE_STOP = 0,
-    REMOTE_MODE_FOLLOW = 1,
-    REMOTE_MODE_SPIN = 2,
-    REMOTE_MODE_ADVANCED = 3
-};
-extern RemoteMode remote_mode;
-enum ShootFricMode {
-    SHOOT_FRIC_MODE_DISABLE = -1,
-    SHOOT_FRIC_MODE_STOP = 0,
-    SHOOT_FRIC_MODE_PREPARING = 1,
-    SHOOT_FRIC_MODE_PREPARED = 2,
-    SHOOT_FRIC_SPEEDUP = 3,
-    SHOOT_FRIC_SPEEDDOWN = 4,
-};
-extern ShootFricMode shoot_flywheel_mode;
-enum ShootMode {
-    SHOOT_MODE_DISABLE = -1,
-    SHOOT_MODE_STOP = 0,
-    SHOOT_MODE_PREPARING = 1,
-    SHOOT_MODE_PREPARED = 2,
-    SHOOT_MODE_SINGLE = 3,
-    SHOOT_MODE_BURST = 4,
-};
-extern ShootMode shoot_load_mode;
-extern osThreadId_t remoteTaskHandle;
-const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
+#include "bsp_thread.h"
+#include "tim.h"
+
+bsp::Thread* buzzer_thread = nullptr;
+const osThreadAttr_t buzzer_thread_attr_ = {.name = "BuzzerTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,
                                             .cb_size = 0,
                                             .stack_mem = nullptr,
-                                            .stack_size = 512 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh7,
+                                            .stack_size = 256 * 4,
+                                            .priority = (osPriority_t)osPriorityLow,
                                             .tz_module = 0,
                                             .reserved = 0};
-void remoteTask(void* arg);
-void init_remote();
+
+void buzzerTask(void* args);
+
+const bsp::thread_init_t thread_init = {
+    .func = buzzerTask,
+    .args = nullptr,
+    .attr = buzzer_thread_attr_,
+};
+
+osThreadId_t buzzerTaskHandle;
+
+driver::Buzzer* buzzer = nullptr;
+const driver::BuzzerNoteDelayed* buzzer_song = nullptr;
+
+void Buzzer_Delay(uint32_t delay) {
+    osDelay(delay);
+}
+
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song) {
+    if (buzzer_song == nullptr) {
+        buzzer_song = song;
+        osThreadFlagsSet(buzzerTaskHandle, BUZZER_SIGNAL);
+        return true;
+    }
+    return false;
+}
+void buzzerTask(void* arg) {
+    UNUSED(arg);
+    while (1) {
+        uint32_t flags = osThreadFlagsWait(BUZZER_SIGNAL, osFlagsWaitAll, osWaitForever);
+        if (flags & BUZZER_SIGNAL) {
+            if (buzzer_song != nullptr) {
+                buzzer->SingSong(buzzer_song, Buzzer_Delay);
+                buzzer_song = nullptr;
+            }
+        }
+    }
+}
+
+void init_buzzer() {
+    buzzer = new driver::Buzzer(&htim4, 3, 1000000);
+    buzzer_thread = new bsp::Thread(thread_init);
+    buzzer_thread->Start();
+}

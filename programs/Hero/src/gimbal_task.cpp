@@ -97,7 +97,7 @@ void gimbalTask(void* arg) {
         //      osDelay(1);
         //      continue;
         //    }
-        if (selftest.dbus) {
+        if (dbus->IsOnline()) {
             if (dbus->mouse.y != 0) {
                 pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
             } else {
@@ -108,7 +108,7 @@ void gimbalTask(void* arg) {
             } else {
                 yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
             }
-        } else if (selftest.refereerc) {
+        } else if (refereerc->IsOnline()) {
             pitch_ratio = refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 7.0;
             yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 7.0;
         } else {

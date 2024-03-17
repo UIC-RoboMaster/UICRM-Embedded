@@ -40,7 +40,7 @@ void RM_RTOS_Default_Task(const void* arguments) {
     while (true) {
         set_cursor(0, 0);
         clear_screen();
-        print("Online: %s\r\n",(dbus->IsOnline()? "true" : "false"));
+        print("Online: %s\r\n", (dbus->IsOnline() ? "true" : "false"));
         print(
             "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
             "TWL: %d "

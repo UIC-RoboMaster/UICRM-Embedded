@@ -177,6 +177,8 @@ namespace control {
 
         float max_motor_speed_ = 2 * PI * 10;
 
+        BoolEdgeDetector is_super_capacitor_online_;
+
     };
 
     class ChassisCanBridgeSender {

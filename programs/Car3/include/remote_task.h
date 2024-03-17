@@ -23,7 +23,6 @@
 #include "main.h"
 #include "referee_task.h"
 #include "sbus.h"
-#include "selftest_task.h"
 #include "user_define.h"
 #include "utils.h"
 extern remote::SBUS* sbus;

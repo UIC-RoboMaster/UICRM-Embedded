@@ -63,7 +63,7 @@ void remoteTask(void* arg) {
 
     while (1) {
         // Offline Detection && Security Check
-        is_dbus_offline = (!selftest.sbus && !selftest.refereerc) || sbus->ch7 <= -550;
+        is_dbus_offline = (!sbus->IsOnline() && !refereerc->IsOnline()) || sbus->ch7 <= -550;
         // Kill Detection
         //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
         //        is_shoot_available =
@@ -96,11 +96,11 @@ void remoteTask(void* arg) {
         last_keyboard = keyboard;
         last_mouse = mouse;
         // Update State
-        if (selftest.sbus) {
+        if (sbus->IsOnline()) {
             state_r = sbus->ch7;
             state_l = sbus->ch8;
         }
-        if (selftest.refereerc && state_l == 0 && state_r == 0){
+        if (refereerc->IsOnline() && state_l == 0 && state_r == 0) {
             state_r = 0;
             state_l = 0;
             keyboard = refereerc->remote_control.keyboard;
@@ -111,12 +111,11 @@ void remoteTask(void* arg) {
             mouse_right_edge->input(mouse.r);
         }
 
-
         // Update Timestamp
 
         if (sbus->ch7 > 0 && last_state_r == 0) {
             mode_switch = true;
-        }else if (ctrl_edge->posEdge()) {
+        } else if (ctrl_edge->posEdge()) {
             mode_switch = true;
         }
         // remote mode switch
@@ -137,13 +136,13 @@ void remoteTask(void* arg) {
                 if (sbus->ch8 < 0 && last_state_l == 0) {
                     shoot_switch = true;
                     shoot_burst_timestamp = 0;
-                } else if (last_state_l < 0 && selftest.sbus) {
+                } else if (last_state_l < 0 && sbus->IsOnline()) {
                     shoot_burst_timestamp++;
                     if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
                         shoot_burst_switch = true;
                     }
                 } else {
-                    if(selftest.refereerc){
+                    if (refereerc->IsOnline()) {
                         if (z_edge->posEdge()) {
                             shoot_fric_switch = true;
                         }
@@ -161,7 +160,6 @@ void remoteTask(void* arg) {
                             shoot_stop_switch = true;
                         }
                     }
-
                 }
             }
 

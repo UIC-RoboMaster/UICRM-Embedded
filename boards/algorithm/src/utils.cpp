@@ -76,6 +76,9 @@ bool BoolEdgeDetector::negEdge() {
 bool BoolEdgeDetector::get() {
     return prev_;
 }
+BoolEdgeDetector::BoolEdgeDetector() {
+    prev_ = false;
+}
 
 FloatEdgeDetector::FloatEdgeDetector(float initial, float threshold) {
     prev_ = initial;
@@ -154,6 +157,7 @@ void EndianSwap(void* data, size_t size) {
         p[i] = p[size - i - 1];
         p[size - i - 1] = temp;
     }
+}
 Ease::Ease(float initial, float step) {
     current_ = initial;
     step_ = step;
