@@ -96,10 +96,10 @@ void RM_RTOS_Init() {
     super_cap->Enable();
     super_cap->TransmitSettings();
     super_cap->SetMaxVoltage(24.0f);
-    super_cap->SetPowerTotal(120.0f);
+    super_cap->SetPowerTotal(100.0f);
     super_cap->SetMaxChargePower(150.0f);
     super_cap->SetMaxDischargePower(250.0f);
-    super_cap->SetPerferBuffer(40.0f);
+    super_cap->SetPerferBuffer(50.0f);
 
     can_bridge = new communication::CanBridge(can1, 0x52);
 
