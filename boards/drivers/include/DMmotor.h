@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "bsp_can.h"
+#include "connection_driver.h"
 #include "main.h"
 
 namespace driver {
@@ -58,7 +59,7 @@ namespace driver {
      * @note DM motor uses CAN communication, but the CAN protocol is different from DJI's, so it
      * needs to be implemented separately
      */
-    class DMMotor4310 {
+    class DMMotor4310 : public ConnectionDriver {
       public:
         /**
          * @brief 基础构造函数
@@ -266,8 +267,6 @@ namespace driver {
          * @return value converted from unsigned int to float
          */
         static float uint_to_float(int x_int, float x_min, float x_max, int bits);
-
-        volatile bool connection_flag_ = false;
 
       private:
         bsp::CAN* can_;

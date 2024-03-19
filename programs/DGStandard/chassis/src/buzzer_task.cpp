@@ -18,37 +18,56 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
-#include "MotorCanBase.h"
-#include "bsp_can.h"
-#include "buzzer_notes.h"
 #include "buzzer_task.h"
-#include "cmsis_os2.h"
-#include "gimbal.h"
-#include "gimbal_data.h"
-#include "imu_task.h"
-#include "main.h"
-#include "public_port.h"
-#include "remote_task.h"
-#include "selftest_task.h"
-#include "shoot_task.h"
-#include "user_define.h"
-extern osThreadId_t gimbalTaskHandle;
-const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
+
+#include "bsp_thread.h"
+#include "tim.h"
+
+bsp::EventThread* buzzer_thread = nullptr;
+const osThreadAttr_t buzzer_thread_attr_ = {.name = "BuzzerTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,
                                             .cb_size = 0,
                                             .stack_mem = nullptr,
-                                            .stack_size = 512 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh,
+                                            .stack_size = 256 * 4,
+                                            .priority = (osPriority_t)osPriorityLow,
                                             .tz_module = 0,
                                             .reserved = 0};
 
-void gimbalTask(void* arg);
-extern control::Gimbal* gimbal;
-extern driver::MotorCANBase* pitch_motor;
-extern driver::MotorCANBase* yaw_motor;
-extern control::gimbal_data_t* gimbal_param;
-extern float pitch_diff, yaw_diff;
-void init_gimbal();
-void kill_gimbal();
+void buzzerTask(void* args);
+
+const bsp::thread_init_t thread_init = {
+    .func = buzzerTask,
+    .args = nullptr,
+    .attr = buzzer_thread_attr_,
+};
+
+driver::Buzzer* buzzer = nullptr;
+const driver::BuzzerNoteDelayed* buzzer_song = nullptr;
+
+void Buzzer_Delay(uint32_t delay) {
+    osDelay(delay);
+}
+
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song) {
+    if (buzzer_song == nullptr) {
+        buzzer_song = song;
+        buzzer_thread->Set();
+        return true;
+    }
+    return false;
+}
+void buzzerTask(void* arg) {
+    UNUSED(arg);
+
+    if (buzzer_song != nullptr) {
+        buzzer->SingSong(buzzer_song, Buzzer_Delay);
+        buzzer_song = nullptr;
+    }
+}
+
+void init_buzzer() {
+    buzzer = new driver::Buzzer(&htim4, 3, 1000000);
+    buzzer_thread = new bsp::EventThread(thread_init);
+    buzzer_thread->Start();
+}

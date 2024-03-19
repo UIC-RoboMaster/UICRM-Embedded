@@ -25,8 +25,6 @@ static driver::MotorPWMBase* flywheel_right = nullptr;
 
 driver::MotorCANBase* steering_motor = nullptr;
 
-driver::ServoMotor* load_servo = nullptr;
-
 bsp::GPIO* shoot_key = nullptr;
 
 // 堵转回调函数
@@ -54,8 +52,7 @@ void shootTask(void* arg) {
         osDelay(SHOOT_OS_DELAY);
     }
 
-    load_servo->SetTarget(load_servo->GetTheta(), true);
-    load_servo->CalcOutput();
+    steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
 
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
@@ -82,37 +79,35 @@ void shootTask(void* arg) {
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING && flywheel_speed_ease->IsAtTarget()) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
         }
+
         if (shoot_flywheel_mode != SHOOT_FRIC_MODE_PREPARED) {
-            load_servo->Hold();
-            load_servo->CalcOutput();
+            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
         /* 摩擦轮就绪后执行以下部分 */
 
         if (shoot_load_mode == SHOOT_MODE_STOP) {
-            load_servo->Hold(true);
+            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
             // todo: 这里为什么要是true才能停下？target_angel为什么会超过范围？
         }
         if (shoot_load_mode == SHOOT_MODE_IDLE) {
             uint8_t loaded = shoot_key->Read();
             if (loaded) {
-                load_servo->Hold();
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
             } else {
                 // 没有准备就绪，则旋转拔弹电机
-                load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
+                steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, false);
             }
         }
         if (shoot_load_mode == SHOOT_MODE_SINGLE) {
-            load_servo->SetTarget(load_servo->GetTheta() + 2 * PI / 8, true);
+            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
             shoot_load_mode = SHOOT_MODE_IDLE;
         }
         if (shoot_load_mode == SHOOT_MODE_BURST) {
-            load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, true);
+            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, true);
         }
 
-        // 计算输出
-        load_servo->CalcOutput();
         osDelay(SHOOT_OS_DELAY);
     }
 }
@@ -125,22 +120,39 @@ void init_shoot() {
 
     steering_motor = new driver::Motor2006(can1, 0x207);
 
-    driver::servo_t servo_data = {
-        .motor = steering_motor,
-        .max_speed = 2.5 * PI,
-        .max_acceleration = 16 * PI,
-        .transmission_ratio = M2006P36_RATIO,
-        .omega_pid_param = new float[3]{6000, 80, 0.3},
-        .max_iout = 4000,
-        .max_out = 10000,
-        .hold_pid_param = nullptr,
-        .hold_max_iout = 2000,
-        .hold_max_out = 10000,
+    steering_motor->SetTransmissionRatio(36);
+    control::ConstrainedPID::PID_Init_t steering_motor_theta_pid_init = {
+        .kp = 20,
+        .ki = 0,
+        .kd = 0,
+        .max_out = 2.5 * PI,
+        .max_iout = 0,
+        .deadband = 0,                                 // 死区
+        .A = 0,                                        // 变速积分所能达到的最大值为A+B
+        .B = 0,                                        // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .derivative_filtering_coefficient = 0,         // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-
-    load_servo = new driver::ServoMotor(servo_data);
-    load_servo->RegisterJamCallback(jam_callback, 0.6);
-    load_servo->Hold(true);
+    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
+        .kp = 1000,
+        .ki = 1,
+        .kd = 0,
+        .max_out = 10000,
+        .max_iout = 4000,
+        .deadband = 0,                          // 死区
+        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
     shoot_key = new bsp::GPIO(TRIG_KEY_GPIO_Port, TRIG_KEY_Pin);
     // laser = new bsp::Laser(&htim3, 3, 1000000);

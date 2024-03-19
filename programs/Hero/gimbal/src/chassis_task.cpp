@@ -97,14 +97,14 @@ void chassisTask(void* arg) {
         }
         {
             last_keyboard = keyboard;
-            if (selftest.dbus) {
+            if (dbus->IsOnline()) {
                 keyboard = dbus->keyboard;
                 ch0_edge->input(dbus->ch0 != 0);
                 ch1_edge->input(dbus->ch1 != 0);
                 ch2_edge->input(dbus->ch2 != 0);
                 ch3_edge->input(dbus->ch3 != 0);
                 ch4_edge->input(dbus->ch4 != 0);
-            } else if (selftest.refereerc) {
+            } else if (refereerc->IsOnline()) {
                 keyboard = refereerc->remote_control.keyboard;
                 ch0_edge->input(false);
                 ch1_edge->input(false);
@@ -124,7 +124,7 @@ void chassisTask(void* arg) {
             x_edge->input(keyboard.bit.X);
         }
 
-        relative_angle = -yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
@@ -204,7 +204,7 @@ void chassisTask(void* arg) {
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
-                yaw_pid_error = -yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+                yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
                 if (fabs(yaw_pid_error) < 0.01f) {
                     yaw_pid_error = 0;
                 }

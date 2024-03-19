@@ -30,7 +30,6 @@
 #include "main.h"
 #include "public_port.h"
 #include "remote_task.h"
-#include "selftest_task.h"
 #include "shoot_task.h"
 #include "user_define.h"
 extern osThreadId_t gimbalTaskHandle;
@@ -50,5 +49,6 @@ extern driver::MotorCANBase* pitch_motor;
 extern driver::MotorCANBase* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
 extern float pitch_diff, yaw_diff;
+extern INS_Angle_t INS_Angle;
 void init_gimbal();
 void kill_gimbal();

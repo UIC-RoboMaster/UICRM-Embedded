@@ -24,7 +24,7 @@
 
 #include "supercap.h"
 namespace driver {
-    SuperCap::SuperCap(driver::supercap_init_t init) {
+    SuperCap::SuperCap(driver::supercap_init_t init) : ConnectionDriver(100) {
         can_ = init.can;
         tx_id_ = init.tx_id;
         tx_settings_id_ = init.tx_settings_id;
@@ -46,7 +46,7 @@ namespace driver {
         status_.data = data[6];
         output_voltage_ = 0.1f * data[7];
 
-        connection_flag_ = true;
+        Heartbeat();
     }
     void SuperCap::Enable() {
         tx_flags_.flags.enable = true;

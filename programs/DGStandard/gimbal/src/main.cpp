@@ -28,10 +28,10 @@
 #include "cmsis_os.h"
 #include "gimbal_task.h"
 #include "imu_task.h"
+#include "minipc_task.h"
 #include "public_port.h"
 #include "referee_task.h"
 #include "remote_task.h"
-#include "selftest_task.h"
 #include "shoot_task.h"
 #include "ui_task.h"
 /**
@@ -49,11 +49,10 @@ void RM_RTOS_Init(void) {
     init_imu();
     // 初始化蜂鸣器，蜂鸣器在需要的时候会在后台播放音乐
     init_buzzer();
-    // 初始化模块在线检测，此类会在后续更新
-    init_selftest();
     // 初始化裁判系统，裁判系统类能够读取裁判系统的数据
     init_referee();
     // 初始化遥控器与远程模式选择，遥控器类能够读取遥控器的数据
+    init_minipc();
     init_remote();
     // 初始化发射机构，发射机构类能够控制发射机构的动作
     init_shoot();
@@ -73,7 +72,6 @@ void RM_RTOS_Threads_Init(void) {
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
-    selftestTaskHandle = osThreadNew(selftestTask, nullptr, &selftestTaskAttribute);
     if (ENABLE_UI)
         uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }

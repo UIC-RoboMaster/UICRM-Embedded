@@ -24,8 +24,11 @@
 #include "MotorBase.h"
 #include "bsp_can.h"
 #include "bsp_thread.h"
+#include "connection_driver.h"
 #include "pid.h"
 #include "utils.h"
+
+#define M3508P19_MAX_OUTPUT 12000.0f
 
 namespace driver {
 
@@ -35,7 +38,7 @@ namespace driver {
     /**
      * @brief Basic Interface for DJI Motor with CAN communication
      */
-    class MotorCANBase : public MotorBase {
+    class MotorCANBase : public MotorBase, public ConnectionDriver {
       public:
         enum motor_mode {
             NONE = 0x00,
@@ -168,7 +171,7 @@ namespace driver {
 
         virtual void CalcOutput();
 
-        virtual void SetTarget(float target);
+        virtual void SetTarget(float target, bool override = true);
 
         virtual float GetTarget() const;
 
@@ -186,8 +189,6 @@ namespace driver {
          *        many of the private parameters of MotorCANBase.
          */
         friend class ServoMotor;
-
-        volatile bool connection_flag_ = false;
 
         void Enable();
 

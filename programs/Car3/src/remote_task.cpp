@@ -50,9 +50,20 @@ void remoteTask(void* arg) {
     bool is_dbus_offline;
     bool is_robot_dead;
     bool is_shoot_available;
+
+    BoolEdgeDetector* z_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ctrl_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
+
+    remote::keyboard_t last_keyboard;
+    remote::mouse_t last_mouse;
+    remote::keyboard_t keyboard;
+    remote::mouse_t mouse;
+
     while (1) {
         // Offline Detection && Security Check
-        is_dbus_offline = (!selftest.sbus && !selftest.refereerc) || sbus->ch7 <= -550;
+        is_dbus_offline = (!sbus->IsOnline() && !refereerc->IsOnline()) || sbus->ch7 <= -550;
         // Kill Detection
         //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
         //        is_shoot_available =
@@ -82,15 +93,29 @@ void remoteTask(void* arg) {
         // Update Last State
         last_state_r = state_r;
         last_state_l = state_l;
+        last_keyboard = keyboard;
+        last_mouse = mouse;
         // Update State
-        if (selftest.sbus) {
+        if (sbus->IsOnline()) {
             state_r = sbus->ch7;
             state_l = sbus->ch8;
+        }
+        if (refereerc->IsOnline() && state_l == 0 && state_r == 0) {
+            state_r = 0;
+            state_l = 0;
+            keyboard = refereerc->remote_control.keyboard;
+            mouse = refereerc->remote_control.mouse;
+            z_edge->input(keyboard.bit.Z);
+            ctrl_edge->input(keyboard.bit.CTRL);
+            mouse_left_edge->input(mouse.l);
+            mouse_right_edge->input(mouse.r);
         }
 
         // Update Timestamp
 
         if (sbus->ch7 > 0 && last_state_r == 0) {
+            mode_switch = true;
+        } else if (ctrl_edge->posEdge()) {
             mode_switch = true;
         }
         // remote mode switch
@@ -111,13 +136,30 @@ void remoteTask(void* arg) {
                 if (sbus->ch8 < 0 && last_state_l == 0) {
                     shoot_switch = true;
                     shoot_burst_timestamp = 0;
-                } else if (last_state_l < 0 && selftest.sbus) {
+                } else if (last_state_l < 0 && sbus->IsOnline()) {
                     shoot_burst_timestamp++;
                     if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
                         shoot_burst_switch = true;
                     }
                 } else {
-                    shoot_stop_switch = true;
+                    if (refereerc->IsOnline()) {
+                        if (z_edge->posEdge()) {
+                            shoot_fric_switch = true;
+                        }
+                        if (mouse_left_edge->posEdge()) {
+                            shoot_switch = true;
+                            shoot_burst_timestamp = 0;
+                        } else if (mouse_left_edge->get()) {
+                            shoot_burst_timestamp++;
+                            if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
+                                shoot_burst_switch = true;
+                            }
+                        } else if (mouse_left_edge->negEdge()) {
+                            shoot_stop_switch = true;
+                        } else {
+                            shoot_stop_switch = true;
+                        }
+                    }
                 }
             }
 

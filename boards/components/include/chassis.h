@@ -22,6 +22,7 @@
 
 #include "MotorCanBase.h"
 #include "can_bridge.h"
+#include "connection_driver.h"
 #include "pid.h"
 #include "power_limit.h"
 #include "supercap.h"
@@ -33,7 +34,7 @@ namespace control {
     /**
      * @brief chassis models
      */
-    typedef enum { CHASSIS_MECANUM_WHEEL } chassis_model_t;
+    typedef enum { CHASSIS_MECANUM_WHEEL, CHASSIS_OMNI_WHEEL } chassis_model_t;
 
     /**
      * @brief structure used when chassis instance is initialized
@@ -57,7 +58,7 @@ namespace control {
     /**
      * @brief wrapper class for chassis
      */
-    class Chassis {
+    class Chassis : public driver::ConnectionDriver {
       public:
         /**
          * @brief constructor for chassis
@@ -65,12 +66,12 @@ namespace control {
          * @param chassis structure that used to initialize chassis, refer to type
          * chassis_t
          */
-        Chassis(const chassis_t chassis);
+        explicit Chassis(const chassis_t chassis);
 
         /**
          * @brief destructor for chassis
          */
-        ~Chassis();
+        ~Chassis() override;
 
         /**
          * @brief set the speed for chassis motors
@@ -135,6 +136,8 @@ namespace control {
 
         void UpdatePowerLimit();
 
+        void SetMaxMotorSpeed(float max_speed);
+
       private:
         // acquired from user
         driver::MotorCANBase** motors_ = nullptr;
@@ -156,21 +159,23 @@ namespace control {
                 5000.0f * wheel_num_ / 80.0f * power_limit_info_.power_limit,
         };
 
-        float current_chassis_power_ = 0;
-        float current_chassis_power_buffer_ = 0;
+        volatile float current_chassis_power_ = 0;
+        volatile float current_chassis_power_buffer_ = 0;
 
         float chassis_offset_;
 
         uint8_t can_bridge_tx_id_ = 0x00;
-        float can_bridge_vx_ = 0;
-        float can_bridge_vy_ = 0;
-        float can_bridge_vt_ = 0;
+        volatile float can_bridge_vx_ = 0;
+        volatile float can_bridge_vy_ = 0;
+        volatile float can_bridge_vt_ = 0;
 
         bool chassis_enable_ = true;
 
         bool has_super_capacitor_ = false;
         bool super_capacitor_enable_ = false;
         driver::SuperCap* super_capacitor_ = nullptr;
+
+        float max_motor_speed_ = 2 * PI * 10;
     };
 
     class ChassisCanBridgeSender {

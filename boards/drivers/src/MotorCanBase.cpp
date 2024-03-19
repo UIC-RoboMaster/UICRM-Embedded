@@ -55,7 +55,13 @@ namespace driver {
     void* MotorCANBase::post_output_callback_instance_ = nullptr;
 
     MotorCANBase::MotorCANBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
-        : theta_(0), omega_(0), can_(can), rx_id_(rx_id) {
+        : ConnectionDriver(delay_time * 30),
+          theta_(0),
+          omega_(0),
+          output_shaft_theta_(0),
+          output_shaft_omega_(0),
+          can_(can),
+          rx_id_(rx_id) {
         // 大疆的电机，自动识别TX_ID
         if (tx_id == 0x00) {
             constexpr uint16_t GROUP_SIZE = 4;
@@ -195,13 +201,17 @@ namespace driver {
             osDelay(delay_time);
         }
     }
-    void MotorCANBase::SetTarget(float target) {
+    void MotorCANBase::SetTarget(float target, bool override) {
         // 设置目标值
         // 目标值的单位取决于电机的模式
         // 如果电机启动了角度环PID，则目标值为角度，单位为Rad
         // 如果电机没启动角度环PID的情况下启动了速度环PID，则目标值为角速度，单位为Rad/s
         if (mode_ & INVERTED) {
             target = -target;
+        }
+        if (override == false && !holding_) {
+            // 如果电机没有在hold状态，则不修改目标值
+            return;
         }
         target_ = target;
         if ((mode_ & THETA) && (mode_ & ABSOLUTE)) {
@@ -333,6 +343,7 @@ namespace driver {
                 }
             }
         }
+        Heartbeat();
     }
     void MotorCANBase::SetTransmissionRatio(float ratio) {
         // 设置电机的传动比
@@ -403,11 +414,11 @@ namespace driver {
         theta_ = raw_theta * THETA_SCALE;
         omega_ = raw_omega * OMEGA_SCALE;
 
-        connection_flag_ = true;
         MotorCANBase::UpdateData(data);
     }
 
     void Motor3508::PrintData() const {
+        print("online: %s ", (IsOnline() ? "true" : "false"));
         print("theta: % .4f ", GetTheta());
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
@@ -447,11 +458,11 @@ namespace driver {
         theta_ = raw_theta * THETA_SCALE;
         omega_ = raw_omega * OMEGA_SCALE;
 
-        connection_flag_ = true;
         MotorCANBase::UpdateData(data);
     }
 
     void Motor6020::PrintData() const {
+        print("online: %s ", (IsOnline() ? "true" : "false"));
         print("theta: % .4f ", GetTheta());
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
@@ -487,11 +498,11 @@ namespace driver {
         theta_ = raw_theta * THETA_SCALE;
         omega_ = raw_omega * OMEGA_SCALE;
 
-        connection_flag_ = true;
         MotorCANBase::UpdateData(data);
     }
 
     void Motor2006::PrintData() const {
+        print("online: %s ", (IsOnline() ? "true" : "false"));
         print("theta: % .4f ", GetTheta());
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
@@ -527,11 +538,11 @@ namespace driver {
         theta_ = raw_theta * THETA_SCALE;
         omega_ = raw_omega * OMEGA_SCALE;
 
-        connection_flag_ = true;
         MotorCANBase::UpdateData(data);
     }
 
     void MotorDM4310::PrintData() const {
+        print("online: %s ", (IsOnline() ? "true" : "false"));
         print("theta: % .4f ", GetTheta());
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());

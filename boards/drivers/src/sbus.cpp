@@ -61,7 +61,7 @@ namespace remote {
     }
 
     void SBUS::RxCompleteCallback() {
-        connection_flag_ = true;
+        Heartbeat();
 
         uint8_t* data;
         // data frame misalignment
@@ -103,7 +103,7 @@ namespace remote {
         this->ch15 = abs(this->ch15) <= SBUS_RC_ROCKER_ZERO_DRIFT ? 0 : this->ch15;
         this->ch16 = abs(this->ch16) <= SBUS_RC_ROCKER_ZERO_DRIFT ? 0 : this->ch16;
         this->flag = repr->flag;
-        this->timestamp = HAL_GetTick();
+        this->timestamp = GetLastUptime();
     }
 
 } /* namespace remote */

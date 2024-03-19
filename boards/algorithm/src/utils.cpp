@@ -76,6 +76,9 @@ bool BoolEdgeDetector::negEdge() {
 bool BoolEdgeDetector::get() {
     return prev_;
 }
+BoolEdgeDetector::BoolEdgeDetector() {
+    prev_ = false;
+}
 
 FloatEdgeDetector::FloatEdgeDetector(float initial, float threshold) {
     prev_ = initial;
@@ -147,6 +150,14 @@ void RampSource::SetCurrent(float current) {
     output_ = current;
 }
 
+void EndianSwap(void* data, size_t size) {
+    uint8_t* p = (uint8_t*)data;
+    for (size_t i = 0; i < size / 2; i++) {
+        uint8_t temp = p[i];
+        p[i] = p[size - i - 1];
+        p[size - i - 1] = temp;
+    }
+}
 Ease::Ease(float initial, float step) {
     current_ = initial;
     step_ = step;

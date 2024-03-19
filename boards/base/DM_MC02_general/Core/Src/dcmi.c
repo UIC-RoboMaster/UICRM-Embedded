@@ -127,7 +127,7 @@ void HAL_DCMI_MspInit(DCMI_HandleTypeDef* dcmiHandle)
 
     /* DCMI DMA Init */
     /* DCMI Init */
-    hdma_dcmi.Instance = DMA2_Stream4;
+    hdma_dcmi.Instance = DMA2_Stream5;
     hdma_dcmi.Init.Request = DMA_REQUEST_DCMI_PSSI;
     hdma_dcmi.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_dcmi.Init.PeriphInc = DMA_PINC_DISABLE;

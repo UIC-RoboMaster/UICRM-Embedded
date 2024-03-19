@@ -31,7 +31,6 @@
 #include "public_port.h"
 // #include "referee_task.h"
 #include "remote_task.h"
-#include "selftest_task.h"
 #include "shoot_task.h"
 #include "ui_task.h"
 #include "user_define.h"
@@ -42,12 +41,12 @@ void RM_RTOS_Init(void) {
     init_batt();
     init_imu();
     init_buzzer();
-    // init_referee();
+    init_referee();
     init_remote();
     init_shoot();
     init_gimbal();
     init_chassis();
-    // init_ui();
+    init_ui();
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -59,9 +58,8 @@ void RM_RTOS_Threads_Init(void) {
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
-    selftestTaskHandle = osThreadNew(selftestTask, nullptr, &selftestTaskAttribute);
-    //    if (ENABLE_UI)
-    //        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
+    if (ENABLE_UI)
+        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {

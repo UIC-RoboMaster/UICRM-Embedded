@@ -187,16 +187,16 @@ void uiTask(void* arg) {
 
         // Update self-diagnosis messages
         {
-            fl_motor_check_edge->input(selftest.fl_motor);
-            fr_motor_check_edge->input(selftest.fr_motor);
-            bl_motor_check_edge->input(selftest.bl_motor);
-            br_motor_check_edge->input(selftest.br_motor);
-            yaw_motor_check_edge->input(selftest.yaw_motor);
-            pitch_motor_check_edge->input(selftest.pitch_motor);
-            steer_motor_check_edge->input(selftest.steering_motor);
-            dbus_edge->input(selftest.dbus);
-            imu_cali_edge->input(selftest.imu_cali);
-            imu_temp_edge->input(selftest.imu_temp);
+            fl_motor_check_edge->input(true);
+            fr_motor_check_edge->input(true);
+            bl_motor_check_edge->input(true);
+            br_motor_check_edge->input(true);
+            yaw_motor_check_edge->input(true);
+            pitch_motor_check_edge->input(true);
+            steer_motor_check_edge->input(true);
+            dbus_edge->input(true);
+            imu_cali_edge->input(true);
+            imu_temp_edge->input(true);
             if (fl_motor_check_edge->negEdge()) {
                 strcpy(diagStr, "FL MOTOR OFFLINE     ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
@@ -240,7 +240,7 @@ void uiTask(void* arg) {
         }
 
         // clear self-diagnosis messages
-        if (selftest.dbus) {
+        if (dbus->IsOnline()) {
             v_edge->input(dbus->keyboard.bit.V);
         } else {
             v_edge->input(refereerc->remote_control.keyboard.bit.V);
@@ -296,7 +296,7 @@ void uiTask(void* arg) {
             osDelay(110);
             continue;
         }
-        if (selftest.dbus) {
+        if (dbus->IsOnline()) {
             c_edge->input(dbus->keyboard.bit.C);
         } else {
             c_edge->input(refereerc->remote_control.keyboard.bit.C);

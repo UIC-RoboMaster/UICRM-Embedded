@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,13 +18,23 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
+#include "connection_driver.h"
 
-#define SHOOT_OS_DELAY 1
-#define CHASSIS_OS_DELAY 1
-#define GIMBAL_OS_DELAY 1
-#define REMOTE_OS_DELAY 1
-#define DETECT_OS_DELAY 30
-#define UI_OS_DELAY 40
-#define SHOOT_REFEREE 0
-#define ENABLE_UI 1
+#include "bsp_os.h"
+namespace driver {
+    bool ConnectionDriver::IsOnline() const {
+        if (last_uptime_ == 0) {
+            return false;
+        }
+        return bsp::GetHighresTickMilliSec() - last_uptime_ < online_threshold_;
+    }
+    void ConnectionDriver::Heartbeat() {
+        last_uptime_ = bsp::GetHighresTickMilliSec();
+    }
+    uint32_t ConnectionDriver::GetLastUptime() {
+        return last_uptime_;
+    }
+    void ConnectionDriver::SetThreshold(uint32_t threshold) {
+        online_threshold_ = threshold;
+    }
+}  // namespace driver

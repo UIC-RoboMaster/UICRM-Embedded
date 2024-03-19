@@ -101,14 +101,14 @@ void chassisTask(void* arg) {
         // 更新状态机
         {
             last_keyboard = keyboard;
-            if (selftest.dbus) {
+            if (dbus->IsOnline()) {
                 keyboard = dbus->keyboard;
                 ch0_edge->input(dbus->ch0 != 0);
                 ch1_edge->input(dbus->ch1 != 0);
                 ch2_edge->input(dbus->ch2 != 0);
                 ch3_edge->input(dbus->ch3 != 0);
                 ch4_edge->input(dbus->ch4 != 0);
-            } else if (selftest.refereerc) {
+            } else if (refereerc->IsOnline()) {
                 keyboard = refereerc->remote_control.keyboard;
                 ch0_edge->input(false);
                 ch1_edge->input(false);
@@ -207,6 +207,15 @@ void chassisTask(void* arg) {
                 offset_yaw = vz_ramp->Calc(current_speed_offset);
             }
         }
+        if (abs(vx_set_org) < 0.05f) {
+            vx_set_org = 0;
+        }
+        if (abs(vy_set_org) < 0.05f) {
+            vy_set_org = 0;
+        }
+        if (abs(offset_yaw) < 0.05f) {
+            offset_yaw = 0;
+        }
         // 计算实际速度
         chassis_vx = vx_set_org;
         chassis_vy = vy_set_org;
@@ -260,6 +269,7 @@ void chassisTask(void* arg) {
                                   referee->power_heat_data.chassis_power_buffer, true);
                 osDelay(1);
                 break;
+
             default:
                 // Not Support
                 kill_chassis();

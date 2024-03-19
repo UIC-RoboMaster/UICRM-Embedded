@@ -20,6 +20,8 @@
 
 #include "remote_task.h"
 
+#include <string.h>
+
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
@@ -64,7 +66,7 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     while (1) {
         // Offline Detection && Security Check
-        is_dbus_offline = (!selftest.dbus) || dbus->swr == remote::DOWN;
+        is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
         // Kill Detection
         //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
         //        is_shoot_available =
@@ -97,12 +99,12 @@ void remoteTask(void* arg) {
         last_keyboard = keyboard;
         last_mouse = mouse;
         // Update State
-        if (selftest.dbus) {
+        if (dbus->IsOnline()) {
             state_r = dbus->swr;
             state_l = dbus->swl;
             keyboard = dbus->keyboard;
             mouse = dbus->mouse;
-        } else if (selftest.refereerc) {
+        } else if (refereerc->IsOnline()) {
             state_r = remote::MID;
             state_l = remote::MID;
             keyboard = refereerc->remote_control.keyboard;
@@ -125,7 +127,7 @@ void remoteTask(void* arg) {
         // remote mode switch
         switch (state_r) {
             case remote::UP:
-                if (last_state_r == remote::MID && selftest.dbus) {
+                if (last_state_r == remote::MID && dbus->IsOnline()) {
                     mode_switch = true;
                 }
                 break;
@@ -149,12 +151,12 @@ void remoteTask(void* arg) {
         if (is_shoot_available == true || SHOOT_REFEREE == 0) {
             switch (state_l) {
                 case remote::UP:
-                    if (last_state_l == remote::MID && selftest.dbus) {
+                    if (last_state_l == remote::MID && dbus->IsOnline()) {
                         shoot_fric_switch = true;
                     }
                     break;
                 case remote::DOWN:
-                    if (last_state_l == remote::MID && selftest.dbus) {
+                    if (last_state_l == remote::MID && dbus->IsOnline()) {
                         shoot_switch = true;
                         //                        shoot_burst_timestamp = 0;
                     }

@@ -33,7 +33,7 @@ namespace driver {
     }
 
     DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_m4310_mode_t mode)
-        : can_(can), rx_id_(rx_id), tx_id_(tx_id) {
+        : ConnectionDriver(50), can_(can), rx_id_(rx_id), tx_id_(tx_id) {
         can->RegisterRxCallback(rx_id, can_motor_4310_callback, this);
         /* following the CAN id format from the m4310 V2.1 document */
         mode_ = mode;
@@ -146,7 +146,6 @@ namespace driver {
             RM_EXPECT_TRUE(false, "Invalid mode number!");
         }
         can_->Transmit(tx_id_actual_, data, 8);
-        connection_flag_ = true;  // temp
     }
 
     void DMMotor4310::UpdateData(const uint8_t data[]) {
@@ -160,7 +159,7 @@ namespace driver {
         omega_ = uint_to_float(raw_vel_, V_MIN, V_MAX, 12);
         torque_ = uint_to_float(raw_torque_, T_MIN, T_MAX, 12);
 
-        connection_flag_ = true;
+        Heartbeat();
     }
 
     void DMMotor4310::PrintData() {

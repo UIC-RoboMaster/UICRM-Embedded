@@ -20,36 +20,29 @@
 
 #pragma once
 #include "MotorCanBase.h"
-#include "bsp_can.h"
-#include "can_bridge.h"
-#include "chassis.h"
+#include "bsp_gpio.h"
 #include "cmsis_os2.h"
-#include "gimbal_task.h"
 #include "imu_task.h"
 #include "main.h"
 #include "public_port.h"
 #include "referee_task.h"
 #include "remote_task.h"
-#include "selftest_task.h"
+#include "user_define.h"
 #include "utils.h"
-extern osThreadId_t chassisTaskHandle;
-const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
-                                             .attr_bits = osThreadDetached,
-                                             .cb_mem = nullptr,
-                                             .cb_size = 0,
-                                             .stack_mem = nullptr,
-                                             .stack_size = 512 * 4,
-                                             .priority = (osPriority_t)osPriorityAboveNormal,
-                                             .tz_module = 0,
-                                             .reserved = 0};
-void chassisTask(void* arg);
-void init_chassis();
-void kill_chassis();
+extern osThreadId_t shootTaskHandle;
+const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
+                                           .attr_bits = osThreadDetached,
+                                           .cb_mem = nullptr,
+                                           .cb_size = 0,
+                                           .stack_mem = nullptr,
+                                           .stack_size = 512 * 4,
+                                           .priority = (osPriority_t)osPriorityNormal,
+                                           .tz_module = 0,
+                                           .reserved = 0};
 
-extern float chassis_vx;
-extern float chassis_vy;
-extern float chassis_vz;
-extern bool chassis_boost_flag;
-const float chassis_vx_max = 660.0f;
-const float chassis_vy_max = 660.0f;
-const float chassis_vz_max = 660.0f;
+extern driver::Motor3508* flywheel_left;
+extern driver::Motor3508* flywheel_right;
+extern driver::Motor3508* steering_motor;
+void shootTask(void* arg);
+void init_shoot();
+void kill_shoot();

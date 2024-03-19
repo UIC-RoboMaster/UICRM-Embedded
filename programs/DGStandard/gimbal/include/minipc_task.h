@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,10 +18,8 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-//
-// Created by yangr on 2023/4/15.
-//
+#pragma once
+#include "protocol.h"
+extern communication::Host* minipc;
 
-#include "gimbal_data.h"
-
-// 此文件已经废弃，不再使用
+void init_minipc();

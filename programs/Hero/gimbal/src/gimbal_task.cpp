@@ -71,7 +71,7 @@ void gimbalTask(void* arg) {
     float pitch_ratio, yaw_ratio;
     float pitch_curr, yaw_curr;
     pitch_curr = -imu->INS_angle[2];
-    yaw_curr = -imu->INS_angle[0];
+    yaw_curr = imu->INS_angle[0];
     float pitch_target = 0, yaw_target = 0;
 
     while (true) {
@@ -85,7 +85,7 @@ void gimbalTask(void* arg) {
         if (!yaw_motor->IsEnable())
             yaw_motor->Enable();
         pitch_curr = -imu->INS_angle[2];
-        yaw_curr = -imu->INS_angle[0];
+        yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
         //    if (dbus->swr == remote::UP) {
@@ -97,7 +97,7 @@ void gimbalTask(void* arg) {
         //      osDelay(1);
         //      continue;
         //    }
-        if (selftest.dbus) {
+        if (dbus->IsOnline()) {
             if (dbus->mouse.y != 0) {
                 pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
             } else {
@@ -108,7 +108,7 @@ void gimbalTask(void* arg) {
             } else {
                 yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
             }
-        } else if (selftest.refereerc) {
+        } else if (refereerc->IsOnline()) {
             pitch_ratio = refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 7.0;
             yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 7.0;
         } else {
@@ -146,8 +146,8 @@ void gimbalTask(void* arg) {
 }
 
 void init_gimbal() {
-    pitch_motor = new driver::Motor6020(can2, 0x206);
-    yaw_motor = new driver::Motor6020(can1, 0x205);
+    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
+    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {
@@ -189,7 +189,7 @@ void init_gimbal() {
         .kp = 18,
         .ki = 0,
         .kd = 0,
-        .max_out = 6 * PI,
+        .max_out = 2 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B

@@ -20,6 +20,8 @@
 
 #include "gimbal_task.h"
 
+#include "minipc_task.h"
+
 osThreadId_t gimbalTaskHandle;
 
 driver::MotorCANBase* pitch_motor = nullptr;
@@ -27,6 +29,7 @@ driver::MotorCANBase* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
+INS_Angle_t INS_Angle;
 void gimbalTask(void* arg) {
     UNUSED(arg);
     // 任务启动时先关掉两个电机，然后等待遥控器连接
@@ -74,9 +77,8 @@ void gimbalTask(void* arg) {
 
     // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
     float pitch_ratio, yaw_ratio;
-    float pitch_curr, yaw_curr;
-    pitch_curr = ahrs->INS_angle[2];
-    yaw_curr = ahrs->INS_angle[0];
+    INS_Angle.pitch = ahrs->INS_angle[2];
+    INS_Angle.yaw = ahrs->INS_angle[0];
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
     float pitch_target = 0, yaw_target = 0;
@@ -96,8 +98,8 @@ void gimbalTask(void* arg) {
         }
 
         // 获取当前陀螺仪角度
-        pitch_curr = ahrs->INS_angle[2];
-        yaw_curr = ahrs->INS_angle[0];
+        INS_Angle.pitch = ahrs->INS_angle[2];
+        INS_Angle.yaw = ahrs->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
         //    if (dbus->swr == remote::UP) {
@@ -110,7 +112,7 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
-        if (selftest.dbus) {
+        if (dbus->IsOnline()) {
             if (dbus->mouse.y != 0) {
                 pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 3.0f;
             } else {
@@ -121,7 +123,7 @@ void gimbalTask(void* arg) {
             } else {
                 yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
             }
-        } else if (selftest.refereerc) {
+        } else if (refereerc->IsOnline()) {
             pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 3.0;
             yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 3.0;
         } else {
@@ -147,13 +149,18 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_FOLLOW:
                 // 如果是跟随模式或者旋转模式，将IMU作为参考系
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                gimbal->UpdateIMU(pitch_curr, yaw_curr);
+                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
                 break;
             case REMOTE_MODE_ADVANCED:
                 // 如果是高级模式，将电机获取的云台当前角度作为参考系
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
+                //            case REMOTE_MODE_AUTOAIM:
+                //                gimbal->TargetReal(minipc->target_angle.target_pitch,
+                //                                   minipc->target_angle.target_yaw);
+                //                gimbal->Update();
+                //                break;
             default:
                 kill_gimbal();
         }
@@ -183,7 +190,7 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
         .kp = 4000,
         .ki = 5,
-        .kd = 500,
+        .kd = 1000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
         .deadband = 0,                          // 死区
@@ -205,9 +212,9 @@ void init_gimbal() {
     yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 10,
+        .kp = 20,
         .ki = 0,
-        .kd = 20,
+        .kd = 0,
         .max_out = 3 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -219,9 +226,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 2000,
+        .kp = 2600,
         .ki = 0,
-        .kd = 100,
+        .kd = 4000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                            // 死区

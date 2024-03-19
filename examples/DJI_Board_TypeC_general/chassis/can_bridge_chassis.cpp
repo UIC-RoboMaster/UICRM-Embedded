@@ -82,7 +82,7 @@ void RM_RTOS_Init() {
     br_motor->SetTransmissionRatio(14);
 
     driver::supercap_init_t supercap_init = {
-        .can = can1,
+        .can = can2,
         .tx_id = 0x02e,
         .tx_settings_id = 0x02f,
         .rx_id = 0x030,
@@ -112,6 +112,8 @@ void RM_RTOS_Init() {
     chassis_data.has_super_capacitor = true;
     chassis_data.super_capacitor = super_cap;
     chassis = new control::Chassis(chassis_data);
+
+    chassis->SetMaxMotorSpeed(2 * PI * 7);
 
     chassis->CanBridgeSetTxId(0x51);
     can_bridge->RegisterRxCallback(0x70, chassis->CanBridgeUpdateEventXYWrapper, chassis);

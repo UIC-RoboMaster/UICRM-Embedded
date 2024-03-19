@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,44 +18,37 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "selftest_task.h"
+#pragma once
 
-osThreadId_t selftestTaskHandle;
+#include <stdint.h>
+namespace driver {
 
-selftest_t selftest;
-
-void selftestTask(void* arg) {
-    UNUSED(arg);
-    uint8_t i = 0;
-    while (true) {
-        // Test Can Motor
-
-        yaw_motor->connection_flag_ = false;
-        pitch_motor->connection_flag_ = false;
-        steering_motor->connection_flag_ = false;
-        // Test DBUS
-        dbus->connection_flag_ = false;
-        // Test Referee
-        referee->connection_flag_ = false;
-        if (i == 0)
-            refereerc->connection_flag_ = false;
-        osDelay(DETECT_OS_DELAY);
-
-        selftest.yaw_motor = yaw_motor->connection_flag_;
-        selftest.pitch_motor = pitch_motor->connection_flag_;
-        selftest.steering_motor = steering_motor->connection_flag_;
-        selftest.dbus = dbus->connection_flag_;
-        selftest.referee = referee->connection_flag_;
-        if (i == 2)
-            selftest.refereerc = refereerc->connection_flag_;
-
-        osDelay(DETECT_OS_DELAY);
-        i++;
-        if (i == 3) {
-            i = 0;
+    class ConnectionDriver {
+      public:
+        ConnectionDriver() = default;
+        explicit ConnectionDriver(uint32_t online_threshold) : online_threshold_(online_threshold) {
         }
-    }
-}
+        virtual ~ConnectionDriver() = default;
 
-void init_selftest() {
-}
+        /**
+         * @brief 判断节点是否在线
+         * @return true 表示当前连接节点在线，false 表示当前节点连接离线
+         */
+        bool IsOnline() const;
+
+        uint32_t GetLastUptime();
+
+        void SetThreshold(uint32_t threshold);
+
+      protected:
+        /* 节点上一个心跳包的时间 */
+        volatile uint64_t last_uptime_ = 0;
+        /* 判断节点离线的时间 */
+        uint32_t online_threshold_ = 500;
+        /**
+         * @brief 更新心跳包
+         */
+        void Heartbeat();
+    };
+
+}  // namespace driver
