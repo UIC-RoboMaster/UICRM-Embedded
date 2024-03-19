@@ -67,7 +67,7 @@ void buzzerTask(void* arg) {
 }
 
 void init_buzzer() {
-    buzzer = new driver::Buzzer(&htim4, 3, 1000000);
+    buzzer = new driver::Buzzer(&htim2, 4, 1000000);
     buzzer_thread = new bsp::EventThread(thread_init);
     buzzer_thread->Start();
 }

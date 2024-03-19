@@ -93,14 +93,18 @@ void chassisTask(void* arg) {
             continue;
         }
         {
-            if (!fl_motor->IsEnable())
+            if (!fl_motor->IsEnable() && fl_motor->IsOnline())
                 fl_motor->Enable();
-            if (!fr_motor->IsEnable())
+            if (!fr_motor->IsEnable() && fr_motor->IsOnline())
                 fr_motor->Enable();
-            if (!bl_motor->IsEnable())
+            if (!bl_motor->IsEnable() && bl_motor->IsOnline())
                 bl_motor->Enable();
-            if (!br_motor->IsEnable())
+            if (!br_motor->IsEnable() && br_motor->IsOnline())
                 br_motor->Enable();
+            if (fl_motor->IsOnline() && fr_motor->IsOnline() && bl_motor->IsOnline() &&
+                br_motor->IsOnline()) {
+                chassis->Enable();
+            }
         }
         {
             if (sbus->IsOnline()) {
@@ -193,7 +197,9 @@ void chassisTask(void* arg) {
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->SetPower(false, 30, 20, 100);
+                chassis->SetPower(true, (float)referee->game_robot_status.chassis_power_limit,
+                                  referee->power_heat_data.chassis_power,
+                                  (float)referee->power_heat_data.chassis_power_buffer);
                 chassis->Update();
                 break;
             case REMOTE_MODE_SPIN:
@@ -209,7 +215,9 @@ void chassisTask(void* arg) {
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->SetPower(false, 30, 20, 100);
+                chassis->SetPower(true, (float)referee->game_robot_status.chassis_power_limit,
+                                  referee->power_heat_data.chassis_power,
+                                  (float)referee->power_heat_data.chassis_power_buffer);
                 chassis->Update();
                 break;
             case REMOTE_MODE_ADVANCED:
@@ -219,7 +227,9 @@ void chassisTask(void* arg) {
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->SetPower(false, 30, 20, 100);
+                chassis->SetPower(true, (float)referee->game_robot_status.chassis_power_limit,
+                                  referee->power_heat_data.chassis_power,
+                                  (float)referee->power_heat_data.chassis_power_buffer);
                 chassis->Update();
                 break;
             default:

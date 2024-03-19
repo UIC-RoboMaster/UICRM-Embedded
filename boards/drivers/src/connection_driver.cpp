@@ -19,10 +19,11 @@
  ###########################################################*/
 
 #include "connection_driver.h"
+
 #include "bsp_os.h"
 namespace driver {
     bool ConnectionDriver::IsOnline() const {
-        if(last_uptime_==0){
+        if (last_uptime_ == 0) {
             return false;
         }
         return bsp::GetHighresTickMilliSec() - last_uptime_ < online_threshold_;

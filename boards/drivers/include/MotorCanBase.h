@@ -22,12 +22,11 @@
 #include <unordered_map>
 
 #include "MotorBase.h"
-#include "connection_driver.h"
 #include "bsp_can.h"
 #include "bsp_thread.h"
+#include "connection_driver.h"
 #include "pid.h"
 #include "utils.h"
-
 
 #define M3508P19_MAX_OUTPUT 12000.0f
 
@@ -39,7 +38,7 @@ namespace driver {
     /**
      * @brief Basic Interface for DJI Motor with CAN communication
      */
-    class MotorCANBase : public MotorBase, public ConnectionDriver{
+    class MotorCANBase : public MotorBase, public ConnectionDriver {
       public:
         enum motor_mode {
             NONE = 0x00,

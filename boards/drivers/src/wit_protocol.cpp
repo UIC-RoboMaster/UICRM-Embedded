@@ -21,7 +21,7 @@
 #include "wit_protocol.h"
 
 namespace imu {
-    WITUART::WITUART(bsp::UART* uart): driver::ConnectionDriver(100){
+    WITUART::WITUART(bsp::UART* uart) : driver::ConnectionDriver(100) {
         uart_ = uart;
 
         uart_->SetupRxData(&read_ptr_, &read_len_);

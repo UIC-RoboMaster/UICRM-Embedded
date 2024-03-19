@@ -20,37 +20,28 @@
 
 #include "main.h"
 
-#include "MotorCanBase.h"
-#include "bsp_can.h"
 #include "bsp_print.h"
-#include "buzzer_notes.h"
-#include "buzzer_task.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "supercap.h"
+#include "dbus.h"
 
-bsp::CAN* can1 = nullptr;
-bsp::CAN* can2 = nullptr;
+bsp::CAN* can = nullptr;
 driver::MotorCANBase* fl_motor = nullptr;
 driver::MotorCANBase* fr_motor = nullptr;
 driver::MotorCANBase* bl_motor = nullptr;
 driver::MotorCANBase* br_motor = nullptr;
 
-driver::SuperCap* super_cap = nullptr;
-
 control::Chassis* chassis = nullptr;
-communication::CanBridge* can_bridge = nullptr;
+remote::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init() {
-    HAL_Delay(100);
-    print_use_uart(&huart1);
-    can2 = new bsp::CAN(&hcan2, false);
-    can1 = new bsp::CAN(&hcan1, true);
-    fl_motor = new driver::Motor3508(can2, 0x202);
-    fr_motor = new driver::Motor3508(can2, 0x201);
-    bl_motor = new driver::Motor3508(can2, 0x203);
-    br_motor = new driver::Motor3508(can2, 0x204);
-
+    HAL_Delay(200);
+    print_use_uart(&huart5);
+    can = new bsp::CAN(&hcan2, false);
+    fl_motor = new driver::Motor3508(can, 0x202);
+    fr_motor = new driver::Motor3508(can, 0x201);
+    bl_motor = new driver::Motor3508(can, 0x203);
+    br_motor = new driver::Motor3508(can, 0x204);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
         .ki = 3,
@@ -70,38 +61,19 @@ void RM_RTOS_Init() {
 
     fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     fl_motor->SetMode(driver::MotorCANBase::OMEGA);
-    fl_motor->SetTransmissionRatio(14);
+    fl_motor->SetTransmissionRatio(19);
 
     fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     fr_motor->SetMode(driver::MotorCANBase::OMEGA);
-    fr_motor->SetTransmissionRatio(14);
+    fr_motor->SetTransmissionRatio(19);
 
     bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     bl_motor->SetMode(driver::MotorCANBase::OMEGA);
-    bl_motor->SetTransmissionRatio(14);
+    bl_motor->SetTransmissionRatio(19);
 
     br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
-    br_motor->SetTransmissionRatio(14);
-
-    driver::supercap_init_t supercap_init = {
-        .can = can1,
-        .tx_id = 0x02e,
-        .tx_settings_id = 0x02f,
-        .rx_id = 0x030,
-    };
-    super_cap = new driver::SuperCap(supercap_init);
-    super_cap->Disable();
-    super_cap->TransmitSettings();
-    super_cap->Enable();
-    super_cap->TransmitSettings();
-    super_cap->SetMaxVoltage(24.0f);
-    super_cap->SetPowerTotal(100.0f);
-    super_cap->SetMaxChargePower(150.0f);
-    super_cap->SetMaxDischargePower(250.0f);
-    super_cap->SetPerferBuffer(50.0f);
-
-    can_bridge = new communication::CanBridge(can1, 0x52);
+    br_motor->SetTransmissionRatio(19);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
@@ -112,29 +84,26 @@ void RM_RTOS_Init() {
     control::chassis_t chassis_data;
     chassis_data.motors = motors;
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
-    chassis_data.has_super_capacitor = true;
-    chassis_data.super_capacitor = super_cap;
     chassis = new control::Chassis(chassis_data);
 
-    chassis->SetMaxMotorSpeed(2 * PI * 7);
-
-    chassis->CanBridgeSetTxId(0x51);
-    can_bridge->RegisterRxCallback(0x70, chassis->CanBridgeUpdateEventXYWrapper, chassis);
-    can_bridge->RegisterRxCallback(0x71, chassis->CanBridgeUpdateEventTurnWrapper, chassis);
-    can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
-    can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
-
+    dbus = new remote::DBUS(&huart3);
     HAL_Delay(300);
-    init_buzzer();
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
 
-    osDelay(500);
-    Buzzer_Sing(Mario);
+    osDelay(500);  // DBUS initialization needs time
 
     while (true) {
+        const float ratio = 1.0f / 660.0f * 6 * PI;
+        chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
+
+        // Kill switch
+        if (dbus->swl == remote::UP || dbus->swl == remote::DOWN) {
+            RM_ASSERT_TRUE(false, "Operation killed");
+        }
+        chassis->SetPower(false, 30, 20, 60);
         chassis->Update();
         osDelay(10);
     }

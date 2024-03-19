@@ -190,7 +190,7 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
         .kp = 4000,
         .ki = 5,
-        .kd = 500,
+        .kd = 1000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
         .deadband = 0,                          // 死区
@@ -212,9 +212,9 @@ void init_gimbal() {
     yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 10,
+        .kp = 20,
         .ki = 0,
-        .kd = 20,
+        .kd = 0,
         .max_out = 3 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -226,9 +226,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 2000,
+        .kp = 2600,
         .ki = 0,
-        .kd = 100,
+        .kd = 4000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                            // 死区

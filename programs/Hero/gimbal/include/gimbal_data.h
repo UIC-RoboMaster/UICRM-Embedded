@@ -18,42 +18,15 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_os.h"
+#pragma once
+#include "gimbal.h"
+#include "pid.h"
 
-#include "cmsis_os.h"
-#include "task.h"
-
-static TIM_HandleTypeDef* htim_os = nullptr;
-
-/**
- * @brief override FreeRTOS weak function to configure the timer used for
- * generating run-time stats
- */
-extern "C" void configureTimerForRunTimeStats(void) {
-    if (!htim_os)
-        return;
-    __HAL_TIM_SET_AUTORELOAD(htim_os, 0xffffffff);
-    __HAL_TIM_SET_COUNTER(htim_os, 0);
-    __HAL_TIM_ENABLE(htim_os);
-}
-
-extern "C" unsigned long getRunTimeCounterValue(void) {
-    if (!htim_os)
-        return 0;
-    return htim_os->Instance->CNT;
-}
-
-namespace bsp {
-
-    void SetHighresClockTimer(TIM_HandleTypeDef* htim) {
-        htim_os = htim;
-    }
-
-    uint64_t GetHighresTickMicroSec(void) {
-        return getRunTimeCounterValue();
-    }
-
-    uint32_t GetHighresTickMilliSec(void) {
-        return HAL_GetTick();
-    }
-} /* namespace bsp */
+// basic information of gimbal
+const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 0.9750f,
+                                                 .yaw_offset_ = 1.6820f,
+                                                 .pitch_max_ = 0.5039f,
+                                                 .yaw_max_ = PI,
+                                                 .yaw_circle_ = true,
+                                                 .pitch_inverted = true,
+                                                 .yaw_inverted = false};

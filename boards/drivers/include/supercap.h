@@ -291,6 +291,5 @@ namespace driver {
         float max_discharge_power_ = 250.0f;
         volatile float perfer_buffer_ = 45.0f;
         supercap_send_flags_t tx_flags_ = {0};
-
     };
 }  // namespace driver

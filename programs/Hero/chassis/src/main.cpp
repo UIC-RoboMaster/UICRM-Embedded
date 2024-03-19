@@ -43,7 +43,7 @@ communication::CanBridge* can_bridge = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
-    print_use_uart(&huart1);
+    print_use_uart(&huart5);
     can2 = new bsp::CAN(&hcan2, false);
     can1 = new bsp::CAN(&hcan1, true);
     fl_motor = new driver::Motor3508(can2, 0x202);
@@ -70,19 +70,19 @@ void RM_RTOS_Init() {
 
     fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     fl_motor->SetMode(driver::MotorCANBase::OMEGA);
-    fl_motor->SetTransmissionRatio(14);
+    fl_motor->SetTransmissionRatio(19);
 
     fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     fr_motor->SetMode(driver::MotorCANBase::OMEGA);
-    fr_motor->SetTransmissionRatio(14);
+    fr_motor->SetTransmissionRatio(19);
 
     bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     bl_motor->SetMode(driver::MotorCANBase::OMEGA);
-    bl_motor->SetTransmissionRatio(14);
+    bl_motor->SetTransmissionRatio(19);
 
     br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
-    br_motor->SetTransmissionRatio(14);
+    br_motor->SetTransmissionRatio(19);
 
     driver::supercap_init_t supercap_init = {
         .can = can1,
@@ -116,7 +116,7 @@ void RM_RTOS_Init() {
     chassis_data.super_capacitor = super_cap;
     chassis = new control::Chassis(chassis_data);
 
-    chassis->SetMaxMotorSpeed(2 * PI * 7);
+    chassis->SetMaxMotorSpeed(2 * PI * 8);
 
     chassis->CanBridgeSetTxId(0x51);
     can_bridge->RegisterRxCallback(0x70, chassis->CanBridgeUpdateEventXYWrapper, chassis);

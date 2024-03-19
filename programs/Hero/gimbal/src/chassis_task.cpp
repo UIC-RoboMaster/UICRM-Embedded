@@ -124,7 +124,7 @@ void chassisTask(void* arg) {
             x_edge->input(keyboard.bit.X);
         }
 
-        relative_angle = -yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
@@ -204,7 +204,7 @@ void chassisTask(void* arg) {
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
-                yaw_pid_error = -yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+                yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
                 if (fabs(yaw_pid_error) < 0.01f) {
                     yaw_pid_error = 0;
                 }

@@ -33,7 +33,7 @@ namespace remote {
      * @brief DBUS remote receiver class
      * @note used for DJI DR16 receiver
      */
-    class SBUS : public bsp::UART,public driver::ConnectionDriver {
+    class SBUS : public bsp::UART, public driver::ConnectionDriver {
       public:
         /**
          * @brief 构造函数

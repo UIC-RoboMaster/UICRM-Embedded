@@ -33,7 +33,7 @@ namespace driver {
     }
 
     DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_m4310_mode_t mode)
-        : ConnectionDriver(50),can_(can), rx_id_(rx_id), tx_id_(tx_id) {
+        : ConnectionDriver(50), can_(can), rx_id_(rx_id), tx_id_(tx_id) {
         can->RegisterRxCallback(rx_id, can_motor_4310_callback, this);
         /* following the CAN id format from the m4310 V2.1 document */
         mode_ = mode;

@@ -19,14 +19,12 @@
  ###########################################################*/
 
 #pragma once
-#include "gimbal.h"
-#include "pid.h"
 
-// basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 0.9750f,
-                                                 .yaw_offset_ = 4.6986f,
-                                                 .pitch_max_ = 0.5039f,
-                                                 .yaw_max_ = PI / 2,
-                                                 .yaw_circle_ = true,
-                                                 .pitch_inverted = true,
-                                                 .yaw_inverted = true};
+#define SHOOT_OS_DELAY 1
+#define CHASSIS_OS_DELAY 10 - 2
+#define GIMBAL_OS_DELAY 1
+#define REMOTE_OS_DELAY 1
+#define DETECT_OS_DELAY 30
+#define UI_OS_DELAY 40
+#define SHOOT_REFEREE 0
+#define ENABLE_UI 1

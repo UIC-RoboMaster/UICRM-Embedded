@@ -47,7 +47,7 @@ namespace imu {
         WIT_RX_READ_REG = 0x5F,
     };
 
-    class WITUART :public driver::ConnectionDriver {
+    class WITUART : public driver::ConnectionDriver {
       public:
         explicit WITUART(bsp::UART* uart);
         ~WITUART();

@@ -55,7 +55,13 @@ namespace driver {
     void* MotorCANBase::post_output_callback_instance_ = nullptr;
 
     MotorCANBase::MotorCANBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
-        : ConnectionDriver(delay_time*30),theta_(0), omega_(0),output_shaft_theta_(0),output_shaft_omega_(0), can_(can), rx_id_(rx_id) {
+        : ConnectionDriver(delay_time * 30),
+          theta_(0),
+          omega_(0),
+          output_shaft_theta_(0),
+          output_shaft_omega_(0),
+          can_(can),
+          rx_id_(rx_id) {
         // 大疆的电机，自动识别TX_ID
         if (tx_id == 0x00) {
             constexpr uint16_t GROUP_SIZE = 4;
@@ -412,7 +418,7 @@ namespace driver {
     }
 
     void Motor3508::PrintData() const {
-        print("online: %s ",(IsOnline()? "true" : "false"));
+        print("online: %s ", (IsOnline() ? "true" : "false"));
         print("theta: % .4f ", GetTheta());
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
@@ -456,7 +462,7 @@ namespace driver {
     }
 
     void Motor6020::PrintData() const {
-        print("online: %s ",(IsOnline()? "true" : "false"));
+        print("online: %s ", (IsOnline() ? "true" : "false"));
         print("theta: % .4f ", GetTheta());
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
@@ -496,7 +502,7 @@ namespace driver {
     }
 
     void Motor2006::PrintData() const {
-        print("online: %s ",(IsOnline()? "true" : "false"));
+        print("online: %s ", (IsOnline() ? "true" : "false"));
         print("theta: % .4f ", GetTheta());
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
@@ -536,7 +542,7 @@ namespace driver {
     }
 
     void MotorDM4310::PrintData() const {
-        print("online: %s ",(IsOnline()? "true" : "false"));
+        print("online: %s ", (IsOnline() ? "true" : "false"));
         print("theta: % .4f ", GetTheta());
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());

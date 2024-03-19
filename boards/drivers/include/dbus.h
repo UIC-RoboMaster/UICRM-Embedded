@@ -21,8 +21,8 @@
 #pragma once
 
 #include "bsp_uart.h"
-#include "dbus_package.h"
 #include "connection_driver.h"
+#include "dbus_package.h"
 
 namespace remote {
 
@@ -40,7 +40,7 @@ namespace remote {
      * @brief DBUS remote receiver class
      * @note used for DJI DR16 receiver
      */
-    class DBUS : public bsp::UART,public driver::ConnectionDriver {
+    class DBUS : public bsp::UART, public driver::ConnectionDriver {
       public:
         /**
          * @brief 构造函数

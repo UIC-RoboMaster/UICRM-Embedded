@@ -19,8 +19,9 @@
  ###########################################################*/
 
 #include "chassis.h"
-#include "bsp_os.h"
+
 #include "bsp_error_handler.h"
+#include "bsp_os.h"
 
 namespace control {
 
@@ -138,25 +139,25 @@ namespace control {
                 super_capacitor_enable_ = false;
             }
 
-                super_capacitor_->SetPowerTotal(max(power_limit_info_.power_limit-25.0f,30.0f));
+            super_capacitor_->SetPowerTotal(max(power_limit_info_.power_limit - 25.0f, 30.0f));
         }
     }
 
     void Chassis::Update() {
         bool need_shutdown = !IsOnline();
-        for(int i = 0; i < wheel_num_; i++){
-            if(!motors_[i]->IsOnline()){
+        for (int i = 0; i < wheel_num_; i++) {
+            if (!motors_[i]->IsOnline()) {
                 need_shutdown = true;
                 break;
             }
         }
-        if(need_shutdown){
+        if (need_shutdown) {
             Disable();
         }
 
-        if(has_super_capacitor_ && super_capacitor_->IsOnline()){
+        if (has_super_capacitor_ && super_capacitor_->IsOnline()) {
             super_capacitor_->TransmitSettings();
-             super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
+            super_capacitor_->UpdateCurrentBuffer(current_chassis_power_buffer_);
         }
 
         if (!chassis_enable_) {
@@ -196,9 +197,6 @@ namespace control {
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
-
-
-
     }
 
     void Chassis::CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id,
@@ -287,7 +285,7 @@ namespace control {
         power_limit_info_.power_limit = data.data_two_float.data[1];
         power_limit_info_.WARNING_power = data.data_two_float.data[1] * 0.9f;
         if (has_super_capacitor_) {
-            super_capacitor_->SetPowerTotal(max(power_limit_info_.power_limit-25.0f,30.0f));
+            super_capacitor_->SetPowerTotal(max(power_limit_info_.power_limit - 25.0f, 30.0f));
         }
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
@@ -310,7 +308,7 @@ namespace control {
     void Chassis::UpdatePowerLimit() {
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
-            case CHASSIS_OMNI_WHEEL:{
+            case CHASSIS_OMNI_WHEEL: {
                 float input[FourWheel::motor_num];
                 float output[FourWheel::motor_num];
                 for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
@@ -329,10 +327,8 @@ namespace control {
                                              current_chassis_power_, current_chassis_power_buffer_,
                                              input, output);
                     } else {
-
-                            for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
-                                output[i] = input[i];
-
+                        for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
+                            output[i] = input[i];
                     }
                 }
 
@@ -429,6 +425,5 @@ namespace control {
             }
         }
     }
-
 
 } /* namespace control */

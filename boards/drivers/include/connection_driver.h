@@ -26,7 +26,8 @@ namespace driver {
     class ConnectionDriver {
       public:
         ConnectionDriver() = default;
-        explicit ConnectionDriver(uint32_t online_threshold) : online_threshold_(online_threshold) {}
+        explicit ConnectionDriver(uint32_t online_threshold) : online_threshold_(online_threshold) {
+        }
         virtual ~ConnectionDriver() = default;
 
         /**

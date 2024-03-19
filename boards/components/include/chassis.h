@@ -22,10 +22,10 @@
 
 #include "MotorCanBase.h"
 #include "can_bridge.h"
+#include "connection_driver.h"
 #include "pid.h"
 #include "power_limit.h"
 #include "supercap.h"
-#include "connection_driver.h"
 
 #define MAX_WHEEL_NUM 8
 
@@ -34,7 +34,7 @@ namespace control {
     /**
      * @brief chassis models
      */
-    typedef enum { CHASSIS_MECANUM_WHEEL,CHASSIS_OMNI_WHEEL } chassis_model_t;
+    typedef enum { CHASSIS_MECANUM_WHEEL, CHASSIS_OMNI_WHEEL } chassis_model_t;
 
     /**
      * @brief structure used when chassis instance is initialized
@@ -138,7 +138,6 @@ namespace control {
 
         void SetMaxMotorSpeed(float max_speed);
 
-
       private:
         // acquired from user
         driver::MotorCANBase** motors_ = nullptr;
@@ -177,8 +176,6 @@ namespace control {
         driver::SuperCap* super_capacitor_ = nullptr;
 
         float max_motor_speed_ = 2 * PI * 10;
-
-
     };
 
     class ChassisCanBridgeSender {
@@ -208,7 +205,6 @@ namespace control {
                       float chassis_power_buffer, bool enable_supercap = false,
                       bool force_update = false);
 
-
       private:
         communication::CanBridge* can_bridge_;
         bool chassis_enable_ = true;
@@ -222,7 +218,6 @@ namespace control {
         uint8_t chassis_current_power_reg_id_ = 0x00;
         communication::can_bridge_ext_id_t rx_id_;
         communication::can_bridge_data_t data_;
-
     };
 
 }  // namespace control

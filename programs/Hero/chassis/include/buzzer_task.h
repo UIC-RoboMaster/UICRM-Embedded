@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -20,11 +20,22 @@
 
 #pragma once
 
-#define SHOOT_OS_DELAY 1
-#define CHASSIS_OS_DELAY 1
-#define GIMBAL_OS_DELAY 1
-#define REMOTE_OS_DELAY 1
-#define DETECT_OS_DELAY 30
-#define UI_OS_DELAY 40
-#define SHOOT_REFEREE 0
-#define ENABLE_UI 1
+#include "buzzer.h"
+#include "cmsis_os2.h"
+
+#define BUZZER_SIGNAL (1 << 0)
+
+extern driver::Buzzer* buzzer;
+
+const osThreadAttr_t buzzerTaskAttribute = {.name = "buzzerTask",
+                                            .attr_bits = osThreadDetached,
+                                            .cb_mem = nullptr,
+                                            .cb_size = 0,
+                                            .stack_mem = nullptr,
+                                            .stack_size = 128 * 4,
+                                            .priority = (osPriority_t)osPriorityBelowNormal,
+                                            .tz_module = 0,
+                                            .reserved = 0};
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song);
+void buzzerTask(void* arg);
+void init_buzzer();

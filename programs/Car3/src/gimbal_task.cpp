@@ -101,7 +101,7 @@ void gimbalTask(void* arg) {
         if (pitch_ratio == 0 && yaw_ratio == 0 && refereerc->IsOnline()) {
             pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 3.0;
             yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 3.0;
-        } else {
+        } else if (!sbus->IsOnline()) {
             pitch_ratio = 0;
             yaw_ratio = 0;
         }
@@ -155,7 +155,7 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
-        .kp = 2000,
+        .kp = 4000,
         .ki = 100,
         .kd = 0,
         .max_out = 25000,
@@ -178,7 +178,7 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
         .kp = 18,
         .ki = 0,
-        .kd = 0,
+        .kd = 200,
         .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -190,9 +190,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 1500,
+        .kp = 3000,
         .ki = 0.5,
-        .kd = 0,
+        .kd = 3000,
         .max_out = 25000,
         .max_iout = 10000,
         .deadband = 0,                          // 死区

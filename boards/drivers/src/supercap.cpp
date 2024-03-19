@@ -24,7 +24,7 @@
 
 #include "supercap.h"
 namespace driver {
-    SuperCap::SuperCap(driver::supercap_init_t init): ConnectionDriver(100){
+    SuperCap::SuperCap(driver::supercap_init_t init) : ConnectionDriver(100) {
         can_ = init.can;
         tx_id_ = init.tx_id;
         tx_settings_id_ = init.tx_settings_id;
