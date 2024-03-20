@@ -125,7 +125,7 @@ void uiTask(void* arg) {
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
         pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
         // 更新底盘转速码表
-        chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max,
+        chassisGUI->Update(chassis_vx / chassis_max_xy_speed, chassis_vy / chassis_max_xy_speed,
                            relative_angle);
         osDelay(UI_OS_DELAY);
 
