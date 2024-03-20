@@ -21,19 +21,19 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
+const float chassis_max_xy_speed = 2*PI;
+const float chassis_max_t_speed = 2*PI;
+
 float chassis_vx = 0;
 float chassis_vy = 0;
-float chassis_vz = 0;
+float chassis_vt = 0;
 bool chassis_boost_flag = true;
-const float speed_offset = 660;
-const float speed_offset_boost = 1320;
 
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
 
 void chassisTask(void* arg) {
     UNUSED(arg);
-    // 开机关闭底盘
     kill_chassis();
     osDelay(1000);
 
@@ -46,50 +46,9 @@ void chassisTask(void* arg) {
         osDelay(1);
     }
 
-    // 初始化与云台的相对角度
-    float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-
-    // 初始化各变量和状态机
-    // float last_speed = 0;
-    float sin_yaw, cos_yaw, vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
-    float offset_yaw = 0;
-    float spin_speed = 350;
-    float manual_mode_yaw_pid_args[3] = {200, 0.5, 20};
-    float manual_mode_yaw_pid_max_iout = 100;
-    float manual_mode_yaw_pid_max_out = 350;
-    control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
-        manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
-    manual_mode_pid->Reset();
-    float yaw_pid_error = 0;
-    float manual_mode_pid_output = 0;
-    float current_speed_offset = speed_offset_boost;
-    remote::keyboard_t keyboard;
-    remote::keyboard_t last_keyboard;
-    RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2, 0.01);
-    RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2, 0.01);
-    RampSource* vz_ramp = new RampSource(0, -chassis_vz_max / 2, chassis_vz_max / 2, 0.01);
-    BoolEdgeDetector* w_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* s_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* a_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* d_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* shift_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* q_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* e_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* x_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* ch0_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* ch1_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* ch2_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* ch3_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* ch4_edge = new BoolEdgeDetector(false);
-
-    // 开底盘
     chassis->Enable();
 
-    // 速度转换比例，660=>16PI
-    const float ratio = 1.0f / 660.0f * 16 * PI;
-
     while (true) {
-        // 离线杀底盘
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
             while (remote_mode == REMOTE_MODE_KILL) {
@@ -98,183 +57,96 @@ void chassisTask(void* arg) {
             chassis->Enable();
             continue;
         }
-        // 更新状态机
+
+        remote::keyboard_t keyboard;
+        if (dbus->IsOnline()) {
+            keyboard = dbus->keyboard;
+        } else if (refereerc->IsOnline()) {
+            keyboard = refereerc->remote_control.keyboard;
+        }
+
+        // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
+        float car_vx, car_vy, car_vt;
+//        if (keyboard.bit.X) {
+//            // 刹车
+//            car_vx = 0;
+//            car_vy = 0;
+//            car_vt = 0;
+//        } else
+        if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
+            // 优先使用遥控器
+            car_vx = dbus->ch0 / dbus->ROCKER_MAX;
+            car_vy = dbus->ch1 / dbus->ROCKER_MAX;
+            car_vt = dbus->ch4 / dbus->ROCKER_MAX;
+        } else {
+            // 使用键盘
+            const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
+            const float keyboard_spin_speed = 0.01;
+            car_vx = (keyboard.bit.D - keyboard.bit.A) * keyboard_speed;
+            car_vy = (keyboard.bit.W - keyboard.bit.S) * keyboard_speed;
+            car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
+        }
+
+        // 云台和底盘的角度差
+        float chassis_yaw_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+
+        // 底盘以底盘自己为基准的运动速度
+        float sin_yaw = arm_sin_f32(chassis_yaw_diff);
+        float cos_yaw = arm_cos_f32(chassis_yaw_diff);
+        chassis_vx = cos_yaw * car_vx + sin_yaw * car_vy;
+        chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
+        chassis_vt = 0;
+
+        if (remote_mode == REMOTE_MODE_ADVANCED)
         {
-            last_keyboard = keyboard;
-            if (dbus->IsOnline()) {
-                keyboard = dbus->keyboard;
-                ch0_edge->input(dbus->ch0 != 0);
-                ch1_edge->input(dbus->ch1 != 0);
-                ch2_edge->input(dbus->ch2 != 0);
-                ch3_edge->input(dbus->ch3 != 0);
-                ch4_edge->input(dbus->ch4 != 0);
-            } else if (refereerc->IsOnline()) {
-                keyboard = refereerc->remote_control.keyboard;
-                ch0_edge->input(false);
-                ch1_edge->input(false);
-                ch2_edge->input(false);
-                ch3_edge->input(false);
-                ch4_edge->input(false);
-            }
+            // 手动模式下，遥控器直接控制底盘速度
+            chassis_vx = car_vx;
+            chassis_vy = car_vy;
+            chassis_vt = car_vt;
         }
+
+        if (remote_mode == REMOTE_MODE_FOLLOW)
         {
-            w_edge->input(keyboard.bit.W);
-            s_edge->input(keyboard.bit.S);
-            a_edge->input(keyboard.bit.A);
-            d_edge->input(keyboard.bit.D);
-            shift_edge->input(keyboard.bit.SHIFT);
-            q_edge->input(keyboard.bit.Q);
-            e_edge->input(keyboard.bit.E);
-            x_edge->input(keyboard.bit.X);
+            // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向
+            const float angle_threshold = 0.02f;
+            float chassis_vt_pid_error = chassis_yaw_diff;
+            if (fabs(chassis_vt_pid_error) < angle_threshold) {
+                chassis_vt_pid_error = 0;
+            }
+
+            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(2 / (2*PI), 0, 0, 0.5, 1);
+            chassis_vt += chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
         }
 
-        // 更新云台角度
-        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        if (remote_mode == REMOTE_MODE_SPIN)
+        {
+            // 小陀螺模式，拨盘用来控制底盘加速度
+            static float spin_speed = 660;
+            spin_speed = spin_speed + car_vt * 0.05;
+            spin_speed = clip<float>(spin_speed, -660, 660);
+            chassis_vt = spin_speed;
+        }
 
-        // 计算角度的sin/cos
-        sin_yaw = arm_sin_f32(relative_angle);
-        cos_yaw = arm_cos_f32(relative_angle);
-        // 检测到shift，切换速度模式
-        if (shift_edge->posEdge()) {
-            if (chassis_boost_flag) {
-                chassis_boost_flag = false;
-                vx_ramp->SetMax(chassis_vx_max / 2);
-                vy_ramp->SetMax(chassis_vy_max / 2);
-                vz_ramp->SetMax(chassis_vz_max / 2);
-                vx_ramp->SetMin(-chassis_vx_max / 2);
-                vy_ramp->SetMin(-chassis_vy_max / 2);
-                vz_ramp->SetMin(-chassis_vz_max / 2);
-                current_speed_offset = speed_offset;
-            } else {
-                chassis_boost_flag = true;
-                vx_ramp->SetMax(chassis_vx_max);
-                vy_ramp->SetMax(chassis_vy_max);
-                vz_ramp->SetMax(chassis_vz_max);
-                vx_ramp->SetMin(-chassis_vx_max);
-                vy_ramp->SetMin(-chassis_vy_max);
-                vz_ramp->SetMin(-chassis_vz_max);
-                current_speed_offset = speed_offset_boost;
-            }
-        }
-        // 平移速度控制
-        if (ch0_edge->get()) {
-            vx_set_org = dbus->ch0;
-        } else if (ch0_edge->negEdge() || x_edge->posEdge()) {
-            vx_set_org = 0;
-            vx_ramp->SetCurrent(0);
-        } else if (d_edge->get()) {
-            vx_set_org = vx_ramp->Calc(current_speed_offset);
-        } else if (a_edge->get()) {
-            vx_set_org = vx_ramp->Calc(-current_speed_offset);
-        } else {
-            if (vx_set_org > 0) {
-                vx_set_org = vx_ramp->Calc(-current_speed_offset);
-            } else if (vx_set_org < 0) {
-                vx_set_org = vx_ramp->Calc(current_speed_offset);
-            }
-        }
-        // 前进速度控制
-        if (ch1_edge->get()) {
-            vy_set_org = dbus->ch1;
-        } else if (ch1_edge->negEdge() || x_edge->posEdge()) {
-            vy_set_org = 0;
-            vy_ramp->SetCurrent(0);
-        } else if (w_edge->get()) {
-            vy_set_org = vy_ramp->Calc(current_speed_offset);
-        } else if (s_edge->get()) {
-            vy_set_org = vy_ramp->Calc(-current_speed_offset);
-        } else {
-            if (vy_set_org > 0) {
-                vy_set_org = vy_ramp->Calc(-current_speed_offset);
-            } else if (vy_set_org < 0) {
-                vy_set_org = vy_ramp->Calc(current_speed_offset);
-            }
-        }
-        // 旋转速度控制（如果需要）
-        if (ch4_edge->get()) {
-            offset_yaw = dbus->ch4;
-        } else if (ch4_edge->negEdge() || x_edge->posEdge()) {
-            offset_yaw = 0;
-            vz_ramp->SetCurrent(0);
-        } else if (e_edge->get()) {
-            offset_yaw = vz_ramp->Calc(current_speed_offset);
-        } else if (q_edge->get()) {
-            offset_yaw = vz_ramp->Calc(-current_speed_offset);
-        } else {
-            if (offset_yaw > 0) {
-                offset_yaw = vz_ramp->Calc(-current_speed_offset);
-            } else if (offset_yaw < 0) {
-                offset_yaw = vz_ramp->Calc(current_speed_offset);
-            }
-        }
-        if (abs(vx_set_org) < 0.05f) {
-            vx_set_org = 0;
-        }
-        if (abs(vy_set_org) < 0.05f) {
-            vy_set_org = 0;
-        }
-        if (abs(offset_yaw) < 0.05f) {
-            offset_yaw = 0;
-        }
-        // 计算实际速度
-        chassis_vx = vx_set_org;
-        chassis_vy = vy_set_org;
-        chassis_vz = offset_yaw;
-        vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
-        vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
-        switch (remote_mode) {
-            case REMOTE_MODE_FOLLOW:
-                // 云台跟随模式，底盘跟随云台前进
-                yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-                if (fabs(yaw_pid_error) < 0.01f) {
-                    yaw_pid_error = 0;
-                }
-                manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);
-                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
-                osDelay(1);
-                // 当前底盘功率限制
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer, true);
-                osDelay(1);
-                break;
-            case REMOTE_MODE_SPIN:
-                // 小陀螺模式
-                //                if (offset_yaw != 0) {
-                //                    // 旋转速度叠加
-                //                    spin_speed = spin_speed + offset_yaw;
-                //                    offset_yaw = 0;
-                //                    spin_speed = clip<float>(spin_speed, -660, 660);
-                //                }
-                vz_set = spin_speed;
-                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
-                osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer, true);
-                osDelay(1);
-                break;
-            case REMOTE_MODE_ADVANCED:
-                // 高级模式，底盘速度直接为绝对值，不受云台角度影响
-                vz_set = offset_yaw;
-                if (offset_yaw != 0) {
-                    spin_speed = spin_speed + offset_yaw;
-                    offset_yaw = 0;
-                    spin_speed = clip<float>(spin_speed, -660, 660);
-                }
-                chassis->SetSpeed(vx_set_org * ratio, vy_set_org * ratio, vz_set * ratio);
-                osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer, true);
-                osDelay(1);
-                break;
+        // 进行缩放
+        chassis_vx*=chassis_max_xy_speed;
+        chassis_vy*=chassis_max_xy_speed;
+        chassis_vt*=chassis_max_t_speed;
 
-            default:
-                // Not Support
-                kill_chassis();
-        }
-        chassis_vz = vz_set;
+        static const float move_ease_ratio = 1.5;
+        static const float turn_ease_ratio = 0.8;
+        static Ease chassis_ease_vx(0, move_ease_ratio);
+        static Ease chassis_ease_vy(0, move_ease_ratio);
+        static Ease chassis_ease_vt(0, turn_ease_ratio);
+        chassis_vx = chassis_ease_vx.Calc(chassis_vx);
+        chassis_vy = chassis_ease_vy.Calc(chassis_vy);
+        chassis_vt = chassis_ease_vt.Calc(chassis_vt);
+
+
+        chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
+        osDelay(CHASSIS_OS_DELAY);
+        chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
+                          referee->power_heat_data.chassis_power,
+                          referee->power_heat_data.chassis_power_buffer, false);
         osDelay(CHASSIS_OS_DELAY);
     }
 }
