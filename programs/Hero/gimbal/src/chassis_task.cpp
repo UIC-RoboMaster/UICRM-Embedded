@@ -51,8 +51,8 @@ void chassisTask(void* arg) {
     float sin_yaw, cos_yaw, vx_set = 0, vy_set = 0, vz_set = 0, vx_set_org = 0, vy_set_org = 0;
     float offset_yaw = 0;
     float spin_speed = 350;
-    float manual_mode_yaw_pid_args[3] = {200, 0.5, 0};
-    float manual_mode_yaw_pid_max_iout = 10;
+    float manual_mode_yaw_pid_args[3] = {200, 0.5, 20};
+    float manual_mode_yaw_pid_max_iout = 100;
     float manual_mode_yaw_pid_max_out = 350;
     control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
         manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
@@ -62,12 +62,9 @@ void chassisTask(void* arg) {
     float current_speed_offset = speed_offset;
     remote::keyboard_t keyboard;
     remote::keyboard_t last_keyboard;
-    RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
-    RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
-    RampSource* vz_ramp = new RampSource(0, -chassis_vz_max / 2, chassis_vz_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
+    RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2, 0.01);
+    RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2, 0.01);
+    RampSource* vz_ramp = new RampSource(0, -chassis_vz_max / 2, chassis_vz_max / 2, 0.01);
     BoolEdgeDetector* w_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* s_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* a_edge = new BoolEdgeDetector(false);
@@ -95,6 +92,7 @@ void chassisTask(void* arg) {
             chassis->Enable();
             continue;
         }
+        // 更新状态机
         {
             last_keyboard = keyboard;
             if (dbus->IsOnline()) {
@@ -124,10 +122,13 @@ void chassisTask(void* arg) {
             x_edge->input(keyboard.bit.X);
         }
 
+        // 更新云台角度
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
+        // 计算角度的sin/cos
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
+        // 检测到shift，切换速度模式
         if (shift_edge->posEdge()) {
             if (chassis_boost_flag) {
                 chassis_boost_flag = false;
@@ -149,6 +150,7 @@ void chassisTask(void* arg) {
                 current_speed_offset = speed_offset_boost;
             }
         }
+        // 平移速度控制
         if (ch0_edge->get()) {
             vx_set_org = dbus->ch0;
         } else if (ch0_edge->negEdge() || x_edge->posEdge()) {
@@ -165,6 +167,7 @@ void chassisTask(void* arg) {
                 vx_set_org = vx_ramp->Calc(current_speed_offset);
             }
         }
+        // 前进速度控制
         if (ch1_edge->get()) {
             vy_set_org = dbus->ch1;
         } else if (ch1_edge->negEdge() || x_edge->posEdge()) {
@@ -181,6 +184,7 @@ void chassisTask(void* arg) {
                 vy_set_org = vy_ramp->Calc(current_speed_offset);
             }
         }
+        // 旋转速度控制（如果需要）
         if (ch4_edge->get()) {
             offset_yaw = dbus->ch4;
         } else if (ch4_edge->negEdge() || x_edge->posEdge()) {
@@ -196,6 +200,15 @@ void chassisTask(void* arg) {
             } else if (offset_yaw < 0) {
                 offset_yaw = vz_ramp->Calc(current_speed_offset);
             }
+        }
+        if (abs(vx_set_org) < 0.05f) {
+            vx_set_org = 0;
+        }
+        if (abs(vy_set_org) < 0.05f) {
+            vy_set_org = 0;
+        }
+        if (abs(offset_yaw) < 0.05f) {
+            offset_yaw = 0;
         }
         chassis_vx = vx_set_org;
         chassis_vy = vy_set_org;
