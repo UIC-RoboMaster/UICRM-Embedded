@@ -22,11 +22,12 @@
 // Created by Steven on 2024/3/20.
 //
 
+#include "main.h"
+
 #include "MotorCanBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "main.h"
 #include "pid.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
@@ -72,10 +73,10 @@ void RM_RTOS_Init() {
     motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::OMEGA|driver::MotorCANBase::INVERTED);
+    motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     motor2->SetMode(driver::MotorCANBase::OMEGA);
-    motor3->SetMode(driver::MotorCANBase::OMEGA| driver::MotorCANBase::INVERTED);
-    motor4->SetMode(driver::MotorCANBase::OMEGA );
+    motor3->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    motor4->SetMode(driver::MotorCANBase::OMEGA);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
