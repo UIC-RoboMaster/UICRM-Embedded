@@ -21,8 +21,8 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
-const float chassis_max_xy_speed = 2*PI;
-const float chassis_max_t_speed = 2*PI;
+const float chassis_max_xy_speed = 2*PI*8;
+const float chassis_max_t_speed = 2*PI*4;
 
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -75,13 +75,13 @@ void chassisTask(void* arg) {
 //        } else
         if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
-            car_vx = dbus->ch0 / dbus->ROCKER_MAX;
-            car_vy = dbus->ch1 / dbus->ROCKER_MAX;
-            car_vt = dbus->ch4 / dbus->ROCKER_MAX;
+            car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX;
+            car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX;
+            car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
-            const float keyboard_spin_speed = 0.01;
+            const float keyboard_spin_speed = 1;
             car_vx = (keyboard.bit.D - keyboard.bit.A) * keyboard_speed;
             car_vy = (keyboard.bit.W - keyboard.bit.S) * keyboard_speed;
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
@@ -114,16 +114,16 @@ void chassisTask(void* arg) {
                 chassis_vt_pid_error = 0;
             }
 
-            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(2 / (2*PI), 0, 0, 0.5, 1);
+            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(4 / (2*PI), 0, 0, 0.5, 1);
             chassis_vt += chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
         }
 
         if (remote_mode == REMOTE_MODE_SPIN)
         {
             // 小陀螺模式，拨盘用来控制底盘加速度
-            static float spin_speed = 660;
-            spin_speed = spin_speed + car_vt * 0.05;
-            spin_speed = clip<float>(spin_speed, -660, 660);
+            static float spin_speed = 1;
+            spin_speed = spin_speed + car_vt * 0.01;
+            spin_speed = clip<float>(spin_speed, -1, 1);
             chassis_vt = spin_speed;
         }
 
@@ -132,8 +132,8 @@ void chassisTask(void* arg) {
         chassis_vy*=chassis_max_xy_speed;
         chassis_vt*=chassis_max_t_speed;
 
-        static const float move_ease_ratio = 1.5;
-        static const float turn_ease_ratio = 0.8;
+        static const float move_ease_ratio = 2;
+        static const float turn_ease_ratio = 1;
         static Ease chassis_ease_vx(0, move_ease_ratio);
         static Ease chassis_ease_vy(0, move_ease_ratio);
         static Ease chassis_ease_vt(0, turn_ease_ratio);

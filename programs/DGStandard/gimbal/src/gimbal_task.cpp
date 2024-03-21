@@ -30,32 +30,26 @@ control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
 INS_Angle_t INS_Angle;
+
+control::gimbal_t gimbal_data;
+
+void check_kill();
+
 void gimbalTask(void* arg) {
     UNUSED(arg);
     // 任务启动时先关掉两个电机，然后等待遥控器连接
     pitch_motor->Disable();
     yaw_motor->Disable();
     osDelay(1500);
-    while (remote_mode == REMOTE_MODE_KILL) {
-        kill_gimbal();
-        osDelay(GIMBAL_OS_DELAY);
-    }
-    // 遥控器连接后等待一段时间，等云台完全复位
-    int i = 0;
-    while (i < 5000) {
-        while (remote_mode == REMOTE_MODE_KILL) {
-            kill_gimbal();
-            osDelay(GIMBAL_OS_DELAY);
-        }
-        if (!pitch_motor->IsEnable())
-            pitch_motor->Enable();
-        if (!yaw_motor->IsEnable())
-            yaw_motor->Enable();
 
+    // 遥控器连接后等待一段时间，等云台完全复位
+    int i;
+    for (i=0;i<2000;i++)
+    {
+        check_kill();
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        osDelay(GIMBAL_OS_DELAY);
-        ++i;
+        osDelay(1);
     }
 
     // 云台复位完成后，播放一段音乐，代表开始校准陀螺仪
@@ -85,17 +79,7 @@ void gimbalTask(void* arg) {
 
     while (true) {
         // 如果遥控器处于关闭状态，关闭两个电机
-        if (remote_mode == REMOTE_MODE_KILL) {
-            kill_gimbal();
-            while (remote_mode == REMOTE_MODE_KILL) {
-                osDelay(GIMBAL_OS_DELAY);
-            }
-            if (!pitch_motor->IsEnable())
-                pitch_motor->Enable();
-            if (!yaw_motor->IsEnable())
-                yaw_motor->Enable();
-            continue;
-        }
+        check_kill();
 
         // 获取当前陀螺仪角度
         INS_Angle.pitch = ahrs->INS_angle[2];
@@ -162,7 +146,7 @@ void gimbalTask(void* arg) {
                 //                gimbal->Update();
                 //                break;
             default:
-                kill_gimbal();
+                break;
         }
 
         osDelay(GIMBAL_OS_DELAY);
@@ -249,16 +233,24 @@ void init_gimbal() {
                        driver::MotorCANBase::ABSOLUTE);
 
     // 初始化云台对象
-    control::gimbal_t gimbal_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;
     gimbal_data.data = gimbal_init_data;
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
 }
-void kill_gimbal() {
-    // 当杀死云台任务时，需要关闭两个电机
-    yaw_motor->Disable();
-    pitch_motor->Disable();
-    // steering_motor->SetOutput(0);
+void check_kill()
+{
+    if (remote_mode == REMOTE_MODE_KILL)
+    {
+        yaw_motor->Disable();
+        pitch_motor->Disable();
+        steering_motor->Disable();
+        while (remote_mode == REMOTE_MODE_KILL)
+            osDelay(1);
+
+    }
+    yaw_motor->Enable();
+    pitch_motor->Enable();
+    steering_motor->Enable();
 }
