@@ -161,13 +161,15 @@ void remoteTask(void* arg) {
         // 单发
         static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
         shoot_switch_edge->input(state_l == remote::DOWN);
-        if (shoot_switch_edge->posEdge()) {
+        static BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
+        mouse_left_edge->input(mouse.l);
+        if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge()) {
             shoot_load_mode = SHOOT_MODE_SINGLE;
             shoot_burst_timestamp = 0;
         }
 
         // 连发
-        if (state_l == remote::DOWN) {
+        if (state_l == remote::DOWN || mouse.l) {
             shoot_burst_timestamp++;
         }
         static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);
@@ -177,7 +179,7 @@ void remoteTask(void* arg) {
         }
 
         // 不发射
-        if (shoot_switch_edge->negEdge()) {
+        if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge()) {
             shoot_load_mode = SHOOT_MODE_STOP;
             shoot_burst_timestamp = 0;
         }
