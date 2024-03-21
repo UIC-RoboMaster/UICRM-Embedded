@@ -21,8 +21,8 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
-const float chassis_max_xy_speed = 2*PI*8;
-const float chassis_max_t_speed = 2*PI*4;
+const float chassis_max_xy_speed = 2 * PI * 8;
+const float chassis_max_t_speed = 2 * PI * 4;
 
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -67,12 +67,12 @@ void chassisTask(void* arg) {
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
         float car_vx, car_vy, car_vt;
-//        if (keyboard.bit.X) {
-//            // 刹车
-//            car_vx = 0;
-//            car_vy = 0;
-//            car_vt = 0;
-//        } else
+        //        if (keyboard.bit.X) {
+        //            // 刹车
+        //            car_vx = 0;
+        //            car_vy = 0;
+        //            car_vt = 0;
+        //        } else
         if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX;
@@ -97,16 +97,14 @@ void chassisTask(void* arg) {
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
-        if (remote_mode == REMOTE_MODE_ADVANCED)
-        {
+        if (remote_mode == REMOTE_MODE_ADVANCED) {
             // 手动模式下，遥控器直接控制底盘速度
             chassis_vx = car_vx;
             chassis_vy = car_vy;
             chassis_vt = car_vt;
         }
 
-        if (remote_mode == REMOTE_MODE_FOLLOW)
-        {
+        if (remote_mode == REMOTE_MODE_FOLLOW) {
             // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向
             const float angle_threshold = 0.02f;
             float chassis_vt_pid_error = chassis_yaw_diff;
@@ -114,12 +112,12 @@ void chassisTask(void* arg) {
                 chassis_vt_pid_error = 0;
             }
 
-            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(4 / (2*PI), 0, 0, 0.5, 1);
+            static control::ConstrainedPID* chassis_vt_pid =
+                new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
             chassis_vt += chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
         }
 
-        if (remote_mode == REMOTE_MODE_SPIN)
-        {
+        if (remote_mode == REMOTE_MODE_SPIN) {
             // 小陀螺模式，拨盘用来控制底盘加速度
             static float spin_speed = 1;
             spin_speed = spin_speed + car_vt * 0.01;
@@ -128,9 +126,9 @@ void chassisTask(void* arg) {
         }
 
         // 进行缩放
-        chassis_vx*=chassis_max_xy_speed;
-        chassis_vy*=chassis_max_xy_speed;
-        chassis_vt*=chassis_max_t_speed;
+        chassis_vx *= chassis_max_xy_speed;
+        chassis_vy *= chassis_max_xy_speed;
+        chassis_vt *= chassis_max_t_speed;
 
         static const float move_ease_ratio = 2;
         static const float turn_ease_ratio = 1;
@@ -140,7 +138,6 @@ void chassisTask(void* arg) {
         chassis_vx = chassis_ease_vx.Calc(chassis_vx);
         chassis_vy = chassis_ease_vy.Calc(chassis_vy);
         chassis_vt = chassis_ease_vt.Calc(chassis_vt);
-
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
         osDelay(CHASSIS_OS_DELAY);
