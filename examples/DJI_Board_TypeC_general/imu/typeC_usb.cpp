@@ -24,6 +24,7 @@
 #include "i2c.h"
 #include "main.h"
 #include "spi.h"
+#include "protocol.h"
 
 #define RX_SIGNAL (1 << 0)
 
@@ -49,6 +50,10 @@ class IMU : public bsp::IMU_typeC {
 };
 
 static IMU* imu = nullptr;
+
+static communication::Host* mini_pc = nullptr;
+static bsp::UART* mini_pc_uart = nullptr;
+
 
 void imuTask(void* arg) {
     UNUSED(arg);
@@ -90,6 +95,13 @@ void RM_RTOS_Init(void) {
     imu_init.Accel_INT_pin_ = INT1_ACCEL_Pin;
     imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
     imu = new IMU(imu_init, false);
+
+    mini_pc_uart = new bsp::UART(&huart1);
+    mini_pc_uart->SetBaudrate(921600);
+    HAL_Delay(100);  // wait for the baudrate to take effect
+    mini_pc_uart->SetupTx(300);
+    mini_pc_uart->SetupRx(300);
+    mini_pc = new communication::Host(mini_pc_uart);
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -100,6 +112,13 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     imu->Calibrate();
     while (true) {
+        for(uint8_t i=0;i<50;i++){
+            mini_pc->gimbal_current_status.current_imu_yaw = imu->INS_angle[0] / PI * 180;
+            mini_pc->gimbal_current_status.current_imu_roll = imu->INS_angle[1] / PI * 180;
+            mini_pc->gimbal_current_status.current_imu_pitch = imu->INS_angle[2] / PI * 180;
+            mini_pc->Transmit(communication::ROBOT_POSITION);
+            osDelay(1);
+        }
         set_cursor(0, 0);
         clear_screen();
         print(
@@ -111,6 +130,5 @@ void RM_RTOS_Default_Task(const void* arg) {
             imu->INS_angle[2] / PI * 180,
             imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
 
-        osDelay(50);
     }
 }
