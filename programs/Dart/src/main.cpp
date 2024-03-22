@@ -88,9 +88,9 @@ void RM_RTOS_Init() {
     flywheel_motor4->SetMode(driver::MotorCANBase::OMEGA);
 
     can2 = new bsp::CAN(&hcan2, false);
-    pitch_motor = new driver::Motor3508(can2, 0x205);
-    yaw_motor = new driver::Motor6020(can2, 0x206);
-    putter_motor = new driver::Motor3508(can2, 0x207);
+    pitch_motor = new driver::Motor3508(can2, 0x207);
+    yaw_motor = new driver::Motor6020(can2, 0x205);
+    putter_motor = new driver::Motor3508(can2, 0x206);
 
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
         .kp = 20,
@@ -179,7 +179,7 @@ void RM_RTOS_Default_Task(const void* args) {
             }
         }
         pitch_motor->SetTarget(sbus->ch3 * ratio);
-        putter_motor->SetTarget(sbus->ch1 * ratio);
+        putter_motor->SetTarget(sbus->ch2 * ratio);
         yaw_angle += (-sbus->ch4 / 18000.0 / 7.0);
         yaw_angle = clip<float>(yaw_angle, -yaw_max+yaw_offset, yaw_max+yaw_offset);
         yaw_motor->SetTarget(yaw_angle);
