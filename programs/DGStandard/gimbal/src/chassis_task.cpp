@@ -114,7 +114,9 @@ void chassisTask(void* arg) {
 
             static control::ConstrainedPID* chassis_vt_pid =
                 new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
-            chassis_vt += chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
+            float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
+            if (chassis_vt_pid_error != 0)
+                chassis_vt = vt;
         }
 
         if (remote_mode == REMOTE_MODE_SPIN) {

@@ -20,6 +20,8 @@
 
 #include "gimbal_task.h"
 
+#include "chassis_task.h"
+#include "dbus_package.h"
 #include "minipc_task.h"
 
 osThreadId_t gimbalTaskHandle;
@@ -95,20 +97,19 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
+        const float mouse_ratio = 1;
+        const float remote_ratio = 0.005;
         if (dbus->IsOnline()) {
-            if (dbus->mouse.y != 0) {
-                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 3.0f;
+            if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
+                pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = (float)dbus->mouse.x / mouse_xy_max * mouse_ratio;
             } else {
-                pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
-            }
-            if (dbus->mouse.x != 0) {
-                yaw_ratio = dbus->mouse.x / 32767.0 * 7.5 / 3.0f;
-            } else {
-                yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
+                pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
+                yaw_ratio = (float)dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
             }
         } else if (refereerc->IsOnline()) {
-            pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 3.0;
-            yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 3.0;
+            pitch_ratio = -refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
+            yaw_ratio = -refereerc->remote_control.mouse.x / mouse_xy_max * mouse_ratio;
         } else {
             pitch_ratio = 0;
             yaw_ratio = 0;
@@ -154,26 +155,30 @@ void gimbalTask(void* arg) {
 
 void init_gimbal() {
     // 云台需要使用两个6020电机，并且进行角度环和速度环双环控制。此时我们需要初始化两个电机对象和四个PID对象，并且将四个PID对象分别绑定到两个电机对象上。
+
+    /**
+     * pitch motor
+     */
     pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 20,
+        .kp = 12,
         .ki = 0,
-        .kd = 0,
+        .kd = 10,
         .max_out = 6 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 0.2,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 4000,
-        .ki = 5,
-        .kd = 1000,
+        .kp = 8192,
+        .ki = 0,
+        .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
         .deadband = 0,                          // 死区
@@ -192,32 +197,36 @@ void init_gimbal() {
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
     pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
                          driver::MotorCANBase::ABSOLUTE);
+
+    /**
+     * yaw motor
+     */
     yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 20,
+        .kp = 7,
         .ki = 0,
-        .kd = 0,
-        .max_out = 3 * PI,  // 最高旋转速度
+        .kd = 50,
+        .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 0.15,          // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 2600,
+        .kp = 6000,
         .ki = 0,
-        .kd = 4000,
+        .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                            // 死区
         .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 0.5 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,      // 输出滤波系数
+        .output_filtering_coefficient = 0.03,     // 输出滤波系数
         .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
