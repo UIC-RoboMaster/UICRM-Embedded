@@ -207,6 +207,10 @@ namespace driver {
 
         bool IsHolding() const;
 
+        void Hold(bool override = true);
+
+        void SetSpeedOffset(float offset);
+
       protected:
         volatile float theta_;
         volatile float omega_;
@@ -242,6 +246,8 @@ namespace driver {
         control::ConstrainedPID omega_pid_;
         control::ConstrainedPID theta_pid_;
         float target_;
+
+        float speed_offset_;  // 前馈中使用，在角度环输出的速度上加上一个偏移量
 
         callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
         void* error_callback_instance_ = nullptr;
