@@ -19,8 +19,9 @@
  ###########################################################*/
 
 #include "gimbal_task.h"
-
 #include "minipc_task.h"
+#include "chassis_task.h"
+#include "dbus_package.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -95,20 +96,19 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
+        const float mouse_ratio = 1;
+        const float remote_ratio = 0.005;
         if (dbus->IsOnline()) {
-            if (dbus->mouse.y != 0) {
-                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 3.0f;
+            if (dbus->mouse.x!=0 || dbus->mouse.y!=0) {
+                pitch_ratio = (float) dbus->mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = (float) dbus->mouse.x / mouse_xy_max * mouse_ratio;
             } else {
-                pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
-            }
-            if (dbus->mouse.x != 0) {
-                yaw_ratio = dbus->mouse.x / 32767.0 * 7.5 / 3.0f;
-            } else {
-                yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
+                pitch_ratio = (float) dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
+                yaw_ratio = (float) dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
             }
         } else if (refereerc->IsOnline()) {
-            pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 3.0;
-            yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 3.0;
+            pitch_ratio = -refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
+            yaw_ratio = -refereerc->remote_control.mouse.x / mouse_xy_max * mouse_ratio;
         } else {
             pitch_ratio = 0;
             yaw_ratio = 0;
