@@ -128,6 +128,9 @@ void gimbalTask(void* arg) {
         //        }
 
         // 根据运动模式选择不同的控制方式
+        const float ratio = 1;
+        float speed_offset = chassis_vt * ratio;
+        yaw_motor->SetSpeedOffset(speed_offset);
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
