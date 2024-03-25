@@ -86,10 +86,10 @@ void RM_RTOS_Default_Task(const void* arg) {
     char s[50];
     //    char CPU_RunInfo[512];
     while (true) {
-        if(referee->game_robot_status.mains_power_gimbal_output){
-                gimbal_power->High();
-        }else{
-                gimbal_power->Low();
+        if (referee->game_robot_status.mains_power_gimbal_output) {
+            gimbal_power->High();
+        } else {
+            gimbal_power->Low();
         }
         //        print("%.4f %.4f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
         //        osDelay(2);
