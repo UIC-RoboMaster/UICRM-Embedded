@@ -94,12 +94,26 @@ void shootTask(void* arg) {
         if (shoot_load_mode == SHOOT_MODE_IDLE) {
             uint8_t loaded = shoot_key->Read();
             if (loaded) {
-                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta(), false);
             } else {
                 // 没有准备就绪，则旋转拔弹电机
                 steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, false);
             }
         }
+
+        int heat_limit = referee->game_robot_status.shooter_heat_limit;
+        int heat_buffer = referee->power_heat_data.shooter_id1_17mm_cooling_heat;
+        const int shooter_heat_threashold = 25;
+        if (heat_buffer>heat_limit-shooter_heat_threashold) {
+            // 临时解决方案
+            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            print("overheat!\n");
+            osDelay(SHOOT_OS_DELAY);
+            continue;
+        }
+        UNUSED(heat_limit);
+        UNUSED(heat_buffer);
+
         if (shoot_load_mode == SHOOT_MODE_SINGLE) {
             steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
             shoot_load_mode = SHOOT_MODE_IDLE;
@@ -125,7 +139,7 @@ void init_shoot() {
         .kp = 20,
         .ki = 0,
         .kd = 0,
-        .max_out = 2.5 * PI,
+        .max_out = 2 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
