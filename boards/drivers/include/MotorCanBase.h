@@ -207,6 +207,8 @@ namespace driver {
 
         bool IsHolding() const;
 
+        void Hold(bool override = true);
+
       protected:
         volatile float theta_;
         volatile float omega_;

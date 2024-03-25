@@ -88,13 +88,13 @@ void shootTask(void* arg) {
         /* 摩擦轮就绪后执行以下部分 */
 
         if (shoot_load_mode == SHOOT_MODE_STOP) {
-            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            steering_motor->Hold();
             // todo: 这里为什么要是true才能停下？target_angel为什么会超过范围？
         }
         if (shoot_load_mode == SHOOT_MODE_IDLE) {
             uint8_t loaded = shoot_key->Read();
             if (loaded) {
-                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta(), false);
+                steering_motor->Hold(false);
             } else {
                 // 没有准备就绪，则旋转拔弹电机
                 steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, false);
@@ -106,7 +106,7 @@ void shootTask(void* arg) {
         const int shooter_heat_threashold = 25;
         if (heat_buffer > heat_limit - shooter_heat_threashold) {
             // 临时解决方案
-            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            steering_motor->Hold();
             print("overheat!\n");
             osDelay(SHOOT_OS_DELAY);
             continue;
