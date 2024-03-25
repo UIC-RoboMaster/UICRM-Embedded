@@ -114,7 +114,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pins : PHPin PHPin PHPin PHPin */
   GPIO_InitStruct.Pin = MOS_CTL1_Pin|MOS_CTL2_Pin|MOS_CTL3_Pin|MOS_CTL4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
