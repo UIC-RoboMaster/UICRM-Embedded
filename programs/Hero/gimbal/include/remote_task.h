@@ -26,6 +26,7 @@
 #include "user_define.h"
 #include "utils.h"
 extern remote::DBUS* dbus;
+extern bool turbo_shoot;
 /**
  * @brief Dbus Init
  */

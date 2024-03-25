@@ -25,14 +25,15 @@
 #include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
-RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
-RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
+RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
+RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
-const int8_t remote_mode_max = 3;
+const int8_t remote_mode_max = 2;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
+bool turbo_shoot = false;
 
 void init_dbus() {
     dbus = new remote::DBUS(&huart3);
@@ -66,6 +67,7 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* ctrl_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* shoot_burst_edge = new BoolEdgeDetector(false);
     while (1) {
         // Offline Detection && Security Check
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
@@ -85,6 +87,7 @@ void remoteTask(void* arg) {
             if (is_killed) {
                 remote_mode = last_remote_mode;
                 shoot_load_mode = SHOOT_MODE_STOP;
+                shoot_fric_switch = SHOOT_FRIC_MODE_STOP;
                 is_killed = false;
             }
         }
@@ -118,11 +121,9 @@ void remoteTask(void* arg) {
         mouse_left_edge->input(mouse.l);
         mouse_right_edge->input(mouse.r);
 
-        if (last_keyboard.bit.G == 1 && keyboard.bit.G == 0) {
-            shoot_flywheel_mode = SHOOT_FRIC_SPEEDUP;
-        }
-        if (last_keyboard.bit.B == 1 && keyboard.bit.B == 0) {
-            shoot_flywheel_mode = SHOOT_FRIC_SPEEDDOWN;
+        shoot_burst_edge->input(keyboard.bit.F);
+        if(shoot_burst_edge->posEdge()){
+            turbo_shoot=!turbo_shoot;
         }
 
         // remote mode switch
@@ -212,7 +213,7 @@ void remoteTask(void* arg) {
             if (shoot_switch) {
                 shoot_switch = false;
                 if (shoot_load_mode == SHOOT_MODE_PREPARED &&
-                    shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED && (is_shoot_available == true || SHOOT_REFEREE == 0)) {
+                    shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED && (is_shoot_available || SHOOT_REFEREE == 0 || turbo_shoot)) {
                     // 摩擦轮与拔弹系统准备就绪则发射子弹
                     shoot_load_mode = SHOOT_MODE_SINGLE;
                 }

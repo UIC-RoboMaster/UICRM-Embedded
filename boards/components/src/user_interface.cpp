@@ -587,27 +587,27 @@ namespace communication {
                           speed_y_val_);
     }
 
-    CrossairGUI::CrossairGUI(UserInterface* UI) : UI_(UI) {
-        centerX_ = 960;
-        centerY_ = 540;
-        Init();
+    CrossairGUI::CrossairGUI(UserInterface* UI,int16_t centerX,int16_t centerY,int16_t x1,int16_t x2, int16_t x3,int16_t x4,int16_t x5,int16_t x6) : UI_(UI) {
+        centerX_ = centerX;
+        centerY_ = centerY;
+        Init(x1,x2,x3,x4,x5,x6);
     }
 
-    void CrossairGUI::Init() {
+    void CrossairGUI::Init(int16_t x1,int16_t x2, int16_t x3,int16_t x4,int16_t x5,int16_t x6) {
         UI_->LineDraw(&crosshair1_, "ch1", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50,
-                      centerY_ - 90, centerX_ + 50, centerY_ - 90);
+                      centerY_ + x1, centerX_ + 50, centerY_ + x1);
         UI_->LineDraw(&crosshair2_, "ch2", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 120, centerX_ + 30, centerY_ - 120);
+                      centerY_ + x2, centerX_ + 30, centerY_ + x2);
         UI_->LineDraw(&crosshair3_, "ch3", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 540, centerX_ + 30, centerY_ - 540);
+                      centerY_ + x3, centerX_ + 30, centerY_ + x3);
         UI_->LineDraw(&crosshair4_, "ch4", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50,
-                      centerY_ - 540, centerX_ + 50, centerY_ - 540);
+                      centerY_ + x4, centerX_ + 50, centerY_ + x4);
         UI_->LineDraw(&crosshair5_, "ch5", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 540, centerX_ + 30, centerY_ - 540);
+                      centerY_ + x5, centerX_ + 30, centerY_ + x5);
         UI_->LineDraw(&crosshair6_, "ch6", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
-                      centerY_ - 540, centerX_ + 30, centerY_ - 540);
+                      centerY_ + x6, centerX_ + 30, centerY_ + x6);
         UI_->LineDraw(&crosshair7_, "ch7", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_,
-                      centerY_ - 30, centerX_, centerY_ - 200);
+                      centerY_ + x1 + 30, centerX_, centerY_ + x6 - 30);
         UI_->GraphRefresh(7, crosshair1_, crosshair2_, crosshair3_, crosshair4_, crosshair5_,
                           crosshair6_, crosshair7_);
     }
