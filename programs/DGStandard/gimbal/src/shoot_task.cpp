@@ -104,7 +104,7 @@ void shootTask(void* arg) {
         int heat_limit = referee->game_robot_status.shooter_heat_limit;
         int heat_buffer = referee->power_heat_data.shooter_id1_17mm_cooling_heat;
         const int shooter_heat_threashold = 25;
-        if (heat_buffer>heat_limit-shooter_heat_threashold) {
+        if (heat_buffer > heat_limit - shooter_heat_threashold) {
             // 临时解决方案
             steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
             print("overheat!\n");

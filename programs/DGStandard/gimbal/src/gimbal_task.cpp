@@ -19,9 +19,10 @@
  ###########################################################*/
 
 #include "gimbal_task.h"
-#include "minipc_task.h"
+
 #include "chassis_task.h"
 #include "dbus_package.h"
+#include "minipc_task.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -99,12 +100,12 @@ void gimbalTask(void* arg) {
         const float mouse_ratio = 1;
         const float remote_ratio = 0.005;
         if (dbus->IsOnline()) {
-            if (dbus->mouse.x!=0 || dbus->mouse.y!=0) {
-                pitch_ratio = (float) dbus->mouse.y / mouse_xy_max * mouse_ratio;
-                yaw_ratio = (float) dbus->mouse.x / mouse_xy_max * mouse_ratio;
+            if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
+                pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = (float)dbus->mouse.x / mouse_xy_max * mouse_ratio;
             } else {
-                pitch_ratio = (float) dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
-                yaw_ratio = (float) dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
+                pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
+                yaw_ratio = (float)dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
             }
         } else if (refereerc->IsOnline()) {
             pitch_ratio = -refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
@@ -211,7 +212,7 @@ void init_gimbal() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.15,           // 输出滤波系数
+        .output_filtering_coefficient = 0.15,          // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
@@ -225,7 +226,7 @@ void init_gimbal() {
         .deadband = 0,                            // 死区
         .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 0.5 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.03,      // 输出滤波系数
+        .output_filtering_coefficient = 0.03,     // 输出滤波系数
         .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波

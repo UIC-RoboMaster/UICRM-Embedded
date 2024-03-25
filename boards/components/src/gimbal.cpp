@@ -62,7 +62,7 @@ namespace control {
         //        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         //        float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
 
-        if(!data_.yaw_circle_){
+        if (!data_.yaw_circle_) {
             yaw_angle_ = clip<float>(yaw_angle_, yaw_lower_limit_, yaw_upper_limit_);
         }
         yaw_motor_->SetTarget(yaw_angle_);
