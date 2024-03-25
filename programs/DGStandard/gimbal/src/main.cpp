@@ -38,6 +38,7 @@
  * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
  */
 
+bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
     bsp::SetHighresClockTimer(&htim7);
@@ -62,6 +63,8 @@ void RM_RTOS_Init(void) {
     init_chassis();
     // 初始化用户界面，用户界面类能够在图传上显示实时状态
     init_ui();
+    gimbal_power = new bsp::GPIO(MOS_CTL2_GPIO_Port, MOS_CTL2_Pin);
+    gimbal_power->Low();
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -83,6 +86,11 @@ void RM_RTOS_Default_Task(const void* arg) {
     char s[50];
     //    char CPU_RunInfo[512];
     while (true) {
+        if(referee->game_robot_status.mains_power_gimbal_output){
+                gimbal_power->High();
+        }else{
+                gimbal_power->Low();
+        }
         //        print("%.4f %.4f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
         //        osDelay(2);
         set_cursor(0, 0);
