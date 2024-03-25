@@ -587,13 +587,15 @@ namespace communication {
                           speed_y_val_);
     }
 
-    CrossairGUI::CrossairGUI(UserInterface* UI,int16_t centerX,int16_t centerY,int16_t x1,int16_t x2, int16_t x3,int16_t x4,int16_t x5,int16_t x6) : UI_(UI) {
+    CrossairGUI::CrossairGUI(UserInterface* UI, int16_t centerX, int16_t centerY, int16_t x1,
+                             int16_t x2, int16_t x3, int16_t x4, int16_t x5, int16_t x6)
+        : UI_(UI) {
         centerX_ = centerX;
         centerY_ = centerY;
-        Init(x1,x2,x3,x4,x5,x6);
+        Init(x1, x2, x3, x4, x5, x6);
     }
 
-    void CrossairGUI::Init(int16_t x1,int16_t x2, int16_t x3,int16_t x4,int16_t x5,int16_t x6) {
+    void CrossairGUI::Init(int16_t x1, int16_t x2, int16_t x3, int16_t x4, int16_t x5, int16_t x6) {
         UI_->LineDraw(&crosshair1_, "ch1", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50,
                       centerY_ + x1, centerX_ + 50, centerY_ + x1);
         UI_->LineDraw(&crosshair2_, "ch2", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,

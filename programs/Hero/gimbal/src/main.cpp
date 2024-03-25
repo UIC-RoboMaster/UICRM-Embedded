@@ -66,100 +66,97 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     osDelay(3000);
     Buzzer_Sing(DJI);
-//    while (true) {
-//        clear_screen();
-//        set_cursor(0, 0);
-//        flywheel_left->PrintData();
-//        flywheel_right->PrintData();
-//        osDelay(10);
-//    }
-        char s[50];
-        while (true) {
-            set_cursor(0, 0);
-            clear_screen();
-            switch (remote_mode) {
-                case REMOTE_MODE_PREPARE:
-                    strcpy(s, "PREPARE");
-                    break;
-                case REMOTE_MODE_STOP:
-                    strcpy(s, "STOP");
-                    break;
-                case REMOTE_MODE_KILL:
-                    strcpy(s, "KILL");
-                    break;
-                case REMOTE_MODE_FOLLOW:
-                    strcpy(s, "MANUAL");
-                    break;
-                case REMOTE_MODE_SPIN:
-                    strcpy(s, "SPIN");
-                    break;
-                default:
-                    strcpy(s, "UNKNOWN");
-                    break;
-            }
-            print("Mode:%s\r\n", s);
-            //        switch (shoot_fric_mode) {
-            //            case SHOOT_FRIC_MODE_PREPARING:
-            //                strcpy(s, "PREPARE");
-            //                break;
-            //            case SHOOT_FRIC_MODE_STOP:
-            //                strcpy(s, "STOP");
-            //                break;
-            //            case SHOOT_FRIC_MODE_PREPARED:
-            //                strcpy(s, "PREPARED");
-            //                break;
-            //            case SHOOT_FRIC_MODE_DISABLE:
-            //                strcpy(s, "DISABLE");
-            //                break;
-            //        }
-            //        print("Shoot Fric Mode:%s\r\n", s);
-            switch (shoot_load_mode) {
-                case SHOOT_MODE_PREPARING:
-                    strcpy(s, "PREPARE");
-                    break;
-                case SHOOT_MODE_STOP:
-                    strcpy(s, "STOP");
-                    break;
-                case SHOOT_MODE_PREPARED:
-                    strcpy(s, "PREPARED");
-                    break;
-                case SHOOT_MODE_DISABLE:
-                    strcpy(s, "DISABLE");
-                    break;
-                case SHOOT_MODE_SINGLE:
-                    strcpy(s, "SINGLE");
-                    break;
-                case SHOOT_MODE_BURST:
-                    strcpy(s, "BURST");
-                    break;
-            }
-            print("Shoot Mode:%s\r\n", s);
-
-            print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
-                  imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
-            print("Temp: %.2f\r\n", imu->Temp);
-            print("Heater: %.2f\r\n", imu->TempPWM);
-            print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
-                  imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
-            print("Is Calibrated: %s\r\n",
-                  imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
-            print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
-            print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(),
-            pitch_motor->GetOmega());
-                    print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt /
-            1000.0);
-                    print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current /
-                    1000.0); print("Chassis Power: %.3f\r\n",
-            referee->power_heat_data.chassis_power);
-                    print("\r\n");
-                    print("Shooter Cooling Heat: %hu\r\n",
-                          referee->power_heat_data.shooter_id1_42mm_cooling_heat);
-                    print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
-                    print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-                    print("\r\n");
-                    print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
-                          referee->game_robot_status.max_HP);
-                    print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
-            osDelay(75);
+    //    while (true) {
+    //        clear_screen();
+    //        set_cursor(0, 0);
+    //        flywheel_left->PrintData();
+    //        flywheel_right->PrintData();
+    //        osDelay(10);
+    //    }
+    char s[50];
+    while (true) {
+        set_cursor(0, 0);
+        clear_screen();
+        switch (remote_mode) {
+            case REMOTE_MODE_PREPARE:
+                strcpy(s, "PREPARE");
+                break;
+            case REMOTE_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case REMOTE_MODE_KILL:
+                strcpy(s, "KILL");
+                break;
+            case REMOTE_MODE_FOLLOW:
+                strcpy(s, "MANUAL");
+                break;
+            case REMOTE_MODE_SPIN:
+                strcpy(s, "SPIN");
+                break;
+            default:
+                strcpy(s, "UNKNOWN");
+                break;
         }
+        print("Mode:%s\r\n", s);
+        //        switch (shoot_fric_mode) {
+        //            case SHOOT_FRIC_MODE_PREPARING:
+        //                strcpy(s, "PREPARE");
+        //                break;
+        //            case SHOOT_FRIC_MODE_STOP:
+        //                strcpy(s, "STOP");
+        //                break;
+        //            case SHOOT_FRIC_MODE_PREPARED:
+        //                strcpy(s, "PREPARED");
+        //                break;
+        //            case SHOOT_FRIC_MODE_DISABLE:
+        //                strcpy(s, "DISABLE");
+        //                break;
+        //        }
+        //        print("Shoot Fric Mode:%s\r\n", s);
+        switch (shoot_load_mode) {
+            case SHOOT_MODE_PREPARING:
+                strcpy(s, "PREPARE");
+                break;
+            case SHOOT_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case SHOOT_MODE_PREPARED:
+                strcpy(s, "PREPARED");
+                break;
+            case SHOOT_MODE_DISABLE:
+                strcpy(s, "DISABLE");
+                break;
+            case SHOOT_MODE_SINGLE:
+                strcpy(s, "SINGLE");
+                break;
+            case SHOOT_MODE_BURST:
+                strcpy(s, "BURST");
+                break;
+        }
+        print("Shoot Mode:%s\r\n", s);
+
+        print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
+              imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
+        print("Temp: %.2f\r\n", imu->Temp);
+        print("Heater: %.2f\r\n", imu->TempPWM);
+        print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
+              imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
+        print("Is Calibrated: %s\r\n",
+              imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+        print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
+        print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(), pitch_motor->GetOmega());
+        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
+        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
+        print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
+        print("\r\n");
+        print("Shooter Cooling Heat: %hu\r\n",
+              referee->power_heat_data.shooter_id1_42mm_cooling_heat);
+        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
+        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        print("\r\n");
+        print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
+              referee->game_robot_status.max_HP);
+        print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
+        osDelay(75);
+    }
 }

@@ -73,7 +73,9 @@ void remoteTask(void* arg) {
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available =(referee->game_robot_status.shooter_heat_limit - referee->power_heat_data.shooter_id1_42mm_cooling_heat)>=100 && imu->CaliDone();
+        is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
+                              referee->power_heat_data.shooter_id1_42mm_cooling_heat) >= 100 &&
+                             imu->CaliDone();
         //        is_robot_dead = false;
         // is_shoot_available = true;
         if (is_dbus_offline || is_robot_dead) {
@@ -122,8 +124,8 @@ void remoteTask(void* arg) {
         mouse_right_edge->input(mouse.r);
 
         shoot_burst_edge->input(keyboard.bit.F);
-        if(shoot_burst_edge->posEdge()){
-            turbo_shoot=!turbo_shoot;
+        if (shoot_burst_edge->posEdge()) {
+            turbo_shoot = !turbo_shoot;
         }
 
         // remote mode switch
@@ -150,94 +152,95 @@ void remoteTask(void* arg) {
             remote_mode = next_mode;
         }
         // shoot mode switch
-            switch (state_l) {
-                case remote::UP:
-                    if (last_state_l == remote::MID && dbus->IsOnline()) {
-                        shoot_fric_switch = true;
-                    }
-                    break;
-                case remote::DOWN:
-                    if (last_state_l == remote::MID && dbus->IsOnline()) {
-                        shoot_switch = true;
-                        //                        shoot_burst_timestamp = 0;
-                    }
-                    //                    else if (last_state_l == remote::DOWN && selftest.dbus) {
-                    //                        shoot_burst_timestamp++;
-                    //                        if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
-                    //                            shoot_burst_switch = true;
-                    //                        }
-                    //                    }
-                    break;
-                case remote::MID:
-                    switch (last_state_l) {
-                        case remote::DOWN:
+        switch (state_l) {
+            case remote::UP:
+                if (last_state_l == remote::MID && dbus->IsOnline()) {
+                    shoot_fric_switch = true;
+                }
+                break;
+            case remote::DOWN:
+                if (last_state_l == remote::MID && dbus->IsOnline()) {
+                    shoot_switch = true;
+                    //                        shoot_burst_timestamp = 0;
+                }
+                //                    else if (last_state_l == remote::DOWN && selftest.dbus) {
+                //                        shoot_burst_timestamp++;
+                //                        if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
+                //                            shoot_burst_switch = true;
+                //                        }
+                //                    }
+                break;
+            case remote::MID:
+                switch (last_state_l) {
+                    case remote::DOWN:
+                        shoot_stop_switch = true;
+                        break;
+                    case remote::UP:
+                        break;
+                    case remote::MID:
+                        if (z_edge->posEdge()) {
+                            shoot_fric_switch = true;
+                        }
+                        if (mouse_left_edge->posEdge()) {
+                            shoot_switch = true;
+                            //                                shoot_burst_timestamp = 0;
+                        } else if (mouse_left_edge->get()) {
+                            //                                shoot_burst_timestamp++;
+                            //                                if (shoot_burst_timestamp > 500 *
+                            //                                REMOTE_OS_DELAY) {
+                            //                                    shoot_burst_switch = true;
+                            //                                }
+                        } else if (mouse_left_edge->negEdge()) {
                             shoot_stop_switch = true;
-                            break;
-                        case remote::UP:
-                            break;
-                        case remote::MID:
-                            if (z_edge->posEdge()) {
-                                shoot_fric_switch = true;
-                            }
-                            if (mouse_left_edge->posEdge()) {
-                                shoot_switch = true;
-                                //                                shoot_burst_timestamp = 0;
-                            } else if (mouse_left_edge->get()) {
-                                //                                shoot_burst_timestamp++;
-                                //                                if (shoot_burst_timestamp > 500 *
-                                //                                REMOTE_OS_DELAY) {
-                                //                                    shoot_burst_switch = true;
-                                //                                }
-                            } else if (mouse_left_edge->negEdge()) {
-                                shoot_stop_switch = true;
-                            } else {
-                                shoot_stop_switch = true;
-                            }
-                            break;
-                    }
-                    break;
-            }
-            // 切换摩擦轮模式
-            if (shoot_fric_switch) {
-                shoot_fric_switch = false;
-                if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
-                    shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-                    shoot_load_mode = SHOOT_MODE_PREPARING;
-                } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ||
-                           shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING) {  // 原来转则停止
-                    shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-                    shoot_load_mode = SHOOT_MODE_STOP;
+                        } else {
+                            shoot_stop_switch = true;
+                        }
+                        break;
                 }
+                break;
+        }
+        // 切换摩擦轮模式
+        if (shoot_fric_switch) {
+            shoot_fric_switch = false;
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+                shoot_load_mode = SHOOT_MODE_PREPARING;
+            } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ||
+                       shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING) {  // 原来转则停止
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
+                shoot_load_mode = SHOOT_MODE_STOP;
             }
-            // 射出单颗子弹
-            if (shoot_switch) {
-                shoot_switch = false;
-                if (shoot_load_mode == SHOOT_MODE_PREPARED &&
-                    shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED && (is_shoot_available || SHOOT_REFEREE == 0 || turbo_shoot)) {
-                    // 摩擦轮与拔弹系统准备就绪则发射子弹
-                    shoot_load_mode = SHOOT_MODE_SINGLE;
-                }
+        }
+        // 射出单颗子弹
+        if (shoot_switch) {
+            shoot_switch = false;
+            if (shoot_load_mode == SHOOT_MODE_PREPARED &&
+                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED &&
+                (is_shoot_available || SHOOT_REFEREE == 0 || turbo_shoot)) {
+                // 摩擦轮与拔弹系统准备就绪则发射子弹
+                shoot_load_mode = SHOOT_MODE_SINGLE;
             }
-            // 射出连发子弹
-            //            if (shoot_burst_switch) {
-            //                if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
-            //                    // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
-            //                    if (shoot_mode == SHOOT_MODE_PREPARED || shoot_mode ==
-            //                    SHOOT_MODE_SINGLE) {
-            //                        shoot_mode = SHOOT_MODE_BURST;
-            //                        shoot_burst_switch = false;
-            //                    }
-            //                } else {
-            //                    shoot_burst_switch = false;
-            //                }
-            //            }
-            // 停止射击
-            if (shoot_stop_switch) {
-                shoot_stop_switch = false;
-                if (shoot_load_mode == SHOOT_MODE_BURST) {
-                    shoot_load_mode = SHOOT_MODE_PREPARED;
-                }
+        }
+        // 射出连发子弹
+        //            if (shoot_burst_switch) {
+        //                if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
+        //                    // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
+        //                    if (shoot_mode == SHOOT_MODE_PREPARED || shoot_mode ==
+        //                    SHOOT_MODE_SINGLE) {
+        //                        shoot_mode = SHOOT_MODE_BURST;
+        //                        shoot_burst_switch = false;
+        //                    }
+        //                } else {
+        //                    shoot_burst_switch = false;
+        //                }
+        //            }
+        // 停止射击
+        if (shoot_stop_switch) {
+            shoot_stop_switch = false;
+            if (shoot_load_mode == SHOOT_MODE_BURST) {
+                shoot_load_mode = SHOOT_MODE_PREPARED;
             }
+        }
 
         osDelay(REMOTE_OS_DELAY);
     }

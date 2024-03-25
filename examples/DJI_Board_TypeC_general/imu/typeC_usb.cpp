@@ -23,8 +23,8 @@
 #include "cmsis_os.h"
 #include "i2c.h"
 #include "main.h"
-#include "spi.h"
 #include "protocol.h"
+#include "spi.h"
 
 #define RX_SIGNAL (1 << 0)
 
@@ -53,7 +53,6 @@ static IMU* imu = nullptr;
 
 static communication::Host* mini_pc = nullptr;
 static bsp::UART* mini_pc_uart = nullptr;
-
 
 void imuTask(void* arg) {
     UNUSED(arg);
@@ -112,7 +111,7 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     imu->Calibrate();
     while (true) {
-        for(uint8_t i=0;i<50;i++){
+        for (uint8_t i = 0; i < 50; i++) {
             mini_pc->gimbal_current_status.current_imu_yaw = imu->INS_angle[0] / PI * 180;
             mini_pc->gimbal_current_status.current_imu_roll = imu->INS_angle[1] / PI * 180;
             mini_pc->gimbal_current_status.current_imu_pitch = imu->INS_angle[2] / PI * 180;
@@ -129,6 +128,5 @@ void RM_RTOS_Default_Task(const void* arg) {
             imu->INS_angle[0] / PI * 180, imu->INS_angle[1] / PI * 180,
             imu->INS_angle[2] / PI * 180,
             imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
-
     }
 }

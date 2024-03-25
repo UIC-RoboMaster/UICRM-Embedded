@@ -36,7 +36,7 @@ static driver::Motor3508* motor3 = nullptr;
 static driver::Motor3508* motor4 = nullptr;
 
 void RM_RTOS_Init() {
-    print_use_uart(&huart1,true,3000000);
+    print_use_uart(&huart1, true, 3000000);
     can2 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::Motor3508(can2, 0x201);
     motor2 = new driver::Motor3508(can2, 0x202);
@@ -55,8 +55,8 @@ void RM_RTOS_Init() {
         .max_out = 30000,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
-        .A = 30 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 20 * PI,                            // 启动变速积分的死区
+        .A = 30 * PI,                           // 变速积分所能达到的最大值为A+B
+        .B = 20 * PI,                           // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
@@ -68,10 +68,10 @@ void RM_RTOS_Init() {
     motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::OMEGA|driver::MotorCANBase::INVERTED);
+    motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     motor2->SetMode(driver::MotorCANBase::OMEGA);
-    motor3->SetMode(driver::MotorCANBase::OMEGA| driver::MotorCANBase::INVERTED);
-    motor4->SetMode(driver::MotorCANBase::OMEGA );
+    motor3->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    motor4->SetMode(driver::MotorCANBase::OMEGA);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
@@ -82,8 +82,8 @@ void RM_RTOS_Default_Task(const void* args) {
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
     int current = 0;
     while (true) {
-//        set_cursor(0, 0);
-//        clear_screen();
+        //        set_cursor(0, 0);
+        //        clear_screen();
         if (key.Read() == 0) {
             osDelay(30);
             if (key.Read() == 1)
@@ -109,7 +109,6 @@ void RM_RTOS_Default_Task(const void* args) {
         }
         print("%.2f %.2f %.2f %.2f\r\n", motor1->GetOmega(), motor2->GetOmega(), motor3->GetOmega(),
               motor4->GetOmega());
-
 
         osDelay(1);
     }

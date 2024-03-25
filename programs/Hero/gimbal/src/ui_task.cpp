@@ -43,7 +43,7 @@ void uiTask(void* arg) {
     while (remote_mode == REMOTE_MODE_KILL) {
         osDelay(UI_OS_DELAY);
     }
-    while (!referee->IsOnline()){
+    while (!referee->IsOnline()) {
         osDelay(UI_OS_DELAY);
     }
     UI->SetID(referee->game_robot_status.robot_id);
@@ -60,7 +60,7 @@ void uiTask(void* arg) {
     chassisGUI->Init2();
     osDelay(110);
     // Initialize crosshair GUI
-    crossairGui = new communication::CrossairGUI(UI,988,540,-70,-540,-540,-540,-540,-84);
+    crossairGui = new communication::CrossairGUI(UI, 988, 540, -70, -540, -540, -540, -540, -84);
     osDelay(110);
 
     // Initialize supercapacitor GUI
@@ -84,7 +84,7 @@ void uiTask(void* arg) {
     // Initialize current mode GUI
     char followModeStr[15] = "FOLLOW MODE";
     int8_t modeColor = UI_Color_Orange;
-    modeGUI = new communication::StringGUI(UI, followModeStr, 810, 120, modeColor,30);
+    modeGUI = new communication::StringGUI(UI, followModeStr, 810, 120, modeColor, 30);
     // Initialize flywheel status GUI
     char wheelOnStr[15] = "FLYWHEEL ON";
     char wheelOffStr[15] = "FLYWHEEL OFF";
@@ -95,8 +95,7 @@ void uiTask(void* arg) {
     // osDelay(110);
     char shootUnlockStr[15] = "UNLOCK";
     char shootLockStr[15] = "       ";
-    shootUnlockGUI = new communication::StringGUI(UI,shootLockStr,870,510,UI_Color_Pink,30);
-
+    shootUnlockGUI = new communication::StringGUI(UI, shootLockStr, 870, 510, UI_Color_Pink, 30);
 
     modeGUI->Init();
     osDelay(110);
@@ -308,7 +307,7 @@ void uiTask(void* arg) {
             osDelay(110);
             gimbalGUI->Init2();
             osDelay(110);
-            crossairGui->Init(-70,-540,-540,-540,-540,-84);
+            crossairGui->Init(-70, -540, -540, -540, -540, -84);
             osDelay(110);
             batteryGUI->Init();
             osDelay(110);

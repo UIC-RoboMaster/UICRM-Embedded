@@ -178,7 +178,8 @@ void shootTask(void* arg) {
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5, false);
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5,
+                                                      false);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
                     }

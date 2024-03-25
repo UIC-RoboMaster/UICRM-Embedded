@@ -27,9 +27,9 @@
 #include "buzzer_task.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "supercap.h"
 #include "dbus.h"
 #include "protocol.h"
+#include "supercap.h"
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -37,7 +37,6 @@ driver::MotorCANBase* fl_motor = nullptr;
 driver::MotorCANBase* fr_motor = nullptr;
 driver::MotorCANBase* bl_motor = nullptr;
 driver::MotorCANBase* br_motor = nullptr;
-
 
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
@@ -89,8 +88,6 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(19);
 
-
-
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
@@ -103,7 +100,6 @@ void RM_RTOS_Init() {
     chassis = new control::Chassis(chassis_data);
 
     chassis->SetMaxMotorSpeed(2 * PI * 12);
-
 
     referee_uart = new bsp::UART(&huart6);
     referee_uart->SetupTx(300);
@@ -124,19 +120,19 @@ void RM_RTOS_Default_Task(const void* args) {
 
     float ratio = 1.0f / 660.0f * 12 * PI;
     while (true) {
-        if(!dbus->IsOnline()){
-                chassis->Disable();
-                osDelay(10);
-                continue;
+        if (!dbus->IsOnline()) {
+            chassis->Disable();
+            osDelay(10);
+            continue;
         }
-        switch(dbus->swr){
+        switch (dbus->swr) {
             case remote::MID:
                 chassis->Enable();
                 chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
                 break;
             case remote::UP:
                 chassis->Enable();
-                if(referee->game_status.game_progress==4)
+                if (referee->game_status.game_progress == 4)
                     chassis->SetSpeed(0, 0, 12 * PI);
                 else
                     chassis->SetSpeed(0, 0, 0);
@@ -146,7 +142,9 @@ void RM_RTOS_Default_Task(const void* args) {
                 break;
         }
         // chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
-        chassis->SetPower(true, referee->game_robot_status.chassis_power_limit, referee->power_heat_data.chassis_power, referee->power_heat_data.chassis_power_buffer);
+        chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                          referee->power_heat_data.chassis_power,
+                          referee->power_heat_data.chassis_power_buffer);
         chassis->Update();
         osDelay(10);
     }

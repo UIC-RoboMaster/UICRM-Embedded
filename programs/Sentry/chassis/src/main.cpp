@@ -22,14 +22,13 @@
 
 #include "MotorCanBase.h"
 #include "bsp_can.h"
+#include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "buzzer_notes.h"
 #include "buzzer_task.h"
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "supercap.h"
-#include "bsp_gpio.h"
-
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -37,7 +36,6 @@ driver::MotorCANBase* fl_motor = nullptr;
 driver::MotorCANBase* fr_motor = nullptr;
 driver::MotorCANBase* bl_motor = nullptr;
 driver::MotorCANBase* br_motor = nullptr;
-
 
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
@@ -87,9 +85,6 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(19);
 
-
-
-
     can_bridge = new communication::CanBridge(can2, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
@@ -114,7 +109,7 @@ void RM_RTOS_Init() {
     HAL_Delay(300);
     init_buzzer();
 
-    power_en2 = new bsp::GPIO(Power_OUT2_EN_GPIO_Port,Power_OUT2_EN_Pin);
+    power_en2 = new bsp::GPIO(Power_OUT2_EN_GPIO_Port, Power_OUT2_EN_Pin);
 }
 
 void RM_RTOS_Default_Task(const void* args) {

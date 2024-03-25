@@ -63,7 +63,8 @@ void remoteTask(void* arg) {
 
     while (1) {
         // Offline Detection && Security Check
-        is_dbus_offline = (!dbus->IsOnline() && !refereerc->IsOnline()) || dbus->swr == remote::DOWN;
+        is_dbus_offline =
+            (!dbus->IsOnline() && !refereerc->IsOnline()) || dbus->swr == remote::DOWN;
         // Kill Detection
         //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
         //        is_shoot_available =
@@ -105,8 +106,7 @@ void remoteTask(void* arg) {
             ctrl_edge->input(keyboard.bit.CTRL);
             mouse_left_edge->input(mouse.l);
             mouse_right_edge->input(mouse.r);
-        }
-        else if (refereerc->IsOnline()) {
+        } else if (refereerc->IsOnline()) {
             state_r = remote::MID;
             state_l = remote::MID;
             keyboard = refereerc->remote_control.keyboard;
@@ -136,10 +136,10 @@ void remoteTask(void* arg) {
         }
         // shoot mode switch
         if (is_shoot_available == true || SHOOT_REFEREE == 0) {
-            if (dbus->swl == remote::UP && last_state_l  == remote::MID) {
+            if (dbus->swl == remote::UP && last_state_l == remote::MID) {
                 shoot_fric_switch = true;
             } else {
-                if (dbus->swl == remote::UP && last_state_l  == remote::MID) {
+                if (dbus->swl == remote::UP && last_state_l == remote::MID) {
                     shoot_switch = true;
                     shoot_burst_timestamp = 0;
                 } else if (last_state_l < 0 && dbus->IsOnline()) {
