@@ -22,6 +22,8 @@
 
 #include <string.h>
 
+#include "imu_task.h"
+
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
@@ -68,11 +70,10 @@ void remoteTask(void* arg) {
         // Offline Detection && Security Check
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
         // Kill Detection
-        //        is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        //        is_shoot_available =
-        //            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
-        is_robot_dead = false;
-        is_shoot_available = true;
+        is_robot_dead = referee->game_robot_status.remain_HP == 0;
+        is_shoot_available =(referee->game_robot_status.shooter_heat_limit - referee->power_heat_data.shooter_id1_42mm_cooling_heat)>=100 && imu->CaliDone();
+        //        is_robot_dead = false;
+        // is_shoot_available = true;
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
@@ -148,7 +149,6 @@ void remoteTask(void* arg) {
             remote_mode = next_mode;
         }
         // shoot mode switch
-        if (is_shoot_available == true || SHOOT_REFEREE == 0) {
             switch (state_l) {
                 case remote::UP:
                     if (last_state_l == remote::MID && dbus->IsOnline()) {
@@ -212,7 +212,7 @@ void remoteTask(void* arg) {
             if (shoot_switch) {
                 shoot_switch = false;
                 if (shoot_load_mode == SHOOT_MODE_PREPARED &&
-                    shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+                    shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED && (is_shoot_available == true || SHOOT_REFEREE == 0)) {
                     // 摩擦轮与拔弹系统准备就绪则发射子弹
                     shoot_load_mode = SHOOT_MODE_SINGLE;
                 }
@@ -237,11 +237,7 @@ void remoteTask(void* arg) {
                     shoot_load_mode = SHOOT_MODE_PREPARED;
                 }
             }
-        } else {
-            // 没有子弹了，则停止射击
-            shoot_load_mode = SHOOT_MODE_STOP;
-            shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-        }
+
         osDelay(REMOTE_OS_DELAY);
     }
 }

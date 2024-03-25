@@ -18,11 +18,12 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
+#include "main.h"
+
 #include "MotorCanBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "main.h"
 #include "pid.h"
 #include "referee_task.h"
 #include "sbus.h"
@@ -69,8 +70,8 @@ void RM_RTOS_Init() {
         .max_out = 30000,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
-        .A = 30 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 20 * PI,                            // 启动变速积分的死区
+        .A = 30 * PI,                           // 变速积分所能达到的最大值为A+B
+        .B = 20 * PI,                           // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
@@ -82,9 +83,9 @@ void RM_RTOS_Init() {
     flywheel_motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     flywheel_motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     flywheel_motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor1->SetMode(driver::MotorCANBase::OMEGA|driver::MotorCANBase::INVERTED);
+    flywheel_motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     flywheel_motor2->SetMode(driver::MotorCANBase::OMEGA);
-    flywheel_motor3->SetMode(driver::MotorCANBase::OMEGA| driver::MotorCANBase::INVERTED);
+    flywheel_motor3->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     flywheel_motor4->SetMode(driver::MotorCANBase::OMEGA);
 
     can2 = new bsp::CAN(&hcan2, false);
@@ -124,7 +125,7 @@ void RM_RTOS_Init() {
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                    driver::MotorCANBase::ABSOLUTE);
+                       driver::MotorCANBase::ABSOLUTE);
 
     control::ConstrainedPID::PID_Init_t motor_3508_omega_pid_init = {
         .kp = 2500,
@@ -159,18 +160,18 @@ void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
 
     static BoolEdgeDetector flywheel_switch(false);
-    bool  flywheel_flag = false;
-    const float ratio = 1.0f / 660.0f * PI * 2 * 10;
+    bool flywheel_flag = false;
+    const float ratio = 1.0f / 660.0f * PI * 2 * 10;  // 限定电机每秒转10圈
     while (true) {
-        flywheel_switch.input(sbus->ch8>0);
-        if(flywheel_switch.posEdge()){
-            if(flywheel_flag){
+        flywheel_switch.input(sbus->ch8 > 0);
+        if (flywheel_switch.posEdge()) {
+            if (flywheel_flag) {
                 flywheel_motor1->SetTarget(0);
                 flywheel_motor2->SetTarget(0);
                 flywheel_motor3->SetTarget(0);
                 flywheel_motor4->SetTarget(0);
                 flywheel_flag = false;
-            }else{
+            } else {
                 flywheel_motor1->SetTarget(120 * 2 * PI);
                 flywheel_motor2->SetTarget(120 * 2 * PI);
                 flywheel_motor3->SetTarget(120 * 2 * PI);
@@ -181,9 +182,8 @@ void RM_RTOS_Default_Task(const void* args) {
         pitch_motor->SetTarget(sbus->ch3 * ratio);
         putter_motor->SetTarget(sbus->ch2 * ratio);
         yaw_angle += (-sbus->ch4 / 18000.0 / 7.0);
-        yaw_angle = clip<float>(yaw_angle, -yaw_max+yaw_offset, yaw_max+yaw_offset);
+        yaw_angle = clip<float>(yaw_angle, -yaw_max + yaw_offset, yaw_max + yaw_offset);
         yaw_motor->SetTarget(yaw_angle);
-
 
         osDelay(1);
     }
