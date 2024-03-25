@@ -20,6 +20,8 @@
 
 #include "gimbal_task.h"
 
+#include "chassis_task.h"
+#include "dbus_package.h"
 #include "minipc_task.h"
 
 osThreadId_t gimbalTaskHandle;
@@ -30,32 +32,25 @@ control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
 INS_Angle_t INS_Angle;
+
+control::gimbal_t gimbal_data;
+
+void check_kill();
+
 void gimbalTask(void* arg) {
     UNUSED(arg);
     // 任务启动时先关掉两个电机，然后等待遥控器连接
     pitch_motor->Disable();
     yaw_motor->Disable();
     osDelay(1500);
-    while (remote_mode == REMOTE_MODE_KILL) {
-        kill_gimbal();
-        osDelay(GIMBAL_OS_DELAY);
-    }
-    // 遥控器连接后等待一段时间，等云台完全复位
-    int i = 0;
-    while (i < 5000) {
-        while (remote_mode == REMOTE_MODE_KILL) {
-            kill_gimbal();
-            osDelay(GIMBAL_OS_DELAY);
-        }
-        if (!pitch_motor->IsEnable())
-            pitch_motor->Enable();
-        if (!yaw_motor->IsEnable())
-            yaw_motor->Enable();
 
+    // 遥控器连接后等待一段时间，等云台完全复位
+    int i;
+    for (i = 0; i < 2000; i++) {
+        check_kill();
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
-        osDelay(GIMBAL_OS_DELAY);
-        ++i;
+        osDelay(1);
     }
 
     // 云台复位完成后，播放一段音乐，代表开始校准陀螺仪
@@ -85,17 +80,7 @@ void gimbalTask(void* arg) {
 
     while (true) {
         // 如果遥控器处于关闭状态，关闭两个电机
-        if (remote_mode == REMOTE_MODE_KILL) {
-            kill_gimbal();
-            while (remote_mode == REMOTE_MODE_KILL) {
-                osDelay(GIMBAL_OS_DELAY);
-            }
-            if (!pitch_motor->IsEnable())
-                pitch_motor->Enable();
-            if (!yaw_motor->IsEnable())
-                yaw_motor->Enable();
-            continue;
-        }
+        check_kill();
 
         // 获取当前陀螺仪角度
         INS_Angle.pitch = ahrs->INS_angle[2];
@@ -112,20 +97,19 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
+        const float mouse_ratio = 1;
+        const float remote_ratio = 0.005;
         if (dbus->IsOnline()) {
-            if (dbus->mouse.y != 0) {
-                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 3.0f;
+            if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
+                pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = (float)dbus->mouse.x / mouse_xy_max * mouse_ratio;
             } else {
-                pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
-            }
-            if (dbus->mouse.x != 0) {
-                yaw_ratio = dbus->mouse.x / 32767.0 * 7.5 / 3.0f;
-            } else {
-                yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
+                pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
+                yaw_ratio = (float)dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
             }
         } else if (refereerc->IsOnline()) {
-            pitch_ratio = -refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 3.0;
-            yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 3.0;
+            pitch_ratio = -refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
+            yaw_ratio = -refereerc->remote_control.mouse.x / mouse_xy_max * mouse_ratio;
         } else {
             pitch_ratio = 0;
             yaw_ratio = 0;
@@ -162,7 +146,7 @@ void gimbalTask(void* arg) {
                 //                gimbal->Update();
                 //                break;
             default:
-                kill_gimbal();
+                break;
         }
 
         osDelay(GIMBAL_OS_DELAY);
@@ -171,26 +155,30 @@ void gimbalTask(void* arg) {
 
 void init_gimbal() {
     // 云台需要使用两个6020电机，并且进行角度环和速度环双环控制。此时我们需要初始化两个电机对象和四个PID对象，并且将四个PID对象分别绑定到两个电机对象上。
+
+    /**
+     * pitch motor
+     */
     pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 20,
+        .kp = 12,
         .ki = 0,
-        .kd = 0,
+        .kd = 10,
         .max_out = 6 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 0.2,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 4000,
-        .ki = 5,
-        .kd = 1000,
+        .kp = 8192,
+        .ki = 0,
+        .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
         .deadband = 0,                          // 死区
@@ -209,32 +197,36 @@ void init_gimbal() {
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
     pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
                          driver::MotorCANBase::ABSOLUTE);
+
+    /**
+     * yaw motor
+     */
     yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 20,
+        .kp = 7,
         .ki = 0,
-        .kd = 0,
-        .max_out = 3 * PI,  // 最高旋转速度
+        .kd = 50,
+        .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 0.15,          // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 2600,
+        .kp = 6000,
         .ki = 0,
-        .kd = 4000,
+        .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                            // 死区
         .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 0.5 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,      // 输出滤波系数
+        .output_filtering_coefficient = 0.03,     // 输出滤波系数
         .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
@@ -249,16 +241,21 @@ void init_gimbal() {
                        driver::MotorCANBase::ABSOLUTE);
 
     // 初始化云台对象
-    control::gimbal_t gimbal_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;
     gimbal_data.data = gimbal_init_data;
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
 }
-void kill_gimbal() {
-    // 当杀死云台任务时，需要关闭两个电机
-    yaw_motor->Disable();
-    pitch_motor->Disable();
-    // steering_motor->SetOutput(0);
+void check_kill() {
+    if (remote_mode == REMOTE_MODE_KILL) {
+        yaw_motor->Disable();
+        pitch_motor->Disable();
+        steering_motor->Disable();
+        while (remote_mode == REMOTE_MODE_KILL)
+            osDelay(1);
+    }
+    yaw_motor->Enable();
+    pitch_motor->Enable();
+    steering_motor->Enable();
 }

@@ -31,6 +31,8 @@ namespace remote {
         uint8_t r;
     } __packed mouse_t;
 
+#define mouse_xy_max 32767.0
+
     typedef union {
         uint16_t code;
         struct {
