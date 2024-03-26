@@ -57,7 +57,7 @@ void shootTask(void* arg) {
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+        if (remote_mode == REMOTE_MODE_KILL || !referee->game_robot_status.mains_power_shooter_output) {
             // 死了
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
@@ -94,7 +94,7 @@ void shootTask(void* arg) {
         if (shoot_load_mode == SHOOT_MODE_IDLE) {
             uint8_t loaded = shoot_key->Read();
             if (loaded) {
-                steering_motor->Hold(false);
+                steering_motor->Hold(true);
             } else {
                 // 没有准备就绪，则旋转拔弹电机
                 steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, false);
@@ -116,7 +116,11 @@ void shootTask(void* arg) {
 
         if (shoot_load_mode == SHOOT_MODE_SINGLE) {
             steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
-            shoot_load_mode = SHOOT_MODE_IDLE;
+            uint8_t loaded = shoot_key->Read();
+            // 等到这一粒子弹发射出去再变成IDLE，否则会因为当前有子弹而直接锁定造成无法发射子弹
+            if (!loaded) {
+                shoot_load_mode = SHOOT_MODE_IDLE;
+            }
         }
         if (shoot_load_mode == SHOOT_MODE_BURST) {
             steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, true);

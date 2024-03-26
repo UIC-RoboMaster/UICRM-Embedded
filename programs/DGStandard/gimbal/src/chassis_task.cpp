@@ -132,8 +132,8 @@ void chassisTask(void* arg) {
         chassis_vy *= chassis_max_xy_speed;
         chassis_vt *= chassis_max_t_speed;
 
-        static const float move_ease_ratio = 2;
-        static const float turn_ease_ratio = 1;
+        static const float move_ease_ratio = 1.8;
+        static const float turn_ease_ratio = 0.9;
         static Ease chassis_ease_vx(0, move_ease_ratio);
         static Ease chassis_ease_vy(0, move_ease_ratio);
         static Ease chassis_ease_vt(0, turn_ease_ratio);

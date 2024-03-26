@@ -128,7 +128,7 @@ void gimbalTask(void* arg) {
         //        }
 
         // 根据运动模式选择不同的控制方式
-        const float ratio = 1;
+        const float ratio = 0.215;
         float speed_offset = chassis_vt * ratio;
         yaw_motor->SetSpeedOffset(speed_offset);
         switch (remote_mode) {
@@ -173,7 +173,7 @@ void init_gimbal() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.2,           // 输出滤波系数
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };

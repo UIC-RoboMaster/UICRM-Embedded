@@ -84,7 +84,6 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(3000);
     Buzzer_Sing(DJI);
     char s[50];
-    //    char CPU_RunInfo[512];
     while (true) {
         if (referee->game_robot_status.mains_power_gimbal_output) {
             gimbal_power->High();
@@ -171,21 +170,5 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
               ahrs->INS_angle[2]);
         osDelay(100);
-        // print("\r\n");
-        // yaw_motor->PrintData();
-        // pitch_motor->PrintData();
-
-        //        memset(CPU_RunInfo,0,512);
-        //        vTaskList((char *)&CPU_RunInfo); //获取任务运行时间信息
-        //        print("---------------------------------------------\r\n");
-        //        print("NAME   STATUS   PRIORITY   LESSSTACK   NUM\r\n");
-        //        print("%s\r\n", CPU_RunInfo);
-        //        print("---------------------------------------------\r\n");
-        //        memset(CPU_RunInfo,0,512);
-        //        vTaskGetRunTimeStats((char *)&CPU_RunInfo);
-        //        print("NAME   COUNT   PERSENT\r\n");
-        //        print("%s", CPU_RunInfo);
-        //        print("---------------------------------------------\r\n\n");
-        //        osDelay(1000);
     }
 }
