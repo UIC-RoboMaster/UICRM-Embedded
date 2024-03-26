@@ -247,7 +247,7 @@ namespace driver {
         control::ConstrainedPID theta_pid_;
         float target_;
 
-        float speed_offset_; // 前馈中使用，在角度环输出的速度上加上一个偏移量
+        float speed_offset_;  // 前馈中使用，在角度环输出的速度上加上一个偏移量
 
         callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
         void* error_callback_instance_ = nullptr;
