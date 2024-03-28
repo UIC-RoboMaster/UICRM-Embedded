@@ -160,7 +160,7 @@ namespace imu {
             RM_ASSERT_TRUE(false, "BMI088 init error");
         }
 
-        Read(this->gyro_, this->accel_, &(this->temperature_));
+        Read();
 
         // spi_->hspi_->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
         spi_device_accel_->RegisterCallback(BMI088::AccelSPICallbackWrapper, this);
@@ -259,7 +259,7 @@ namespace imu {
         return BMI088_NO_ERROR;
     }
 
-    void BMI088::Read(float* gyro, float* accel, float* temperate) {
+    void BMI088::Read() {
         // Read the data in blocking mode
         uint8_t buf[8] = {0, 0, 0, 0, 0, 0};
         int16_t bmi088_raw_temp;
@@ -267,20 +267,20 @@ namespace imu {
         BMI088_accel_read_muli_reg(BMI088_ACCEL_XOUT_L, buf, 6);
 
         bmi088_raw_temp = (int16_t)((buf[1]) << 8) | buf[0];
-        accel[0] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+        accel_[0] = bmi088_raw_temp * BMI088_ACCEL_SEN;
         bmi088_raw_temp = (int16_t)((buf[3]) << 8) | buf[2];
-        accel[1] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+        accel_[1] = bmi088_raw_temp * BMI088_ACCEL_SEN;
         bmi088_raw_temp = (int16_t)((buf[5]) << 8) | buf[4];
-        accel[2] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+        accel_[2] = bmi088_raw_temp * BMI088_ACCEL_SEN;
 
         BMI088_gyro_read_muli_reg(BMI088_GYRO_CHIP_ID, buf, 8);
         if (buf[0] == BMI088_GYRO_CHIP_ID_VALUE) {
             bmi088_raw_temp = (int16_t)((buf[3]) << 8) | buf[2];
-            gyro[0] = bmi088_raw_temp * BMI088_GYRO_SEN;
+            gyro_[0] = bmi088_raw_temp * BMI088_GYRO_SEN;
             bmi088_raw_temp = (int16_t)((buf[5]) << 8) | buf[4];
-            gyro[1] = bmi088_raw_temp * BMI088_GYRO_SEN;
+            gyro_[1] = bmi088_raw_temp * BMI088_GYRO_SEN;
             bmi088_raw_temp = (int16_t)((buf[7]) << 8) | buf[6];
-            gyro[2] = bmi088_raw_temp * BMI088_GYRO_SEN;
+            gyro_[2] = bmi088_raw_temp * BMI088_GYRO_SEN;
         }
         BMI088_accel_read_muli_reg(BMI088_TEMP_M, buf, 2);
 
@@ -289,57 +289,56 @@ namespace imu {
         if (bmi088_raw_temp > 1023)
             bmi088_raw_temp -= 2048;
 
-        *temperate = bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET;
+        temperature_ = bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET;
     }
 
     void BMI088::Read_IT() {
         if (gyro_update_flag & (1 << BMI088_IMU_NOTIFY_SHFITS)) {
             gyro_update_flag &= ~(1 << BMI088_IMU_NOTIFY_SHFITS);
-            gyro_read_over(gyro_dma_rx_buf + BMI088_GYRO_RX_BUF_DATA_OFFSET, gyro_);
+            gyro_read_over(gyro_dma_rx_buf + BMI088_GYRO_RX_BUF_DATA_OFFSET);
         }
 
         if (accel_update_flag & (1 << BMI088_IMU_UPDATE_SHFITS)) {
             accel_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
-            accel_read_over(accel_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET, accel_, &time_);
+            accel_read_over(accel_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET);
         }
 
         if (accel_temp_update_flag & (1 << BMI088_IMU_UPDATE_SHFITS)) {
             accel_temp_update_flag &= ~(1 << BMI088_IMU_UPDATE_SHFITS);
-            temperature_read_over(accel_temp_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
-                                  &temperature_);
+            temperature_read_over(accel_temp_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET);
         }
     }
 
-    void BMI088::temperature_read_over(uint8_t* rx_buf, float* temperate) {
+    void BMI088::temperature_read_over(uint8_t* rx_buf) {
         int16_t bmi088_raw_temp;
         bmi088_raw_temp = (int16_t)((rx_buf[0] << 3) | (rx_buf[1] >> 5));
 
         if (bmi088_raw_temp > 1023)
             bmi088_raw_temp -= 2048;
-        *temperate = bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET;
+        temperature_ = bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET;
     }
 
-    void BMI088::accel_read_over(uint8_t* rx_buf, float* accel, float* time) {
+    void BMI088::accel_read_over(uint8_t* rx_buf) {
         int16_t bmi088_raw_temp;
         uint32_t sensor_time;
         bmi088_raw_temp = (int16_t)((rx_buf[1]) << 8) | rx_buf[0];
-        accel[0] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+        accel_[0] = bmi088_raw_temp * BMI088_ACCEL_SEN;
         bmi088_raw_temp = (int16_t)((rx_buf[3]) << 8) | rx_buf[2];
-        accel[1] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+        accel_[1] = bmi088_raw_temp * BMI088_ACCEL_SEN;
         bmi088_raw_temp = (int16_t)((rx_buf[5]) << 8) | rx_buf[4];
-        accel[2] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+        accel_[2] = bmi088_raw_temp * BMI088_ACCEL_SEN;
         sensor_time = (uint32_t)((rx_buf[8] << 16) | (rx_buf[7] << 8) | rx_buf[6]);
-        *time = sensor_time * 39.0625f;
+        time_ = sensor_time * 39.0625f;
     }
 
-    void BMI088::gyro_read_over(uint8_t* rx_buf, float* gyro) {
+    void BMI088::gyro_read_over(uint8_t* rx_buf) {
         int16_t bmi088_raw_temp;
         bmi088_raw_temp = (int16_t)((rx_buf[1]) << 8) | rx_buf[0];
-        gyro[0] = bmi088_raw_temp * BMI088_GYRO_SEN;
+        gyro_[0] = bmi088_raw_temp * BMI088_GYRO_SEN;
         bmi088_raw_temp = (int16_t)((rx_buf[3]) << 8) | rx_buf[2];
-        gyro[1] = bmi088_raw_temp * BMI088_GYRO_SEN;
+        gyro_[1] = bmi088_raw_temp * BMI088_GYRO_SEN;
         bmi088_raw_temp = (int16_t)((rx_buf[5]) << 8) | rx_buf[4];
-        gyro[2] = bmi088_raw_temp * BMI088_GYRO_SEN;
+        gyro_[2] = bmi088_raw_temp * BMI088_GYRO_SEN;
     }
 
     void BMI088::imu_cmd_spi() {

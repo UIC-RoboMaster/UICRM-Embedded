@@ -172,11 +172,11 @@ namespace imu {
          */
         void Reset();
 
-        float gyro_[3];
-        float accel_[3];
-        float mag_[3];
-        float temperature_;
-        float time_;
+        volatile float gyro_[3];
+        volatile float accel_[3];
+        volatile float mag_[3];
+        volatile float temperature_;
+        volatile float time_;
 
         void RegisterCallback(mpu6500_callback_t callback);
 

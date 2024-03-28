@@ -51,11 +51,11 @@ namespace imu {
       public:
         explicit WITUART(bsp::UART* uart);
         ~WITUART();
-        float mag_[3] = {0};
-        float gyro_[3] = {0};
-        float accel_[3] = {0};
-        float INS_angle[3] = {0};
-        float temp_ = 0;
+        volatile float mag_[3] = {0};
+        volatile float gyro_[3] = {0};
+        volatile float accel_[3] = {0};
+        volatile float INS_angle[3] = {0};
+        volatile float temp_ = 0;
         uint16_t version_ = 0;
         uint16_t port_status_[4] = {0};
         float quat_[4] = {0};
