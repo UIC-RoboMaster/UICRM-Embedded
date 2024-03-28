@@ -210,9 +210,9 @@ void chassisTask(void* arg) {
         if (abs(offset_yaw) < 0.05f) {
             offset_yaw = 0;
         }
-        chassis_vx = vx_set_org* ratio;
-        chassis_vy = vy_set_org* ratio;
-        chassis_vz = offset_yaw* ratio;
+        chassis_vx = vx_set_org * ratio;
+        chassis_vy = vy_set_org * ratio;
+        chassis_vz = offset_yaw * ratio;
         vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
@@ -235,7 +235,7 @@ void chassisTask(void* arg) {
                     offset_yaw = 0;
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
-                vz_set = spin_speed*ratio;
+                vz_set = spin_speed * ratio;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,

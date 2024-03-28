@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "gimbal_task.h"
+
 #include "chassis_task.h"
 
 osThreadId_t gimbalTaskHandle;

@@ -87,7 +87,6 @@ void uiTask(void* arg) {
     char boostOffStr[15] = " ";
     boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
 
-
     modeGUI->Init();
     osDelay(110);
     wheelGUI->Init();
