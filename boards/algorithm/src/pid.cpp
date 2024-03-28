@@ -206,10 +206,10 @@ namespace control {
         max_out_ = max_out;
     }
     void ConstrainedPID::PID_ErrorHandle() {
-        if (output_ < max_out_ * 0.02f) {
+        if (output_ < max_out_ * 0.1f) {
             return;
         }
-        if (abs(target_ - measure_) / target_ > 0.97f) {
+        if (abs(target_ - measure_) / target_ > 0.98f) {
             PID_ErrorHandler.error_count++;
         } else {
             PID_ErrorHandler.error_count = 0;

@@ -3,3 +3,6 @@
 add_subdirectory(Car3)
 add_subdirectory(DGStandard)
 add_subdirectory(Hero)
+add_subdirectory(Dart)
+add_subdirectory(Sentry)
+add_subdirectory(FakeSentry)

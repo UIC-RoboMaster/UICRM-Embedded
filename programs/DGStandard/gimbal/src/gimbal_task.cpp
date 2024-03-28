@@ -46,7 +46,7 @@ void gimbalTask(void* arg) {
 
     // 遥控器连接后等待一段时间，等云台完全复位
     int i;
-    for (i = 0; i < 2000; i++) {
+    for (i = 0; i < 5000; i++) {
         check_kill();
         gimbal->TargetAbs(0, 0);
         gimbal->Update();

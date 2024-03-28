@@ -178,7 +178,8 @@ void shootTask(void* arg) {
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5);
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5,
+                                                      false);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
@@ -258,9 +259,9 @@ void init_shoot() {
     flywheel_right->SetTransmissionRatio(1);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 500,
-        .ki = 3,
-        .kd = 0,
+        .kp = 150,
+        .ki = 0.03,
+        .kd = 1,
         .max_out = 30000,
         .max_iout = 10000,
         .deadband = 0,                          // 死区

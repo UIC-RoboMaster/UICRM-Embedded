@@ -20,6 +20,8 @@
 
 #include "gimbal_task.h"
 
+#include "chassis_task.h"
+
 osThreadId_t gimbalTaskHandle;
 
 driver::MotorCANBase* pitch_motor = nullptr;
@@ -74,6 +76,7 @@ void gimbalTask(void* arg) {
     yaw_curr = imu->INS_angle[0];
     float pitch_target = 0, yaw_target = 0;
 
+    float actural_chassis_turn_speed = chassis_vz / 6.0f;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();
@@ -131,6 +134,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
+                yaw_motor->SetSpeedOffset(actural_chassis_turn_speed);
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
             case REMOTE_MODE_ADVANCED:
@@ -165,10 +169,10 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
-        .kp = 3000,
-        .ki = 50,
+        .kp = 4000,
+        .ki = 0,
         .kd = 0,
-        .max_out = 30000,
+        .max_out = 16383,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
         .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
@@ -186,7 +190,7 @@ void init_gimbal() {
 
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
-        .kp = 18,
+        .kp = 25,
         .ki = 0,
         .kd = 0,
         .max_out = 2 * PI,
@@ -200,10 +204,10 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 1000,
-        .ki = 0.5,
-        .kd = 0,
-        .max_out = 30000,
+        .kp = 4000,
+        .ki = 0,
+        .kd = 100,
+        .max_out = 16383,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
         .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B

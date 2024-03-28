@@ -29,6 +29,7 @@ communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
+communication::StringGUI* shootUnlockGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
 
 void UI_Delay(uint32_t delay) {
@@ -38,8 +39,11 @@ void UI_Delay(uint32_t delay) {
 void uiTask(void* arg) {
     UNUSED(arg);
 
-    osDelay(3000);
+    osDelay(1500);
     while (remote_mode == REMOTE_MODE_KILL) {
+        osDelay(UI_OS_DELAY);
+    }
+    while (!referee->IsOnline()) {
         osDelay(UI_OS_DELAY);
     }
     UI->SetID(referee->game_robot_status.robot_id);
@@ -56,7 +60,7 @@ void uiTask(void* arg) {
     chassisGUI->Init2();
     osDelay(110);
     // Initialize crosshair GUI
-    crossairGui = new communication::CrossairGUI(UI);
+    crossairGui = new communication::CrossairGUI(UI, 988, 540, -70, -540, -540, -540, -540, -84);
     osDelay(110);
 
     // Initialize supercapacitor GUI
@@ -70,15 +74,17 @@ void uiTask(void* arg) {
     gimbalGUI = new communication::GimbalGUI(UI);
     osDelay(110);
     gimbalGUI->Init2();
+    osDelay(110);
 
     // Initialize self-diagnosis GUI
     char diagStr[29] = "";
     diagGUI = new communication::DiagGUI(UI);
 
+    osDelay(110);
     // Initialize current mode GUI
     char followModeStr[15] = "FOLLOW MODE";
     int8_t modeColor = UI_Color_Orange;
-    modeGUI = new communication::StringGUI(UI, followModeStr, 1230, 45, modeColor);
+    modeGUI = new communication::StringGUI(UI, followModeStr, 810, 120, modeColor, 30);
     // Initialize flywheel status GUI
     char wheelOnStr[15] = "FLYWHEEL ON";
     char wheelOffStr[15] = "FLYWHEEL OFF";
@@ -86,26 +92,33 @@ void uiTask(void* arg) {
     char boostModeStr[15] = "BOOST!";
     char boostOffStr[15] = " ";
     boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
-    communication::graphic_data_t graphMode;
-    communication::graphic_data_t graphWheel;
-    communication::graphic_data_t graphBoost;
+    // osDelay(110);
+    char shootUnlockStr[15] = "UNLOCK";
+    char shootLockStr[15] = "       ";
+    shootUnlockGUI = new communication::StringGUI(UI, shootLockStr, 870, 510, UI_Color_Pink, 30);
 
-    graphMode = modeGUI->InitBulk();
-    graphWheel = wheelGUI->InitBulk();
-    graphBoost = boostGUI->InitBulk();
-    UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+    modeGUI->Init();
+    osDelay(110);
+    wheelGUI->Init();
+    osDelay(110);
+    boostGUI->Init();
+    osDelay(110);
+    shootUnlockGUI->Init();
     osDelay(110);
     modeGUI->InitString();
     osDelay(110);
     wheelGUI->InitString();
     osDelay(110);
     boostGUI->InitString();
+    osDelay(110);
+    shootUnlockGUI->InitString();
     float relative_angle = 0;
     float pitch_angle = 0;
     float power_percent = 1;
     RemoteMode last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
     BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
+    BoolEdgeDetector* turboShootDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
 
@@ -182,6 +195,12 @@ void uiTask(void* arg) {
             boostGUI->Update(boostStr, UI_Color_Pink);
             osDelay(UI_OS_DELAY);
         }
+        turboShootDetector->input(turbo_shoot);
+        if (turboShootDetector->edge()) {
+            char* turboshootstr = turbo_shoot ? shootUnlockStr : shootLockStr;
+            shootUnlockGUI->Update(turboshootstr, UI_Color_Pink);
+            osDelay(UI_OS_DELAY);
+        }
         last_mode = remote_mode;
         last_fric_mode = shoot_flywheel_mode;
 
@@ -191,10 +210,10 @@ void uiTask(void* arg) {
             fr_motor_check_edge->input(true);
             bl_motor_check_edge->input(true);
             br_motor_check_edge->input(true);
-            yaw_motor_check_edge->input(true);
-            pitch_motor_check_edge->input(true);
-            steer_motor_check_edge->input(true);
-            dbus_edge->input(true);
+            yaw_motor_check_edge->input(yaw_motor->IsOnline());
+            pitch_motor_check_edge->input(pitch_motor->IsOnline());
+            steer_motor_check_edge->input(steering_motor->IsOnline());
+            dbus_edge->input(dbus->IsOnline());
             imu_cali_edge->input(true);
             imu_temp_edge->input(true);
             if (fl_motor_check_edge->negEdge()) {
@@ -262,10 +281,21 @@ void uiTask(void* arg) {
             osDelay(110);
             batteryGUI->Delete();
             osDelay(110);
-            graphMode = modeGUI->DeleteBulk();
-            graphBoost = boostGUI->DeleteBulk();
-            graphWheel = wheelGUI->DeleteBulk();
-            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            modeGUI->Init();
+            osDelay(110);
+            wheelGUI->Init();
+            osDelay(110);
+            boostGUI->Init();
+            osDelay(110);
+            shootUnlockGUI->Init();
+            osDelay(110);
+            modeGUI->InitString();
+            osDelay(110);
+            wheelGUI->InitString();
+            osDelay(110);
+            boostGUI->InitString();
+            osDelay(110);
+            shootUnlockGUI->Init();
             osDelay(110);
             diagGUI->Clear(UI_Delay);
             osDelay(110);
@@ -277,16 +307,23 @@ void uiTask(void* arg) {
             osDelay(110);
             gimbalGUI->Init2();
             osDelay(110);
-            crossairGui->Init();
+            crossairGui->Init(-70, -540, -540, -540, -540, -84);
             osDelay(110);
             batteryGUI->Init();
             osDelay(110);
             batteryGUI->InitName();
             osDelay(110);
-            graphMode = modeGUI->InitBulk();
-            graphWheel = wheelGUI->InitBulk();
-            graphBoost = boostGUI->InitBulk();
-            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            modeGUI->Init();
+            osDelay(110);
+            wheelGUI->Init();
+            osDelay(110);
+            boostGUI->Init();
+            osDelay(110);
+            modeGUI->InitString();
+            osDelay(110);
+            wheelGUI->InitString();
+            osDelay(110);
+            boostGUI->InitString();
             osDelay(110);
             modeGUI->InitString();
             osDelay(110);
