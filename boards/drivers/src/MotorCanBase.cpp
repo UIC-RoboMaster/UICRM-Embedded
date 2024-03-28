@@ -392,7 +392,7 @@ namespace driver {
     }
 
     void MotorCANBase::Hold(bool override) {
-        if (!IsHolding()) {
+        if (!IsHolding() && mode_ & THETA) {
             SetTarget(GetOutputShaftTheta(), override);
         }
     }

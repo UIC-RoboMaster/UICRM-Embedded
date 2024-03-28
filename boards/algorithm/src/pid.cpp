@@ -111,7 +111,7 @@ namespace control {
             // 异常处理
             PID_ErrorHandle();
             if (PID_ErrorHandler.error_type != PID_ERROR_NONE) {
-                // 发现问题
+                // 发现问题，则调用回调函数
                 error_callback_(error_callback_instance_, PID_ErrorHandler);
                 // 清除问题
                 PID_ErrorHandler.error_type = PID_ERROR_NONE;
@@ -120,55 +120,62 @@ namespace control {
             }
         }
 
+        // 更新目标值和当前的测量值
         target_ = target;
         measure_ = measure;
         error_ = target_ - measure_;
 
+        // 如果误差小于死区，则不进行处理
         if (abs(error_) > dead_band_) {
-            // 比死区大，处理
+            // 比死区大，则进行pid计算
             pout_ = kp_ * error_;
+            // 此处的iterm_仅仅计算了当前的积分值，累积积分值后续会进行计算
             iterm_ = ki_ * error_;
             dout_ = kd_ * (error_ - last_error_);
 
-            // Trapezoid Intergral
+            // 梯形积分计算
             if (mode_ & Trapezoid_Intergral) {
                 PID_TrapezoidIntegral();
             }
-            // Changing Integral Rate
 
+            // 变速积分，参考此文章中的变速积分计算
+            // https://www.cnblogs.com/WangHongxi/p/12409382.html
             if (mode_ & ChangingIntegralRate) {
                 PID_ChangingIntegralRate();
             }
-            // Integral limit
 
+            // 积分限幅
             if (mode_ & Integral_Limit) {
                 PID_IntegralLimit();
             }
-            // Derivative On Measurement
 
+            // 将微分的参考值转为对实际测量值的参考而不是对误差的参考，避免突然修改error导致的微分爆炸
             if (mode_ & Derivative_On_Measurement) {
                 PID_DerivativeOnMeasurement();
             }
-            // Derivative filter
 
+            // 微分滤波，采取当前值和上一次的值的加权平均
             if (mode_ & DerivativeFilter) {
                 PID_DerivativeFilter();
             }
+
+            // 计算输出值
             iout_ += iterm_;
             output_ = pout_ + iout_ + dout_;
-            // Output Filter
 
+            // 计算输出滤波，采取当前值和上一次的值的加权平均
             if (mode_ & OutputFilter) {
                 PID_OutputFilter();
             }
-            // Output limit
 
+            // 输出限幅
             PID_OutputLimit();
-            // Proportional limit
 
+            // 微分限幅
             PID_ProportionLimit();
         }
 
+        // 将本次计算的值保存，用于下一次计算
         last_measure_ = measure_;
         last_output_ = output_;
         last_dout_ = dout_;
@@ -206,16 +213,21 @@ namespace control {
         max_out_ = max_out;
     }
     void ConstrainedPID::PID_ErrorHandle() {
+        // pid错误处理，目前用于判断电机堵转
+        // 请在速度环使用电机堵转判断
         if (output_ < max_out_ * 0.1f) {
+            // 排除PID输出本身很小的情况
             return;
         }
-        if (abs(target_ - measure_) / target_ > 0.98f) {
+        // 电机是否难以移动，此处的意思是当实际速度几乎等于0的时候，电机无法转动
+        if (abs(target_ - measure_) / target_ > 0.98f) {  // 此处0.98和上面0.1需要进行调节优化
             PID_ErrorHandler.error_count++;
         } else {
             PID_ErrorHandler.error_count = 0;
             PID_ErrorHandler.error_type = PID_ERROR_NONE;
         }
 
+        // 检测到连续1s电机无法转动，则认为电机堵转
         if (PID_ErrorHandler.error_count > 1000) {
             // 1s 堵转了
             PID_ErrorHandler.error_type = Motor_Blocked;

@@ -96,7 +96,7 @@ namespace driver {
         virtual void PrintData() const = 0;
 
         /**
-         * @brief 获得电机的角度，格式为[rad]
+         * @brief 获得电机的角度（电机编码器角度），格式为[rad]
          *
          * @return 电机的弧度角度，范围为[0, 2PI]
          */
@@ -108,14 +108,14 @@ namespace driver {
         virtual float GetTheta() const;
 
         /**
-         * @brief 获得电机的输出轴角度，格式为[rad]
+         * @brief 获得电机的输出轴角度（经过变速箱且编码器在变速箱之前），格式为[rad]
          *
          * @return 电机的弧度角度，范围为[0, 2PI]
          */
         virtual float GetOutputShaftTheta() const;
 
         /**
-         * @brief 获得电机的角度与目标角度的角度差，格式为[rad]
+         * @brief 获得电机的编码器角度与目标角度的角度差，格式为[rad]
          *
          * @param target 目标角度，格式为[rad]
          *
@@ -131,7 +131,7 @@ namespace driver {
         virtual float GetThetaDelta(const float target) const;
 
         /**
-         * @brief 获得电机的角速度，格式为[rad / s]
+         * @brief 获得电机的角速度（编码器角速度），格式为[rad / s]
          *
          * @return 电机的角速度
          */
@@ -143,14 +143,14 @@ namespace driver {
         virtual float GetOmega() const;
 
         /**
-         * @brief 获得电机的输出轴角速度，格式为[rad / s]
+         * @brief 获得电机的输出轴角速度（经过变速箱且编码器在变速箱之前），格式为[rad / s]
          *
          * @return 电机的角速度
          */
         virtual float GetOutputShaftOmega() const;
 
         /**
-         * @brief 获得电机的角速度与目标角速度的角速度差，格式为[rad / s]
+         * @brief 获得电机的编码器角速度与目标角速度的角速度差，格式为[rad / s]
          *
          * @param target 目标角速度，格式为[rad / s]
          *
@@ -165,20 +165,57 @@ namespace driver {
          */
         virtual float GetOmegaDelta(const float target) const;
 
+        /**
+         * @brief 获得电机的扭矩电流
+         *
+         * @return 电机的扭矩电流，单位为mA
+         */
         virtual int16_t GetCurr() const;
 
+        /**
+         * @brief 获得电机的运行温度
+         * @return 电机的运行温度，单位为摄氏度
+         */
         virtual uint16_t GetTemp() const;
 
+        /**
+         * @brief 通过电机的pid控制器计算电机的输出
+         * @note 本函数会在电机输出进程中按照所设定的频率被自动调用，正常情况下请勿手动调用
+         */
         virtual void CalcOutput();
 
+        /**
+         * @brief 设置电机的目标
+         * @param target 电机的目标值，取决于电机的模式，可以是角度[RAD]、角速度[RAD/S]
+         * @param override 是否覆写电机的目标值，仅针对启用角度环控制时有效
+         */
         virtual void SetTarget(float target, bool override = true);
 
+        /**
+         * @brief 获得当前电机的目标值
+         * @return 电机的目标值，取决于电机的模式，可以是角度[RAD]、角速度[RAD/S]
+         */
         virtual float GetTarget() const;
 
+        /**
+         * @brief 设置电机的PID
+         * @param pid_init pid的初始化参数
+         * @param mode 所需要设置的pid的环，一般是速度环或者角度环
+         */
         virtual void ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode);
 
+        /**
+         * @brief
+         * 设置电机的工作模式，工作模式由若干个bool值组成，请参考电机模式的定义，启动多个模式的情况需要使用或运算
+         * @refitem motor_mode
+         * @param mode 电机的工作模式
+         */
         void SetMode(uint8_t mode);
 
+        /**
+         * @brief 设置电机的减速箱比例
+         * @param ratio 电机的减速箱比例
+         */
         void SetTransmissionRatio(float ratio);
 
         /**
@@ -190,25 +227,67 @@ namespace driver {
          */
         friend class ServoMotor;
 
+        /**
+         * @brief 使能电机
+         */
         void Enable();
 
+        /**
+         * @brief 禁用电机
+         */
         void Disable();
 
+        /**
+         * @brief 判断电机是否被使能
+         * @return 电机是否被使能
+         */
         bool IsEnable() const;
 
+        /**
+         * @brief 设置堵转回调函数
+         * @param callback 堵转回调函数
+         * @param instance 堵转回调函数的参数
+         */
         void RegisterErrorCallback(callback_t callback, void* instance);
 
+        /**
+         * @brief 处理堵转回调函数
+         * @param instance 关联的电机实例
+         * @param type pid的故障类型
+         */
         static void ErrorCallbackWrapper(void* instance,
                                          control::ConstrainedPID::PID_ErrorHandler_t type);
 
+        /**
+         * @brief 设置在执行输出数据前的回调函数，一般用于功率限制
+         * @param callback 回调函数
+         * @param instance 回调函数的参数
+         */
         static void RegisterPreOutputCallback(callback_t callback, void* instance);
 
+        /**
+         * @brief 设置在执行输出数据后的回调函数，一般用于垃圾清理等
+         * @param callback 回调函数
+         * @param instance 回调函数的参数
+         */
         static void RegisterPostOutputCallback(callback_t callback, void* instance);
 
+        /**
+         * @brief 判断电机是否进入保持状态
+         * @return 电机是否进入保持状态
+         */
         bool IsHolding() const;
 
+        /**
+         * @brief 使电机进入保持状态，仅针对角度环控制有效
+         * @param override 是否覆写电机的目标值
+         */
         void Hold(bool override = true);
 
+        /**
+         * @brief 设置电机的速度偏移量，一般用于前馈控制，仅针对速度环控制有效
+         * @param offset 速度偏移量的值
+         */
         void SetSpeedOffset(float offset);
 
       protected:
