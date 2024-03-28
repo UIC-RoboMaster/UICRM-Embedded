@@ -67,23 +67,23 @@ void minipc_task(void* args) {
         minipc->gimbal_current_status.current_imu_pitch = INS_Angle.pitch;
         minipc->gimbal_current_status.current_imu_yaw = INS_Angle.yaw;
         minipc->gimbal_current_status.current_imu_roll = INS_Angle.roll;
-        minipc->Transmit(communication::ROBOT_POSITION);
+        minipc->Transmit(communication::GIMBAL_CURRENT_STATUS);
 
         if (i == 1000) {
             // Secend event
-            minipc->robot_status_upload.robot_id = referee->game_robot_status.robot_id;
-            minipc->robot_status_upload.robot_level = referee->game_robot_status.robot_level;
-            minipc->robot_status_upload.remain_HP = referee->game_robot_status.remain_HP;
-            minipc->robot_status_upload.max_HP = referee->game_robot_status.max_HP;
-            minipc->robot_status_upload.chassis_current_power =
+            minipc->robot_power_heat_hp_upload.robot_id = referee->game_robot_status.robot_id;
+            minipc->robot_power_heat_hp_upload.robot_level = referee->game_robot_status.robot_level;
+            minipc->robot_power_heat_hp_upload.remain_HP = referee->game_robot_status.remain_HP;
+            minipc->robot_power_heat_hp_upload.max_HP = referee->game_robot_status.max_HP;
+            minipc->robot_power_heat_hp_upload.chassis_current_power =
                 referee->power_heat_data.chassis_power;
-            minipc->robot_status_upload.chassis_power_limit =
+            minipc->robot_power_heat_hp_upload.chassis_power_limit =
                 referee->game_robot_status.chassis_power_limit;
-            minipc->robot_status_upload.shooter_cooling_rate =
+            minipc->robot_power_heat_hp_upload.shooter_cooling_rate =
                 referee->power_heat_data.shooter_id1_17mm_cooling_heat;
-            minipc->robot_status_upload.shooter_heat_limit =
+            minipc->robot_power_heat_hp_upload.shooter_heat_limit =
                 referee->game_robot_status.shooter_heat_limit;
-            minipc->Transmit(communication::ROBOT_STATUS_UPLOAD);
+            minipc->Transmit(communication::ROBOT_POWER_HEAT_HP_UPLOAD);
             i = 0;
         }
         osDelay(1);
