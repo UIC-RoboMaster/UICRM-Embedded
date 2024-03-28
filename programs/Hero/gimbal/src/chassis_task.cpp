@@ -210,19 +210,18 @@ void chassisTask(void* arg) {
         if (abs(offset_yaw) < 0.05f) {
             offset_yaw = 0;
         }
-        chassis_vx = vx_set_org;
-        chassis_vy = vy_set_org;
-        chassis_vz = offset_yaw;
+        chassis_vx = vx_set_org* ratio;
+        chassis_vy = vy_set_org* ratio;
+        chassis_vz = offset_yaw* ratio;
         vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
                 yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-                if (fabs(yaw_pid_error) < 0.01f) {
-                    yaw_pid_error = 0;
-                }
+
                 manual_mode_pid_output = manual_mode_pid->ComputeOutput(yaw_pid_error);
-                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
+                vz_set = manual_mode_pid_output * ratio;
+                chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
@@ -236,8 +235,8 @@ void chassisTask(void* arg) {
                     offset_yaw = 0;
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
-                vz_set = spin_speed;
-                chassis->SetSpeed(vx_set * ratio, vy_set * ratio, vz_set * ratio);
+                vz_set = spin_speed*ratio;
+                chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
@@ -251,7 +250,7 @@ void chassisTask(void* arg) {
                     offset_yaw = 0;
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
-                chassis->SetSpeed(vx_set_org * ratio, vy_set_org * ratio, vz_set * ratio);
+                chassis->SetSpeed(vx_set_org, vy_set_org, vz_set);
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,

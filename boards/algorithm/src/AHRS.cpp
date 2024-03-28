@@ -33,21 +33,70 @@ namespace control {
         q[1] = 0;
         q[2] = 0;
         q[3] = 0;
+        accel_fliter_1[0] = accel_fliter_2[0] = accel_fliter_3[0] = accel_[0]=0.0f;
+        accel_fliter_1[1] = accel_fliter_2[1] = accel_fliter_3[1] = accel_[1]=0.0f;
+        accel_fliter_1[2] = accel_fliter_2[2] = accel_fliter_3[2] = accel_[2]=0.0f;
     }
     void AHRS::Update(float gx, float gy, float gz, float ax, float ay, float az, float mx,
                       float my, float mz) {
+        accel_[0]=ax;
+        accel_[1]=ay;
+        accel_[2]=az;
+        gyro_[0]=gx;
+        gyro_[1]=gy;
+        gyro_[2]=gz;
+        mag_[0]=mx;
+        mag_[1]=my;
+        mag_[2]=mz;
+        accel_fliter_1[0] = accel_fliter_2[0];
+        accel_fliter_2[0] = accel_fliter_3[0];
+        accel_fliter_3[0] = accel_fliter_2[0] * fliter_num[0] +
+                            accel_fliter_1[0] * fliter_num[1] +
+                            accel_[0] * fliter_num[2];
+        accel_fliter_1[1] = accel_fliter_2[1];
+        accel_fliter_2[1] = accel_fliter_3[1];
+        accel_fliter_3[1] = accel_fliter_2[1] * fliter_num[0] +
+                            accel_fliter_1[1] * fliter_num[1] +
+                            accel_[1] * fliter_num[2];
+        accel_fliter_1[2] = accel_fliter_2[2];
+        accel_fliter_2[2] = accel_fliter_3[2];
+        accel_fliter_3[2] = accel_fliter_2[2] * fliter_num[0] +
+                            accel_fliter_1[2] * fliter_num[1] +
+                            accel_[2] * fliter_num[2];
         if (cailb_done_) {
-            MahonyAHRSupdate(q, gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2], ax,
-                             ay, az, mx, my, mz);
+            MahonyAHRSupdate(q, gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2], accel_fliter_1[0],
+                             accel_fliter_1[1], accel_fliter_1[2], mx, my, mz);
             INSCalculate();
         } else if (cailb_flag_) {
             CailbrateHandler(gx, gy, gz, ax, ay, az, mx, my, mz);
         }
     }
     void AHRS::Update(float gx, float gy, float gz, float ax, float ay, float az) {
+        accel_[0]=ax;
+        accel_[1]=ay;
+        accel_[2]=az;
+        gyro_[0]=gx;
+        gyro_[1]=gy;
+        gyro_[2]=gz;
+        accel_fliter_1[0] = accel_fliter_2[0];
+        accel_fliter_2[0] = accel_fliter_3[0];
+        accel_fliter_3[0] = accel_fliter_2[0] * fliter_num[0] +
+                            accel_fliter_1[0] * fliter_num[1] +
+                            accel_[0] * fliter_num[2];
+        accel_fliter_1[1] = accel_fliter_2[1];
+        accel_fliter_2[1] = accel_fliter_3[1];
+        accel_fliter_3[1] = accel_fliter_2[1] * fliter_num[0] +
+                            accel_fliter_1[1] * fliter_num[1] +
+                            accel_[1] * fliter_num[2];
+        accel_fliter_1[2] = accel_fliter_2[2];
+        accel_fliter_2[2] = accel_fliter_3[2];
+        accel_fliter_3[2] = accel_fliter_2[2] * fliter_num[0] +
+                            accel_fliter_1[2] * fliter_num[1] +
+                            accel_[2] * fliter_num[2];
         if (cailb_done_) {
             MahonyAHRSupdateIMU(q, gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2],
-                                ax, ay, az);
+                                accel_fliter_1[0],
+                                accel_fliter_1[1], accel_fliter_1[2]);
             INSCalculate();
         } else if (cailb_flag_) {
             CailbrateHandler(gx, gy, gz, ax, ay, az, 0, 0, 0);

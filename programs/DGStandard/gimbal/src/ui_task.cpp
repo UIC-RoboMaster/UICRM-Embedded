@@ -86,14 +86,13 @@ void uiTask(void* arg) {
     char boostModeStr[15] = "BOOST!";
     char boostOffStr[15] = " ";
     boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
-    communication::graphic_data_t graphMode;
-    communication::graphic_data_t graphWheel;
-    communication::graphic_data_t graphBoost;
 
-    graphMode = modeGUI->InitBulk();
-    graphWheel = wheelGUI->InitBulk();
-    graphBoost = boostGUI->InitBulk();
-    UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+
+    modeGUI->Init();
+    osDelay(110);
+    wheelGUI->Init();
+    osDelay(110);
+    boostGUI->Init();
     osDelay(110);
     modeGUI->InitString();
     osDelay(110);
@@ -264,10 +263,11 @@ void uiTask(void* arg) {
             osDelay(110);
             batteryGUI->Delete();
             osDelay(110);
-            graphMode = modeGUI->DeleteBulk();
-            graphBoost = boostGUI->DeleteBulk();
-            graphWheel = wheelGUI->DeleteBulk();
-            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            modeGUI->Init();
+            osDelay(110);
+            wheelGUI->Init();
+            osDelay(110);
+            boostGUI->Init();
             osDelay(110);
             diagGUI->Clear(UI_Delay);
             osDelay(110);
@@ -285,10 +285,11 @@ void uiTask(void* arg) {
             osDelay(110);
             batteryGUI->InitName();
             osDelay(110);
-            graphMode = modeGUI->InitBulk();
-            graphWheel = wheelGUI->InitBulk();
-            graphBoost = boostGUI->InitBulk();
-            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            modeGUI->Init();
+            osDelay(110);
+            wheelGUI->Init();
+            osDelay(110);
+            boostGUI->Init();
             osDelay(110);
             modeGUI->InitString();
             osDelay(110);
