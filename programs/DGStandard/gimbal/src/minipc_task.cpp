@@ -22,6 +22,7 @@
 
 #include "bsp_thread.h"
 #include "bsp_uart.h"
+#include "chassis_task.h"
 #include "gimbal_task.h"
 #include "protocol.h"
 #include "referee_task.h"
@@ -64,26 +65,71 @@ void minipc_task(void* args) {
     while (true) {
         i++;
         // microsecond
-        minipc->gimbal_current_status.current_imu_pitch = INS_Angle.pitch;
-        minipc->gimbal_current_status.current_imu_yaw = INS_Angle.yaw;
-        minipc->gimbal_current_status.current_imu_roll = INS_Angle.roll;
-        minipc->Transmit(communication::GIMBAL_CURRENT_STATUS);
+        if (i % 2 == 0) {
+            minipc->gimbal_current_status.current_imu_pitch = INS_Angle.pitch;
+            minipc->gimbal_current_status.current_imu_yaw = INS_Angle.yaw;
+            minipc->gimbal_current_status.current_imu_roll = INS_Angle.roll;
+            minipc->gimbal_current_status.pitch_theta = pitch_motor->GetTheta();
+            minipc->gimbal_current_status.yaw_theta = yaw_motor->GetTheta();
+            minipc->gimbal_current_status.pitch_omega = pitch_motor->GetOmega();
+            minipc->gimbal_current_status.yaw_omega = yaw_motor->GetOmega();
+            minipc->gimbal_current_status.shooter_id = 0;
+            minipc->Transmit(communication::GIMBAL_CURRENT_STATUS);
+        }
+        if (i % 10 == 0) {
+            minipc->chassis_current_status.chassis_enabled = 1;  // 暂时底盘默认为打开
+            minipc->chassis_current_status.speed_x = chassis_vx;
+            minipc->chassis_current_status.speed_y = chassis_vy;
+            minipc->chassis_current_status.speed_turn = chassis_vt;
+            minipc->Transmit(communication::CHASSIS_CURRENT_STATUS);
+        }
 
         if (i == 1000) {
             // Secend event
-            minipc->robot_power_heat_hp_upload.robot_id = referee->game_robot_status.robot_id;
-            minipc->robot_power_heat_hp_upload.robot_level = referee->game_robot_status.robot_level;
-            minipc->robot_power_heat_hp_upload.remain_HP = referee->game_robot_status.remain_HP;
-            minipc->robot_power_heat_hp_upload.max_HP = referee->game_robot_status.max_HP;
-            minipc->robot_power_heat_hp_upload.chassis_current_power =
-                referee->power_heat_data.chassis_power;
-            minipc->robot_power_heat_hp_upload.chassis_power_limit =
-                referee->game_robot_status.chassis_power_limit;
-            minipc->robot_power_heat_hp_upload.shooter_cooling_rate =
-                referee->power_heat_data.shooter_id1_17mm_cooling_heat;
-            minipc->robot_power_heat_hp_upload.shooter_heat_limit =
-                referee->game_robot_status.shooter_heat_limit;
-            minipc->Transmit(communication::ROBOT_POWER_HEAT_HP_UPLOAD);
+            minipc->robot_status_upload.robot_id = referee->game_robot_status.robot_id;
+            minipc->robot_status_upload.vision_reset = 0;
+            minipc->robot_status_upload.location_data[0] = 0;
+            minipc->robot_status_upload.location_data[1] = 0;
+            minipc->robot_status_upload.is_killed = (referee->game_robot_status.remain_HP == 0);
+            minipc->robot_status_upload.is_killed |= (remote_mode == REMOTE_MODE_KILL);
+            switch (remote_mode) {
+                case REMOTE_MODE_FOLLOW:
+                    minipc->robot_status_upload.robot_mode = 1;
+                    break;
+                case REMOTE_MODE_SPIN:
+                    minipc->robot_status_upload.robot_mode = 2;
+                    break;
+                case REMOTE_MODE_ADVANCED:
+                    minipc->robot_status_upload.robot_mode = 3;
+                    break;
+                default:
+                    minipc->robot_status_upload.robot_mode = 0;
+                    break;
+            }
+            switch (shoot_flywheel_mode) {
+                case SHOOT_FRIC_MODE_PREPARED:
+                    minipc->robot_status_upload.robot_fric_mode = 1;
+                    break;
+                default:
+                    minipc->robot_status_upload.robot_fric_mode = 0;
+                    break;
+            }
+            switch (shoot_load_mode) {
+                case SHOOT_MODE_SINGLE:
+                    // 单发状态未必会更新，并且未来可能会直接全部突突突取消单发模式
+                    minipc->robot_status_upload.robot_shoot_mode = 1;
+                    break;
+                case SHOOT_MODE_BURST:
+                    minipc->robot_status_upload.robot_shoot_mode = 2;
+                    break;
+                default:
+                    minipc->robot_status_upload.robot_shoot_mode = 0;
+                    break;
+            }
+            minipc->robot_status_upload.supercapacitor_enabled = 0;
+            minipc->robot_status_upload.robot_module_online = 0xff;
+            minipc->robot_status_upload.is_double_gimbal = 0;
+            minipc->Transmit(communication::ROBOT_STATUS_UPLOAD);
             i = 0;
         }
         osDelay(1);
