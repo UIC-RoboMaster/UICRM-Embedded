@@ -213,8 +213,8 @@ void chassisTask(void* arg) {
         chassis_vx = vx_set_org * ratio;
         chassis_vy = vy_set_org * ratio;
         chassis_vz = offset_yaw * ratio;
-        vx_set = cos_yaw * vx_set_org + sin_yaw * vy_set_org;
-        vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
+        vx_set = cos_yaw * chassis_vx + sin_yaw * chassis_vy;
+        vy_set = -sin_yaw * chassis_vx + cos_yaw * chassis_vy;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
                 yaw_pid_error = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
@@ -244,13 +244,13 @@ void chassisTask(void* arg) {
                 osDelay(1);
                 break;
             case REMOTE_MODE_ADVANCED:
-                vz_set = offset_yaw;
+                vz_set = offset_yaw*ratio;
                 if (offset_yaw != 0) {
                     spin_speed = spin_speed + offset_yaw;
                     offset_yaw = 0;
                     spin_speed = clip<float>(spin_speed, -660, 660);
                 }
-                chassis->SetSpeed(vx_set_org, vy_set_org, vz_set);
+                chassis->SetSpeed(chassis_vx, chassis_vy, vz_set);
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
