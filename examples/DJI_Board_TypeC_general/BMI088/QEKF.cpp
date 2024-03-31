@@ -18,18 +18,17 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "main.h"
-
 #include "QEKF.h"
-#include "bsp_dwt.h"
+
 #include "BMI088.h"
 #include "IST8310.h"
+#include "bsp_dwt.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "bsp_spi.h"
 #include "cmsis_os.h"
 #include "heater.h"
-
+#include "main.h"
 
 #define RX_SIGNAL (1 << 0)
 
@@ -44,8 +43,6 @@ static bsp::GPIO* bmi088_accel_cs = nullptr;
 static bsp::GPIO* bmi088_gyro_cs = nullptr;
 static bsp::GPIT* bmi088_accel_int = nullptr;
 static bsp::GPIT* bmi088_gyro_int = nullptr;
-
-
 
 void BMI088ReceiveDone() {
     ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
@@ -80,7 +77,6 @@ void RM_RTOS_Init(void) {
     };
     bmi088 = new imu::BMI088(bmi088Init);
     hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
-
 
     ahrs = new control::QEKF(DWT_GetDeltaT);
     heater_pwm = new bsp::PWM(&htim10, 1, 1000000, 2000, 0);

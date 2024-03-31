@@ -19,9 +19,10 @@
  ###########################################################*/
 
 #include "QEKF.h"
-#include "bsp_dwt.h"
+
 #include "BMI088.h"
 #include "IST8310.h"
+#include "bsp_dwt.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "bsp_spi.h"

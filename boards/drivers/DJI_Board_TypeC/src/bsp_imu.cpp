@@ -604,8 +604,8 @@ namespace bsp {
           Accel_INT_(init.Accel_INT_pin_, this),
           Gyro_INT_(init.Gyro_INT_pin_, this) {
         useMag_ = useMag;
-        RM_ASSERT_FALSE(instance_== nullptr, "IMU repeated initialization");
-        instance_=this;
+        RM_ASSERT_FALSE(instance_ == nullptr, "IMU repeated initialization");
+        instance_ = this;
         IST8310_param_ = init.IST8310;
         BMI088_param_ = init.BMI088;
         heater_param_ = init.heater;
@@ -694,9 +694,7 @@ namespace bsp {
         return Temp > heater_param_.temp - 2;
     }
 
-   IMU_typeC* IMU_typeC::instance_=nullptr;
-
-
+    IMU_typeC* IMU_typeC::instance_ = nullptr;
 
     void IMU_typeC::AHRS_init(float* quat, float* accel, float* mag) {
         UNUSED(accel);
@@ -857,7 +855,7 @@ namespace bsp {
     }
 
     void DMACallbackWrapper(SPI_HandleTypeDef* hspi) {
-        if(IMU_typeC::instance_==nullptr){
+        if (IMU_typeC::instance_ == nullptr) {
             return;
         }
         IMU_typeC* imu = IMU_typeC::instance_;

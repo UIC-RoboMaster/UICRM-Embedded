@@ -22,7 +22,7 @@
 
 namespace control {
 
-    QEKF::QEKF(qekf_gettickoffset_t gettickdelta):gettickdelta_(gettickdelta) {
+    QEKF::QEKF(qekf_gettickoffset_t gettickdelta) : gettickdelta_(gettickdelta) {
         cailb_flag_ = false;
         cailb_done_ = false;
         INS_angle[0] = 0;
@@ -47,12 +47,12 @@ namespace control {
         gyro_[1] = gy;
         gyro_[2] = gz;
 
-         if (cailb_done_) {
-             IMU_QuaternionEKF_Update(gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2],
-                                      ax,ay,az, ticks_count_current_);
-             INS_angle[0]=QEKF_INS.Yaw;
-             INS_angle[1]=QEKF_INS.Pitch;
-             INS_angle[2]=QEKF_INS.Roll;
+        if (cailb_done_) {
+            IMU_QuaternionEKF_Update(gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2],
+                                     ax, ay, az, ticks_count_current_);
+            INS_angle[0] = QEKF_INS.Yaw;
+            INS_angle[1] = QEKF_INS.Pitch;
+            INS_angle[2] = QEKF_INS.Roll;
         } else if (cailb_flag_) {
             CailbrateHandler(gx, gy, gz, ax, ay, az, 0, 0, 0);
         }

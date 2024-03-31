@@ -21,17 +21,16 @@
 #pragma once
 #include "main.h"
 //clang-format off
-#include "arm_math.h"
 #include "QuaternionEKF.h"
+#include "arm_math.h"
 //clang-format on
 namespace control {
 
-    typedef float (*qekf_gettickoffset_t)(uint32_t* last_tick); // refer to the dwt delay function
+    typedef float (*qekf_gettickoffset_t)(uint32_t* last_tick);  // refer to the dwt delay function
 
     class QEKF {
       public:
         QEKF(qekf_gettickoffset_t gettickdelta);
-
 
         void Update(float gx, float gy, float gz, float ax, float ay, float az);
 
@@ -43,9 +42,9 @@ namespace control {
 
       private:
         qekf_gettickoffset_t gettickdelta_;
-        uint32_t last_tick_=0;
-        float ticks_count_=0;
-        float ticks_count_current_=0;
+        uint32_t last_tick_ = 0;
+        float ticks_count_ = 0;
+        float ticks_count_current_ = 0;
 
         float q[4];
         float g_zerodrift[3] = {0};
@@ -54,9 +53,6 @@ namespace control {
         uint16_t calib_cnt_ = 0;
         float accel_[3];
         float gyro_[3];
-
-
-
 
         void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx,
                               float my, float mz);
