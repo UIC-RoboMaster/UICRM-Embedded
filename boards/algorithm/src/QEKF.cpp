@@ -32,9 +32,7 @@ namespace control {
         q[1] = 0;
         q[2] = 0;
         q[3] = 0;
-        accel_fliter_1[0] = accel_fliter_2[0] = accel_fliter_3[0] = accel_[0] = 0.0f;
-        accel_fliter_1[1] = accel_fliter_2[1] = accel_fliter_3[1] = accel_[1] = 0.0f;
-        accel_fliter_1[2] = accel_fliter_2[2] = accel_fliter_3[2] = accel_[2] = 0.0f;
+
         IMU_QuaternionEKF_Init(10, 0.001, 10000000, 1, 0);
     }
 
@@ -48,25 +46,16 @@ namespace control {
         gyro_[0] = gx;
         gyro_[1] = gy;
         gyro_[2] = gz;
-        accel_fliter_1[0] = accel_fliter_2[0];
-        accel_fliter_2[0] = accel_fliter_3[0];
-        accel_fliter_3[0] = accel_fliter_2[0] * fliter_num[0] + accel_fliter_1[0] * fliter_num[1] +
-                            accel_[0] * fliter_num[2];
-        accel_fliter_1[1] = accel_fliter_2[1];
-        accel_fliter_2[1] = accel_fliter_3[1];
-        accel_fliter_3[1] = accel_fliter_2[1] * fliter_num[0] + accel_fliter_1[1] * fliter_num[1] +
-                            accel_[1] * fliter_num[2];
-        accel_fliter_1[2] = accel_fliter_2[2];
-        accel_fliter_2[2] = accel_fliter_3[2];
-        accel_fliter_3[2] = accel_fliter_2[2] * fliter_num[0] + accel_fliter_1[2] * fliter_num[1] +
-                            accel_[2] * fliter_num[2];
-        // if (cailb_done_) {
-            IMU_QuaternionEKF_Update(gx, gy, gz, ax, ay, az, ticks_count_current_);
-            memcpy(q, QEKF_INS.q, sizeof(QEKF_INS.q));
-            INSCalculate();
-//        } else if (cailb_flag_) {
-//            CailbrateHandler(gx, gy, gz, ax, ay, az, 0, 0, 0);
-//        }
+
+         if (cailb_done_) {
+             IMU_QuaternionEKF_Update(gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2],
+                                      ax,ay,az, ticks_count_current_);
+             INS_angle[0]=QEKF_INS.Yaw;
+             INS_angle[1]=QEKF_INS.Pitch;
+             INS_angle[2]=QEKF_INS.Roll;
+        } else if (cailb_flag_) {
+            CailbrateHandler(gx, gy, gz, ax, ay, az, 0, 0, 0);
+        }
     }
     void QEKF::CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az,
                                 float mx, float my, float mz) {
