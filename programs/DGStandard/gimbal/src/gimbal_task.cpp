@@ -148,6 +148,10 @@ void gimbalTask(void* arg) {
                 //                                   minipc->target_angle.target_yaw);
                 //                gimbal->Update();
                 //                break;
+            case REMOTE_MODE_AUTOAIM:
+                gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
+                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+                break;
             default:
                 break;
         }
