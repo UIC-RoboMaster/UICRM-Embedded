@@ -585,8 +585,7 @@ namespace bsp {
 
         friend void DMACallbackWrapper(SPI_HandleTypeDef* hspi);
 
-        static std::map<SPI_HandleTypeDef*, IMU_typeC*> spi_ptr_map;
-        static IMU_typeC* FindInstance(SPI_HandleTypeDef* hspi);
+        static IMU_typeC* instance_;
 
         float TempControl(float real_temp);
         void GetAngle(float q[4], float* yaw, float* pitch, float* roll);
