@@ -103,11 +103,11 @@ void IMU_Param_Correction(IMU_Param_t* param, float gyro[3], float accel[3]) {
 }
 
 //------------------------------------functions below are not used in this
-//demo-------------------------------------------------
+// demo-------------------------------------------------
 //----------------------------------you can read them for learning or
-//programming-----------------------------------------------
+// programming-----------------------------------------------
 //----------------------------------they could also be helpful for further
-//design-----------------------------------------------
+// design-----------------------------------------------
 
 /**
  * @brief        Update quaternion
