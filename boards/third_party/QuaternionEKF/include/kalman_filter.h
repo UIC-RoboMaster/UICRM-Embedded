@@ -22,19 +22,19 @@
 #define ARM_MATH_DSP    // define in arm_math.h
 */
 
-#include "arm_math.h"
+// clang-format off
 #include "main.h"
+#include "arm_math.h"
+#include "cmsis_os.h"
+// clang-format on
 // #include "dsp/matrix_functions.h"
 #include "math.h"
 #include "stdint.h"
 #include "stdlib.h"
 
 #ifndef user_malloc
-#ifdef _CMSIS_OS_H
+// Every board in this framework would add RTOS support
 #define user_malloc pvPortMalloc
-#else
-#define user_malloc malloc
-#endif
 #endif
 
 #define mat arm_matrix_instance_f32

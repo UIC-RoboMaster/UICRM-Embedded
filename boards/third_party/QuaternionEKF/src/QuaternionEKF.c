@@ -465,12 +465,21 @@ static void IMU_QuaternionEKF_Observe(KalmanFilter_t* kf) {
  * @param x x
  * @return float
  */
+// Fast inverse square-root
+// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+
 static float invSqrt(float x) {
-    float halfx = 0.5f * x;
-    float y = x;
-    long i = *(long*)&y;
-    i = 0x5f375a86 - (i >> 1);
-    y = *(float*)&i;
-    y = y * (1.5f - (halfx * y * y));
-    return y;
+    union {
+        float f;
+        uint32_t i;
+    } conv;
+
+    float x2;
+    const float threehalfs = 1.5F;
+
+    x2 = x * 0.5F;
+    conv.f = x;
+    conv.i = 0x5f3759df - (conv.i >> 1);
+    conv.f = conv.f * (threehalfs - (x2 * conv.f * conv.f));
+    return conv.f;
 }
