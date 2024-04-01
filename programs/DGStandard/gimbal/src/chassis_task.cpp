@@ -21,8 +21,8 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
-const float chassis_max_xy_speed = 2 * PI * 8;
-const float chassis_max_t_speed = 2 * PI * 4;
+const float chassis_max_xy_speed = 2 * PI * 10;
+const float chassis_max_t_speed = 2 * PI * 5;
 
 float chassis_vx = 0;
 float chassis_vy = 0;

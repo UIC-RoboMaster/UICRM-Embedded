@@ -56,6 +56,8 @@ enum ShootMode {
     SHOOT_MODE_BURST = 3,   // 连发
 };
 extern ShootMode shoot_load_mode;
+extern bool is_autoaim;
+
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
                                             .attr_bits = osThreadDetached,

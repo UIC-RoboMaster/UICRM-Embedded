@@ -619,9 +619,9 @@ namespace communication {
     /* ===== TARGET_ANGLE 0x0402 ===== */
     typedef struct {
         uint8_t shooter_id;
+        uint8_t target_robot_id;
         float target_pitch;
         float target_yaw;
-        float expected_bullet_speed;
         uint8_t accuracy;// 置信度 0-100
         uint8_t shoot_cmd;
     } __packed target_angle_t;

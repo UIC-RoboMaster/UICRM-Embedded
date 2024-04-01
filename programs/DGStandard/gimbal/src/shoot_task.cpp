@@ -141,10 +141,10 @@ void init_shoot() {
 
     steering_motor->SetTransmissionRatio(36);
     control::ConstrainedPID::PID_Init_t steering_motor_theta_pid_init = {
-        .kp = 20,
+        .kp = 40,
         .ki = 0,
         .kd = 0,
-        .max_out = 2 * PI,
+        .max_out = 4 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
