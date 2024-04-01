@@ -22,13 +22,14 @@
 
 #include <string.h>
 
-#include "imu_task.h"
 #include "gimbal_task.h"
+#include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,REMOTE_MODE_AUTOAIM};
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
+                                      REMOTE_MODE_AUTOAIM};
 const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
@@ -133,20 +134,19 @@ void remoteTask(void* arg) {
                 next_mode = (RemoteMode)remote_mode_min;
             }
             remote_mode = next_mode;
-            if(remote_mode == REMOTE_MODE_AUTOAIM){
+            if (remote_mode == REMOTE_MODE_AUTOAIM) {
                 is_autoaim = true;
-            }
-            else{
+            } else {
                 is_autoaim = false;
             }
         }
         // 右键切换自瞄
-        if(mouse_right_edge->posEdge()){
+        if (mouse_right_edge->posEdge()) {
             is_autoaim = !is_autoaim;
-             if(is_autoaim==false){
-                 // gimbal->TargetAbs(INS_Angle.pitch, INS_Angle.yaw);
-                 shoot_load_mode = SHOOT_MODE_STOP;
-             }
+            if (is_autoaim == false) {
+                // gimbal->TargetAbs(INS_Angle.pitch, INS_Angle.yaw);
+                shoot_load_mode = SHOOT_MODE_STOP;
+            }
         }
 
         /*
@@ -175,7 +175,7 @@ void remoteTask(void* arg) {
             }
         }
 
-        if(!is_autoaim || !minipc->IsOnline()) {
+        if (!is_autoaim || !minipc->IsOnline()) {
             // 单发
             static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
             shoot_switch_edge->input(state_l == remote::DOWN);
@@ -200,13 +200,12 @@ void remoteTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_STOP;
                 shoot_burst_timestamp = 0;
             }
-        }else{
+        } else {
             // 自喵模式下只有连发
-            if(minipc->IsOnline()){
-                if(minipc->target_angle.shoot_cmd != 0){
+            if (minipc->IsOnline()) {
+                if (minipc->target_angle.shoot_cmd != 0) {
                     shoot_load_mode = SHOOT_MODE_BURST;
-                }
-                else{
+                } else {
                     shoot_load_mode = SHOOT_MODE_STOP;
                     shoot_burst_timestamp = 0;
                 }

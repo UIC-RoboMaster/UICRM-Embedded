@@ -91,7 +91,7 @@ void uiTask(void* arg) {
 
     char autoAimStr[15] = "AUTOAIM ";
     char autoAimOffStr[15] = "        ";
-        autoAimGUI = new communication::StringGUI(UI, autoAimOffStr, 840, 730, UI_Color_Orange, 30);
+    autoAimGUI = new communication::StringGUI(UI, autoAimOffStr, 840, 730, UI_Color_Orange, 30);
 
     modeGUI->Init();
     osDelay(110);

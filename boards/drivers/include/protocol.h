@@ -596,7 +596,6 @@ namespace communication {
 
     /* Command for Host */
 
-
     typedef enum {
         PACK = 0x0401,
         TARGET_ANGLE = 0x0402,
@@ -622,10 +621,9 @@ namespace communication {
         uint8_t target_robot_id;
         float target_pitch;
         float target_yaw;
-        uint8_t accuracy;// 置信度 0-100
+        uint8_t accuracy;  // 置信度 0-100
         uint8_t shoot_cmd;
     } __packed target_angle_t;
-
 
     /* ===== NO_TARGET_FLAG 0x0403 ===== */
     typedef struct {
@@ -635,9 +633,9 @@ namespace communication {
     /* ===== SHOOT_CMD 0x0404 ===== */
     typedef struct {
         uint8_t shooter_id;
-        uint8_t shoot_flywheel;   // 0x00 for stop, 0x01 for start
-        uint8_t shoot_cmd;        // 0x00 for stop, 0x01 for shoot
-        float expect_bullet_speed; // 摩擦轮期望速度
+        uint8_t shoot_flywheel;     // 0x00 for stop, 0x01 for start
+        uint8_t shoot_cmd;          // 0x00 for stop, 0x01 for shoot
+        float expect_bullet_speed;  // 摩擦轮期望速度
     } __packed shoot_cmd_t;
 
     /* ===== ROBOT_MOVE_SPEED 0x0405 ===== */
@@ -682,57 +680,54 @@ namespace communication {
 
     /* ===== AUTOAIM_ENABLE 0x0504 ===== */
     typedef struct {
-            uint8_t autoaim_enabled;
+        uint8_t autoaim_enabled;
     } __packed autoaim_enable_t;
 
     /* ===== ROBOT_STATUS_UPLOAD 1Hz 0x0505 ===== */
-        typedef struct {
-            uint8_t robot_id;
-            uint8_t vision_reset; // 是否重置视觉识别
-            uint8_t location_data[2];// 裁判系统返回的位置数据，RMUL状态下为0
-            uint8_t is_killed; // 是否被击杀，裁判系统血量为0或者触发手动kill则视为被击杀
-            uint8_t robot_mode; // 机器人模式
-            /*
-             * 1:一般跟随
-             * 2:小陀螺
-             * 3:高级调试
-             * 4:全自动小陀螺原地防守
-             * 5:全自动哨兵
-             * */
-            uint8_t robot_fric_mode;
-            /*
-             * 1:正常
-             * 0:停止
-             * */
-            uint8_t robot_shoot_mode;
-            /*
-             * 1:单发
-             * 2:连发
-             * 3:停止
-             * */
-            uint8_t supercapacitor_enabled;
-                /*
-                 * 1:开启
-                 * 0:关闭
-                 * */
-            uint8_t robot_module_online;
-            /*
-             * 八位Bool
-             * 0:底盘
-             * 1:云台
-             * 2:发射机构
-             * 3:IMU
-             * 4-7:保留
-             */
-            uint8_t is_double_gimbal;
-            /*
-             * 1:双云台
-             * 0:单云台
-             * */
-        } __packed robot_status_upload_t;
-
-
-
+    typedef struct {
+        uint8_t robot_id;
+        uint8_t vision_reset;      // 是否重置视觉识别
+        uint8_t location_data[2];  // 裁判系统返回的位置数据，RMUL状态下为0
+        uint8_t is_killed;  // 是否被击杀，裁判系统血量为0或者触发手动kill则视为被击杀
+        uint8_t robot_mode;  // 机器人模式
+        /*
+         * 1:一般跟随
+         * 2:小陀螺
+         * 3:高级调试
+         * 4:全自动小陀螺原地防守
+         * 5:全自动哨兵
+         * */
+        uint8_t robot_fric_mode;
+        /*
+         * 1:正常
+         * 0:停止
+         * */
+        uint8_t robot_shoot_mode;
+        /*
+         * 1:单发
+         * 2:连发
+         * 3:停止
+         * */
+        uint8_t supercapacitor_enabled;
+        /*
+         * 1:开启
+         * 0:关闭
+         * */
+        uint8_t robot_module_online;
+        /*
+         * 八位Bool
+         * 0:底盘
+         * 1:云台
+         * 2:发射机构
+         * 3:IMU
+         * 4-7:保留
+         */
+        uint8_t is_double_gimbal;
+        /*
+         * 1:双云台
+         * 0:单云台
+         * */
+    } __packed robot_status_upload_t;
 
     class Host : public UARTProtocol {
       public:
