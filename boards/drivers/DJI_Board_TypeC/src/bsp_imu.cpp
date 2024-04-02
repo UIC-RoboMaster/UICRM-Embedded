@@ -604,7 +604,7 @@ namespace bsp {
           Accel_INT_(init.Accel_INT_pin_, this),
           Gyro_INT_(init.Gyro_INT_pin_, this) {
         useMag_ = useMag;
-        RM_ASSERT_FALSE(instance_ == nullptr, "IMU repeated initialization");
+        RM_ASSERT_TRUE(instance_ == nullptr, "IMU repeated initialization");
         instance_ = this;
         IST8310_param_ = init.IST8310;
         BMI088_param_ = init.BMI088;
