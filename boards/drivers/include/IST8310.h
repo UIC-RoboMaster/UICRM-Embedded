@@ -58,14 +58,14 @@ namespace imu {
         float mag[3];
     } IST8310_real_data_t;
 
-    typedef void (*ist8310_callback_t)(float mag[3]);
+    typedef void (*ist8310_callback_t)(void* instance);
 
     class IST8310 {
       public:
         IST8310(IST8310_init_t init);
         bool IsReady();
-        void RegisterCallback(ist8310_callback_t callback);
-        float mag_[3];
+        void RegisterCallback(ist8310_callback_t callback, void* instance);
+        volatile float mag_[3];
 
       private:
         uint8_t Init();
@@ -86,7 +86,8 @@ namespace imu {
         bsp::GPIO* rst_;
         bsp::GPIT* int_;
 
-        ist8310_callback_t callback_ = [](float mag_tmp[3]) { UNUSED(mag_tmp); };
+        ist8310_callback_t callback_ = [](void* instance) { UNUSED(instance); };
+        void* callback_instance_;
 
         bool start_flag_;
 

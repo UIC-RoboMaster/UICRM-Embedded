@@ -64,14 +64,14 @@ void RM_RTOS_Init() {
     flywheel_motor4->SetTransmissionRatio(1);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 250,
-        .ki = 0.3,
-        .kd = 0,
+        .kp = 150,
+        .ki = 0.03,
+        .kd = 1,
         .max_out = 30000,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
-        .A = 30 * PI,                           // 变速积分所能达到的最大值为A+B
-        .B = 20 * PI,                           // 启动变速积分的死区
+        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
@@ -172,10 +172,10 @@ void RM_RTOS_Default_Task(const void* args) {
                 flywheel_motor4->SetTarget(0);
                 flywheel_flag = false;
             } else {
-                flywheel_motor1->SetTarget(120 * 2 * PI);
-                flywheel_motor2->SetTarget(120 * 2 * PI);
-                flywheel_motor3->SetTarget(120 * 2 * PI);
-                flywheel_motor4->SetTarget(120 * 2 * PI);
+                flywheel_motor1->SetTarget(90 * 2 * PI);
+                flywheel_motor2->SetTarget(90 * 2 * PI);
+                flywheel_motor3->SetTarget(90 * 2 * PI);
+                flywheel_motor4->SetTarget(90 * 2 * PI);
                 flywheel_flag = true;
             }
         }

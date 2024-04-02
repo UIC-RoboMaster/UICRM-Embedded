@@ -215,12 +215,12 @@ namespace control {
     void ConstrainedPID::PID_ErrorHandle() {
         // pid错误处理，目前用于判断电机堵转
         // 请在速度环使用电机堵转判断
-        if (output_ < max_out_ * 0.1f) {
+        if (output_ < max_out_ * 0.01f) {
             // 排除PID输出本身很小的情况
             return;
         }
         // 电机是否难以移动，此处的意思是当实际速度几乎等于0的时候，电机无法转动
-        if (abs(target_ - measure_) / target_ > 0.98f) {  // 此处0.98和上面0.1需要进行调节优化
+        if (abs(target_ - measure_) / target_ > 0.9f) {
             PID_ErrorHandler.error_count++;
         } else {
             PID_ErrorHandler.error_count = 0;

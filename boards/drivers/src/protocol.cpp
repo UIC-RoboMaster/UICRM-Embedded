@@ -253,11 +253,20 @@ namespace communication {
             case ROBOT_MOVE_SPEED:
                 memcpy(&robot_move, data, length);
                 break;
+            case ROBOT_POWER_HEAT_HP_UPLOAD:
+                memcpy(&robot_power_heat_hp_upload, data, length);
+                break;
+            case GIMBAL_CURRENT_STATUS:
+                memcpy(&gimbal_current_status, data, length);
+                break;
+            case CHASSIS_CURRENT_STATUS:
+                memcpy(&chassis_current_status, data, length);
+                break;
+            case AUTOAIM_ENABLE:
+                memcpy(&autoaim_enable, data, length);
+                break;
             case ROBOT_STATUS_UPLOAD:
                 memcpy(&robot_status_upload, data, length);
-                break;
-            case ROBOT_POSITION:
-                memcpy(&gimbal_current_status, data, length);
                 break;
             default:
                 return false;
@@ -288,13 +297,25 @@ namespace communication {
                 data_len = sizeof(robot_move_t);
                 memcpy(data, &robot_move, data_len);
                 break;
+            case ROBOT_POWER_HEAT_HP_UPLOAD:
+                data_len = sizeof(robot_power_heat_hp_upload_t);
+                memcpy(data, &robot_power_heat_hp_upload, data_len);
+                break;
+            case GIMBAL_CURRENT_STATUS:
+                data_len = sizeof(gimbal_current_status_t);
+                memcpy(data, &gimbal_current_status, data_len);
+                break;
+            case CHASSIS_CURRENT_STATUS:
+                data_len = sizeof(chassis_current_status_t);
+                memcpy(data, &chassis_current_status, data_len);
+                break;
+            case AUTOAIM_ENABLE:
+                data_len = sizeof(autoaim_enable_t);
+                memcpy(data, &autoaim_enable, data_len);
+                break;
             case ROBOT_STATUS_UPLOAD:
                 data_len = sizeof(robot_status_upload_t);
                 memcpy(data, &robot_status_upload, data_len);
-                break;
-            case ROBOT_POSITION:
-                data_len = sizeof(gimbal_current_status_t);
-                memcpy(data, &gimbal_current_status, data_len);
                 break;
             default:
                 data_len = -1;

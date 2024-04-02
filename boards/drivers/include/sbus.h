@@ -66,23 +66,23 @@ namespace remote {
          *
          */
 
-        int16_t ch1;
-        int16_t ch2;
-        int16_t ch3;
-        int16_t ch4;
-        int16_t ch5;
-        int16_t ch6;
-        int16_t ch7;
-        int16_t ch8;
-        int16_t ch9;
-        int16_t ch10;
-        int16_t ch11;
-        int16_t ch12;
-        int16_t ch13;
-        int16_t ch14;
-        int16_t ch15;
-        int16_t ch16;
-        uint8_t flag;
+        volatile int16_t ch1;
+        volatile int16_t ch2;
+        volatile int16_t ch3;
+        volatile int16_t ch4;
+        volatile int16_t ch5;
+        volatile int16_t ch6;
+        volatile int16_t ch7;
+        volatile int16_t ch8;
+        volatile int16_t ch9;
+        volatile int16_t ch10;
+        volatile int16_t ch11;
+        volatile int16_t ch12;
+        volatile int16_t ch13;
+        volatile int16_t ch14;
+        volatile int16_t ch15;
+        volatile int16_t ch16;
+        volatile uint8_t flag;
 
         // timestamp of the update interrupt
         /**

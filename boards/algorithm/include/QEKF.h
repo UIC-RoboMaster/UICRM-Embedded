@@ -19,18 +19,44 @@
  ###########################################################*/
 
 #pragma once
+#include "main.h"
+//clang-format off
+#include "QuaternionEKF.h"
+#include "arm_math.h"
+//clang-format on
+namespace control {
 
-#define SHOOT_OS_DELAY 1
-#define CHASSIS_OS_DELAY 5
-#define GIMBAL_OS_DELAY 1
-#define REMOTE_OS_DELAY 1
-#define DETECT_OS_DELAY 30
-#define UI_OS_DELAY 100
-#define SHOOT_REFEREE 0
-#define ENABLE_UI 1
+    typedef float (*qekf_gettickoffset_t)(uint32_t* last_tick);  // refer to the dwt delay function
 
-typedef struct {
-    float pitch;
-    float roll;
-    float yaw;
-} INS_Angle_t;
+    class QEKF {
+      public:
+        QEKF(qekf_gettickoffset_t gettickdelta);
+
+        void Update(float gx, float gy, float gz, float ax, float ay, float az);
+
+        void Cailbrate();
+
+        bool IsCailbrated();
+
+        float INS_angle[3];
+
+      private:
+        qekf_gettickoffset_t gettickdelta_;
+        uint32_t last_tick_ = 0;
+        float ticks_count_ = 0;
+        float ticks_count_current_ = 0;
+
+        float q[4];
+        float g_zerodrift[3] = {0};
+        bool cailb_flag_;
+        bool cailb_done_;
+        uint16_t calib_cnt_ = 0;
+        float accel_[3];
+        float gyro_[3];
+
+        void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx,
+                              float my, float mz);
+
+        void INSCalculate();
+    };
+}  // namespace control

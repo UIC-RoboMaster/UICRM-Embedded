@@ -358,25 +358,19 @@ namespace imu {
          */
         bool IsReady();
 
-        float gyro_[3];     /**< 陀螺仪数据 */
-        float accel_[3];    /**< 加速度计数据 */
-        float temperature_; /**< 温度 */
-        float time_;        /**< 时间戳 */
+        volatile float gyro_[3];     /**< 陀螺仪数据 */
+        volatile float accel_[3];    /**< 加速度计数据 */
+        volatile float temperature_; /**< 温度 */
+        volatile float time_;        /**< 时间戳 */
 
       protected:
         /**
          * @brief 在阻塞模式下读取陀螺仪和加速度计数据
-         * @param gyro 陀螺仪数据的指针
-         * @param accel 加速度计数据的指针
-         * @param temperate 温度数据的指针
          */
         /**
          * @brief Read gyroscope and accelerometer data in blocking mode
-         * @param gyro pointer to gyroscope data
-         * @param accel pointer to accelerometer data
-         * @param temperate pointer to temperature data
          */
-        void Read(float* gyro, float* accel, float* temperate);
+        void Read();
         /**
          * @brief 在中断或者DMA模式下读取陀螺仪数据
          */
@@ -384,9 +378,9 @@ namespace imu {
          * @brief Read gyroscope data in interrupt or DMA mode
          */
         void Read_IT();
-        static void temperature_read_over(uint8_t* rx_buf, float* temperate);
-        static void accel_read_over(uint8_t* rx_buf, float accel[3], float* time);
-        static void gyro_read_over(uint8_t* rx_buf, float gyro[3]);
+        void temperature_read_over(uint8_t* rx_buf);
+        void accel_read_over(uint8_t* rx_buf);
+        void gyro_read_over(uint8_t* rx_buf);
 
         volatile uint8_t gyro_update_flag = 0;
         volatile uint8_t accel_update_flag = 0;

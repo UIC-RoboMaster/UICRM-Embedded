@@ -604,8 +604,8 @@ namespace bsp {
           Accel_INT_(init.Accel_INT_pin_, this),
           Gyro_INT_(init.Gyro_INT_pin_, this) {
         useMag_ = useMag;
-        RM_ASSERT_FALSE(FindInstance(init.hspi), "Uart repeated initialization");
-        spi_ptr_map[init.hspi] = this;
+        RM_ASSERT_TRUE(instance_ == nullptr, "IMU repeated initialization");
+        instance_ = this;
         IST8310_param_ = init.IST8310;
         BMI088_param_ = init.BMI088;
         heater_param_ = init.heater;
@@ -694,16 +694,7 @@ namespace bsp {
         return Temp > heater_param_.temp - 2;
     }
 
-    std::map<SPI_HandleTypeDef*, IMU_typeC*> IMU_typeC::spi_ptr_map;
-
-    IMU_typeC* IMU_typeC::FindInstance(SPI_HandleTypeDef* hspi) {
-        const auto it = spi_ptr_map.find(hspi);
-        if (it == spi_ptr_map.end()) {
-            return nullptr;
-        }
-
-        return it->second;
-    }
+    IMU_typeC* IMU_typeC::instance_ = nullptr;
 
     void IMU_typeC::AHRS_init(float* quat, float* accel, float* mag) {
         UNUSED(accel);
@@ -864,9 +855,10 @@ namespace bsp {
     }
 
     void DMACallbackWrapper(SPI_HandleTypeDef* hspi) {
-        IMU_typeC* imu = IMU_typeC::FindInstance(hspi);
-        if (!imu)
+        if (IMU_typeC::instance_ == nullptr) {
             return;
+        }
+        IMU_typeC* imu = IMU_typeC::instance_;
         if (__HAL_DMA_GET_FLAG(hspi->hdmarx, __HAL_DMA_GET_TC_FLAG_INDEX(hspi->hdmarx)) != RESET) {
             __HAL_DMA_CLEAR_FLAG(hspi->hdmarx, __HAL_DMA_GET_TC_FLAG_INDEX(hspi->hdmarx));
 

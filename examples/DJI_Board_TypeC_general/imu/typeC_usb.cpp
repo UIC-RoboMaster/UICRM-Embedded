@@ -115,7 +115,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             mini_pc->gimbal_current_status.current_imu_yaw = imu->INS_angle[0] / PI * 180;
             mini_pc->gimbal_current_status.current_imu_roll = imu->INS_angle[1] / PI * 180;
             mini_pc->gimbal_current_status.current_imu_pitch = imu->INS_angle[2] / PI * 180;
-            mini_pc->Transmit(communication::ROBOT_POSITION);
+            mini_pc->Transmit(communication::GIMBAL_CURRENT_STATUS);
             osDelay(1);
         }
         set_cursor(0, 0);

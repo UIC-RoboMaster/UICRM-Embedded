@@ -344,15 +344,15 @@ namespace driver {
 
         cybergear_mode_e mode_ = CYBERGEAR_MODE_CURRENT;
 
-        float theta_ = 0;
-        float mit_theta_ = 0;
-        float omega_ = 0;
-        float torque_ = 0;
-        float temperature_ = 0;
-        float current_ = 0;
+        volatile float theta_ = 0;
+        volatile float mit_theta_ = 0;
+        volatile float omega_ = 0;
+        volatile float torque_ = 0;
+        volatile float temperature_ = 0;
+        volatile float current_ = 0;
 
-        uint8_t error_code_ = 0;
-        uint8_t status_ = 0;
+        volatile uint8_t error_code_ = 0;
+        volatile uint8_t status_ = 0;
 
         void TransmitData();
 

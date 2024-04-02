@@ -75,34 +75,34 @@ namespace remote {
         /**
          * @brief 获取右摇杆的x轴值
          */
-        int16_t ch0;
+        volatile int16_t ch0;
         /**
          * @brief 获取右摇杆的y轴值
          */
-        int16_t ch1;
+        volatile int16_t ch1;
         /**
          * @brief 获取左摇杆的x轴值
          */
-        int16_t ch2;
+        volatile int16_t ch2;
         /**
          * @brief 获取左摇杆的y轴值
          */
-        int16_t ch3;
+        volatile int16_t ch3;
 
         // left and right switch information
         /**
          * @brief 获取左拨杆的状态
          */
-        switch_t swl;
+        volatile switch_t swl;
         /**
          * @brief 获取右拨杆的状态
          */
-        switch_t swr;
+        volatile switch_t swr;
         // left track wheel
         /**
          * @brief 获取左波轮的x轴值
          */
-        int16_t ch4;
+        volatile int16_t ch4;
         // mouse movement and button information
         /**
          * @brief 获取鼠标的数据，仅限于DT7连接上电脑之后
