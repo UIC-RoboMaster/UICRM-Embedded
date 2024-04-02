@@ -163,10 +163,20 @@ namespace control {
     };
 
     /**
-     * @brief 带有积分输出限制的PID控制器
+     * @brief 带有积分输出限制的PID控制器，又名复杂PID控制器
+     * @note
+     * 该PID控制器支持的功能有：积分输出限制、微分先行、梯形积分、输出滤波、变积分、微分滤波、异常处理
+     * 具体功能实现请打开此链接：https://www.cnblogs.com/WangHongxi/p/12404424.html
+     * 本PID类是基于此链接的代码进行移植的
      */
     /**
-     * @brief PID controller with integral output constraint
+     * @brief PID controller with integral output constraint, also known as
+     * complex PID controller
+     * @note this PID controller supports the following features: integral output
+     * constraint, derivative on measurement, trapezoid integral, output filtering,
+     * changing integral rate, derivative filtering, error handling
+     * For specific implementation, please refer to this link:
+     * https://www.cnblogs.com/WangHongxi/p/12404424.html
      */
     class ConstrainedPID {
       public:
