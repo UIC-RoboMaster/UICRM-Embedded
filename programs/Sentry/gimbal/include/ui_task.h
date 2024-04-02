@@ -24,7 +24,6 @@
 #include <cstdio>
 #include <cstring>
 
-#include "bsp_batteryvol.h"
 #include "chassis_task.h"
 #include "cmsis_os2.h"
 #include "gimbal_task.h"

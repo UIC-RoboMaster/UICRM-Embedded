@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -19,18 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#include "gimbal.h"
-#include "pid.h"
+#include "protocol.h"
+extern communication::Host* minipc;
 
-// basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = 2.0540f,
-    .yaw_offset_ = 3.6800f,
-    .pitch_max_ = 0.2796f,
-    .yaw_max_ = PI,
-    .yaw_circle_ = true,
-    .pitch_inverted = true,
-    .yaw_inverted = false,
-    .pitch_eposition = 0,
-    .yaw_eposition = 0,
-};
+void init_minipc();
