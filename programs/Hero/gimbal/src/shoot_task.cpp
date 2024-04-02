@@ -79,72 +79,7 @@ void shootTask(void* arg) {
         if (!flywheel_right->IsEnable()) {
             flywheel_right->Enable();
         }
-        //                if (referee->bullet_remaining.bullet_remaining_num_17mm == 0){
-        //                    //没子弹了
-        //                    shoot_flywheel_offset = -200;
-        //                    flywheel_left->SetOutput(ramp_1.Calc(shoot_flywheel_offset));
-        //                    flywheel_right->SetOutput(ramp_2.Calc(shoot_flywheel_offset));
-        //                    shoot_state = 0;
-        //                    shoot_state_2 = 0;
-        //                    kill_shoot();
-        //                    osDelay(SHOOT_OS_DELAY);
-        //                    continue;
-        //                }
-        //         检测开关状态，向上来回打即启动拔弹
-        //        if (can_shoot_click) {
-        //            if (dbus->keyboard.bit.CTRL == 1) {
-        //                if (shoot_state == 0) {
-        //                    shoot_state = 1;
-        //                } else {
-        //                    shoot_state = 0;
-        //                    shoot_state_2 = 0;
-        //                }
-        //            }
-        //            if (shoot_state != 0) {
-        //                if (dbus->mouse.l == 1) {
-        //                    shoot_state_2 = 2;
-        //                } else if (dbus->mouse.l == 0) {
-        //                    shoot_state_2 = 0;
-        //                }
-        //            }
-        //        }
-        //        if (dbus->keyboard.bit.CTRL == 0) {
-        //            can_shoot_click = true;
-        //        } else {
-        //            can_shoot_click = false;
-        //        }
-        //        if (dbus->swl == remote::UP) {
-        //            if (last_state == remote::MID)
-        //                last_state = remote::UP;
-        //        } else if (dbus->swl == remote::MID) {
-        //            if (last_state == remote::UP) {
-        //                last_state = remote::MID;
-        //                if (shoot_state == 0) {
-        //                    shoot_state = 1;
-        //                } else {
-        //                    shoot_state = 0;
-        //                    shoot_state_2 = 0;
-        //                }
-        //            }
-        //        }
-        //        switch (shoot_state) {
-        //            case 0:
-        //                shoot_flywheel_offset = -200;
-        //
-        //                break;
-        //            case 1:
-        //            case 2:
-        //                shoot_flywheel_offset = 200;
-        //                if (servo_back == 0) {
-        //                    load_servo->SetTarget(load_servo->GetTheta() - 2 * PI / 32, true);
-        //                    servo_back = 1;
-        //                }
-        //                break;
-        //        }
-        //        if (shoot_state == 1 && ramp_1.Get() == ramp_1.GetMax() &&
-        //            ramp_2.Get() == ramp_2.GetMax()) {
-        //            shoot_state = 2;
-        //        }
+
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
                 flywheel_left->SetTarget(120.0f * 2 * PI);
@@ -192,61 +127,6 @@ void shootTask(void* arg) {
             }
         }
         last_shoot_mode = shoot_load_mode;
-        //        // 启动拔弹电机后的操作
-        //        if (shoot_state == 2) {
-        //            // 检测是否已装填子弹
-        //
-        //            // 检测是否需要发射子弹
-        //
-        //                if (dbus->swl == remote::DOWN) {
-        //                    if (last_state_2 == remote::MID) {
-        //                        last_state_2 = remote::DOWN;
-        //                        if (shoot_state_2 == 0) {
-        //                            shoot_state_2 = 1;
-        //                        }
-        //                        shoot_time_count = 0;
-        //                    }
-        //                    shoot_time_count++;
-        //                    if (shoot_time_count > 1000 / SHOOT_OS_DELAY) {
-        //                        shoot_state_2 = 2;
-        //                    }
-        //                } else if (dbus->swl == remote::MID) {
-        //                    if (last_state_2 == remote::DOWN) {
-        //                        last_state_2 = remote::MID;
-        //                    }
-        //                    shoot_state_2 = 0;
-        //                }
-        //            // 发射子弹
-        //            if (shoot_state_2 == 1) {
-        //                // 检测是否已经发射完毕
-        //                if (last_shoot_key == 0 && shoot_state_key == 1) {
-        //                    last_shoot_key = 1;
-        //                } else if (last_shoot_key == 1 && shoot_state_key == 0) {
-        //                    last_shoot_key = 0;
-        //                    shoot_state_2 = 0;
-        //                }
-        //                // 如果发射未完成，则需要发射子弹
-        //                if (shoot_state_2 == 1) {
-        //                    load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-        //                } else {
-        //                    if (!load_servo->Holding()) {
-        //                        load_servo->SetTarget(load_servo->GetTheta(), true);
-        //                    }
-        //                }
-        //            } else if (shoot_state_2 == 2) {
-        //                // 连续发射
-        //                load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-        //            } else if (shoot_state_key == 1) {
-        //                // 不需要发射子弹，但是未装弹完毕，则需要装填子弹
-        //                load_servo->SetTarget(load_servo->GetTarget() + 2 * PI / 8, false);
-        //            } else {
-        //                // 不需要发射子弹，且装弹完毕，则需要锁定拔弹电机
-        //                if (!load_servo->Holding()) {
-        //                    load_servo->SetTarget(load_servo->GetTheta(), true);
-        //                }
-        //            }
-        //        }
-        // 计算输出，由于拔弹电机的输出系统由云台托管，不需要再次处理can的传输
 
         osDelay(SHOOT_OS_DELAY);
     }

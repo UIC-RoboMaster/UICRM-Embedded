@@ -129,12 +129,15 @@ void gimbalTask(void* arg) {
         //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
         //            pitch_diff = 0;
         //        }
-
+        float yaw_speed_offset = actural_chassis_turn_speed + yaw_ratio;
+        float pitch_speed_offset = pitch_ratio;
+        yaw_motor->SetSpeedOffset(yaw_speed_offset);
+        pitch_motor->SetSpeedOffset(pitch_speed_offset);
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                yaw_motor->SetSpeedOffset(actural_chassis_turn_speed);
+
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
             case REMOTE_MODE_ADVANCED:
@@ -169,7 +172,7 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
-        .kp = 4000,
+        .kp = 4500,
         .ki = 0,
         .kd = 0,
         .max_out = 16383,
@@ -190,10 +193,10 @@ void init_gimbal() {
 
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
-        .kp = 25,
+        .kp = 13,
         .ki = 0,
-        .kd = 0,
-        .max_out = 2 * PI,
+        .kd = 4.5,
+        .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
@@ -206,7 +209,7 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
         .kp = 4000,
         .ki = 0,
-        .kd = 100,
+        .kd = 2000,
         .max_out = 16383,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
