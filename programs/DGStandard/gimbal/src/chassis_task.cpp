@@ -21,8 +21,8 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
-const float chassis_max_xy_speed = 2 * PI * 8;
-const float chassis_max_t_speed = 2 * PI * 4;
+const float chassis_max_xy_speed = 2 * PI * 10;
+const float chassis_max_t_speed = 2 * PI * 5;
 
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -97,7 +97,7 @@ void chassisTask(void* arg) {
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
-        if (remote_mode == REMOTE_MODE_ADVANCED) {
+        if (remote_mode == REMOTE_MODE_ADVANCED || remote_mode == REMOTE_MODE_AUTOAIM) {
             // 手动模式下，遥控器直接控制底盘速度
             chassis_vx = car_vx;
             chassis_vy = car_vy;

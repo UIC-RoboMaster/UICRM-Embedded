@@ -29,6 +29,7 @@ communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
+communication::StringGUI* autoAimGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
 
 void UI_Delay(uint32_t delay) {
@@ -70,6 +71,7 @@ void uiTask(void* arg) {
     gimbalGUI = new communication::GimbalGUI(UI);
     osDelay(110);
     gimbalGUI->Init2();
+    osDelay(110);
 
     // Initialize self-diagnosis GUI
     char diagStr[29] = "";
@@ -87,23 +89,33 @@ void uiTask(void* arg) {
     char boostOffStr[15] = " ";
     boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
 
+    char autoAimStr[15] = "AUTOAIM ";
+    char autoAimOffStr[15] = "        ";
+    autoAimGUI = new communication::StringGUI(UI, autoAimOffStr, 840, 730, UI_Color_Orange, 30);
+
     modeGUI->Init();
     osDelay(110);
     wheelGUI->Init();
     osDelay(110);
     boostGUI->Init();
     osDelay(110);
+    autoAimGUI->Init();
+    osDelay(110);
     modeGUI->InitString();
     osDelay(110);
     wheelGUI->InitString();
     osDelay(110);
     boostGUI->InitString();
+    osDelay(110);
+    autoAimGUI->InitString();
+    osDelay(110);
     float relative_angle = 0;
     float pitch_angle = 0;
     float power_percent = 1;
     int8_t last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
     BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
+    BoolEdgeDetector* autoAimEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
 
@@ -182,6 +194,12 @@ void uiTask(void* arg) {
             boostGUI->Update(boostStr, UI_Color_Pink);
             osDelay(UI_OS_DELAY);
         }
+        autoAimEdgeDetector->input(is_autoaim);
+        if (autoAimEdgeDetector->edge()) {
+            char* autoaimStr = is_autoaim ? autoAimStr : autoAimOffStr;
+            autoAimGUI->Update(autoaimStr, UI_Color_Pink);
+            osDelay(UI_OS_DELAY);
+        }
         last_mode = remote_mode;
         last_fric_mode = shoot_flywheel_mode;
 
@@ -191,11 +209,11 @@ void uiTask(void* arg) {
             fr_motor_check_edge->input(true);
             bl_motor_check_edge->input(true);
             br_motor_check_edge->input(true);
-            yaw_motor_check_edge->input(true);
-            pitch_motor_check_edge->input(true);
-            steer_motor_check_edge->input(true);
-            dbus_edge->input(true);
-            imu_cali_edge->input(true);
+            yaw_motor_check_edge->input(yaw_motor->IsOnline());
+            pitch_motor_check_edge->input(pitch_motor->IsOnline());
+            steer_motor_check_edge->input(steering_motor->IsOnline());
+            dbus_edge->input(dbus->IsOnline());
+            imu_cali_edge->input(ahrs->IsCailbrated());
             imu_temp_edge->input(true);
             if (fl_motor_check_edge->negEdge()) {
                 strcpy(diagStr, "FL MOTOR OFFLINE     ");
@@ -262,11 +280,13 @@ void uiTask(void* arg) {
             osDelay(110);
             batteryGUI->Delete();
             osDelay(110);
-            modeGUI->Init();
+            modeGUI->Delete();
             osDelay(110);
-            wheelGUI->Init();
+            wheelGUI->Delete();
             osDelay(110);
-            boostGUI->Init();
+            boostGUI->Delete();
+            osDelay(110);
+            autoAimGUI->Delete();
             osDelay(110);
             diagGUI->Clear(UI_Delay);
             osDelay(110);
@@ -295,6 +315,10 @@ void uiTask(void* arg) {
             wheelGUI->InitString();
             osDelay(110);
             boostGUI->InitString();
+            osDelay(110);
+            autoAimGUI->Init();
+            osDelay(110);
+            autoAimGUI->InitString();
             osDelay(110);
             continue;
         }
