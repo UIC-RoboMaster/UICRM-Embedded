@@ -33,8 +33,9 @@ namespace imu {
         return i2c_->isReady(IST8310_IIC_ADDRESS << 1, 100);
     }
 
-    void IST8310::RegisterCallback(imu::ist8310_callback_t callback) {
+    void IST8310::RegisterCallback(imu::ist8310_callback_t callback, void* instance) {
         callback_ = callback;
+        callback_instance_ = instance;
     }
 
     uint8_t IST8310::Init() {
@@ -111,7 +112,7 @@ namespace imu {
         temp_ist8310_data = (int16_t)((rx_buf_[5] << 8) | rx_buf_[4]);
         mag_[2] = MAG_SEN * temp_ist8310_data;
         is_transmitting_ = 0;
-        callback_(mag_);
+        callback_(callback_instance_);
     }
 
     void IST8310::ist8310_RST_H() {
