@@ -22,17 +22,21 @@
 
 #include <string.h>
 
+#include "gimbal_task.h"
 #include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
-const int8_t remote_mode_max = 2;
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
+                                      REMOTE_MODE_AUTOAIM};
+const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 bool is_killed = false;
+
+bool is_autoaim = false;
 
 void init_dbus() {
     // 初始化遥控器
@@ -130,6 +134,19 @@ void remoteTask(void* arg) {
                 next_mode = (RemoteMode)remote_mode_min;
             }
             remote_mode = next_mode;
+            if (remote_mode == REMOTE_MODE_AUTOAIM) {
+                is_autoaim = true;
+            } else {
+                is_autoaim = false;
+            }
+        }
+        // 右键切换自瞄
+        if (mouse_right_edge->posEdge()) {
+            is_autoaim = !is_autoaim;
+            if (is_autoaim == false) {
+                // gimbal->TargetAbs(INS_Angle.pitch, INS_Angle.yaw);
+                shoot_load_mode = SHOOT_MODE_STOP;
+            }
         }
 
         /*
@@ -158,30 +175,41 @@ void remoteTask(void* arg) {
             }
         }
 
-        // 单发
-        static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
-        shoot_switch_edge->input(state_l == remote::DOWN);
-        static BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
-        mouse_left_edge->input(mouse.l);
-        if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge()) {
-            shoot_load_mode = SHOOT_MODE_SINGLE;
-            shoot_burst_timestamp = 0;
-        }
+        if (!is_autoaim || !minipc->IsOnline()) {
+            // 单发
+            static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
+            shoot_switch_edge->input(state_l == remote::DOWN);
 
-        // 连发
-        if (state_l == remote::DOWN || mouse.l) {
-            shoot_burst_timestamp++;
-        }
-        static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);
-        shoot_burst_switch_edge->input(shoot_burst_timestamp > 500 * REMOTE_OS_DELAY);
-        if (shoot_burst_switch_edge->posEdge()) {
-            shoot_load_mode = SHOOT_MODE_BURST;
-        }
+            if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge()) {
+                shoot_load_mode = SHOOT_MODE_SINGLE;
+                shoot_burst_timestamp = 0;
+            }
 
-        // 不发射
-        if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge()) {
-            shoot_load_mode = SHOOT_MODE_STOP;
-            shoot_burst_timestamp = 0;
+            // 连发
+            if (state_l == remote::DOWN || mouse.l) {
+                shoot_burst_timestamp++;
+            }
+            static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);
+            shoot_burst_switch_edge->input(shoot_burst_timestamp > 200 * REMOTE_OS_DELAY);
+            if (shoot_burst_switch_edge->posEdge()) {
+                shoot_load_mode = SHOOT_MODE_BURST;
+            }
+
+            // 不发射
+            if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge()) {
+                shoot_load_mode = SHOOT_MODE_STOP;
+                shoot_burst_timestamp = 0;
+            }
+        } else {
+            // 自喵模式下只有连发
+            if (minipc->IsOnline()) {
+                if (minipc->target_angle.shoot_cmd != 0) {
+                    shoot_load_mode = SHOOT_MODE_BURST;
+                } else {
+                    shoot_load_mode = SHOOT_MODE_STOP;
+                    shoot_burst_timestamp = 0;
+                }
+            }
         }
         osDelay(REMOTE_OS_DELAY);
     }

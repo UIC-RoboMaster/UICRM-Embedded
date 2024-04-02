@@ -244,12 +244,8 @@ void chassisTask(void* arg) {
                 osDelay(1);
                 break;
             case REMOTE_MODE_ADVANCED:
-                vz_set = offset_yaw*ratio;
-                if (offset_yaw != 0) {
-                    spin_speed = spin_speed + offset_yaw;
-                    offset_yaw = 0;
-                    spin_speed = clip<float>(spin_speed, -660, 660);
-                }
+                vz_set = chassis_vz;
+
                 chassis->SetSpeed(chassis_vx, chassis_vy, vz_set);
                 osDelay(1);
                 chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
