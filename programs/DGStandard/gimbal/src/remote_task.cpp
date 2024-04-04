@@ -76,7 +76,7 @@ void remoteTask(void* arg) {
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available =
-            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
 #else
         is_robot_dead = false;
         is_shoot_available = true;

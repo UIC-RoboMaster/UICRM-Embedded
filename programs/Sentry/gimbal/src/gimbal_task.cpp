@@ -256,6 +256,11 @@ void init_gimbal() {
     gimbal_param = gimbal->GetData();
 }
 void check_kill() {
+#ifdef HAS_REFEREE
+
+#else
+
+#endif
     if (remote_mode == REMOTE_MODE_KILL) {
         yaw_motor->Disable();
         pitch_motor->Disable();

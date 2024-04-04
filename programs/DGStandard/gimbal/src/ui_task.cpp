@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "ui_task.h"
+#include "shoot_task.h"
 
 osThreadId_t uiTaskHandle;
 communication::UserInterface* UI = nullptr;
@@ -80,7 +81,7 @@ void uiTask(void* arg) {
     // Initialize current mode GUI
     char followModeStr[15] = "FOLLOW MODE";
     int8_t modeColor = UI_Color_Orange;
-    modeGUI = new communication::StringGUI(UI, followModeStr, 1230, 45, modeColor);
+    modeGUI = new communication::StringGUI(UI, followModeStr, 810, 120, modeColor, 30);
     // Initialize flywheel status GUI
     char wheelOnStr[15] = "FLYWHEEL ON";
     char wheelOffStr[15] = "FLYWHEEL OFF";
@@ -129,6 +130,7 @@ void uiTask(void* arg) {
     BoolEdgeDetector* dbus_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* imu_cali_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* imu_temp_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* shoot_jam_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
         // 通过两个云台电机的角度
@@ -215,6 +217,8 @@ void uiTask(void* arg) {
             dbus_edge->input(dbus->IsOnline());
             imu_cali_edge->input(ahrs->IsCailbrated());
             imu_temp_edge->input(true);
+            shoot_jam_edge->input(jam_notify_flags);
+
             if (fl_motor_check_edge->negEdge()) {
                 strcpy(diagStr, "FL MOTOR OFFLINE     ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
@@ -253,6 +257,11 @@ void uiTask(void* arg) {
             }
             if (imu_temp_edge->posEdge()) {
                 strcpy(diagStr, "IMU TEMP NOT SAFE   ");
+                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            }
+            if(shoot_jam_edge->posEdge()){
+                jam_notify_flags = false;
+                strcpy(diagStr,"STEER JAM");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
         }

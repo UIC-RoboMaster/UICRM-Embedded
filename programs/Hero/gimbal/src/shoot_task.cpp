@@ -25,11 +25,17 @@ driver::Motor3508* flywheel_right = nullptr;
 
 driver::Motor3508* steering_motor = nullptr;
 
+bool jam_notify_flags = false;
+
 void jam_callback(void* args) {
     driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
+    jam_notify_flags = true;
     float target = motor->GetTarget();
     if (target > motor->GetOutputShaftTheta()) {
         float prev_target = motor->GetTarget() - 2 * PI / 5;
+        motor->SetTarget(prev_target);
+    }else{
+        float prev_target = motor->GetTarget() + 2 * PI / 5;
         motor->SetTarget(prev_target);
     }
 }
