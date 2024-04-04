@@ -212,6 +212,16 @@ namespace control {
         max_iout_ = max_iout;
         max_out_ = max_out;
     }
+    ConstrainedPID::PID_State_t ConstrainedPID::State() const {
+        return {
+            .error = error_,
+            .pout = pout_,
+            .iout = iout_,
+            .dout = dout_,
+            .output = output_,
+        };
+    }
+
     void ConstrainedPID::PID_ErrorHandle() {
         // pid错误处理，目前用于判断电机堵转
         // 请在速度环使用电机堵转判断
