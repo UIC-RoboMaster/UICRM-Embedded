@@ -31,6 +31,8 @@
 extern bsp::UART* referee_uart;
 extern communication::Referee* referee;
 extern bsp::UART* refereerc_uart;
-extern communication::Referee* refereerc;
+// extern communication::Referee* refereerc;
+extern bsp::UART* minipc_uart;
+extern communication::Host* minipc;
 
 void init_referee();

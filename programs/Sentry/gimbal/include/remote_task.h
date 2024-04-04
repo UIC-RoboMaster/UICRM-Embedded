@@ -37,7 +37,8 @@ enum RemoteMode {
     REMOTE_MODE_STOP = 0,
     REMOTE_MODE_FOLLOW = 1,
     REMOTE_MODE_SPIN = 2,
-    REMOTE_MODE_ADVANCED = 3
+    REMOTE_MODE_ADVANCED = 3,
+    REMOTE_MODE_AUTOAIM = 4,
 };
 extern RemoteMode remote_mode;
 enum ShootFricMode {
@@ -45,26 +46,25 @@ enum ShootFricMode {
     SHOOT_FRIC_MODE_STOP = 0,
     SHOOT_FRIC_MODE_PREPARING = 1,
     SHOOT_FRIC_MODE_PREPARED = 2,
-    SHOOT_FRIC_SPEEDUP = 3,
-    SHOOT_FRIC_SPEEDDOWN = 4,
 };
 extern ShootFricMode shoot_flywheel_mode;
 enum ShootMode {
     SHOOT_MODE_DISABLE = -1,
-    SHOOT_MODE_STOP = 0,
-    SHOOT_MODE_PREPARING = 1,
-    SHOOT_MODE_PREPARED = 2,
-    SHOOT_MODE_SINGLE = 3,
-    SHOOT_MODE_BURST = 4,
+    SHOOT_MODE_STOP = 0,    // 停止供弹
+    SHOOT_MODE_IDLE = 1,    // 连续供弹直到检测到弹丸
+    SHOOT_MODE_SINGLE = 2,  // 单发，用于通知shoot_task，发射后由shoot_task设置回IDLE
+    SHOOT_MODE_BURST = 3,   // 连发
 };
 extern ShootMode shoot_load_mode;
+extern bool is_autoaim;
+
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,
                                             .cb_size = 0,
                                             .stack_mem = nullptr,
-                                            .stack_size = 512 * 4,
+                                            .stack_size = 768 * 4,
                                             .priority = (osPriority_t)osPriorityHigh,
                                             .tz_module = 0,
                                             .reserved = 0};

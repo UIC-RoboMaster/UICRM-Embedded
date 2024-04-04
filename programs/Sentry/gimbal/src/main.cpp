@@ -28,32 +28,48 @@
 #include "cmsis_os.h"
 #include "gimbal_task.h"
 #include "imu_task.h"
+#include "minipc_task.h"
 #include "public_port.h"
-// #include "referee_task.h"
+#include "referee_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"
 #include "ui_task.h"
-#include "user_define.h"
+/**
+ * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
+ */
+
+bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
+    // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
     bsp::SetHighresClockTimer(&htim5);
+    // 初始化调试串口，使print()函数能够输出调试信息
+    // print_use_uart(&huart8, true, 921600);
     print_use_usb();
+    // 初始化can总线，can在各个进程中都需要被使用所以在这里独立初始化
     init_can();
-    init_batt();
+    // 初始化IMU
     init_imu();
+    // 初始化蜂鸣器，蜂鸣器在需要的时候会在后台播放音乐
     init_buzzer();
+    // 初始化裁判系统，裁判系统类能够读取裁判系统的数据
     init_referee();
+    // 初始化遥控器与远程模式选择，遥控器类能够读取遥控器的数据
+    init_minipc();
     init_remote();
+    // 初始化发射机构，发射机构类能够控制发射机构的动作
     init_shoot();
+    // 初始化云台，云台类能够控制云台的动作
     init_gimbal();
+    // 初始化底盘，底盘类能够控制底盘的动作
     init_chassis();
+    // 初始化用户界面，用户界面类能够在图传上显示实时状态
     init_ui();
 }
 
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
+    // 分别启动每个任务
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
-    //    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
-    //    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
@@ -68,6 +84,8 @@ void RM_RTOS_Default_Task(const void* arg) {
     Buzzer_Sing(DJI);
     char s[50];
     while (true) {
+        //        print("%.4f %.4f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
+        //        osDelay(2);
         set_cursor(0, 0);
         clear_screen();
         switch (remote_mode) {
@@ -91,30 +109,30 @@ void RM_RTOS_Default_Task(const void* arg) {
                 break;
         }
         print("Mode:%s\r\n", s);
-        //        switch (shoot_flywheel_mode) {
-        //            case SHOOT_FRIC_MODE_PREPARING:
-        //                strcpy(s, "PREPARE");
-        //                break;
-        //            case SHOOT_FRIC_MODE_STOP:
-        //                strcpy(s, "STOP");
-        //                break;
-        //            case SHOOT_FRIC_MODE_PREPARED:
-        //                strcpy(s, "PREPARED");
-        //                break;
-        //            case SHOOT_FRIC_MODE_DISABLE:
-        //                strcpy(s, "DISABLE");
-        //                break;
-        //        }
-        //        print("Shoot Fric Mode:%s\r\n", s);
-        switch (shoot_load_mode) {
-            case SHOOT_MODE_PREPARING:
+        switch (shoot_flywheel_mode) {
+            case SHOOT_FRIC_MODE_PREPARING:
                 strcpy(s, "PREPARE");
                 break;
+            case SHOOT_FRIC_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case SHOOT_FRIC_MODE_PREPARED:
+                strcpy(s, "PREPARED");
+                break;
+            case SHOOT_FRIC_MODE_DISABLE:
+                strcpy(s, "DISABLE");
+                break;
+            default:
+                strcpy(s, "UNKNOWN");
+                break;
+        }
+        print("Shoot Fric Mode:%s\r\n", s);
+        switch (shoot_load_mode) {
             case SHOOT_MODE_STOP:
                 strcpy(s, "STOP");
                 break;
-            case SHOOT_MODE_PREPARED:
-                strcpy(s, "PREPARED");
+            case SHOOT_MODE_IDLE:
+                strcpy(s, "IDLE");
                 break;
             case SHOOT_MODE_DISABLE:
                 strcpy(s, "DISABLE");
@@ -127,15 +145,14 @@ void RM_RTOS_Default_Task(const void* arg) {
                 break;
         }
         print("Shoot Mode:%s\r\n", s);
+        print(
+            "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
+            "TWL: %d "
+            "@ %d "
+            "ms\r\n",
+            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
+            dbus->timestamp);
 
-        print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
-              imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
-        print("Temp: %.2f\r\n", imu->Temp);
-        print("Heater: %.2f\r\n", imu->TempPWM);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
-              imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
-        print("Is Calibrated: %s\r\n",
-              imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
         print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
         print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
         print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
@@ -144,10 +161,10 @@ void RM_RTOS_Default_Task(const void* arg) {
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        // print("\r\n");
-        // yaw_motor->PrintData();
-        // pitch_motor->PrintData();
-
-        osDelay(75);
+        print("INS Angle: %.3f %.3f %.3f\r\n", imu->INS_angle[0], imu->INS_angle[1],
+              imu->INS_angle[2]);
+        print("Vision Target: %.3f %.3f", minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw);
+        osDelay(100);
     }
 }
