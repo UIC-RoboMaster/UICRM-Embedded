@@ -400,6 +400,10 @@ namespace control {
             data_.data_two_float.data[1] = turn_speed;
             rx_id_.data.reg = chassis_turn_on_reg_id_;
             can_bridge_->Send(rx_id_, data_);
+        }else{
+            data_.data_two_float.data[0] = 0.0f;
+            data_.data_two_float.data[1] = 0.0f;
+            can_bridge_->Send(rx_id_, data_);
         }
     }
     void ChassisCanBridgeSender::SetPower(bool power_limit_on, float power_limit,
@@ -407,8 +411,7 @@ namespace control {
                                           bool enable_supercap, bool force_update) {
         UNUSED(force_update);
         if (chassis_enable_) {
-            if (power_limit_on != chassis_power_limit_on_ || power_limit != chassis_power_limit_ ||
-                enable_supercap != chassis_super_capacitor_enable_) {
+             {
                 chassis_power_limit_on_ = power_limit_on;
                 chassis_power_limit_ = power_limit;
                 data_.data_eight_uint8.data[0] = power_limit_on;
