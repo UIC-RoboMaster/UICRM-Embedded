@@ -29,6 +29,7 @@ communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
+communication::StringGUI* autoAimGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
 
 void UI_Delay(uint32_t delay) {
@@ -60,7 +61,7 @@ void uiTask(void* arg) {
     osDelay(110);
 
     // Initialize supercapacitor GUI
-    char batteryStr[15] = "BATTERY";
+    char batteryStr[15] = "SUPERCAP";
     batteryGUI = new communication::CapGUI(UI, batteryStr);
     osDelay(110);
     batteryGUI->InitName();
@@ -70,6 +71,7 @@ void uiTask(void* arg) {
     gimbalGUI = new communication::GimbalGUI(UI);
     osDelay(110);
     gimbalGUI->Init2();
+    osDelay(110);
 
     // Initialize self-diagnosis GUI
     char diagStr[29] = "";
@@ -86,26 +88,34 @@ void uiTask(void* arg) {
     char boostModeStr[15] = "BOOST!";
     char boostOffStr[15] = " ";
     boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
-    communication::graphic_data_t graphMode;
-    communication::graphic_data_t graphWheel;
-    communication::graphic_data_t graphBoost;
 
-    graphMode = modeGUI->InitBulk();
-    graphWheel = wheelGUI->InitBulk();
-    graphBoost = boostGUI->InitBulk();
-    UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+    char autoAimStr[15] = "AUTOAIM ";
+    char autoAimOffStr[15] = "        ";
+    autoAimGUI = new communication::StringGUI(UI, autoAimOffStr, 840, 730, UI_Color_Orange, 30);
+
+    modeGUI->Init();
+    osDelay(110);
+    wheelGUI->Init();
+    osDelay(110);
+    boostGUI->Init();
+    osDelay(110);
+    autoAimGUI->Init();
     osDelay(110);
     modeGUI->InitString();
     osDelay(110);
     wheelGUI->InitString();
     osDelay(110);
     boostGUI->InitString();
+    osDelay(110);
+    autoAimGUI->InitString();
+    osDelay(110);
     float relative_angle = 0;
     float pitch_angle = 0;
     float power_percent = 1;
-    RemoteMode last_mode = REMOTE_MODE_KILL;
+    int8_t last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
     BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
+    BoolEdgeDetector* autoAimEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
 
@@ -121,23 +131,25 @@ void uiTask(void* arg) {
     BoolEdgeDetector* imu_temp_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
+        // 通过两个云台电机的角度
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
         pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
-        chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max,
+        // 更新底盘转速码表
+        chassisGUI->Update(chassis_vx / chassis_max_xy_speed, chassis_vy / chassis_max_xy_speed,
                            relative_angle);
         osDelay(UI_OS_DELAY);
 
-        power_percent = battery_vol->GetBatteryPercentage();
+        // 更新电源百分比（后期是超级电容剩余点亮
+        power_percent = 1.0f;
 
         batteryGUI->Update(power_percent);
         osDelay(UI_OS_DELAY);
 
-        // Update Gimbal GUI
-        gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle,
-                          imu->CaliDone());
+        // 更新云台小坦克
+        gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle, true);
         osDelay(UI_OS_DELAY);
 
-        // Update current mode GUI
+        // 更新运行模式
         if (remote_mode != last_mode) {
             char modeStr[30];
             switch (remote_mode) {
@@ -182,10 +194,16 @@ void uiTask(void* arg) {
             boostGUI->Update(boostStr, UI_Color_Pink);
             osDelay(UI_OS_DELAY);
         }
+        autoAimEdgeDetector->input(is_autoaim);
+        if (autoAimEdgeDetector->edge()) {
+            char* autoaimStr = is_autoaim ? autoAimStr : autoAimOffStr;
+            autoAimGUI->Update(autoaimStr, UI_Color_Pink);
+            osDelay(UI_OS_DELAY);
+        }
         last_mode = remote_mode;
         last_fric_mode = shoot_flywheel_mode;
 
-        // Update self-diagnosis messages
+        // 离线信息
         {
             fl_motor_check_edge->input(true);
             fr_motor_check_edge->input(true);
@@ -195,7 +213,7 @@ void uiTask(void* arg) {
             pitch_motor_check_edge->input(pitch_motor->IsOnline());
             steer_motor_check_edge->input(steering_motor->IsOnline());
             dbus_edge->input(dbus->IsOnline());
-            imu_cali_edge->input(true);
+            imu_cali_edge->input(imu->CaliDone());
             imu_temp_edge->input(true);
             if (fl_motor_check_edge->negEdge()) {
                 strcpy(diagStr, "FL MOTOR OFFLINE     ");
@@ -239,9 +257,10 @@ void uiTask(void* arg) {
             }
         }
 
-        // clear self-diagnosis messages
-
-        v_edge->input(refereerc->remote_control.keyboard.bit.V);
+        // v键清理UI
+        if (dbus->IsOnline()) {
+            v_edge->input(dbus->keyboard.bit.V);
+        }
 
         if (v_edge->posEdge()) {
             osDelay(110);
@@ -259,10 +278,13 @@ void uiTask(void* arg) {
             osDelay(110);
             batteryGUI->Delete();
             osDelay(110);
-            graphMode = modeGUI->DeleteBulk();
-            graphBoost = boostGUI->DeleteBulk();
-            graphWheel = wheelGUI->DeleteBulk();
-            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            modeGUI->Delete();
+            osDelay(110);
+            wheelGUI->Delete();
+            osDelay(110);
+            boostGUI->Delete();
+            osDelay(110);
+            autoAimGUI->Delete();
             osDelay(110);
             diagGUI->Clear(UI_Delay);
             osDelay(110);
@@ -280,10 +302,11 @@ void uiTask(void* arg) {
             osDelay(110);
             batteryGUI->InitName();
             osDelay(110);
-            graphMode = modeGUI->InitBulk();
-            graphWheel = wheelGUI->InitBulk();
-            graphBoost = boostGUI->InitBulk();
-            UI->GraphRefresh(5, graphMode, graphWheel, graphBoost, graphEmpty1, graphEmpty2);
+            modeGUI->Init();
+            osDelay(110);
+            wheelGUI->Init();
+            osDelay(110);
+            boostGUI->Init();
             osDelay(110);
             modeGUI->InitString();
             osDelay(110);
@@ -291,10 +314,16 @@ void uiTask(void* arg) {
             osDelay(110);
             boostGUI->InitString();
             osDelay(110);
+            autoAimGUI->Init();
+            osDelay(110);
+            autoAimGUI->InitString();
+            osDelay(110);
             continue;
         }
-
-        c_edge->input(refereerc->remote_control.keyboard.bit.C);
+        // c键清理消息
+        if (dbus->IsOnline()) {
+            c_edge->input(dbus->keyboard.bit.C);
+        }
         if (c_edge->posEdge()) {
             diagGUI->Clear(UI_Delay);
         }

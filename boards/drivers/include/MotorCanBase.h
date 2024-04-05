@@ -205,6 +205,11 @@ namespace driver {
         virtual void ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode);
 
         /**
+         * @brief 获取电机PID数值
+         */
+        virtual control::ConstrainedPID::PID_State_t GetPIDState(uint8_t mode) const;
+
+        /**
          * @brief
          * 设置电机的工作模式，工作模式由若干个bool值组成，请参考电机模式的定义，启动多个模式的情况需要使用或运算
          * @refitem motor_mode

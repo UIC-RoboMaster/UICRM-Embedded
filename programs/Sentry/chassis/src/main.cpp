@@ -40,17 +40,15 @@ driver::MotorCANBase* br_motor = nullptr;
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
 
-bsp::GPIO* power_en2 = nullptr;
-
 void RM_RTOS_Init() {
     HAL_Delay(100);
-    print_use_uart(&huart5);
+    print_use_uart(&huart1);
     can2 = new bsp::CAN(&hcan2, false);
     can1 = new bsp::CAN(&hcan1, true);
-    fl_motor = new driver::Motor3508(can1, 0x202);
-    fr_motor = new driver::Motor3508(can1, 0x201);
-    bl_motor = new driver::Motor3508(can1, 0x203);
-    br_motor = new driver::Motor3508(can1, 0x204);
+    fl_motor = new driver::Motor3508(can2, 0x202);
+    fr_motor = new driver::Motor3508(can2, 0x201);
+    bl_motor = new driver::Motor3508(can2, 0x203);
+    br_motor = new driver::Motor3508(can2, 0x204);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
@@ -85,7 +83,7 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(19);
 
-    can_bridge = new communication::CanBridge(can2, 0x52);
+    can_bridge = new communication::CanBridge(can1, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
@@ -108,8 +106,6 @@ void RM_RTOS_Init() {
 
     HAL_Delay(300);
     init_buzzer();
-
-    power_en2 = new bsp::GPIO(Power_OUT2_EN_GPIO_Port, Power_OUT2_EN_Pin);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
@@ -118,7 +114,6 @@ void RM_RTOS_Default_Task(const void* args) {
     osDelay(500);
     Buzzer_Sing(Mario);
 
-    power_en2->High();
     while (true) {
         chassis->Update();
         osDelay(10);

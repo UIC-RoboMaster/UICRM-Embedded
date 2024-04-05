@@ -9,6 +9,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         src/imu_task.cpp
         src/gimbal_data.cpp
         src/gimbal_task.cpp
+        src/minipc_task.cpp
         src/shoot_task.cpp
         src/remote_task.cpp
         src/chassis_task.cpp

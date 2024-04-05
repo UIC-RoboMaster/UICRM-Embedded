@@ -237,6 +237,17 @@ namespace control {
         } PID_Init_t;
 
         /**
+         * @brief State()函数的返回值，用于获取PID控制器的状态
+         * */
+         typedef struct {
+            float error;   /// 误差
+            float pout;    /// 比例输出
+            float iout;    /// 积分输出
+            float dout;    /// 微分输出
+            float output;  /// 输出值
+        } PID_State_t;
+
+        /**
          * @brief PID控制器默认构造函数
          */
         /**
@@ -349,6 +360,8 @@ namespace control {
          * @param max_out output constraint
          */
         void ChangeMax(float max_iout, float max_out);
+
+        PID_State_t State() const;
 
         /**
          * @brief 重设积分项
