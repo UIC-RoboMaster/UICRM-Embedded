@@ -44,6 +44,10 @@ const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
 extern driver::MotorCANBase* steering_motor;
 extern bool jam_notify_flags;
 
+extern control::ConstrainedPID::PID_Init_t steering_motor_theta_normal_pid_init;
+extern control::ConstrainedPID::PID_Init_t steering_motor_theta_fast_pid_init;
+extern control::ConstrainedPID::PID_Init_t steering_motor_theta_burst_pid_init;
+
 void shootTask(void* arg);
 void init_shoot();
 void kill_shoot();

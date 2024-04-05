@@ -29,6 +29,7 @@ communication::GimbalGUI* gimbalGUI = nullptr;
 communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
+communication::StringGUI* shootFrequencyGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
 communication::StringGUI* autoAimGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
@@ -94,6 +95,12 @@ void uiTask(void* arg) {
     char autoAimOffStr[15] = "        ";
     autoAimGUI = new communication::StringGUI(UI, autoAimOffStr, 840, 730, UI_Color_Orange, 30);
 
+    // Initialize current mode GUI
+    char ShootFrequencyStr[15] = "NORMAL";
+    int8_t ShootFrequencyColor = UI_Color_Green;
+    shootFrequencyGUI = new communication::StringGUI(UI, ShootFrequencyStr, 1500, 460, ShootFrequencyColor);
+
+
     modeGUI->Init();
     osDelay(110);
     wheelGUI->Init();
@@ -101,6 +108,8 @@ void uiTask(void* arg) {
     boostGUI->Init();
     osDelay(110);
     autoAimGUI->Init();
+    osDelay(110);
+    shootFrequencyGUI->Init();
     osDelay(110);
     modeGUI->InitString();
     osDelay(110);
@@ -110,11 +119,14 @@ void uiTask(void* arg) {
     osDelay(110);
     autoAimGUI->InitString();
     osDelay(110);
+    shootFrequencyGUI->InitString();
+    osDelay(110);
     float relative_angle = 0;
     float pitch_angle = 0;
     float power_percent = 1;
     int8_t last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
+    ShootSpeed last_shoot_frequency = SHOOT_FREQUENCY_NORMAL;
     BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* autoAimEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
@@ -190,6 +202,30 @@ void uiTask(void* arg) {
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }
+        if(shoot_speed != last_shoot_frequency){
+            char shoot_frequency_str[30];
+            switch (shoot_speed) {
+                case SHOOT_FREQUENCY_NORMAL:
+                    strcpy(shoot_frequency_str, "NORMAL        ");
+                    ShootFrequencyColor = UI_Color_Green;
+                    break;
+                case SHOOT_FREQUENCY_FAST:
+                    strcpy(shoot_frequency_str, "FAST   ");
+                    ShootFrequencyColor = UI_Color_Orange;
+                    break;
+                case SHOOT_FREQUENCY_BURST:
+                    strcpy(shoot_frequency_str, "BURST     ");
+                    ShootFrequencyColor = UI_Color_Purplish_red;
+                    break;
+                default:
+                    strcpy(shoot_frequency_str, "UNKNOWN   ");
+                    ShootFrequencyColor = UI_Color_Purplish_red;
+                    break;
+            }
+
+            shootFrequencyGUI->Update(shoot_frequency_str, ShootFrequencyColor);
+            osDelay(UI_OS_DELAY);
+        }
         boostEdgeDetector->input(chassis_boost_flag);
         if (boostEdgeDetector->edge()) {
             char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
@@ -204,6 +240,7 @@ void uiTask(void* arg) {
         }
         last_mode = remote_mode;
         last_fric_mode = shoot_flywheel_mode;
+        last_shoot_frequency = shoot_speed;
 
         // 离线信息
         {
@@ -297,6 +334,8 @@ void uiTask(void* arg) {
             osDelay(110);
             autoAimGUI->Delete();
             osDelay(110);
+            shootFrequencyGUI->Delete();
+            osDelay(110);
             diagGUI->Clear(UI_Delay);
             osDelay(110);
             chassisGUI->Init();
@@ -318,6 +357,10 @@ void uiTask(void* arg) {
             wheelGUI->Init();
             osDelay(110);
             boostGUI->Init();
+            osDelay(110);
+            shootFrequencyGUI->Init();
+            osDelay(110);
+            shootFrequencyGUI->InitString();
             osDelay(110);
             modeGUI->InitString();
             osDelay(110);
