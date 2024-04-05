@@ -69,10 +69,7 @@ void minipc_task(void* args) {
             minipc->gimbal_current_status.current_imu_pitch = INS_Angle.pitch;
             minipc->gimbal_current_status.current_imu_yaw = INS_Angle.yaw;
             minipc->gimbal_current_status.current_imu_roll = INS_Angle.roll;
-            minipc->gimbal_current_status.pitch_theta = pitch_motor->GetTheta();
-            minipc->gimbal_current_status.yaw_theta = yaw_motor->GetTheta();
-            minipc->gimbal_current_status.pitch_omega = pitch_motor->GetOmega();
-            minipc->gimbal_current_status.yaw_omega = yaw_motor->GetOmega();
+            minipc->gimbal_current_status.robot_id = referee->game_robot_status.robot_id;
             minipc->gimbal_current_status.shooter_id = 0;
             minipc->Transmit(communication::GIMBAL_CURRENT_STATUS);
         }

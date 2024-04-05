@@ -60,15 +60,7 @@ void shootTask(void* arg) {
     ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
-            // 死了
-            kill_shoot();
-            while (remote_mode == REMOTE_MODE_KILL) {
-                osDelay(1);
-            }
-            osDelay(SHOOT_OS_DELAY);
-            continue;
-        }
+        check_kill_shoot();
 
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
@@ -78,6 +70,8 @@ void shootTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_IDLE;
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
+                flywheel_left->SetTarget(250.0f * PI);
+                flywheel_right->SetTarget(250.0f * PI);
                 break;
             case SHOOT_FRIC_MODE_STOP:
                 flywheel_left->SetTarget(0);
@@ -196,8 +190,28 @@ void init_shoot() {
     steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 }
-void kill_shoot() {
-    steering_motor->SetOutput(0);
-    flywheel_left->SetOutput(0);
-    flywheel_right->SetOutput(0);
+void check_kill_shoot() {
+#ifdef HAS_REFEREE
+    uint8_t is_shooter_on = referee->game_robot_status.mains_power_shooter_output;
+#else
+    uint8_t is_shooter_on = 1;
+#endif
+    if (remote_mode == REMOTE_MODE_KILL || is_shooter_on==0) {
+        steering_motor->Disable();
+        flywheel_left->SetTarget(0);
+        flywheel_right->SetTarget(0);
+        
+        while (remote_mode == REMOTE_MODE_KILL || is_shooter_on==0){
+#ifdef HAS_REFEREE
+            is_shooter_on = referee->game_robot_status.mains_power_shooter_output;
+#else
+            is_shooter_on = 1;
+#endif
+            osDelay(1);
+        }
+
+    }
+    flywheel_left->Enable();
+    flywheel_right->Enable();
+    steering_motor->Enable();
 }

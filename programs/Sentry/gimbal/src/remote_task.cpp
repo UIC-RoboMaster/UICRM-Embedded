@@ -61,7 +61,6 @@ void remoteTask(void* arg) {
     bool is_robot_dead;
     bool is_shoot_available;
 
-    BoolEdgeDetector* keyboard_Z_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* keyboard_ctrl_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
@@ -74,10 +73,14 @@ void remoteTask(void* arg) {
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available =
-            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+
 #else
         is_robot_dead = false;
+#endif
+#ifdef SHOOT_REFEREE
+        is_shoot_available =
+            referee->game_robot_status.mains_power_shooter_output!=0;
+#else
         is_shoot_available = true;
 #endif
         if (is_dbus_offline || is_robot_dead) {
@@ -128,19 +131,15 @@ void remoteTask(void* arg) {
                 next_mode = (RemoteMode)remote_mode_min;
             }
             remote_mode = next_mode;
-            if (remote_mode == REMOTE_MODE_AUTOAIM) {
-                is_autoaim = true;
-            } else {
-                is_autoaim = false;
-            }
+        }
+        if (referee->game_status.game_progress == 4){
+            remote_mode = REMOTE_MODE_SPIN;
         }
         // 右键切换自瞄
-        if (mouse_right_edge->posEdge()) {
-            is_autoaim = !is_autoaim;
-            if (is_autoaim == false) {
-                // gimbal->TargetAbs(INS_Angle.pitch, INS_Angle.yaw);
-                shoot_load_mode = SHOOT_MODE_STOP;
-            }
+        if (referee->game_status.game_progress == 4 || remote_mode == REMOTE_MODE_AUTOAIM) {
+            is_autoaim = true;
+        }else{
+            is_autoaim = false;
         }
 
         /*
@@ -155,19 +154,11 @@ void remoteTask(void* arg) {
         }
 
         // 切换摩擦轮
-        static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
-        flywheel_switch_edge->input(state_l == remote::UP);
-        keyboard_Z_edge->input(keyboard.bit.Z);
-        if (flywheel_switch_edge->posEdge() || keyboard_Z_edge->posEdge()) {
-            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-                shoot_load_mode = SHOOT_MODE_IDLE;
-            } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
-                       shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {  // 原来转则停止
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-                shoot_load_mode = SHOOT_MODE_STOP;
-            }
+        if (referee->game_status.game_progress == 4){
+            shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+            shoot_load_mode = SHOOT_MODE_IDLE;
         }
+
 
         if (!is_autoaim || !minipc->IsOnline()) {
             // 单发
