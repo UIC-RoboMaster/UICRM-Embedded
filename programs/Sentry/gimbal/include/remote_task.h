@@ -38,7 +38,7 @@ enum RemoteMode {
     REMOTE_MODE_FOLLOW = 1,
     REMOTE_MODE_SPIN = 2,
     REMOTE_MODE_ADVANCED = 3,
-    REMOTE_MODE_AUTOAIM = 4,
+    REMOTE_MODE_AUTOMATIC = 4,
 };
 extern RemoteMode remote_mode;
 enum ShootFricMode {
@@ -57,6 +57,9 @@ enum ShootMode {
 };
 extern ShootMode shoot_load_mode;
 extern bool is_autoaim;
+
+extern BoolEdgeDetector* game_start_edge;
+extern bool is_chassis_ok;
 
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",

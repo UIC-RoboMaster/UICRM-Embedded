@@ -22,18 +22,23 @@
 
 #include <string.h>
 
+#include "chassis_task.h"
 #include "gimbal_task.h"
 #include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
-RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
+RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
+RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
-                                      REMOTE_MODE_AUTOAIM};
+                                      REMOTE_MODE_AUTOMATIC};
 const int8_t remote_mode_max = 3;
-const int8_t remote_mode_min = 1;
+const int8_t remote_mode_min = 3;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
+
+BoolEdgeDetector* game_start_edge = nullptr;
+bool is_chassis_ok = false;
+
 bool is_killed = false;
 
 bool is_autoaim = false;
@@ -66,6 +71,8 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* keyboard_G_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* keyboard_B_edge = new BoolEdgeDetector(false);
+
+    game_start_edge = new BoolEdgeDetector(false);
 
     while (1) {
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
@@ -121,25 +128,23 @@ void remoteTask(void* arg) {
         keyboard_G_edge->input(keyboard.bit.G);
         keyboard_B_edge->input(keyboard.bit.B);
 
+        game_start_edge->input(referee->game_status.game_progress==4);
         // remote mode switch
-        static BoolEdgeDetector* mode_switch_edge = new BoolEdgeDetector(false);
-        mode_switch_edge->input(state_r == remote::UP);
 
-        if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge()) {
-            RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
-            if ((int8_t)next_mode > (int8_t)remote_mode_max) {
-                next_mode = (RemoteMode)remote_mode_min;
-            }
-            remote_mode = next_mode;
-        }
-        if (referee->game_status.game_progress == 4){
-            remote_mode = REMOTE_MODE_SPIN;
-        }
-        // 右键切换自瞄
-        if (referee->game_status.game_progress == 4 || remote_mode == REMOTE_MODE_AUTOAIM) {
-            is_autoaim = true;
-        }else{
-            is_autoaim = false;
+        switch(state_r){
+            case remote::MID:
+                remote_mode = REMOTE_MODE_ADVANCED;
+                break;
+            case remote::DOWN:
+                remote_mode = REMOTE_MODE_KILL;
+                break;
+            case remote::UP:
+
+                if(is_chassis_ok){
+                    remote_mode = REMOTE_MODE_SPIN;
+                }else{
+                    remote_mode = REMOTE_MODE_FOLLOW;
+                }
         }
 
         /*
@@ -154,9 +159,17 @@ void remoteTask(void* arg) {
         }
 
         // 切换摩擦轮
-        if (referee->game_status.game_progress == 4){
-            shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-            shoot_load_mode = SHOOT_MODE_IDLE;
+        static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
+        flywheel_switch_edge->input(state_l == remote::UP);
+        if (flywheel_switch_edge->posEdge()) {
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+                shoot_load_mode = SHOOT_MODE_IDLE;
+            } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
+                       shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {  // 原来转则停止
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
+                shoot_load_mode = SHOOT_MODE_STOP;
+            }
         }
 
 

@@ -49,6 +49,7 @@ extern float chassis_vx;
 extern float chassis_vy;
 extern float chassis_vt;
 extern bool chassis_boost_flag;
+extern control::ChassisCanBridgeSender* chassis;
 
 extern const float chassis_max_xy_speed;
 extern const float chassis_max_t_speed;

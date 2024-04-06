@@ -69,7 +69,7 @@ void chassisTask(void* arg) {
     BoolEdgeDetector* s_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* a_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* d_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* shift_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* ctrl_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* q_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* e_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* x_edge = new BoolEdgeDetector(false);
@@ -116,7 +116,7 @@ void chassisTask(void* arg) {
             s_edge->input(keyboard.bit.S);
             a_edge->input(keyboard.bit.A);
             d_edge->input(keyboard.bit.D);
-            shift_edge->input(keyboard.bit.SHIFT);
+            ctrl_edge->input(keyboard.bit.CTRL);
             q_edge->input(keyboard.bit.Q);
             e_edge->input(keyboard.bit.E);
             x_edge->input(keyboard.bit.X);
@@ -128,8 +128,8 @@ void chassisTask(void* arg) {
         // 计算角度的sin/cos
         sin_yaw = arm_sin_f32(relative_angle);
         cos_yaw = arm_cos_f32(relative_angle);
-        // 检测到shift，切换速度模式
-        if (shift_edge->posEdge()) {
+        // 检测到ctrl，切换速度模式
+        if (ctrl_edge->posEdge()) {
             if (chassis_boost_flag) {
                 chassis_boost_flag = false;
                 vx_ramp->SetMax(chassis_vx_max / 2);

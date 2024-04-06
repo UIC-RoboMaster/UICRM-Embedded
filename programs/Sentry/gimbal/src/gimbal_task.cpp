@@ -100,10 +100,9 @@ void gimbalTask(void* arg) {
         const float remote_ratio = 0.005;
         if (dbus->IsOnline()) {
             if (referee->game_status.game_progress == 4){
-                pitch_ratio = arm_sin_f32(bsp::GetHighresTickMilliSec())*gimbal_init_data.pitch_offset_;
-                yaw_ratio = arm_cos_f32(bsp::GetHighresTickMilliSec())*gimbal_init_data.yaw_offset_;
-            }
-            if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
+                pitch_ratio = arm_sin_f32(bsp::GetHighresTickMilliSec()/100.0f)*gimbal_init_data.pitch_offset_;
+                yaw_ratio = 0;
+            } else if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
                 pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
                 yaw_ratio = (float)-dbus->mouse.x / mouse_xy_max * mouse_ratio;
             } else if(dbus->ch2 != 0 || dbus->ch3!=0){
@@ -142,7 +141,7 @@ void gimbalTask(void* arg) {
             switch (remote_mode) {
                 case REMOTE_MODE_SPIN:
                     gimbal->TargetAbs(pitch_ratio,yaw_ratio);
-                    gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+                    gimbal->Update();
                     break;
                 case REMOTE_MODE_FOLLOW:
                     // 如果是跟随模式或者旋转模式，将IMU作为参考系
@@ -159,7 +158,7 @@ void gimbalTask(void* arg) {
                     //                                   minipc->target_angle.target_yaw);
                     //                gimbal->Update();
                     //                break;
-                case REMOTE_MODE_AUTOAIM:
+                case REMOTE_MODE_AUTOMATIC:
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
                     gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
