@@ -25,10 +25,10 @@
 #include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
-RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
-RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
+RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
+RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
-const int8_t remote_mode_max = 3;
+const int8_t remote_mode_max = 2;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
@@ -64,7 +64,7 @@ void remoteTask(void* arg) {
     bool is_robot_dead;
     bool is_shoot_available;
     BoolEdgeDetector* z_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* ctrl_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* shift_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* shoot_burst_edge = new BoolEdgeDetector(false);
@@ -119,7 +119,7 @@ void remoteTask(void* arg) {
 
         // Update Timestamp
         z_edge->input(keyboard.bit.Z);
-        ctrl_edge->input(keyboard.bit.CTRL);
+        shift_edge->input(keyboard.bit.SHIFT);
         mouse_left_edge->input(mouse.l);
         mouse_right_edge->input(mouse.r);
 
@@ -136,7 +136,7 @@ void remoteTask(void* arg) {
                 }
                 break;
             case remote::MID:
-                if (ctrl_edge->posEdge()) {
+                if (shift_edge->posEdge()) {
                     mode_switch = true;
                 }
                 break;

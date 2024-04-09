@@ -20,6 +20,7 @@
 
 #include "gimbal_task.h"
 
+#include "bsp_os.h"
 #include "chassis_task.h"
 #include "dbus_package.h"
 #include "minipc_task.h"
@@ -98,12 +99,19 @@ void gimbalTask(void* arg) {
         const float mouse_ratio = 1;
         const float remote_ratio = 0.005;
         if (dbus->IsOnline()) {
-            if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
+            if (referee->game_status.game_progress == 4) {
+                pitch_ratio = arm_sin_f32(bsp::GetHighresTickMilliSec() / 100.0f) *
+                              gimbal_init_data.pitch_offset_;
+                yaw_ratio = 0;
+            } else if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
                 pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
                 yaw_ratio = (float)-dbus->mouse.x / mouse_xy_max * mouse_ratio;
-            } else {
+            } else if (dbus->ch2 != 0 || dbus->ch3 != 0) {
                 pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
                 yaw_ratio = (float)-dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
+            } else {
+                pitch_ratio = 0;
+                yaw_ratio = 0;
             }
         } else {
             pitch_ratio = 0;
@@ -132,6 +140,9 @@ void gimbalTask(void* arg) {
         } else {
             switch (remote_mode) {
                 case REMOTE_MODE_SPIN:
+                    gimbal->TargetAbs(pitch_ratio, yaw_ratio);
+                    gimbal->Update();
+                    break;
                 case REMOTE_MODE_FOLLOW:
                     // 如果是跟随模式或者旋转模式，将IMU作为参考系
                     gimbal->TargetRel(pitch_diff, yaw_diff);
@@ -147,7 +158,7 @@ void gimbalTask(void* arg) {
                     //                                   minipc->target_angle.target_yaw);
                     //                gimbal->Update();
                     //                break;
-                case REMOTE_MODE_AUTOAIM:
+                case REMOTE_MODE_AUTOMATIC:
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
                     gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
@@ -184,7 +195,7 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 2500,
+        .kp = 2000,
         .ki = 0,
         .kd = 300,
         .max_out = 16384,  // 最大电流输出，参考说明书
@@ -212,10 +223,10 @@ void init_gimbal() {
     yaw_motor = new driver::Motor6020(can2, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 5,
+        .kp = 6,
         .ki = 0,
-        .kd = 12,
-        .max_out = 4 * PI,  // 最高旋转速度
+        .kd = 4,
+        .max_out = 6 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
@@ -226,9 +237,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 4000,
-        .ki = 0,
-        .kd = 2000,
+        .kp = 7300,
+        .ki = 35,
+        .kd = 500,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                            // 死区
@@ -256,14 +267,23 @@ void init_gimbal() {
     gimbal_param = gimbal->GetData();
 }
 void check_kill() {
-    if (remote_mode == REMOTE_MODE_KILL) {
+#ifdef HAS_REFEREE
+    uint8_t is_gimbal_on = referee->game_robot_status.mains_power_gimbal_output;
+#else
+    uint8_t is_gimbal_on = true;
+#endif
+    if (remote_mode == REMOTE_MODE_KILL || is_gimbal_on == 0) {
         yaw_motor->Disable();
         pitch_motor->Disable();
-        steering_motor->Disable();
-        while (remote_mode == REMOTE_MODE_KILL)
+        while (remote_mode == REMOTE_MODE_KILL || is_gimbal_on == 0) {
+#ifdef HAS_REFEREE
+            is_gimbal_on = referee->game_robot_status.mains_power_gimbal_output;
+#else
+            is_gimbal_on = true;
+#endif
             osDelay(1);
+        }
     }
     yaw_motor->Enable();
     pitch_motor->Enable();
-    steering_motor->Enable();
 }

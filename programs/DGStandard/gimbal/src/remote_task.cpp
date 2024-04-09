@@ -30,10 +30,15 @@ RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
                                       REMOTE_MODE_AUTOAIM};
-const int8_t remote_mode_max = 3;
+const int8_t remote_mode_max = 2;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
+
+ShootSpeed shoot_speed = SHOOT_FREQUENCY_NORMAL;
+const int8_t shoot_speed_min = 1;
+const int8_t shoot_speed_max = 2;
+
 bool is_killed = false;
 
 bool is_autoaim = false;
@@ -76,7 +81,7 @@ void remoteTask(void* arg) {
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available =
-            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && imu->CaliDone();
+            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
 #else
         is_robot_dead = false;
         is_shoot_available = true;
@@ -203,12 +208,37 @@ void remoteTask(void* arg) {
         } else {
             // 自喵模式下只有连发
             if (minipc->IsOnline()) {
-                if (minipc->target_angle.shoot_cmd != 0) {
+                if (minipc->target_angle.shoot_cmd != 0 && mouse.l) {
                     shoot_load_mode = SHOOT_MODE_BURST;
                 } else {
                     shoot_load_mode = SHOOT_MODE_STOP;
                     shoot_burst_timestamp = 0;
                 }
+            }
+        }
+
+        // 按下G切换射速
+        if (keyboard_G_edge->posEdge()) {
+            uint8_t next_shoot_speed = shoot_speed + 1;
+            if ((int8_t)next_shoot_speed > (int8_t)shoot_speed_max) {
+                next_shoot_speed = shoot_speed_min;
+            }
+            shoot_speed = (ShootSpeed)next_shoot_speed;
+            switch (shoot_speed) {
+                case SHOOT_FREQUENCY_NORMAL:
+                    steering_motor->ReInitPID(steering_motor_theta_normal_pid_init,
+                                              driver::MotorCANBase::THETA);
+                    break;
+                case SHOOT_FREQUENCY_FAST:
+                    steering_motor->ReInitPID(steering_motor_theta_fast_pid_init,
+                                              driver::MotorCANBase::THETA);
+                    break;
+                case SHOOT_FREQUENCY_BURST:
+                    steering_motor->ReInitPID(steering_motor_theta_burst_pid_init,
+                                              driver::MotorCANBase::THETA);
+                    break;
+                default:
+                    break;
             }
         }
         osDelay(REMOTE_OS_DELAY);

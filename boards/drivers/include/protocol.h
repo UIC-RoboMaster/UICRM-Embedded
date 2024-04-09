@@ -663,10 +663,7 @@ namespace communication {
         float current_imu_pitch;
         float current_imu_roll;
         float current_imu_yaw;
-        float pitch_theta;
-        float pitch_omega;
-        float yaw_theta;
-        float yaw_omega;
+        uint8_t robot_id;
         uint8_t shooter_id;
     } __packed gimbal_current_status_t;
 

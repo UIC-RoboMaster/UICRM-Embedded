@@ -56,6 +56,8 @@ enum ShootMode {
     SHOOT_MODE_BURST = 3,   // 连发
 };
 extern ShootMode shoot_load_mode;
+enum ShootSpeed { SHOOT_FREQUENCY_NORMAL = 1, SHOOT_FREQUENCY_FAST = 2, SHOOT_FREQUENCY_BURST = 3 };
+extern ShootSpeed shoot_speed;
 extern bool is_autoaim;
 
 extern osThreadId_t remoteTaskHandle;

@@ -19,6 +19,8 @@
  ###########################################################*/
 
 #include "chassis_task.h"
+
+#include "remote_task.h"
 osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
@@ -88,6 +90,23 @@ void chassisTask(void* arg) {
         // 云台和底盘的角度差
         float chassis_yaw_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
+        static uint32_t gamestarttime = 0;
+        if (gamestarttime == 0 && referee->game_status.game_progress == 4) {
+            gamestarttime = HAL_GetTick();
+        }
+
+        if (gamestarttime != 0 && HAL_GetTick() - gamestarttime < 1000) {
+            car_vx = 0;
+            car_vy = 0.1;
+            car_vt = 0;
+        } else if (gamestarttime != 0 && HAL_GetTick() - gamestarttime < 2000) {
+            car_vx = -0.1;
+            car_vy = 0;
+            car_vt = 0;
+        } else if ((gamestarttime != 0 && HAL_GetTick() - gamestarttime > 2000)) {
+            is_chassis_ok = true;
+        }
+
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_yaw_diff);
         float cos_yaw = arm_cos_f32(chassis_yaw_diff);
@@ -95,7 +114,7 @@ void chassisTask(void* arg) {
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
-        if (remote_mode == REMOTE_MODE_ADVANCED || remote_mode == REMOTE_MODE_AUTOAIM) {
+        if (remote_mode == REMOTE_MODE_ADVANCED) {
             // 手动模式下，遥控器直接控制底盘速度
             chassis_vx = car_vx;
             chassis_vy = car_vy;
@@ -119,7 +138,7 @@ void chassisTask(void* arg) {
 
         if (remote_mode == REMOTE_MODE_SPIN) {
             // 小陀螺模式，拨盘用来控制底盘加速度
-            static float spin_speed = 1;
+            static float spin_speed = 0.5;
             spin_speed = spin_speed + car_vt * 0.01;
             spin_speed = clip<float>(spin_speed, -1, 1);
             chassis_vt = spin_speed;

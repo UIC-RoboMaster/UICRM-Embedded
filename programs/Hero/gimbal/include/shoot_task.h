@@ -43,6 +43,7 @@ const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
 extern driver::Motor3508* flywheel_left;
 extern driver::Motor3508* flywheel_right;
 extern driver::Motor3508* steering_motor;
+extern bool jam_notify_flags;
 void shootTask(void* arg);
 void init_shoot();
 void kill_shoot();
