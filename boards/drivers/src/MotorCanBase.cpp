@@ -275,7 +275,7 @@ namespace driver {
             theta_pid_.Reinit(pid_init);
         }
     }
-    control::ConstrainedPID::PID_State_t MotorCANBase::GetPIDState(uint8_t mode) const{
+    control::ConstrainedPID::PID_State_t MotorCANBase::GetPIDState(uint8_t mode) const {
         if (mode & OMEGA && mode_ & OMEGA) {
             return omega_pid_.State();
         } else if (mode & THETA && mode_ & THETA) {

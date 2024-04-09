@@ -239,7 +239,7 @@ namespace control {
         /**
          * @brief State()函数的返回值，用于获取PID控制器的状态
          * */
-         typedef struct {
+        typedef struct {
             float error;   /// 误差
             float pout;    /// 比例输出
             float iout;    /// 积分输出
