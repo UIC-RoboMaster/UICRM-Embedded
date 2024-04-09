@@ -196,12 +196,12 @@ void check_kill_shoot() {
 #else
     uint8_t is_shooter_on = 1;
 #endif
-    if (remote_mode == REMOTE_MODE_KILL || is_shooter_on==0) {
+    if (remote_mode == REMOTE_MODE_KILL || is_shooter_on == 0) {
         steering_motor->Disable();
         flywheel_left->SetTarget(0);
         flywheel_right->SetTarget(0);
-        
-        while (remote_mode == REMOTE_MODE_KILL || is_shooter_on==0){
+
+        while (remote_mode == REMOTE_MODE_KILL || is_shooter_on == 0) {
 #ifdef HAS_REFEREE
             is_shooter_on = referee->game_robot_status.mains_power_shooter_output;
 #else
@@ -209,7 +209,6 @@ void check_kill_shoot() {
 #endif
             osDelay(1);
         }
-
     }
     flywheel_left->Enable();
     flywheel_right->Enable();

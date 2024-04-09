@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "ui_task.h"
+
 #include "shoot_task.h"
 
 osThreadId_t uiTaskHandle;
@@ -98,8 +99,8 @@ void uiTask(void* arg) {
     // Initialize current mode GUI
     char ShootFrequencyStr[15] = "NORMAL";
     int8_t ShootFrequencyColor = UI_Color_Green;
-    shootFrequencyGUI = new communication::StringGUI(UI, ShootFrequencyStr, 1500, 460, ShootFrequencyColor);
-
+    shootFrequencyGUI =
+        new communication::StringGUI(UI, ShootFrequencyStr, 1500, 460, ShootFrequencyColor);
 
     modeGUI->Init();
     osDelay(110);
@@ -202,7 +203,7 @@ void uiTask(void* arg) {
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }
-        if(shoot_speed != last_shoot_frequency){
+        if (shoot_speed != last_shoot_frequency) {
             char shoot_frequency_str[30];
             switch (shoot_speed) {
                 case SHOOT_FREQUENCY_NORMAL:
@@ -296,9 +297,9 @@ void uiTask(void* arg) {
                 strcpy(diagStr, "IMU TEMP NOT SAFE   ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
-            if(shoot_jam_edge->posEdge()){
+            if (shoot_jam_edge->posEdge()) {
                 jam_notify_flags = false;
-                strcpy(diagStr,"STEER JAM");
+                strcpy(diagStr, "STEER JAM");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
         }

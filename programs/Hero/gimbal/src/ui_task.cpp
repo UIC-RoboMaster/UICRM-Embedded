@@ -258,12 +258,11 @@ void uiTask(void* arg) {
                 strcpy(diagStr, "IMU TEMP NOT SAFE   ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
-            if(shoot_jam_edge->posEdge()){
+            if (shoot_jam_edge->posEdge()) {
                 jam_notify_flags = false;
-                strcpy(diagStr,"STEER JAM");
+                strcpy(diagStr, "STEER JAM");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
-
         }
 
         // clear self-diagnosis messages

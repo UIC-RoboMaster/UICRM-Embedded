@@ -131,7 +131,7 @@ void gimbalTask(void* arg) {
         const float ratio = 0.1875;
         float speed_offset = chassis_vt * ratio;
         yaw_motor->SetSpeedOffset(speed_offset);
-        if (is_autoaim && minipc->IsOnline() && minipc->target_angle.target_robot_id!=0) {
+        if (is_autoaim && minipc->IsOnline() && minipc->target_angle.target_robot_id != 0) {
             gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
             gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
         } else {

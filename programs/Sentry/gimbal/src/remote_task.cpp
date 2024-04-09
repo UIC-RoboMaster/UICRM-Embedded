@@ -85,8 +85,7 @@ void remoteTask(void* arg) {
         is_robot_dead = false;
 #endif
 #ifdef SHOOT_REFEREE
-        is_shoot_available =
-            referee->game_robot_status.mains_power_shooter_output!=0;
+        is_shoot_available = referee->game_robot_status.mains_power_shooter_output != 0;
 #else
         is_shoot_available = true;
 #endif
@@ -128,10 +127,10 @@ void remoteTask(void* arg) {
         keyboard_G_edge->input(keyboard.bit.G);
         keyboard_B_edge->input(keyboard.bit.B);
 
-        game_start_edge->input(referee->game_status.game_progress==4);
+        game_start_edge->input(referee->game_status.game_progress == 4);
         // remote mode switch
 
-        switch(state_r){
+        switch (state_r) {
             case remote::MID:
                 remote_mode = REMOTE_MODE_ADVANCED;
                 break;
@@ -140,9 +139,9 @@ void remoteTask(void* arg) {
                 break;
             case remote::UP:
 
-                if(is_chassis_ok){
+                if (is_chassis_ok) {
                     remote_mode = REMOTE_MODE_SPIN;
-                }else{
+                } else {
                     remote_mode = REMOTE_MODE_FOLLOW;
                 }
         }
@@ -171,7 +170,6 @@ void remoteTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_STOP;
             }
         }
-
 
         if (!is_autoaim || !minipc->IsOnline()) {
             // 单发

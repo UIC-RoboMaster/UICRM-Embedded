@@ -34,7 +34,7 @@ void jam_callback(void* args) {
     if (target > motor->GetOutputShaftTheta()) {
         float prev_target = motor->GetTarget() - 2 * PI / 5;
         motor->SetTarget(prev_target);
-    }else{
+    } else {
         float prev_target = motor->GetTarget() + 2 * PI / 5;
         motor->SetTarget(prev_target);
     }

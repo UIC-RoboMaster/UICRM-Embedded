@@ -29,7 +29,6 @@
 #define HAS_REFEREE
 #define ENABLE_UI 1
 
-
 typedef struct {
     float pitch;
     float roll;

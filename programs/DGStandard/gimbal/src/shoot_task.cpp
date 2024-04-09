@@ -27,7 +27,6 @@ driver::MotorCANBase* steering_motor = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
-
 bool jam_notify_flags = false;
 
 control::ConstrainedPID::PID_Init_t steering_motor_theta_normal_pid_init = {
@@ -77,7 +76,7 @@ void jam_callback(void* args) {
     if (target > motor->GetOutputShaftTheta()) {
         float prev_target = motor->GetTarget() - 2 * PI / 32;
         motor->SetTarget(prev_target);
-    }else{
+    } else {
         float prev_target = motor->GetTarget() + 2 * PI / 32;
         motor->SetTarget(prev_target);
     }
@@ -210,10 +209,10 @@ void init_shoot() {
         .B = 2 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate|  // 变速积分
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
 
     };
@@ -221,7 +220,6 @@ void init_shoot() {
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
-
 
     shoot_key = new bsp::GPIO(TRIG_KEY_GPIO_Port, TRIG_KEY_Pin);
     // laser = new bsp::Laser(&htim3, 3, 1000000);

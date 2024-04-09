@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "chassis_task.h"
+
 #include "remote_task.h"
 osThreadId_t chassisTaskHandle;
 
@@ -29,7 +30,6 @@ float chassis_vx = 0;
 float chassis_vy = 0;
 float chassis_vt = 0;
 bool chassis_boost_flag = true;
-
 
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
@@ -91,22 +91,21 @@ void chassisTask(void* arg) {
         float chassis_yaw_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
 
         static uint32_t gamestarttime = 0;
-        if (gamestarttime == 0 && referee->game_status.game_progress==4) {
+        if (gamestarttime == 0 && referee->game_status.game_progress == 4) {
             gamestarttime = HAL_GetTick();
         }
 
-        if (gamestarttime!=0 && HAL_GetTick()-gamestarttime<1000) {
+        if (gamestarttime != 0 && HAL_GetTick() - gamestarttime < 1000) {
             car_vx = 0;
             car_vy = 0.1;
             car_vt = 0;
-        } else if (gamestarttime!=0 && HAL_GetTick()-gamestarttime<2000) {
+        } else if (gamestarttime != 0 && HAL_GetTick() - gamestarttime < 2000) {
             car_vx = -0.1;
             car_vy = 0;
             car_vt = 0;
-        }else if((gamestarttime!=0 && HAL_GetTick()-gamestarttime>2000)){
+        } else if ((gamestarttime != 0 && HAL_GetTick() - gamestarttime > 2000)) {
             is_chassis_ok = true;
         }
-
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_yaw_diff);
@@ -144,9 +143,6 @@ void chassisTask(void* arg) {
             spin_speed = clip<float>(spin_speed, -1, 1);
             chassis_vt = spin_speed;
         }
-
-
-
 
         // 进行缩放
         chassis_vx *= chassis_max_xy_speed;

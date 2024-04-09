@@ -99,17 +99,17 @@ void gimbalTask(void* arg) {
         const float mouse_ratio = 1;
         const float remote_ratio = 0.005;
         if (dbus->IsOnline()) {
-            if (referee->game_status.game_progress == 4){
-                pitch_ratio = arm_sin_f32(bsp::GetHighresTickMilliSec()/100.0f)*gimbal_init_data.pitch_offset_;
+            if (referee->game_status.game_progress == 4) {
+                pitch_ratio = arm_sin_f32(bsp::GetHighresTickMilliSec() / 100.0f) *
+                              gimbal_init_data.pitch_offset_;
                 yaw_ratio = 0;
             } else if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
                 pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
                 yaw_ratio = (float)-dbus->mouse.x / mouse_xy_max * mouse_ratio;
-            } else if(dbus->ch2 != 0 || dbus->ch3!=0){
+            } else if (dbus->ch2 != 0 || dbus->ch3 != 0) {
                 pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
                 yaw_ratio = (float)-dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
-            }
-            else{
+            } else {
                 pitch_ratio = 0;
                 yaw_ratio = 0;
             }
@@ -140,7 +140,7 @@ void gimbalTask(void* arg) {
         } else {
             switch (remote_mode) {
                 case REMOTE_MODE_SPIN:
-                    gimbal->TargetAbs(pitch_ratio,yaw_ratio);
+                    gimbal->TargetAbs(pitch_ratio, yaw_ratio);
                     gimbal->Update();
                     break;
                 case REMOTE_MODE_FOLLOW:
@@ -272,10 +272,10 @@ void check_kill() {
 #else
     uint8_t is_gimbal_on = true;
 #endif
-    if (remote_mode == REMOTE_MODE_KILL || is_gimbal_on==0) {
+    if (remote_mode == REMOTE_MODE_KILL || is_gimbal_on == 0) {
         yaw_motor->Disable();
         pitch_motor->Disable();
-        while (remote_mode == REMOTE_MODE_KILL || is_gimbal_on==0){
+        while (remote_mode == REMOTE_MODE_KILL || is_gimbal_on == 0) {
 #ifdef HAS_REFEREE
             is_gimbal_on = referee->game_robot_status.mains_power_gimbal_output;
 #else
@@ -283,7 +283,6 @@ void check_kill() {
 #endif
             osDelay(1);
         }
-
     }
     yaw_motor->Enable();
     pitch_motor->Enable();
