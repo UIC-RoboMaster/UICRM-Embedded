@@ -77,7 +77,7 @@ void remoteTask(void* arg) {
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
                               referee->power_heat_data.shooter_id1_42mm_cooling_heat) >= 100 &&
                              imu->CaliDone();
-        //DEBUG ONLY
+        //!!! DEBUG ONLY
         is_robot_dead = false;
         is_shoot_available = true;
         if (is_dbus_offline || is_robot_dead) {
