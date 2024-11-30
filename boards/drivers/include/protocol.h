@@ -597,11 +597,14 @@ namespace communication {
     /* Command for Host */
 
     typedef enum {
+        // Control command receive from minipc
         PACK = 0x0401,
         TARGET_ANGLE = 0x0402,
         NO_TARGET_FLAG = 0x0403,
         SHOOT_CMD = 0x0404,
         ROBOT_MOVE_SPEED = 0x0405,
+
+        // Status send to minipc
         ROBOT_POWER_HEAT_HP_UPLOAD = 0x0501,
         GIMBAL_CURRENT_STATUS = 0x0502,
         CHASSIS_CURRENT_STATUS = 0x0503,
