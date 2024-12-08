@@ -3,6 +3,7 @@
 ![arm](https://github.com/UIC-RoboMaster/UICRM-Embedded/workflows/arm%20build/badge.svg)
 
 Embedded system development @ BNU-HKBU UIC RoboMaster
+This is a branch for testing vision control protocals.
 
 ## User Guide
 
