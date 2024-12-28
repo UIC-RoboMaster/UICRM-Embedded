@@ -159,8 +159,8 @@ void gimbalTask(void* arg) {
 
 void RM_RTOS_Init(void) {
     print_use_uart(&huart6);
-
-    can1 = new bsp::CAN(&hcan1, true);
+    // 4pin的是can2
+    can1 = new bsp::CAN(&hcan2, false);
     dbus = new remote::DBUS(&huart3);
 
     bsp::IST8310_init_t IST8310_init;
@@ -190,12 +190,12 @@ void RM_RTOS_Init(void) {
     imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
     imu = new IMU(imu_init, false);
 
-    pitch_motor = new driver::Motor6020(can1, 0x206);
-    yaw_motor = new driver::Motor6020(can1, 0x205);
+    pitch_motor = new driver::Motor6020(can1, 0x20A,0x2FE);
+    yaw_motor = new driver::Motor6020(can1, 0x209,0x2FE);
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {
-        .kp = 20,
+        .kp = 200,
         .ki = 0,
         .kd = 0,
         .max_out = 6 * PI,
@@ -248,7 +248,7 @@ void RM_RTOS_Init(void) {
         .ki = 1,
         .kd = 0,
         .max_out = 16384,
-        .max_iout = 2000,
+        .max_iout = 20000,
         .deadband = 0,                          // 死区
         .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
         .B = 1 * PI,                            // 启动变速积分的死区

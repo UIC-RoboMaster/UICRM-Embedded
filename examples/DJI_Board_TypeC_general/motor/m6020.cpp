@@ -32,16 +32,22 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor6020* motor1 = nullptr;
 
 void RM_RTOS_Init() {
-    print_use_uart(&huart1);
+    // C板UART2 对 huart1
+    // C板UART1 对 huart6
+    print_use_uart(&huart6);
+    // can1 对应 hcan1 ，设置为hcan1时，is_master需置true
+    // can2 对应 hcan2 , 设置为hcan2时，is_master需置false
     can1 = new bsp::CAN(&hcan2, false);
-    motor1 = new driver::Motor6020(can1, 0x20A, 0x2fe);
+    // rxid: 接收id
+    // txid: 发送id
+    motor1 = new driver::Motor6020(can1, 0x209, 0x2FE);
     motor1->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 200,
         .ki = 1,
         .kd = 0,
         .max_out = 16384,
-        .max_iout = 2000,
+        .max_iout = 6000,
         .deadband = 0,                          // 死区
         .A = 2 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 1.5 * PI,                          // 启动变速积分的死区
@@ -75,15 +81,15 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetTarget(6 * PI);
+                motor1->SetTarget(10 * PI, true);
             } else {
                 current = 0;
-                motor1->SetTarget(0);
+                motor1->SetTarget(0, true);
             }
 
             osDelay(20);
         }
         motor1->PrintData();
-        osDelay(20);
+        osDelay(100);
     }
 }

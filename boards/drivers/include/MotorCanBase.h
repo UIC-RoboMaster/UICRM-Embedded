@@ -321,7 +321,7 @@ namespace driver {
         float proximity_out_ = 0.15; /* 电机退出保持状态的临界角度差 */
 
         bool holding_ = true; /* 电机是否进入保持状态 */
-      private:
+      public:
         bsp::CAN* can_;
         uint16_t rx_id_;
         uint16_t tx_id_;

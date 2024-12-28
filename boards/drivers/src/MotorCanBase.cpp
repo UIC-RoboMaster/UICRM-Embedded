@@ -489,6 +489,9 @@ namespace driver {
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
         print("omega: % .4f ", GetOmega());
         print("output shaft omega: % .4f ", GetOutputShaftOmega());
+        print("holding: %d" , holding_);
+        print("target: %f", target_);
+        print("output: %d", output_);
         print("raw temperature: %3d ", raw_temperature_);
         print("raw current get: % d \r\n", raw_current_get_);
     }
