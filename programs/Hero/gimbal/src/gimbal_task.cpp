@@ -69,6 +69,7 @@ void gimbalTask(void* arg) {
         osDelay(1);
         ++i;
     }
+
     Buzzer_Sing(SingCaliDone);
     float pitch_ratio, yaw_ratio;
     float pitch_curr, yaw_curr;
