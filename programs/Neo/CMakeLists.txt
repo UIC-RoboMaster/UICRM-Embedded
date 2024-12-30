@@ -16,3 +16,9 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         src/ui_task.cpp
         src/buzzer_task.cpp
         INCLUDES include)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_chassis_typeC
+        TARGET DJI_Board_TypeC_general
+        SOURCES
+        modChassisExp/can_bridge_chassis.cpp
+)

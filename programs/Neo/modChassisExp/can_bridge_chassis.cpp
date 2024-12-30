@@ -43,8 +43,8 @@ void RM_RTOS_Init() {
     print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan2, false);
     can2 = new bsp::CAN(&hcan1, true);
-    fl_motor = new driver::Motor3508(can1, 0x202);
-    fr_motor = new driver::Motor3508(can1, 0x201);
+    fl_motor = new driver::Motor3508(can1, 0x201);
+    fr_motor = new driver::Motor3508(can1, 0x202);
     bl_motor = new driver::Motor3508(can1, 0x203);
     br_motor = new driver::Motor3508(can1, 0x204);
 
@@ -74,11 +74,13 @@ void RM_RTOS_Init() {
     fr_motor->SetTransmissionRatio(14);
 
     bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    bl_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    //bl_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
     bl_motor->SetTransmissionRatio(14);
 
     br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    br_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    //br_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(14);
 
 //    driver::supercap_init_t supercap_init = {
