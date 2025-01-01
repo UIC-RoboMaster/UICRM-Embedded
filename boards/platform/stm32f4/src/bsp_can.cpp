@@ -155,8 +155,8 @@ namespace bsp {
             return -1;
 
         // poll for can transmission to complete
-        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
-            ;
+//        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
+//            ;
 
         return length;
     }
