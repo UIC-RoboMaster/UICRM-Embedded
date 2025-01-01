@@ -4,21 +4,21 @@ project(Neo ASM C CXX)
 uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         TARGET DJI_Board_TypeC_general
         SOURCES
-        src/main.cpp
-        src/public_port.cpp
-        src/imu_task.cpp
-        src/gimbal_data.cpp
-        src/gimbal_task.cpp
-        src/shoot_task.cpp
-        src/remote_task.cpp
-        src/chassis_task.cpp
-        src/referee_task.cpp
-        src/ui_task.cpp
-        src/buzzer_task.cpp
-        INCLUDES include)
+        gimbal/src/main.cpp
+        gimbal/src/public_port.cpp
+        gimbal/src/imu_task.cpp
+        gimbal/src/gimbal_data.cpp
+        gimbal/src/gimbal_task.cpp
+        gimbal/src/shoot_task.cpp
+        gimbal/src/remote_task.cpp
+        gimbal/src/chassis_task.cpp
+        gimbal/src/referee_task.cpp
+        gimbal/src/ui_task.cpp
+        gimbal/src/buzzer_task.cpp
+        INCLUDES gimbal/include)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_chassis_typeC
         TARGET DJI_Board_TypeC_general
         SOURCES
-        modChassisExp/can_bridge_chassis.cpp
+        chassis/can_bridge_chassis.cpp
 )
