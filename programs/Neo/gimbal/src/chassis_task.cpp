@@ -19,6 +19,8 @@
 ###########################################################*/
 
 #include "chassis_task.h"
+
+#include "minipc_task.h"
 osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
@@ -125,6 +127,12 @@ void chassisTask(void* arg) {
            spin_speed = spin_speed + car_vt * 0.01;
            spin_speed = clip<float>(spin_speed, -1, 1);
            chassis_vt = spin_speed;
+       }
+
+       if (remote_mode == REMOTE_MODE_AUTOPILOT) {
+           chassis_vx = minipc->robot_move.target_x;
+           chassis_vy = minipc->robot_move.target_y;
+           chassis_vt = minipc->robot_move.target_turn;
        }
 
        // 进行缩放

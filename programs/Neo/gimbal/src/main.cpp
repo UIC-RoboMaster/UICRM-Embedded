@@ -34,6 +34,7 @@
 #include "shoot_task.h"
 #include "ui_task.h"
 #include "user_define.h"
+#include "minipc_task.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
     print_use_uart(&huart1, true, 921600);
@@ -42,6 +43,7 @@ void RM_RTOS_Init(void) {
     init_imu();
     init_buzzer();
     init_referee();
+    init_minipc();
     init_remote();
     init_shoot();
     init_gimbal();

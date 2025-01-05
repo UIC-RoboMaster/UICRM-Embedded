@@ -21,6 +21,7 @@
 #include "gimbal_task.h"
 
 #include "chassis_task.h"
+#include "minipc_task.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -143,6 +144,13 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_ADVANCED:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->Update();
+                break;
+            case REMOTE_MODE_AUTOPILOT:
+                if (static_cast<float>(minipc->target_angle.accuracy) < 60.0f)
+                    break;
+                gimbal->TargetAbs(minipc->target_angle.target_pitch,
+                                  -minipc->target_angle.target_yaw);
+                gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
             default:
                 kill_gimbal();
