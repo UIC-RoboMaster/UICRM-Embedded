@@ -171,8 +171,8 @@ void init_shoot() {
 
     steering_motor->SetTransmissionRatio(19);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
-        .kp = 20,
-        .ki = 0,
+        .kp = 50,
+        .ki = 1,
         .kd = 0,
         .max_out = 2 * PI,
         .max_iout = 0,
