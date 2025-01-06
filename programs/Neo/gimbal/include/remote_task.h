@@ -47,8 +47,8 @@ enum ShootFricMode {
     SHOOT_FRIC_MODE_STOP = 0,
     SHOOT_FRIC_MODE_PREPARING = 1,
     SHOOT_FRIC_MODE_PREPARED = 2,
-    SHOOT_FRIC_SPEEDUP = 3,
-    SHOOT_FRIC_SPEEDDOWN = 4,
+    SHOOT_FRIC_MODE_SPEEDUP = 3,
+    SHOOT_FRIC_MODE_SPEEDOWN = 4,
 };
 extern ShootFricMode shoot_flywheel_mode;
 enum ShootMode {

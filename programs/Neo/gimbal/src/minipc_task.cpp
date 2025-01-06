@@ -68,9 +68,10 @@ void minipc_task(void* args) {
         i++;
         // microsecond
         if (i % 2 == 0) {
-            minipc->gimbal_current_status.current_imu_pitch = INS_Angle.pitch;
-            minipc->gimbal_current_status.current_imu_yaw = INS_Angle.yaw;
-            minipc->gimbal_current_status.current_imu_roll = INS_Angle.roll;
+            //todo !!! uncertain assignments, currently transport raw imu angle to mini pc. invert values possible.
+            minipc->gimbal_current_status.current_imu_pitch = imu->INS_angle[2];//!!!
+            minipc->gimbal_current_status.current_imu_yaw = imu->INS_angle[0];//!!!
+            minipc->gimbal_current_status.current_imu_roll = imu->INS_angle[1];//!!!
             minipc->gimbal_current_status.robot_id = referee->game_robot_status.robot_id;
             minipc->gimbal_current_status.shooter_id = 0;
             minipc->Transmit(communication::GIMBAL_CURRENT_STATUS);

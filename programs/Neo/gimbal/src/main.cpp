@@ -43,7 +43,7 @@ void RM_RTOS_Init(void) {
     init_imu();
     init_buzzer();
     init_referee();
-    init_minipc();
+    init_minipc(); //todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
     init_remote();
     init_shoot();
     init_gimbal();
@@ -75,68 +75,87 @@ void RM_RTOS_Default_Task(const void* arg) {
     //        flywheel_right->PrintData();
     //        osDelay(10);
     //    }
-    char s[50];
     while (true) {
         set_cursor(0, 0);
         clear_screen();
+        char remoteModeString[20] = {};
+        char fricModeString[20] = {};
+        char shootModeString[20] = {};
         switch (remote_mode) {
             case REMOTE_MODE_PREPARE:
-                strcpy(s, "PREPARE");
+                strcpy(remoteModeString, "PREPARE");
                 break;
             case REMOTE_MODE_STOP:
-                strcpy(s, "STOP");
+                strcpy(remoteModeString, "STOP");
                 break;
             case REMOTE_MODE_KILL:
-                strcpy(s, "KILL");
+                strcpy(remoteModeString, "KILL");
                 break;
             case REMOTE_MODE_FOLLOW:
-                strcpy(s, "MANUAL");
+                strcpy(remoteModeString, "FOLLOW");
                 break;
             case REMOTE_MODE_SPIN:
-                strcpy(s, "SPIN");
+                strcpy(remoteModeString, "SPIN");
+                break;
+            case REMOTE_MODE_AUTOPILOT:
+                strcpy(remoteModeString, "AUTOPILOT");
                 break;
             default:
-                strcpy(s, "UNKNOWN");
+                strcpy(remoteModeString, "UNKNOWN");
                 break;
         }
-        print("Mode:%s\r\n", s);
-        //        switch (shoot_fric_mode) {
-        //            case SHOOT_FRIC_MODE_PREPARING:
-        //                strcpy(s, "PREPARE");
-        //                break;
-        //            case SHOOT_FRIC_MODE_STOP:
-        //                strcpy(s, "STOP");
-        //                break;
-        //            case SHOOT_FRIC_MODE_PREPARED:
-        //                strcpy(s, "PREPARED");
-        //                break;
-        //            case SHOOT_FRIC_MODE_DISABLE:
-        //                strcpy(s, "DISABLE");
-        //                break;
-        //        }
-        //        print("Shoot Fric Mode:%s\r\n", s);
+        switch (shoot_flywheel_mode) {
+            case SHOOT_FRIC_MODE_PREPARING:
+                strcpy(fricModeString, "PREPARE");
+                break;
+            case SHOOT_FRIC_MODE_STOP:
+                strcpy(fricModeString, "STOP");
+                break;
+            case SHOOT_FRIC_MODE_PREPARED:
+                strcpy(fricModeString, "PREPARED");
+                break;
+            case SHOOT_FRIC_MODE_DISABLE:
+                strcpy(fricModeString, "DISABLE");
+                break;
+            case SHOOT_FRIC_MODE_SPEEDUP:
+                strcpy(fricModeString, "SPEEDUP");
+                break;
+            case SHOOT_FRIC_MODE_SPEEDOWN:
+                strcpy(fricModeString, "SPEEDDWN");
+                break;
+            default:
+                strcpy(fricModeString, "UNKNOWN");
+                break;
+        }
         switch (shoot_load_mode) {
             case SHOOT_MODE_PREPARING:
-                strcpy(s, "PREPARE");
+                strcpy(shootModeString, "PREPARE");
                 break;
             case SHOOT_MODE_STOP:
-                strcpy(s, "STOP");
+                strcpy(shootModeString, "STOP");
                 break;
             case SHOOT_MODE_PREPARED:
-                strcpy(s, "PREPARED");
+                strcpy(shootModeString, "PREPARED");
                 break;
             case SHOOT_MODE_DISABLE:
-                strcpy(s, "DISABLE");
+                strcpy(shootModeString, "DISABLE");
                 break;
             case SHOOT_MODE_SINGLE:
-                strcpy(s, "SINGLE");
+                strcpy(shootModeString, "SINGLE");
                 break;
             case SHOOT_MODE_BURST:
-                strcpy(s, "BURST");
+                strcpy(shootModeString, "BURST");
+                break;
+            default:
+                strcpy(shootModeString, "UNKNOWN");
                 break;
         }
-        print("Shoot Mode:%s\r\n", s);
 
+        print("clear\n");
+
+        print("Mode:%s\r\n", remoteModeString);
+        print("Shoot Flywheel Mode:%s\r\n", fricModeString);
+        print("Shoot Mode:%s\r\n", shootModeString);
         print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
               imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
         print("Temp: %.2f\r\n", imu->Temp);
@@ -159,7 +178,9 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
               referee->game_robot_status.max_HP);
         print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
-        print("clear\n");
+//        print("\r\n");
+//        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
+//        print("Vision accuracy: %.3f", minipc->target_angle.accuracy);
         osDelay(75);
     }
 }

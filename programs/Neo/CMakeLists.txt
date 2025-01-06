@@ -15,6 +15,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         gimbal/src/referee_task.cpp
         gimbal/src/ui_task.cpp
         gimbal/src/buzzer_task.cpp
+        gimbal/src/minipc_task.cpp
         INCLUDES gimbal/include)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_chassis_typeC

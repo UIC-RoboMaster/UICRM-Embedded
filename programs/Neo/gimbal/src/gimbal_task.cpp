@@ -138,7 +138,6 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
             case REMOTE_MODE_ADVANCED:
@@ -146,7 +145,10 @@ void gimbalTask(void* arg) {
                 gimbal->Update();
                 break;
             case REMOTE_MODE_AUTOPILOT:
-                if (static_cast<float>(minipc->target_angle.accuracy) < 60.0f)
+                if (static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
+                    abs(minipc->target_angle.target_pitch) > 90.0f ||
+                    abs(minipc->target_angle.target_yaw) > 180.0f
+                    )
                     break;
                 gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                   -minipc->target_angle.target_yaw);
