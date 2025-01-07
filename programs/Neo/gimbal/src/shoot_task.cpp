@@ -25,19 +25,19 @@ driver::Motor3508* flywheel_right = nullptr;
 
 driver::Motor2006* steering_motor = nullptr;
 
-const short steeringWheelNum = 10;
+const float singleShotDivider = 3.5f;
 
 bool jam_notify_flags = false;
 
 void jam_callback(void* args) {
-    driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
+    driver::Motor2006* motor = static_cast<driver::Motor2006*>(args);
     jam_notify_flags = true;
     float target = motor->GetTarget();
     if (target > motor->GetOutputShaftTheta()) {
-        float prev_target = motor->GetTarget() - 2 * PI / steeringWheelNum;
+        float prev_target = motor->GetTarget() - 2 * PI / singleShotDivider;
         motor->SetTarget(prev_target);
     } else {
-        float prev_target = motor->GetTarget() + 2 * PI / steeringWheelNum;
+        float prev_target = motor->GetTarget() + 2 * PI / singleShotDivider;
         motor->SetTarget(prev_target);
     }
 }
@@ -121,7 +121,7 @@ void shootTask(void* arg) {
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / steeringWheelNum,
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider,
                                                       true);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
@@ -171,8 +171,8 @@ void init_shoot() {
 
     steering_motor->SetTransmissionRatio(19);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
-        .kp = 50,
-        .ki = 1,
+        .kp = 20,
+        .ki = 0.5,
         .kd = 0,
         .max_out = 2 * PI,
         .max_iout = 0,
@@ -181,20 +181,23 @@ void init_shoot() {
         .B = 0,                                        // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate   // 变速积分
 
     };
     steering_motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t steering_omega_pid_init = {
-        .kp = 2500,
-        .ki = 3,
-        .kd = 0,
+        .kp = 2450,
+        .ki = 5,
+        .kd = 100,
         .max_out = 30000,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
         .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .output_filtering_coefficient = 0.10,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
                 control::ConstrainedPID::OutputFilter |          // 输出滤波
@@ -204,6 +207,7 @@ void init_shoot() {
     };
     steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+//    steering_motor->SetMode(driver::MotorCANBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);

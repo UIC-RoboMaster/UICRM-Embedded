@@ -43,7 +43,7 @@ void RM_RTOS_Init(void) {
     init_imu();
     init_buzzer();
     init_referee();
-    init_minipc(); //todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
+    // init_minipc(); //todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
     init_remote();
     init_shoot();
     init_gimbal();
@@ -54,8 +54,8 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
-    //    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
-    //    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
+    // refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
+    // refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
@@ -68,13 +68,14 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     osDelay(3000);
     Buzzer_Sing(DJI);
-    //    while (true) {
-    //        clear_screen();
-    //        set_cursor(0, 0);
-    //        flywheel_left->PrintData();
-    //        flywheel_right->PrintData();
-    //        osDelay(10);
-    //    }
+//    Buzzer_Sing(War_Cant_of_Mars);
+    // while (true) {
+    //     clear_screen();
+    //     set_cursor(0, 0);
+    //     flywheel_left->PrintData();
+    //     flywheel_right->PrintData();
+    //     osDelay(10);
+    // }
     while (true) {
         set_cursor(0, 0);
         clear_screen();
@@ -121,7 +122,7 @@ void RM_RTOS_Default_Task(const void* arg) {
                 strcpy(fricModeString, "SPEEDUP");
                 break;
             case SHOOT_FRIC_MODE_SPEEDOWN:
-                strcpy(fricModeString, "SPEEDDWN");
+                strcpy(fricModeString, "SPEEDOWN");
                 break;
             default:
                 strcpy(fricModeString, "UNKNOWN");
