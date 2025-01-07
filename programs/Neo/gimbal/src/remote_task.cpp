@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "imu_task.h"
+#include "minipc_task.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
@@ -147,6 +148,8 @@ void remoteTask(void* arg) {
         if (mode_switch) {
             mode_switch = false;
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
+            if (next_mode == RemoteMode::REMOTE_MODE_AUTOPILOT && !minipc->IsOnline())
+                next_mode = (RemoteMode)(next_mode + 1);
             if ((int8_t)next_mode > (int8_t)remote_mode_max) {
                 next_mode = (RemoteMode)remote_mode_min;
             }
