@@ -166,7 +166,7 @@ void remoteTask(void* arg) {
                 }
                 else if (last_state_l == remote::DOWN && dbus->IsOnline()) {
                     shoot_burst_timestamp++;
-                    if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
+                    if (shoot_burst_timestamp > 300 * REMOTE_OS_DELAY) {
                         shoot_burst_switch = true;
                     }
                 }

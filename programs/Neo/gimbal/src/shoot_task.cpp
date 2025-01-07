@@ -197,7 +197,7 @@ void init_shoot() {
     control::ConstrainedPID::PID_Init_t steering_omega_pid_init = {
         .kp = 2450,
         .ki = 5,
-        .kd = 100,
+        .kd = 125,
         .max_out = 30000,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
