@@ -116,6 +116,8 @@ void shootTask(void* arg) {
                     //                    if (!steering_motor->IsHolding()) {
                     //                        steering_motor->SetTarget(steering_motor->GetTheta());
                     //                    }
+                    if (last_shoot_mode == SHOOT_MODE_BURST)
+                        steering_motor->Hold(true);
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
@@ -127,8 +129,12 @@ void shootTask(void* arg) {
                         shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
                     break;
+                case SHOOT_MODE_BURST:
+                    steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                    break;
                 case SHOOT_MODE_STOP:
                     // 停止发射
+                    steering_motor->Hold(true);
                     break;
                 default:
                     break;
