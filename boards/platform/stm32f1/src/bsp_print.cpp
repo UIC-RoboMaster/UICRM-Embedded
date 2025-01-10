@@ -56,7 +56,19 @@ void print_use_usb() {
 }
 #endif
 
-int32_t print(const char* format, ...) {
+uint32_t dump(const void* data, uint8_t length)
+{
+    if (print_uart)
+        return print_uart->Write((uint8_t*)data, length);
+#ifndef NO_USB
+    else if (print_usb)
+        return print_usb->Write((uint8_t*)data, length);
+#endif
+    else
+        return 0;
+}
+
+uint32_t print(const char* format, ...) {
 #ifdef NDEBUG
     UNUSED(format);
     UNUSED(print_buffer);
@@ -69,14 +81,7 @@ int32_t print(const char* format, ...) {
     length = vsnprintf(print_buffer, MAX_PRINT_LEN, format, args);
     va_end(args);
 
-    if (print_uart)
-        return print_uart->Write((uint8_t*)print_buffer, length);
-#ifndef NO_USB
-    else if (print_usb)
-        return print_usb->Write((uint8_t*)print_buffer, length);
-#endif
-    else
-        return 0;
+    return dump(print_buffer, length);
 #endif  // #ifdef NDEBUG
 }
 
