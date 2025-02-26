@@ -9,7 +9,9 @@ Embedded system development @ BNU-HKBU UIC RoboMaster
 You can follow the instructions below to set up the necessary environments for
 building the source code and flashing the embedded chips.
 
-### Install ARM Toolchain (manual)
+### Set Up Environment
+
+**Install ARM Toolchain (manual)**
 
 1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for ARM Toolchain.
 2. Download the pre-built toolchain according to your operating system.
@@ -25,7 +27,7 @@ building the source code and flashing the embedded chips.
     export PATH=<path>:$PATH
     ```
 
-### Install OpenOCD (manual)
+**Install OpenOCD (manual)**
 1. Go to the [official download page](https://gnutoolchains.com/arm-eabi/openocd/) for OpenOCD.
 2. Download the pre-built toolchain according to your operating system.
 3. Decompress it to some directory and find an absolute path to the `bin` directory.
@@ -37,21 +39,24 @@ building the source code and flashing the embedded chips.
     export PATH=<path>:$PATH
     ```
 
-### Install CMake
+**Install CMake**
 1. Go to the [official download page](https://cmake.org/download/) for CMake.
 
 > If you are using Clion, this step is not required.
    
-### Install Ninja (Windows only)
+**Install Ninja (Windows only)**
 1. Go to the [official download page](https://ninja-build.org)
 
-### Compile Project (CLion)
+### Compile Project
+
+**With CLion (Recommended)**
+
 You can directly open the project in CLion and build it.
 You need to set the path of the embedded toolchain in the CLion settings.
 
     In Windows, you should open `Settings`, `Build, Execution, Deployment`, `CMake`, then set the `Generator` to Ninja.
 
-### Compile Project (Manual)
+**Compile manually**
 
 1. Go to your project root directory in a terminal.
 2. Run the following command to build the entire project.
@@ -72,17 +77,19 @@ You need to set the path of the embedded toolchain in the CLion settings.
    
     Change build type to `Debug` or `RelWithDebInfo` in order to debug with `gdb`. Note that `Debug` build could be much slower than the other two due to lack of compiler optimizations.
 
-### Flash Binary to Chip (Clion)
+### Flash Binary to Chip
+
+**Flash using CLion**
 
 Choose the target you want to flash and click the `Run` button.
 
 The default configuration is for CMSIS-DAP debugger. If you are using ST-LINK,
 you need to change the configuration in the CLion settings.
 
-### Flash Binary to Chip (OpenOCD)
+**Flash using OpenOCD**
 TODO
 
-### Document Usage
+### Generate document
 
 You will need [Doxygen](https://www.doxygen.nl/index.html).
 
@@ -116,13 +123,20 @@ formatting check will fail and the code will not be merged.
 All codes are required to be formatted correctly before merging. There are several
 integrated build commands that can help you automatically format your changes.
 
-**Prerequisite**: install `clang-format`
+**Prerequisite**: install `clang-format`. (otherwise CMake will not create the format target)
 
 * Linux's users can simply install it using `sudo apt install clang-format-10`.
 * Mac and Windows users need to download prebuilt binaries from [here](https://releases.llvm.org/download.html).
 
-With `clang-format` installed, you can run the following commands inside `build/`
-to automatically format your changes.
+**Format using CLion**
+
+Choose the CMake target and compile it. CLion will automatically format the code for you.
+1. `check-format`: Check `diff` between current source and formatted source (without modifying any source file)
+2. `format`: Format all source files (**Modifies** file in place)
+
+**Format manually**
+
+You can run the following commands inside `build/` to format your changes.
 
 1. `make check-format`: Check `diff` between current source and formatted source (without modifying any source file)
 2. `make format`: Format all source files (**Modifies** file in place)
@@ -139,3 +153,8 @@ This is the easiest way to debug. Choose the target and Directly click the `Debu
 * **`OpenOCD`**
 
 Thought directly using `openocd` is possible, but it is only recommended for advanced users.
+
+### Contribute to this repo
+
+The main branch is protected. You need to create a new branch and make a pull request to merge your changes. You need to
+<u>pass the CI check (formatting check and build check)</u> before merging.
