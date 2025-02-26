@@ -49,3 +49,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m3508
         TARGET ${BOARD_NAME}
         SOURCES servo_m3508.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_pid_adjust
+        TARGET ${BOARD_NAME}
+        SOURCES pid_adjust.cpp)

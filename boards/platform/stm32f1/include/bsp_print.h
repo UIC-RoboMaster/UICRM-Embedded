@@ -22,6 +22,7 @@
 
 #include <cinttypes>
 
+#include "bsp_uart.h"
 #include "usart.h"
 
 /**
@@ -49,6 +50,11 @@ void print_use_usb();
 #endif
 
 /**
+ * @brief dump raw array data to uart or usb
+ */
+uint32_t dump(const void* data, uint8_t length);
+
+/**
  * @brief 输出数据，类似于 printf
  *
  * @param format 格式化字符串
@@ -72,7 +78,7 @@ void print_use_usb();
  * @note    maximum print length is 32
  * @note    will perform no-op in NDEBUG mode
  */
-int32_t print(const char* format, ...);
+uint32_t print(const char* format, ...);
 
 /* escape codes helper functions -- http://www.termsys.demon.co.uk/vtansi.htm
  */
