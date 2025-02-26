@@ -56,8 +56,7 @@ void print_use_usb() {
 }
 #endif
 
-uint32_t dump(const void* data, uint8_t length)
-{
+uint32_t dump(const void* data, uint8_t length) {
     if (print_uart)
         return print_uart->Write((uint8_t*)data, length);
 #ifndef NO_USB
@@ -73,7 +72,7 @@ uint32_t print(const char* format, ...) {
     UNUSED(format);
     UNUSED(print_buffer);
     return 0;
-#else  // == #ifdef DEBUG
+#else   // == #ifdef DEBUG
     va_list args;
     int length;
 
