@@ -123,7 +123,16 @@ namespace bsp {
             .TransmitGlobalTime = DISABLE,
         };
 
-        uint32_t mailbox;
+        uint32_t mailbox = 0xff;
+        if (id_in_tx_mailbox_[0] == id) mailbox = CAN_TX_MAILBOX0;
+        else if (id_in_tx_mailbox_[1] == id) mailbox = CAN_TX_MAILBOX1;
+        else if (id_in_tx_mailbox_[2] == id) mailbox = CAN_TX_MAILBOX2;
+
+        if (mailbox != 0xff) {
+            if (HAL_CAN_IsTxMessagePending(hcan_, mailbox)) {
+                HAL_CAN_AbortTxRequest(hcan_, mailbox);
+            }
+        }
 
         if (HAL_CAN_AddTxMessage(hcan_, &header, (uint8_t*)data, &mailbox) != HAL_OK)
             return -1;
@@ -149,7 +158,16 @@ namespace bsp {
             .TransmitGlobalTime = DISABLE,
         };
 
-        uint32_t mailbox;
+        uint32_t mailbox = 0xff;
+        if (id_in_tx_mailbox_[0] == id) mailbox = CAN_TX_MAILBOX0;
+        else if (id_in_tx_mailbox_[1] == id) mailbox = CAN_TX_MAILBOX1;
+        else if (id_in_tx_mailbox_[2] == id) mailbox = CAN_TX_MAILBOX2;
+
+        if (mailbox != 0xff) {
+            if (HAL_CAN_IsTxMessagePending(hcan_, mailbox)) {
+                HAL_CAN_AbortTxRequest(hcan_, mailbox);
+            }
+        }
 
         if (HAL_CAN_AddTxMessage(hcan_, &header, (uint8_t*)data, &mailbox) != HAL_OK)
             return -1;
