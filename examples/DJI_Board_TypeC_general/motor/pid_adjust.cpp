@@ -31,7 +31,7 @@
 static bsp::CAN* can = nullptr;
 static driver::Motor2006* motor = nullptr;
 
-void PrintTask(void *argument);
+void PrintTask(void* argument);
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1, true, 921600);
@@ -44,14 +44,14 @@ void RM_RTOS_Init() {
         .kd = 300,
         .max_out = 4 * PI,
         .max_iout = 0.25 * PI,
-        .deadband = 0,                                 // 死区
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral   // 梯形积分
+        .deadband = 0,                          // 死区
+        .A = 0,                                 // 变速积分所能达到的最大值为A+B
+        .B = 0,                                 // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |     // 积分限幅
+                control::ConstrainedPID::OutputFilter |       // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
     motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
@@ -65,12 +65,13 @@ void RM_RTOS_Init() {
         .B = 1.5 * PI,                          // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral   // 梯形积分
+        .mode = control::ConstrainedPID::Integral_Limit |     // 积分限幅
+                control::ConstrainedPID::OutputFilter |       // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
     motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA | driver::MotorCANBase::ABSOLUTE);
+    motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA |
+                   driver::MotorCANBase::ABSOLUTE);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
@@ -81,38 +82,36 @@ void RM_RTOS_Init() {
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-    //while (key.Read() == 1)
-    //    osDelay(100);
+    // while (key.Read() == 1)
+    //     osDelay(100);
 
-//    while (true) {
-//        motor->SetTarget(4 * PI, true);
-//        osDelay(1000);
-//        motor->SetTarget(-4 * PI, true);
-//        osDelay(1000);
-//        motor->SetTarget(0, true);
-//        osDelay(1000);
-//    }
+    //    while (true) {
+    //        motor->SetTarget(4 * PI, true);
+    //        osDelay(1000);
+    //        motor->SetTarget(-4 * PI, true);
+    //        osDelay(1000);
+    //        motor->SetTarget(0, true);
+    //        osDelay(1000);
+    //    }
 
-//    while (true)
-//    {
-//        osDelay(1000);
-//    }
+    //    while (true)
+    //    {
+    //        osDelay(1000);
+    //    }
     while (true) {
-        for (int i = 0; i < 8; i++)
-        {
+        for (int i = 0; i < 8; i++) {
             motor->SetTarget(i * PI / 2, true);
             osDelay(2000);
         }
     }
 }
 
-void PrintTask(void *argument)
-{
+void PrintTask(void* argument) {
     UNUSED(argument);
-    while (1)
-    {
-        control::ConstrainedPID::PID_State_t state = motor->GetPIDState(driver::MotorCANBase::THETA);
-        uint8_t buffer[sizeof(state)+2] = {0xAA, 0xBB};
+    while (1) {
+        control::ConstrainedPID::PID_State_t state =
+            motor->GetPIDState(driver::MotorCANBase::THETA);
+        uint8_t buffer[sizeof(state) + 2] = {0xAA, 0xBB};
         memcpy(buffer + 2, &state, sizeof(state));
         dump(&state, sizeof(buffer));
         osDelay(2);
