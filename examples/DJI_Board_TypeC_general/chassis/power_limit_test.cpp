@@ -18,13 +18,12 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "main.h"
-
+#include "bsp_batteryvol.h"
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "dbus.h"
-
+#include "main.h"
 #include "power_meter.h"
 
 bsp::CAN* can = nullptr;
@@ -37,6 +36,7 @@ control::Chassis* chassis = nullptr;
 remote::DBUS* dbus = nullptr;
 
 power_meter *power_meter_1 = nullptr;
+bsp::BatteryVol *battery_vol = nullptr;
 
 void Dump(void* args);
 void callback(uint16_t voltage, int16_t current);
@@ -55,8 +55,6 @@ const bsp::thread_init_t thread_init = {
     .attr = dump_thread_attr_,
 };
 bsp::Thread* dump_thread = nullptr;
-
-
 
 
 void RM_RTOS_Init() {
@@ -115,6 +113,7 @@ void RM_RTOS_Init() {
     dbus = new remote::DBUS(&BOARD_DBUS);
 
     power_meter_1 = new power_meter(&BOARD_UART2, 1, callback);
+    battery_vol = new bsp::BatteryVol(&hadc3, ADC_CHANNEL_8, 1, ADC_SAMPLETIME_3CYCLES);
 
     dump_thread = new bsp::Thread(thread_init);
     dump_thread->Start();
@@ -135,7 +134,7 @@ void RM_RTOS_Default_Task(const void* args) {
         if (dbus->swl == remote::UP || dbus->swl == remote::DOWN) {
             RM_ASSERT_TRUE(false, "Operation killed");
         }
-        chassis->SetPower(true, 30, 20, 60);
+        chassis->UpdatePower(true, 60, battery_vol->GetBatteryVol(), 0.5);
         chassis->Update();
         osDelay(10);
     }
