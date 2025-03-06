@@ -57,7 +57,6 @@ namespace control {
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
         chassis_offset_ = chassis.offset;
-        power_limit_on_ = chassis.power_limit_on;
 
         // 功率限制系统
         NewPowerLimit::power_param_t power_model[4] = {
@@ -66,7 +65,8 @@ namespace control {
             M3508_POWER_MODEL,
             M3508_POWER_MODEL
         };
-        power_limiter_ = new NewPowerLimit(power_model);
+        power_limit_.enabled = chassis.power_limit_on;
+        power_limit_.limiter = new NewPowerLimit(power_model);
         driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
 
         // 底盘是否有超级电容
@@ -124,8 +124,7 @@ namespace control {
 
     void Chassis::SetPower(bool enabled, float max_power, float current_power,
                            float buffer_remain, bool enable_supercap) {
-        if (power_limit_on_ != enabled)
-            power_limit_on_ = enabled;
+        power_limit_.enabled = enabled;
 
         UNUSED(max_power);
         UNUSED(current_power);
@@ -135,27 +134,12 @@ namespace control {
         return;
     }
 
-    void Chassis::UpdatePower(bool enabled, float max_watt, float current_voltage, float buffer_percent)
+    void Chassis::UpdatePower(bool enabled, float max_watt, float current_voltage, uint8_t buffer_percent)
     {
-        power_limit_on_ = enabled;
-
-        // 电流(A) = 功率(W) / 电压(V)
-        float max_current = max_watt / current_voltage;
-
-        // 使用线性插值，调整最大电流。
-        if (buffer_percent < 0.5)
-        {
-            // 如果剩余能量太小，则使用更加严格的限制策略
-            // 将0~0.5的buffer映射到0~0.9倍的最大电流
-            chassis_power_max_current_ = max_current * linear_interpolation<float>(0.5, 0.8, 0, 0.9, buffer_percent);
-        }
-        else
-        {
-            // 正常情况下，使用较为宽松的策略
-            // 将0.5~1的buffer映射到0.9~1.2倍的最大电流
-            chassis_power_max_current_ = max_current * linear_interpolation<float>(0.5, 0.8, 0.9, 1.2, buffer_percent);
-        }
-
+        power_limit_.enabled = enabled;
+        power_limit_.buffer_percent = buffer_percent;
+        power_limit_.voltage = current_voltage;
+        power_limit_.max_watt = max_watt;
         // 这里仅记录信息，实际在在所有电机的PID计算完成、准备发送CAN前，调用ApplyPowerLimit直接设置电机输出，以进行功率限制
     }
 
@@ -264,16 +248,12 @@ namespace control {
                 return;
             }
         }
-        bool is_enable = data.data_eight_uint8.data[0];
-        if (is_enable != power_limit_on_)
-            power_limit_on_ = is_enable;
 
-        bool enable_supercap = data.data_eight_uint8.data[1];
-        if (enable_supercap && has_super_capacitor_) {
-            super_capacitor_enable_ = true;
-        } else {
-            super_capacitor_enable_ = false;
-        }
+        bool enabled = data.data_eight_uint8.data[0];
+        uint8_t max_watt = data.data_eight_uint8.data[1];
+        uint8_t buffer_percent = data.data_eight_uint8.data[2];
+        float voltage = data.data_two_float.data[1];
+        UpdatePower(enabled, max_watt, voltage, buffer_percent);
     }
     void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
                                                    communication::can_bridge_data_t data) {
@@ -294,30 +274,32 @@ namespace control {
         chassis->ApplyPowerLimit();
     }
     void Chassis::ApplyPowerLimit() {
-        if (!power_limit_on_) {
+        if (!power_limit_.enabled) {
             return;
         }
 
-        switch (model_) {
-            case CHASSIS_MECANUM_WHEEL:
-            case CHASSIS_OMNI_WHEEL: {
-                int16_t turn_current[FourWheel::motor_num];
-                float angular_velocity[FourWheel::motor_num];
-                for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
-                {
-                    turn_current[i] = motors_[i]->GetOutput();
-                    angular_velocity[i] = motors_[i]->GetOmega();
-                }
 
-                power_limiter_->LimitPower(turn_current, angular_velocity, (int16_t) (chassis_power_max_current_ * 1000));
+        // 电流(A) = 功率(W) / 电压(V)
+        float max_current = power_limit_.max_watt / power_limit_.voltage;
 
-                for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
-                    motors_[i]->SetOutput((int16_t)turn_current[i]);
-                break;
-            }
-            default:
-                break;
+        // 根据缓冲区剩余能量，使用线性插值，计算最大电流。
+        max_current = max_current * linear_interpolation<int>(50, 80, 90, 120, power_limit_.buffer_percent) / 100;
+
+        // 获取数据
+        int16_t turn_current[FourWheel::motor_num];
+        float angular_velocity[FourWheel::motor_num];
+        for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
+        {
+            turn_current[i] = motors_[i]->GetOutput();
+            angular_velocity[i] = motors_[i]->GetOmega();
         }
+
+        // 在转矩电流之上应用功率限制
+        power_limit_.limiter->LimitPower(turn_current, angular_velocity, (int16_t) (max_current * 1000));
+
+        // 应用限制后的转矩电流
+        for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
+            motors_[i]->SetOutput((int16_t)turn_current[i]);
     }
     void Chassis::Enable() {
         chassis_enable_ = true;
@@ -406,6 +388,18 @@ namespace control {
                 can_bridge_->Send(rx_id_, data_);
             }
         }
+    }
+    void ChassisCanBridgeSender::UpdatePower(bool enabled, uint8_t max_watt, float current_voltage, uint8_t buffer_percent) {
+        if (!chassis_enable_) {
+            return;
+        }
+        data_.data_eight_uint8.data[0] = enabled;
+        data_.data_eight_uint8.data[1] = max_watt;
+        data_.data_eight_uint8.data[2] = buffer_percent;
+        data_.data_two_float.data[1] = current_voltage;
+
+        rx_id_.data.reg = chassis_power_limit_reg_id_;
+        can_bridge_->Send(rx_id_, data_);
     }
 
 } /* namespace control */

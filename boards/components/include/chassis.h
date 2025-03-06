@@ -100,9 +100,9 @@ namespace control {
          * @param enabled 功率控制开关
          * @param max_watt 最大功率，单位为W（根据buffer动态调整，有时会更大）
          * @param current_voltage 电池电压，单位为V
-         * @param buffer_percent 剩余缓冲能量百分比，范围为0~1
+         * @param buffer_percent 剩余缓冲能量百分比，范围为0~100，50%对应于最大电流的90%
          */
-        void UpdatePower(bool enabled, float max_watt, float current_voltage, float buffer_percent);
+        void UpdatePower(bool enabled, float max_watt, float current_voltage, uint8_t buffer_percent);
 
         /**
          * @brief 将解算得到的数据（每个电机的转速）传递给电机类，由电机类进行PID控制、CAN输出等
@@ -164,10 +164,15 @@ namespace control {
 
         uint8_t wheel_num_ = 0;
 
-        bool power_limit_on_ = false;
-        NewPowerLimit* power_limiter_ = nullptr;
+        struct
+        {
+            bool enabled = false;
+            uint8_t buffer_percent = 0; // 0~100
+            float max_watt = 0;
+            float voltage = 0;
 
-        volatile float chassis_power_max_current_ = 0;
+            NewPowerLimit* limiter = nullptr;
+        } power_limit_;
 
         float chassis_offset_;
 
@@ -210,6 +215,7 @@ namespace control {
 
         /**
          * @brief set the power limit for chassis motors
+         * @warning deprecated, use UpdatePower instead
          * @param power_limit_on whether to enable power limit
          * @param power_limit total power limit, in [W]
          * @param chassis_power Current chassis power, in [W]
@@ -218,6 +224,9 @@ namespace control {
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
                       float chassis_power_buffer, bool enable_supercap = false,
                       bool force_update = false);
+
+        // Same as Chassis::SetPower
+        void UpdatePower(bool enabled, uint8_t max_watt, float current_voltage, uint8_t buffer_percent);
 
       private:
         communication::CanBridge* can_bridge_;
