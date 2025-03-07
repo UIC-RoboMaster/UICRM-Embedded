@@ -35,39 +35,32 @@ namespace driver {
     /**
      * @brief 带有CAN通信的DJI通用电机的标准接口
      */
-    /**
-     * @brief Basic Interface for DJI Motor with CAN communication
-     */
     class MotorCANBase : public MotorBase, public ConnectionDriver {
       public:
         enum motor_mode {
+            // 未使用
             NONE = 0x00,
+            // 未使用
             CURRENT = 0x01,
+            // 使用单环PID控制速度
             OMEGA = 0x02,
+            // 使用串级PID控制角度
             THETA = 0x04,
+            // 反转电机方向
             INVERTED = 0x40,
+            // ？？？
             ABSOLUTE = 0x80,
         };
 
         /**
          * @brief 堵转回调函数模板
          */
-        /**
-         * @brief jam callback template
-         */
         typedef void (*callback_t)(void* instance);
 
         /**
          * @brief 基础构造函数
-         *
          * @param can    CAN对象
          * @param rx_id  电机使用的CAN接收ID，参考电机的说明书
-         */
-        /**
-         * @brief base constructor
-         *
-         * @param can    CAN instance
-         * @param rx_id  CAN rx id
          */
         MotorCANBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
 
@@ -76,105 +69,62 @@ namespace driver {
         /**
          * @brief 更新电机的反馈数据
          * @note 仅在CAN回调函数中使用，不要在其他地方调用
-         *
          * @param data[]  原始数据
-         */
-        /**
-         * @brief update motor feedback data
-         * @note only used in CAN callback, do not call elsewhere
-         *
-         * @param data[]  raw data bytes
          */
         virtual void UpdateData(const uint8_t data[]);
 
         /**
          * @brief 打印电机数据
          */
-        /**
-         * @brief print out motor data
-         */
         virtual void PrintData() const = 0;
 
         /**
          * @brief 获得电机的角度（电机编码器角度），格式为[rad]
-         *
          * @return 电机的弧度角度，范围为[0, 2PI]
          */
         /**
          * @brief get motor angle, in [rad]
-         *
          * @return radian angle, range between [0, 2PI]
          */
         virtual float GetTheta() const;
 
         /**
          * @brief 获得电机的输出轴角度（经过变速箱且编码器在变速箱之前），格式为[rad]
-         *
          * @return 电机的弧度角度，范围为[0, 2PI]
          */
         virtual float GetOutputShaftTheta() const;
 
         /**
          * @brief 获得电机的编码器角度与目标角度的角度差，格式为[rad]
-         *
          * @param target 目标角度，格式为[rad]
-         *
          * @return 与目标角度的弧度角度差，范围为[-PI, PI]
-         */
-        /**
-         * @brief get angle difference (target - actual), in [rad]
-         *
-         * @param target  target angle, in [rad]
-         *
-         * @return angle difference, range between [-PI, PI]
          */
         virtual float GetThetaDelta(const float target) const;
 
         /**
          * @brief 获得电机的角速度（编码器角速度），格式为[rad / s]
-         *
-         * @return 电机的角速度
-         */
-        /**
-         * @brief get angular velocity, in [rad / s]
-         *
-         * @return angular velocity
          */
         virtual float GetOmega() const;
 
         /**
          * @brief 获得电机的输出轴角速度（经过变速箱且编码器在变速箱之前），格式为[rad / s]
-         *
-         * @return 电机的角速度
          */
         virtual float GetOutputShaftOmega() const;
 
         /**
          * @brief 获得电机的编码器角速度与目标角速度的角速度差，格式为[rad / s]
-         *
          * @param target 目标角速度，格式为[rad / s]
-         *
          * @return 与目标角速度的角速度差
-         */
-        /**
-         * @brief get angular velocity difference (target - actual), in [rad / s]
-         *
-         * @param target  target angular velocity, in [rad / s]
-         *
-         * @return difference angular velocity
          */
         virtual float GetOmegaDelta(const float target) const;
 
         /**
-         * @brief 获得电机的扭矩电流
-         *
-         * @return 电机的扭矩电流，单位为mA
+         * @return 电调反馈的转矩电流，单位为[mA]
          */
         virtual int16_t GetCurr() const;
 
         /**
-         * @brief 获得电机的运行温度
-         * @return 电机的运行温度，单位为摄氏度
+         * @return 电调反馈的温度，单位为[℃]
          */
         virtual uint16_t GetTemp() const;
 
@@ -187,7 +137,8 @@ namespace driver {
         /**
          * @brief 设置电机的目标
          * @param target 电机的目标值，取决于电机的模式，可以是角度[RAD]、角速度[RAD/S]
-         * @param override 是否覆写电机的目标值，仅针对启用角度环控制时有效
+         * @param override 电机为角度控制模式下，还未达到之前的目标时，是否覆盖旧的目标
+         * @note 指编码器？的的角度/速度
          */
         virtual void SetTarget(float target, bool override = true);
 
@@ -226,32 +177,14 @@ namespace driver {
         /**
          * @brief 设置ServoMotor为MotorCANBase的友元，因为它们需要使用MotorCANBase的许多私有参数。
          */
-        /**
-         * @brief set ServoMotor as friend of MotorCANBase since they need to use
-         *        many of the private parameters of MotorCANBase.
-         */
         friend class ServoMotor;
 
-        /**
-         * @brief 使能电机
-         */
         void Enable();
-
-        /**
-         * @brief 禁用电机
-         */
         void Disable();
-
-        /**
-         * @brief 判断电机是否被使能
-         * @return 电机是否被使能
-         */
         bool IsEnable() const;
 
         /**
          * @brief 设置堵转回调函数
-         * @param callback 堵转回调函数
-         * @param instance 堵转回调函数的参数
          */
         void RegisterErrorCallback(callback_t callback, void* instance);
 
@@ -265,33 +198,28 @@ namespace driver {
 
         /**
          * @brief 设置在执行输出数据前的回调函数，一般用于功率限制
-         * @param callback 回调函数
-         * @param instance 回调函数的参数
          */
         static void RegisterPreOutputCallback(callback_t callback, void* instance);
 
         /**
          * @brief 设置在执行输出数据后的回调函数，一般用于垃圾清理等
-         * @param callback 回调函数
-         * @param instance 回调函数的参数
          */
         static void RegisterPostOutputCallback(callback_t callback, void* instance);
 
         /**
-         * @brief 判断电机是否进入保持状态
-         * @return 电机是否进入保持状态
+         * @brief 在角度控制模式下，是否已经达到目标角度。
          */
         bool IsHolding() const;
 
         /**
-         * @brief 使电机进入保持状态，仅针对角度环控制有效
-         * @param override 是否覆写电机的目标值
+         * @brief 在角度控制模式下，使电机停止在当前位置。
+         * @param override 应为true
          */
         void Hold(bool override = true);
 
         /**
-         * @brief 设置电机的速度偏移量，一般用于前馈控制，仅针对速度环控制有效
-         * @param offset 速度偏移量的值
+         * @brief 在电机目标速度（角度环PID的输出）上加上一个偏移量
+         * @note 用于实现前馈
          */
         void SetSpeedOffset(float offset);
 
@@ -329,9 +257,12 @@ namespace driver {
         uint8_t mode_ = 0;
         control::ConstrainedPID omega_pid_;
         control::ConstrainedPID theta_pid_;
+
+        // 目标，取决于电机的模式，可以是角度[RAD]、角速度[RAD/S]
         float target_;
 
-        float speed_offset_;  // 前馈中使用，在角度环输出的速度上加上一个偏移量
+        // 前馈中使用，在角度环输出的速度上加上一个偏移量
+        float speed_offset_;
 
         callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
         void* error_callback_instance_ = nullptr;
@@ -340,12 +271,6 @@ namespace driver {
          * @brief 发送CAN消息以设置电机输出
          * @param motors[]    CAN电机指针数组
          * @param num_motors  要发送的电机数量
-         */
-        /**
-         * @brief transmit CAN message for setting motor outputs
-         *
-         * @param motors[]    array of CAN motor pointers
-         * @param num_motors  number of motors to transmit
          */
         static void TransmitOutput(MotorCANBase* motors[], uint8_t num_motors);
 
@@ -379,6 +304,8 @@ namespace driver {
         static callback_t post_output_callback_;
         static void* post_output_callback_instance_;
     };
+
+
 
     /**
      * @brief DJI 2006电机的标准类

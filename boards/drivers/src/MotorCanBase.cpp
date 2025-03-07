@@ -210,31 +210,26 @@ namespace driver {
         if (mode_ & INVERTED) {
             target = -target;
         }
+
         if (override == false && !holding_) {
             // 如果电机没有在hold状态，则不修改目标值
             return;
         }
         target_ = target;
+
         if ((mode_ & THETA) && (mode_ & ABSOLUTE)) {
             target_ = wrap<float>(target_, -PI, PI);
         }
 
+        // 重新计算是否Holding
         if (mode_ & THETA) {
-            if (!(mode_ & ABSOLUTE)) {
-                if (!holding_ && abs(target_ - GetOutputShaftTheta()) <= proximity_in_) {
-                    holding_ = true;
-                } else if (holding_ && abs(target_ - GetOutputShaftTheta()) > proximity_out_) {
-                    holding_ = false;
-                }
-            } else {
-                if (!holding_ &&
-                    abs(wrap<float>(target_ - GetOutputShaftTheta(), -PI, PI)) <= proximity_in_) {
-                    holding_ = true;
-                } else if (holding_ && abs(wrap<float>(target_ - GetOutputShaftTheta(), -PI, PI)) >
-                                           proximity_out_) {
-                    holding_ = false;
-                }
-            }
+            float diff;
+            if (mode_ & ABSOLUTE)
+                diff = wrap<float>(target_ - GetOutputShaftTheta(), -PI, PI);
+            else
+                diff = target_ - GetOutputShaftTheta();
+
+            holding_ = abs(diff) < proximity_in_;
         }
     }
     void MotorCANBase::CalcOutput() {
@@ -255,10 +250,8 @@ namespace driver {
                     // 超过半圈，反方向走
                     output = output > theta ? output - 2 * PI : output + 2 * PI;
                 }
-                output = theta_pid_.ComputeOutput(output, theta);
-            } else {
-                output = theta_pid_.ComputeOutput(output, theta);
             }
+            output = theta_pid_.ComputeOutput(output, theta);
         }
         if (mode_ & OMEGA) {
             output += speed_offset_;
@@ -276,15 +269,7 @@ namespace driver {
         }
     }
     control::ConstrainedPID::PID_State_t MotorCANBase::GetPIDState(uint8_t mode) const {
-        if (mode & OMEGA && mode_ & OMEGA) {
-            return omega_pid_.State();
-        } else if (mode & THETA && mode_ & THETA) {
-            return theta_pid_.State();
-        }
-        return control::ConstrainedPID::PID_State_t();
-    }
-
-    void MotorCANBase::SetMode(uint8_t mode) {
+        if (mode & OMEGA && mode_ & OMEGA)  mode) {
         mode_ = mode;
     }
     void MotorCANBase::UpdateData(const uint8_t* data) {
@@ -299,7 +284,15 @@ namespace driver {
         // 0，则回绕检测器将检测到下降沿，这意味着电机在穿过编码器边界时正向正方向转动。
         // 反之亦然，电机角度从接近 0 跃升至接近 2PI
 
-        motor_angle_ = theta_ - align_angle_;
+        motor_angle{
+            return omega_pid_.State();
+        } else if (mode & THETA && mode_ & THETA) {
+            return theta_pid_.State();
+        }
+        return control::ConstrainedPID::PID_State_t();
+    }
+
+    void MotorCANBase::SetMode(uint8_t_ = theta_ - align_angle_;
         if (transmission_ratio_ != 1) {
             // 获得实际的电机屁股角度
             inner_wrap_detector_->input(motor_angle_);
@@ -337,22 +330,15 @@ namespace driver {
         output_shaft_theta_ = servo_angle_ + cumulated_angle_;
         output_shaft_omega_ = omega_ / transmission_ratio_;
 
+        // 重新计算是否Holding
         if (mode_ & THETA) {
-            if (!(mode_ & ABSOLUTE)) {
-                if (!holding_ && abs(target_ - GetOutputShaftTheta()) <= proximity_in_) {
-                    holding_ = true;
-                } else if (holding_ && abs(target_ - GetOutputShaftTheta()) > proximity_out_) {
-                    holding_ = false;
-                }
-            } else {
-                if (!holding_ &&
-                    abs(wrap<float>(target_ - GetOutputShaftTheta(), -PI, PI)) <= proximity_in_) {
-                    holding_ = true;
-                } else if (holding_ && abs(wrap<float>(target_ - GetOutputShaftTheta(), -PI, PI)) >
-                                           proximity_out_) {
-                    holding_ = false;
-                }
-            }
+            float diff;
+            if (mode_ & ABSOLUTE)
+                diff = wrap<float>(target_ - GetOutputShaftTheta(), -PI, PI);
+            else
+                diff = target_ - GetOutputShaftTheta();
+
+            holding_ = abs(diff) < proximity_in_;
         }
         Heartbeat();
     }
