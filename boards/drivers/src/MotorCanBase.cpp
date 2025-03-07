@@ -223,11 +223,9 @@ namespace driver {
 
         // 重新计算是否Holding
         if (mode_ & THETA) {
-            float diff;
+            float diff = target_ - GetOutputShaftTheta();
             if (mode_ & ABSOLUTE)
-                diff = wrap<float>(target_ - GetOutputShaftTheta(), -PI, PI);
-            else
-                diff = target_ - GetOutputShaftTheta();
+                diff = wrap<float>(diff, -PI, PI);
 
             holding_ = abs(diff) < proximity_in_;
         }
@@ -241,9 +239,10 @@ namespace driver {
             return;
         }
         float output = target_;
+
+        // 处理角度环PID
         if (mode_ & THETA) {
-            // 如果电机启动了角度环PID，则计算角度环PID输出
-            float theta = GetOutputShaftTheta();
+            float theta = GetOutputShaftTheta(); // 输出轴角度
             if (mode_ & ABSOLUTE) {
                 // 如果电机启动了绝对控制模式，则直接使用角度环PID输出
                 if (abs(output - theta) > PI) {
@@ -253,10 +252,14 @@ namespace driver {
             }
             output = theta_pid_.ComputeOutput(output, theta);
         }
+
+        // 处理速度环PID
         if (mode_ & OMEGA) {
             output += speed_offset_;
             output = omega_pid_.ComputeOutput(output, GetOutputShaftOmega());
         }
+
+        // 输出
         if (mode_ != NONE) {
             SetOutput((int16_t)output);
         }
@@ -269,9 +272,18 @@ namespace driver {
         }
     }
     control::ConstrainedPID::PID_State_t MotorCANBase::GetPIDState(uint8_t mode) const {
-        if (mode & OMEGA && mode_ & OMEGA)  mode) {
+        if (mode & OMEGA && mode_ & OMEGA) {
+            return omega_pid_.State();
+        } else if (mode & THETA && mode_ & THETA) {
+            return theta_pid_.State();
+        }
+        return control::ConstrainedPID::PID_State_t();
+    }
+
+    void MotorCANBase::SetMode(uint8_t mode) {
         mode_ = mode;
     }
+
     void MotorCANBase::UpdateData(const uint8_t* data) {
         UNUSED(data);
 
@@ -284,29 +296,17 @@ namespace driver {
         // 0，则回绕检测器将检测到下降沿，这意味着电机在穿过编码器边界时正向正方向转动。
         // 反之亦然，电机角度从接近 0 跃升至接近 2PI
 
-        motor_angle{
-            return omega_pid_.State();
-        } else if (mode & THETA && mode_ & THETA) {
-            return theta_pid_.State();
-        }
-        return control::ConstrainedPID::PID_State_t();
-    }
-
-    void MotorCANBase::SetMode(uint8_t_ = theta_ - align_angle_;
+        motor_angle_ = theta_ - align_angle_;
         if (transmission_ratio_ != 1) {
             // 获得实际的电机屁股角度
             inner_wrap_detector_->input(motor_angle_);
+
             // 输入电机屁股的角度到边界检测器
-            if (inner_wrap_detector_->negEdge())
-                // 检测到下降沿，代表电机正向转动了一整圈
-                offset_angle_ =
-                    wrap<float>(offset_angle_ + 2 * PI / transmission_ratio_, 0, 2 * PI);
-            // 更新实际的输出轴角度偏差
-            else if (inner_wrap_detector_->posEdge())
-                // 检测到上升沿，代表电机反向转动了一整圈
-                offset_angle_ =
-                    wrap<float>(offset_angle_ - 2 * PI / transmission_ratio_, 0, 2 * PI);
-            // 更新实际的输出轴角度偏差
+            if (inner_wrap_detector_->negEdge()) // 检测到下降沿，代表电机正向转动了一整圈
+                offset_angle_ += 2 * PI / transmission_ratio_;
+            if (inner_wrap_detector_->posEdge()) // 检测到上升沿，代表电机反向转动了一整圈
+                offset_angle_ -= 2 * PI / transmission_ratio_;
+            offset_angle_ = wrap<float>(offset_angle_, 0, 2 * PI);
 
             servo_angle_ =
                 wrap<float>(offset_angle_ + motor_angle_ / transmission_ratio_, 0, 2 * PI);
@@ -332,12 +332,9 @@ namespace driver {
 
         // 重新计算是否Holding
         if (mode_ & THETA) {
-            float diff;
-            if (mode_ & ABSOLUTE)
-                diff = wrap<float>(target_ - GetOutputShaftTheta(), -PI, PI);
-            else
-                diff = target_ - GetOutputShaftTheta();
-
+           float diff = target_ - GetOutputShaftTheta();
+           if (mode_ & ABSOLUTE)
+               diff = wrap<float>(diff, -PI, PI);
             holding_ = abs(diff) < proximity_in_;
         }
         Heartbeat();

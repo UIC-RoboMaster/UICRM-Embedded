@@ -42,13 +42,14 @@ namespace driver {
             NONE = 0x00,
             // 未使用
             CURRENT = 0x01,
-            // 使用单环PID控制速度
+            // 应用角度环PID：将目标视为角度，将角度
             OMEGA = 0x02,
-            // 使用串级PID控制角度
+            // 应用
             THETA = 0x04,
             // 反转电机方向
             INVERTED = 0x40,
-            // ？？？
+            // 在角度控制模式下使用，以编码器零点作为电机零点，并且将所有角度值限制在-PI到PI。
+            // 默认下不设置，使用上电时的角度作为电机零点，角度目标为从上电开始的累加角度。
             ABSOLUTE = 0x80,
         };
 
@@ -224,8 +225,8 @@ namespace driver {
         void SetSpeedOffset(float offset);
 
       protected:
-        volatile float theta_;
-        volatile float omega_;
+        volatile float theta_;  // 编码器提供的角度值，单位为[rad]
+        volatile float omega_;  // 编码器提供的速度值，单位为[rad/s]
 
         volatile float output_shaft_theta_;
         volatile float output_shaft_omega_;
@@ -233,12 +234,11 @@ namespace driver {
         bool enable_;
 
         // angle control
-        volatile float align_angle_ = 0; /* 对齐角度，开机时的角度，单位为[rad] */
-        volatile float motor_angle_ = 0; /* 当前电机相比于开机的角度的旋转的角度，单位为[rad] */
-        volatile float offset_angle_ = 0; /* cumulative offset angle of motor shaft, range between
-                                                    [0, 2PI] in [rad] */
+        volatile float align_angle_ = 0; /* 开机时的编码器角度，单位为[rad] */
+        volatile float motor_angle_ = 0; /* 相对于开机角度 的旋转的角度，单位为[rad] */
+        volatile float offset_angle_ = 0; /* cumulative offset angle of motor shaft，单位为[rad]，范围为[0, 2PI] */
         volatile float servo_angle_ = 0; /* 电机输出轴的角度，单位为[rad]，范围为[0, 2PI] */
-        volatile float cumulated_angle_ = 0;     /* 累积角度，单位为[rad] */
+        volatile float cumulated_angle_ = 0;     /* 累计圈数，单位为[rad] */
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
         FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
 
@@ -248,7 +248,7 @@ namespace driver {
 
         float proximity_out_ = 0.15; /* 电机退出保持状态的临界角度差 */
 
-        bool holding_ = true; /* 电机是否进入保持状态 */
+        bool holding_ = true; /* 角度模式下，电机是否达到目标 */
       private:
         bsp::CAN* can_;
         uint16_t rx_id_;
