@@ -15,7 +15,7 @@ jobs:
     # cached ARM toolchain
     - name: cache ARM toolchain
       id: cache-arm
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/arm-toolchain-v10-3
         key: ${{ runner.os }}-arm-toolchain
