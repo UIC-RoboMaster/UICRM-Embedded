@@ -123,9 +123,9 @@ namespace driver {
 
         power_on_angle_ = -1;  // Wait for Update to initialize
         relative_angle_ = 0;
-        output_cumulated_turns_ = 0;
-        output_relative_angle_ = 0;
         cumulated_turns_ = 0;
+        output_relative_angle_ = 0;
+        output_cumulated_turns_ = 0;
         inner_wrap_detector_ = new FloatEdgeDetector(0, PI);
         outer_wrap_detector_ = new FloatEdgeDetector(0, PI);
 
@@ -217,6 +217,7 @@ namespace driver {
         }
         target_ = target;
 
+        // ABSOLUTE模式下，认为输出轴只有一圈。
         if ((mode_ & THETA) && (mode_ & ABSOLUTE)) {
             target_ = wrap<float>(target_, -PI, PI);
         }
@@ -243,15 +244,14 @@ namespace driver {
 
         // 处理角度环PID，输入角度差，输出速度值
         if (mode_ & THETA) {
-            float current_output_theta = GetOutputShaftTheta(); // 输出轴角度
             if (mode_ & ABSOLUTE) {
                 // 在ABSOLUTE模式下，如果输出轴到目标要转动大于半圈，则从另一侧转过去
-                if (target - current_output_theta > PI)
+                if (target - output_shaft_theta_ > PI)
                     target = target - 2 * PI;
-                if (target - current_output_theta < -PI)
+                if (target - output_shaft_theta_ < -PI)
                     target = target + 2 * PI;
             }
-            target = theta_pid_.ComputeOutput(target, current_output_theta);
+            target = theta_pid_.ComputeOutput(target, output_shaft_theta_);
         }
 
         // 对速度加上偏移量，前馈时使用
@@ -290,8 +290,7 @@ namespace driver {
     void MotorCANBase::UpdateData(const uint8_t* data) {
         UNUSED(data);
 
-        // 角度速度环控制且非绝对控制模式时，需要使用统计总角度值
-        // 获取初始化时的角度值
+        // 上电第一次获取到角度，则记录下来
         if (power_on_angle_ < 0)
             power_on_angle_ = theta_;
 
@@ -300,38 +299,39 @@ namespace driver {
         // 反之亦然，电机角度从接近 0 跃升至接近 2PI
 
         relative_angle_ = theta_ - power_on_angle_;
-        if (transmission_ratio_ != 1) {
-            // 获得实际的电机屁股角度
-            inner_wrap_detector_->input(relative_angle_);
-
-            // 输入电机屁股的角度到边界检测器
-            if (inner_wrap_detector_->negEdge()) // 检测到下降沿，代表电机正向转动了一整圈
-                output_cumulated_turns_ += 2 * PI / transmission_ratio_;
-            if (inner_wrap_detector_->posEdge()) // 检测到上升沿，代表电机反向转动了一整圈
-                output_cumulated_turns_ -= 2 * PI / transmission_ratio_;
-            output_cumulated_turns_ = wrap<float>(output_cumulated_turns_, 0, 2 * PI);
-
-            output_relative_angle_ =
-                wrap<float>(
-                output_cumulated_turns_ + relative_angle_ / transmission_ratio_, 0, 2 * PI);
-        } else {
+        if (transmission_ratio_ == 1)
+        {
             output_relative_angle_ = wrap<float>(relative_angle_, 0, 2 * PI);
         }
-        // 更新实际输出轴角度
-        outer_wrap_detector_->input(output_relative_angle_);
-        // 输入实际输出轴角度到边界检测器
+        else
+        {
+            // 电机屁股的角度给到边界检测器
+            inner_wrap_detector_->input(relative_angle_);
 
-        // 绝对模式下不需要累积角度
-        if (!(mode_ & ABSOLUTE)) {
-            if (outer_wrap_detector_->negEdge())
-                cumulated_turns_ += 2 * PI;
-            // 检测到下降沿，代表电机输出轴正向转动了一整圈
-            else if (outer_wrap_detector_->posEdge())
-                cumulated_turns_ -= 2 * PI;
-            // 检测到上升沿，代表电机输出轴反向转动了一整圈
+            // 记录编码器累计转过几圈
+            if (inner_wrap_detector_->negEdge())
+                cumulated_turns_ += 2 * PI / transmission_ratio_;
+            else if (inner_wrap_detector_->posEdge())
+                cumulated_turns_ -= 2 * PI / transmission_ratio_;
+            cumulated_turns_ = wrap<float>(cumulated_turns_, -transmission_ratio_, transmission_ratio_);
+
+            output_relative_angle_ =
+                wrap<float>(cumulated_turns_ + relative_angle_ / transmission_ratio_, 0, 2 * PI);
         }
 
-        output_shaft_theta_ = output_relative_angle_ + cumulated_turns_;
+        // 输出轴角度给到边界检测器
+        outer_wrap_detector_->input(output_relative_angle_);
+
+        // 绝对模式认为输出轴只有一圈，不累计圈数
+        if (!(mode_ & ABSOLUTE)) {
+            // 记录输出轴累计转过几圈
+            if (outer_wrap_detector_->negEdge())
+                output_cumulated_turns_ += 2 * PI;
+            else if (outer_wrap_detector_->posEdge())
+                output_cumulated_turns_ -= 2 * PI;
+        }
+
+        output_shaft_theta_ = output_relative_angle_ + output_cumulated_turns_;
         output_shaft_omega_ = omega_ / transmission_ratio_;
 
         // 重新计算是否Holding

@@ -42,14 +42,13 @@ namespace driver {
             NONE = 0x00,
             // 未使用
             CURRENT = 0x01,
-            // 应用角度环PID：将目标视为角度，将角度
+            // 启用角度环控制
             OMEGA = 0x02,
-            // 应用
+            // 启用速度环控制
             THETA = 0x04,
             // 反转电机方向
             INVERTED = 0x40,
-            // 在角度控制模式下使用，以编码器零点作为电机零点，并且将所有角度值限制在-PI到PI。
-            // 默认下不设置，使用上电时的角度作为电机零点，角度目标为从上电开始的累加角度。
+            // ABSOLUTE模式下，认为输出轴只有一圈。电机输出轴角度不会累计，被限制在[0, 2PI]之间，如果目标在相反的半圈，则从另一侧绕过去
             ABSOLUTE = 0x80,
         };
 
@@ -80,14 +79,15 @@ namespace driver {
         virtual void PrintData() const = 0;
 
         /**
-         * @brief 获得电机的角度（电机编码器角度），格式为[rad]
-         * @return 电机的弧度角度，范围为[0, 2PI]
-         */
-        /**
-         * @brief get motor angle, in [rad]
-         * @return radian angle, range between [0, 2PI]
+         * @brief 电机编码器角度，格式为[rad]，范围为[0, 2PI]
          */
         virtual float GetTheta() const;
+
+        /**
+         * @brief 电机编码器角速度，格式为[rad / s]
+         */
+        virtual float GetOmega() const;
+
 
         /**
          * @brief 获得电机的输出轴角度（经过变速箱且编码器在变速箱之前），格式为[rad]
@@ -96,21 +96,19 @@ namespace driver {
         virtual float GetOutputShaftTheta() const;
 
         /**
+         * @brief 获得电机的输出轴角速度（经过变速箱且编码器在变速箱之前），格式为[rad / s]
+         */
+        virtual float GetOutputShaftOmega() const;
+
+
+        /**
          * @brief 获得电机的编码器角度与目标角度的角度差，格式为[rad]
          * @param target 目标角度，格式为[rad]
          * @return 与目标角度的弧度角度差，范围为[-PI, PI]
          */
         virtual float GetThetaDelta(const float target) const;
 
-        /**
-         * @brief 获得电机的角速度（编码器角速度），格式为[rad / s]
-         */
-        virtual float GetOmega() const;
 
-        /**
-         * @brief 获得电机的输出轴角速度（经过变速箱且编码器在变速箱之前），格式为[rad / s]
-         */
-        virtual float GetOutputShaftOmega() const;
 
         /**
          * @brief 获得电机的编码器角速度与目标角速度的角速度差，格式为[rad / s]
@@ -136,16 +134,15 @@ namespace driver {
         virtual void CalcOutput();
 
         /**
-         * @brief 设置电机的目标
-         * @param target 电机的目标值，取决于电机的模式，可以是角度[RAD]、角速度[RAD/S]
+         * @brief 设置目标
+         * @param target 设置输出轴的目标：角度[RAD]、累计角度[RAD]、角速度[RAD/S]（取决于模式）
          * @param override 电机为角度控制模式下，还未达到之前的目标时，是否覆盖旧的目标
-         * @note 指编码器？的的角度/速度
          */
         virtual void SetTarget(float target, bool override = true);
 
         /**
-         * @brief 获得当前电机的目标值
-         * @return 电机的目标值，取决于电机的模式，可以是角度[RAD]、角速度[RAD/S]
+         * @brief 读取上一次设置的目标值
+         * @return 输出轴的目标：角度[RAD]、累计角度[RAD]、角速度[RAD/S]（取决于模式）
          */
         virtual float GetTarget() const;
 
@@ -228,18 +225,17 @@ namespace driver {
         volatile float theta_;  // 编码器提供的角度值，单位为[rad]
         volatile float omega_;  // 编码器提供的速度值，单位为[rad/s]
 
-        volatile float output_shaft_theta_; // 电机输出轴的角度，单位为[rad]
+        volatile float output_shaft_theta_; // 电机输出轴的累计角度，单位为[rad]
         volatile float output_shaft_omega_; // 电机输出轴的速度，单位为[rad/s]
 
         bool enable_;
 
         // angle control
         volatile float power_on_angle_ = 0; /* 上电时的编码器角度，单位为[rad] */
-        volatile float relative_angle_ = 0; /* 编码器相对于开机角度 的旋转的角度，单位为[rad] */
-        volatile float cumulated_turns_ = 0; /* 编码器累计圈数，按照2PI加减，单位为[rad] */
-
-        volatile float output_cumulated_turns_ = 0; /* 输出轴角度，按照2*PI/ratio加减，单位为[rad]，范围为[0, 2PI] */
-        volatile float output_relative_angle_ = 0; /* 输出轴的角度，单位为[rad]，范围为[0, 2PI] */
+        volatile float relative_angle_ = 0; /* 编码器相对于开机角度的角度，单位为[rad] */
+        volatile float cumulated_turns_ = 0; /* 编码器累计圈数，按照2*PI/ratio加减，累积到2*PI清零 */
+        volatile float output_cumulated_turns_ = 0; /* 输出轴累计圈数，按照2*PI加减，单位为[rad]*/
+        volatile float output_relative_angle_ = 0; /* 输出轴在这一圈中的角度，单位为[rad]，范围为[0, 2PI] */
 
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
         FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
