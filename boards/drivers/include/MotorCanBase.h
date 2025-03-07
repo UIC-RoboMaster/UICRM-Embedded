@@ -90,8 +90,8 @@ namespace driver {
 
 
         /**
-         * @brief 获得电机的输出轴角度（经过变速箱且编码器在变速箱之前），格式为[rad]
-         * @return 电机的弧度角度，范围为[0, 2PI]
+         * @brief 获得电机的累计输出轴角度（经过变速箱且编码器在变速箱之前），格式为[rad]
+         * @note ABSOLUTE模式下，认为输出轴只有一圈，输出轴角度不会累计，被限制在[0, 2PI]之间
          */
         virtual float GetOutputShaftTheta() const;
 
@@ -100,15 +100,12 @@ namespace driver {
          */
         virtual float GetOutputShaftOmega() const;
 
-
         /**
          * @brief 获得电机的编码器角度与目标角度的角度差，格式为[rad]
          * @param target 目标角度，格式为[rad]
          * @return 与目标角度的弧度角度差，范围为[-PI, PI]
          */
         virtual float GetThetaDelta(const float target) const;
-
-
 
         /**
          * @brief 获得电机的编码器角速度与目标角速度的角速度差，格式为[rad / s]
