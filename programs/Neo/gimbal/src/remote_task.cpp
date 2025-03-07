@@ -23,12 +23,13 @@
 #include <string.h>
 
 #include "imu_task.h"
+#include "minipc_task.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
-const int8_t remote_mode_max = 2;
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED, REMOTE_MODE_AUTOPILOT};
+const int8_t remote_mode_max = 4;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
@@ -45,9 +46,9 @@ void remoteTask(void* arg) {
     bool mode_switch = false;
     bool shoot_fric_switch = false;
     bool shoot_switch = false;
-    //    bool shoot_burst_switch = false;
+    bool shoot_burst_switch = false;
     bool shoot_stop_switch = false;
-    //    uint32_t shoot_burst_timestamp = 0;
+    uint32_t shoot_burst_timestamp = 0;
     remote::switch_t last_state_r = remote::MID;
     remote::switch_t last_state_l = remote::MID;
     remote::keyboard_t last_keyboard;
@@ -76,8 +77,9 @@ void remoteTask(void* arg) {
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
                               referee->power_heat_data.shooter_id1_42mm_cooling_heat) >= 100 &&
                              imu->CaliDone();
-        is_robot_dead = false;
-        is_shoot_available = true;
+        //todo !!! DEBUG ONLY
+        is_robot_dead = false;//!!!
+        is_shoot_available = true;//!!!
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
@@ -146,6 +148,8 @@ void remoteTask(void* arg) {
         if (mode_switch) {
             mode_switch = false;
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
+            if (next_mode == RemoteMode::REMOTE_MODE_AUTOPILOT && !minipc->IsOnline())
+                next_mode = (RemoteMode)(next_mode + 1);
             if ((int8_t)next_mode > (int8_t)remote_mode_max) {
                 next_mode = (RemoteMode)remote_mode_min;
             }
@@ -161,19 +165,23 @@ void remoteTask(void* arg) {
             case remote::DOWN:
                 if (last_state_l == remote::MID && dbus->IsOnline()) {
                     shoot_switch = true;
-                    //                        shoot_burst_timestamp = 0;
+                    shoot_burst_timestamp = 0;
                 }
-                //                    else if (last_state_l == remote::DOWN && selftest.dbus) {
-                //                        shoot_burst_timestamp++;
-                //                        if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
-                //                            shoot_burst_switch = true;
-                //                        }
-                //                    }
+                else if (last_state_l == remote::DOWN && dbus->IsOnline()) {
+                    shoot_burst_timestamp++;
+                    if (shoot_burst_timestamp > 300 * REMOTE_OS_DELAY) {
+                        shoot_burst_switch = true;
+                    }
+                }
                 break;
             case remote::MID:
                 switch (last_state_l) {
                     case remote::DOWN:
                         shoot_stop_switch = true;
+
+                        //reset burst states
+                        shoot_burst_timestamp = 0;
+                        shoot_burst_switch = false;
                         break;
                     case remote::UP:
                         break;
@@ -211,6 +219,7 @@ void remoteTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_STOP;
             }
         }
+
         // 射出单颗子弹
         if (shoot_switch) {
             shoot_switch = false;
@@ -221,25 +230,21 @@ void remoteTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_SINGLE;
             }
         }
+
         // 射出连发子弹
-        //            if (shoot_burst_switch) {
-        //                if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
-        //                    // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
-        //                    if (shoot_mode == SHOOT_MODE_PREPARED || shoot_mode ==
-        //                    SHOOT_MODE_SINGLE) {
-        //                        shoot_mode = SHOOT_MODE_BURST;
-        //                        shoot_burst_switch = false;
-        //                    }
-        //                } else {
-        //                    shoot_burst_switch = false;
-        //                }
-        //            }
+        if (shoot_burst_switch) {
+            shoot_burst_switch = false;
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED &&
+                (shoot_load_mode == SHOOT_MODE_PREPARED || shoot_load_mode == SHOOT_MODE_SINGLE)) {
+                // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
+                shoot_load_mode = SHOOT_MODE_BURST;
+            }
+        }
+
         // 停止射击
         if (shoot_stop_switch) {
             shoot_stop_switch = false;
-            if (shoot_load_mode == SHOOT_MODE_BURST) {
-                shoot_load_mode = SHOOT_MODE_PREPARED;
-            }
+            shoot_load_mode = SHOOT_MODE_PREPARED;
         }
 
         osDelay(REMOTE_OS_DELAY);

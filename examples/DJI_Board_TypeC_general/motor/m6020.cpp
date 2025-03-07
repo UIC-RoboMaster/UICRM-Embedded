@@ -33,8 +33,8 @@ static driver::Motor6020* motor1 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hcan2, false);
-    motor1 = new driver::Motor6020(can1, 0x20A, 0x2fe);
+    can1 = new bsp::CAN(&hcan1, true);
+    motor1 = new driver::Motor6020(can1, 0x206, 0x1FF);
     motor1->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 200,

@@ -153,6 +153,8 @@ void gimbalTask(void* arg) {
                     //                gimbal->Update();
                     //                break;
                 case REMOTE_MODE_AUTOAIM:
+                    if (static_cast<float>(minipc->target_angle.accuracy) < 60.0f)
+                        break;
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
                     gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
