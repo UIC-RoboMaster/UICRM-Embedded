@@ -234,12 +234,12 @@ namespace driver {
         bool enable_;
 
         // angle control
-        volatile float align_angle_ = 0; /* 上电时的编码器角度，单位为[rad] */
-        volatile float motor_angle_ = 0; /* 编码器相对于开机角度 的旋转的角度，单位为[rad] */
-        volatile float cumulated_angle_ = 0; /* 编码器累计圈数，按照2PI加减，单位为[rad] */
+        volatile float power_on_angle_ = 0; /* 上电时的编码器角度，单位为[rad] */
+        volatile float relative_angle_ = 0; /* 编码器相对于开机角度 的旋转的角度，单位为[rad] */
+        volatile float cumulated_turns_ = 0; /* 编码器累计圈数，按照2PI加减，单位为[rad] */
 
-        volatile float offset_angle_ = 0; /* 输出轴累计圈数，按照2*PI/ratio加减，单位为[rad]，范围为[0, 2PI] */
-        volatile float servo_angle_ = 0; /* 输出轴的角度，单位为[rad]，范围为[0, 2PI] */
+        volatile float output_cumulated_turns_ = 0; /* 输出轴角度，按照2*PI/ratio加减，单位为[rad]，范围为[0, 2PI] */
+        volatile float output_relative_angle_ = 0; /* 输出轴的角度，单位为[rad]，范围为[0, 2PI] */
 
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
         FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
