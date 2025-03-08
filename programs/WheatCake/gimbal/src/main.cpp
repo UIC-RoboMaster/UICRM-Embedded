@@ -37,7 +37,7 @@
 #include "minipc_task.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
-    print_use_uart(&huart1, true, 921600);
+    print_use_uart(&huart1, true, 115200);
     init_can();
     init_batt();
     init_imu();
@@ -66,7 +66,7 @@ void RM_RTOS_Threads_Init(void) {
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
-    osDelay(3000);
+    osDelay(1000);
     Buzzer_Sing(DJI);
 //    Buzzer_Sing(War_Cant_of_Mars);
     // while (true) {
@@ -167,6 +167,8 @@ void RM_RTOS_Default_Task(const void* arg) {
               imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
         print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
         print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(), pitch_motor->GetOmega());
+        print("Chassis motor 01 %.2f, 02 %.2f, 03 %.2f, 04 %.2f\r\n", fl_motor->GetOmega(),
+              fr_motor->GetOmega(), bl_motor->GetOmega(), br_motor->GetOmega());
         print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
         print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
         print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
@@ -179,6 +181,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
               referee->game_robot_status.max_HP);
         print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
+
 //        print("\r\n");
 //        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
 //        print("Vision accuracy: %.3f", minipc->target_angle.accuracy);

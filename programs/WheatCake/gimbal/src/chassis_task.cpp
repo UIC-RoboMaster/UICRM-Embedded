@@ -47,10 +47,10 @@ control::Chassis* chassis = nullptr;
 
 void init_chassis() {
    HAL_Delay(1000);
-   print_use_uart(&huart1);
-   can1 = new bsp::CAN(&hcan1, true);
-   fl_motor = new driver::Motor3508(can1, 0x201);
-   fr_motor = new driver::Motor3508(can1, 0x202);
+   // print_use_uart(&huart1);
+   // can1 = new bsp::CAN(&hcan1, true);
+   fl_motor = new driver::Motor3508(can1, 0x202);
+   fr_motor = new driver::Motor3508(can1, 0x201);
    bl_motor = new driver::Motor3508(can1, 0x203);
    br_motor = new driver::Motor3508(can1, 0x204);
 

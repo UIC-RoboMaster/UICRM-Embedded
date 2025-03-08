@@ -164,7 +164,7 @@ void gimbalTask(void* arg) {
 
 void init_gimbal() {
     pitch_motor = new driver::Motor6020(can1, 0x205, 0x1FF);
-    yaw_motor = new driver::Motor6020(can1, 0x206, 0x1FF);
+    yaw_motor = new driver::Motor6020(can1, 0x20A, 0x1FF);
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {

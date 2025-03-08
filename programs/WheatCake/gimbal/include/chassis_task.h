@@ -52,3 +52,7 @@ extern bool chassis_boost_flag;
 const float chassis_vx_max = 660.0f;
 const float chassis_vy_max = 660.0f;
 const float chassis_vz_max = 660.0f;
+extern driver::MotorCANBase* fl_motor;
+extern driver::MotorCANBase* fr_motor;
+extern driver::MotorCANBase* bl_motor;
+extern driver::MotorCANBase* br_motor;
