@@ -134,7 +134,7 @@ void RM_RTOS_Default_Task(const void* args) {
         if (dbus->swl == remote::UP || dbus->swl == remote::DOWN) {
             RM_ASSERT_TRUE(false, "Operation killed");
         }
-        chassis->UpdatePower(true, 60, battery_vol->GetBatteryVol(), 0.5);
+        chassis->UpdatePower(true, 60, battery_vol->GetBatteryVol(), 50);
         chassis->Update();
         osDelay(10);
     }
