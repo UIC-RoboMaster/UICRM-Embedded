@@ -55,6 +55,11 @@ void print_use_usb();
 uint32_t dump(const void* data, uint8_t length);
 
 /**
+ * @brief print data in a pretty format, representing hexadecimal numbers in text
+ */
+void dump_pretty(const void* data, uint8_t length);
+
+/**
  * @brief 输出数据，类似于 printf
  *
  * @param format 格式化字符串
