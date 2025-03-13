@@ -20,11 +20,13 @@
 
 #include "MotorCanBase.h"
 #include "bsp_can.h"
+#include "bsp_batteryvol.h"
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "main.h"
 #include "supercap.h"
+#include "power_meter.h"
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -38,15 +40,18 @@ driver::SuperCap* super_cap = nullptr;
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
 
+power_meter *power_meter_1 = nullptr;
+bsp::BatteryVol *battery_vol = nullptr;
+
 void RM_RTOS_Init() {
-    HAL_Delay(1000);
+    HAL_Delay(200);
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hcan2, false);
-    can2 = new bsp::CAN(&hcan1, true);
-    fl_motor = new driver::Motor3508(can1, 0x201);
-    fr_motor = new driver::Motor3508(can1, 0x202);
-    bl_motor = new driver::Motor3508(can1, 0x203);
-    br_motor = new driver::Motor3508(can1, 0x204);
+    can1 = new bsp::CAN(&hcan1, true);
+    can2 = new bsp::CAN(&hcan2, false);
+    fl_motor = new driver::Motor3508(can2, 0x201);
+    fr_motor = new driver::Motor3508(can2, 0x202);
+    bl_motor = new driver::Motor3508(can2, 0x203);
+    br_motor = new driver::Motor3508(can2, 0x204);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
@@ -100,7 +105,7 @@ void RM_RTOS_Init() {
 //    super_cap->SetMaxDischargePower(250.0f);
 //    super_cap->SetPerferBuffer(40.0f);
 
-    can_bridge = new communication::CanBridge(can2, 0x52);
+    can_bridge = new communication::CanBridge(can1, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
@@ -113,6 +118,7 @@ void RM_RTOS_Init() {
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
     chassis_data.has_super_capacitor = true;
     chassis_data.super_capacitor = super_cap;
+    chassis_data.power_limit_on = true;
     chassis = new control::Chassis(chassis_data);
 
     chassis->SetMaxMotorSpeed(2 * PI * 7);
@@ -132,6 +138,7 @@ void RM_RTOS_Default_Task(const void* args) {
     osDelay(500);
 
     while (true) {
+        chassis->UpdatePower(true, 60, battery_vol->GetBatteryVol(), 50);
         chassis->Update();
         osDelay(10);
     }
