@@ -25,6 +25,7 @@
 #include "bsp_uart.h"
 #include "connection_driver.h"
 #include "dbus_package.h"
+#include "bsp_usb.h"
 
 namespace communication {
 
@@ -125,6 +126,35 @@ namespace communication {
 
       protected:
         bsp::UART* uart_;
+
+      private:
+        uint8_t* read_ptr_ = nullptr;
+        uint32_t read_len_ = 0;
+        static void CallbackWrapper(void* args);
+        bsp::EventThread* callback_thread_ = nullptr;
+        static void callback_thread_func_(void* args);
+
+        const osThreadAttr_t callback_thread_attr_ = {.name = "ProtocolUpdateTask",
+                                                      .attr_bits = osThreadDetached,
+                                                      .cb_mem = nullptr,
+                                                      .cb_size = 0,
+                                                      .stack_mem = nullptr,
+                                                      .stack_size = 256 * 4,
+                                                      .priority = (osPriority_t)osPriorityHigh,
+                                                      .tz_module = 0,
+                                                      .reserved = 0};
+    };
+
+    class USBProtocol : public Protocol {
+      public:
+//        explicit USBProtocol(bsp::VirtualUSB* usb);
+        explicit USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize, uint32_t rxBufferSize);
+        ~USBProtocol();
+
+        package_t Transmit(int cmd_id) override;
+
+      protected:
+        bsp::VirtualUSB* usb_;
 
       private:
         uint8_t* read_ptr_ = nullptr;
@@ -732,6 +762,43 @@ namespace communication {
     class Host : public UARTProtocol {
       public:
         Host(bsp::UART* uart);
+        pack_t pack{};
+        target_angle_t target_angle{};
+        no_target_flag_t no_target_flag{};
+        shoot_cmd_t shoot_cmd{};
+        robot_move_t robot_move{};
+        robot_power_heat_hp_upload_t robot_power_heat_hp_upload{};
+        gimbal_current_status_t gimbal_current_status{};
+        chassis_current_status_t chassis_current_status{};
+        autoaim_enable_t autoaim_enable{};
+        robot_status_upload_t robot_status_upload{};
+
+      private:
+        /**
+         * @brief process the data for certain command and update corresponding status variables
+         *
+         * @param cmd_id    command id
+         * @param data      address for command data
+         * @param length    number of bytes in command data
+         * @return true for success; false for failure
+         */
+        bool ProcessDataRx(int cmd_id, const uint8_t* data, int length) final;
+
+        /**
+         * @brief process the information for certain command and copy it into the buffer named as
+         * data
+         *
+         * @param cmd_id
+         * @param data
+         * @return length of the data that is copied into buffer
+         */
+        int ProcessDataTx(int cmd_id, uint8_t* data) final;
+    };
+
+    // TODO: basically same with class "Host", consider multiple inheritance instead new class "HostUSB"
+    class HostUSB : public USBProtocol {
+      public:
+        HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize, uint32_t rxBufferSize);
         pack_t pack{};
         target_angle_t target_angle{};
         no_target_flag_t no_target_flag{};

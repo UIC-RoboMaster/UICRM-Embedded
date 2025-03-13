@@ -26,7 +26,6 @@
 #include "cmsis_os.h"
 #include "main.h"
 #include "supercap.h"
-#include "power_meter.h"
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -40,7 +39,6 @@ driver::SuperCap* super_cap = nullptr;
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
 
-power_meter *power_meter_1 = nullptr;
 bsp::BatteryVol *battery_vol = nullptr;
 
 void RM_RTOS_Init() {
@@ -128,6 +126,8 @@ void RM_RTOS_Init() {
     can_bridge->RegisterRxCallback(0x71, chassis->CanBridgeUpdateEventTurnWrapper, chassis);
     can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
     can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
+
+    battery_vol = new bsp::BatteryVol(&hadc3, ADC_CHANNEL_8, 1, ADC_SAMPLETIME_3CYCLES);
 
     HAL_Delay(300);
 }
