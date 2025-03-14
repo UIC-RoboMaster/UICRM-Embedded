@@ -48,7 +48,8 @@ namespace driver {
             THETA = 0x04,
             // 反转电机方向
             INVERTED = 0x40,
-            // ABSOLUTE模式下，认为输出轴只有一圈。电机输出轴角度不会累计，被限制在[0, 2PI]之间，如果目标在相反的半圈，则从另一侧绕过去
+            // ABSOLUTE模式下，认为输出轴只有一圈。电机输出轴角度不会累计，被限制在[0,
+            // 2PI]之间，如果目标在相反的半圈，则从另一侧绕过去
             ABSOLUTE = 0x80,
         };
 
@@ -87,7 +88,6 @@ namespace driver {
          * @brief 电机编码器角速度，格式为[rad / s]
          */
         virtual float GetOmega() const;
-
 
         /**
          * @brief 获得电机的累计输出轴角度（经过变速箱且编码器在变速箱之前），格式为[rad]
@@ -222,17 +222,19 @@ namespace driver {
         volatile float theta_;  // 编码器提供的角度值，单位为[rad]
         volatile float omega_;  // 编码器提供的速度值，单位为[rad/s]
 
-        volatile float output_shaft_theta_; // 电机输出轴的累计角度，单位为[rad]
-        volatile float output_shaft_omega_; // 电机输出轴的速度，单位为[rad/s]
+        volatile float output_shaft_theta_;  // 电机输出轴的累计角度，单位为[rad]
+        volatile float output_shaft_omega_;  // 电机输出轴的速度，单位为[rad/s]
 
         bool enable_;
 
         // angle control
         volatile float power_on_angle_ = 0; /* 上电时的编码器角度，单位为[rad] */
         volatile float relative_angle_ = 0; /* 编码器相对于开机角度的角度，单位为[rad] */
-        volatile float cumulated_turns_ = 0; /* 编码器累计圈数，按照2*PI/ratio加减，累积到2*PI清零 */
+        volatile float cumulated_turns_ =
+            0; /* 编码器累计圈数，按照2*PI/ratio加减，累积到2*PI清零 */
         volatile float output_cumulated_turns_ = 0; /* 输出轴累计圈数，按照2*PI加减，单位为[rad]*/
-        volatile float output_relative_angle_ = 0; /* 输出轴在这一圈中的角度，单位为[rad]，范围为[0, 2PI] */
+        volatile float output_relative_angle_ =
+            0; /* 输出轴在这一圈中的角度，单位为[rad]，范围为[0, 2PI] */
 
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
         FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
@@ -299,8 +301,6 @@ namespace driver {
         static callback_t post_output_callback_;
         static void* post_output_callback_instance_;
     };
-
-
 
     /**
      * @brief DJI 2006电机的标准类

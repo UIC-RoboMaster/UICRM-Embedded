@@ -299,12 +299,9 @@ namespace driver {
         // 反之亦然，电机角度从接近 0 跃升至接近 2PI
 
         relative_angle_ = theta_ - power_on_angle_;
-        if (transmission_ratio_ == 1)
-        {
+        if (transmission_ratio_ == 1) {
             output_relative_angle_ = wrap<float>(relative_angle_, 0, 2 * PI);
-        }
-        else
-        {
+        } else {
             // 电机屁股的角度给到边界检测器
             inner_wrap_detector_->input(relative_angle_);
 
@@ -313,7 +310,8 @@ namespace driver {
                 cumulated_turns_ += 2 * PI / transmission_ratio_;
             else if (inner_wrap_detector_->posEdge())
                 cumulated_turns_ -= 2 * PI / transmission_ratio_;
-            cumulated_turns_ = wrap<float>(cumulated_turns_, -transmission_ratio_, transmission_ratio_);
+            cumulated_turns_ =
+                wrap<float>(cumulated_turns_, -transmission_ratio_, transmission_ratio_);
 
             output_relative_angle_ =
                 wrap<float>(cumulated_turns_ + relative_angle_ / transmission_ratio_, 0, 2 * PI);
@@ -336,9 +334,9 @@ namespace driver {
 
         // 重新计算是否Holding
         if (mode_ & THETA) {
-           float diff = target_ - GetOutputShaftTheta();
-           if (mode_ & ABSOLUTE)
-               diff = wrap<float>(diff, -PI, PI);
+            float diff = target_ - GetOutputShaftTheta();
+            if (mode_ & ABSOLUTE)
+                diff = wrap<float>(diff, -PI, PI);
             holding_ = abs(diff) < proximity_in_;
         }
         Heartbeat();

@@ -38,8 +38,6 @@
  * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
  */
 
-
-
 bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
@@ -120,7 +118,9 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
 
         // Gimbal info
-        print("Gimbal target P%.3f Y%.3f\r\n", gimbal->getPitchAngle() - gimbal_param->pitch_offset_, gimbal->getYawAngle() - gimbal_param->yaw_offset_);
+        print("Gimbal target P%.3f Y%.3f\r\n",
+              gimbal->getPitchAngle() - gimbal_param->pitch_offset_,
+              gimbal->getYawAngle() - gimbal_param->yaw_offset_);
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
         print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
               minipc->target_angle.target_yaw, minipc->target_angle.accuracy);

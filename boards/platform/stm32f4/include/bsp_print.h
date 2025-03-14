@@ -85,8 +85,7 @@ uint32_t print(const char* format, ...);
 /**
  * @brief Print module name with color (green for enabled, red for disabled)
  */
-inline void print_enabled(const char* name, bool enabled)
-{
+inline void print_enabled(const char* name, bool enabled) {
     if (enabled)
         print("\033[32m[%s]\033[0m ", name);
     else

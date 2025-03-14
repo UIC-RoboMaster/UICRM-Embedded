@@ -149,8 +149,8 @@ void gimbalTask(void* arg) {
                 //                gimbal->Update();
                 //                break;
             case REMOTE_MODE_AUTOAIM:
-                if (minipc->target_angle.target_pitch < 10e3 && minipc->target_angle.target_yaw < 10e3)
-                {
+                if (minipc->target_angle.target_pitch < 10e3 &&
+                    minipc->target_angle.target_yaw < 10e3) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
                 }
