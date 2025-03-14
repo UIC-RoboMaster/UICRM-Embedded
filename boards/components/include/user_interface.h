@@ -121,35 +121,12 @@ namespace communication {
          * @return
          */
         bool SetID(int Robot_ID);
-        /**
-         * @brief 生成一条线的图形数据
-         * @param image 图形数据
-         * @param name 图形名称
-         * @param graph_operate 图形操作
-         * @param graph_layer 图形层级
-         * @param graph_color 图形颜色
-         * @param graph_width 图形宽度
-         * @param start_x 起始点x坐标
-         * @param start_y 起始点y坐标
-         * @param end_x 终止点x坐标
-         * @param end_y 终止点y坐标
-         */
+
+        // 将某个图形的数据放入image
+
         static void LineDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
                              uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
                              uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y);
-        /**
-         *
-         * @param image
-         * @param name
-         * @param graph_operate
-         * @param graph_layer
-         * @param graph_color
-         * @param graph_width
-         * @param start_x
-         * @param start_y
-         * @param end_x
-         * @param end_y
-         */
         static void RectangleDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
                                   uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
                                   uint32_t start_x, uint32_t start_y, uint32_t end_x,
@@ -177,9 +154,16 @@ namespace communication {
                              uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
                              uint32_t char_length, uint32_t graph_width, uint32_t start_x,
                              uint32_t start_y);
+
+        // 将data_buffer里面的数据作为 机器人交互数据->选手端UI绘图 发送出去
         int WriteData(uint8_t* data_buffer, communication::content graph_content);
+
         int UIDelete(uint8_t del_operate, uint8_t del_layer);
+
+        // 将若干个graphic_data_t复制到局部数组中，调用WriteData发送
         int GraphRefresh(int cnt, ...);
+
+        // CharRefresh需要独立的一个 机器人交互数据 包
         int CharRefresh(graphic_data_t image, char* theString, int len);
 
         void DiagGUIInit(graphic_data_t* message, int len);

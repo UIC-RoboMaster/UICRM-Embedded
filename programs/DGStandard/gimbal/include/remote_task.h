@@ -40,14 +40,37 @@ enum RemoteMode {
     REMOTE_MODE_ADVANCED = 3,
     REMOTE_MODE_AUTOAIM = 4,
 };
+inline const char* remote_mode_str(RemoteMode mode) {
+    switch (mode) {
+        case REMOTE_MODE_PREPARE: return "PREPARE"; break;
+        case REMOTE_MODE_KILL: return "KILL"; break;
+        case REMOTE_MODE_STOP: return "STOP"; break;
+        case REMOTE_MODE_FOLLOW: return "FOLLOW"; break;
+        case REMOTE_MODE_SPIN: return "SPIN"; break;
+        case REMOTE_MODE_ADVANCED: return "ADVANCED"; break;
+        case REMOTE_MODE_AUTOAIM: return "AUTOAIM"; break;
+        default: return "UNKNOWN"; break;
+    }
+}
 extern RemoteMode remote_mode;
+
 enum ShootFricMode {
     SHOOT_FRIC_MODE_DISABLE = -1,
     SHOOT_FRIC_MODE_STOP = 0,
     SHOOT_FRIC_MODE_PREPARING = 1,
     SHOOT_FRIC_MODE_PREPARED = 2,
 };
+inline const char* shoot_fric_mode_str(ShootFricMode mode) {
+    switch (mode) {
+        case SHOOT_FRIC_MODE_DISABLE: return "DISABLE"; break;
+        case SHOOT_FRIC_MODE_STOP: return "STOP"; break;
+        case SHOOT_FRIC_MODE_PREPARING: return "PREPARING"; break;
+        case SHOOT_FRIC_MODE_PREPARED: return "PREPARED"; break;
+        default: return "UNKNOWN"; break;
+    }
+}
 extern ShootFricMode shoot_flywheel_mode;
+
 enum ShootMode {
     SHOOT_MODE_DISABLE = -1,
     SHOOT_MODE_STOP = 0,    // 停止供弹
@@ -55,9 +78,21 @@ enum ShootMode {
     SHOOT_MODE_SINGLE = 2,  // 单发，用于通知shoot_task，发射后由shoot_task设置回IDLE
     SHOOT_MODE_BURST = 3,   // 连发
 };
+inline const char* shoot_load_mode_str(ShootMode mode) {
+    switch (mode) {
+        case SHOOT_MODE_DISABLE: return "DISABLE"; break;
+        case SHOOT_MODE_STOP: return "STOP"; break;
+        case SHOOT_MODE_IDLE: return "IDLE"; break;
+        case SHOOT_MODE_SINGLE: return "SINGLE"; break;
+        case SHOOT_MODE_BURST: return "BURST"; break;
+        default: return "UNKNOWN"; break;
+    }
+}
 extern ShootMode shoot_load_mode;
+
 enum ShootSpeed { SHOOT_FREQUENCY_NORMAL = 1, SHOOT_FREQUENCY_FAST = 2, SHOOT_FREQUENCY_BURST = 3 };
 extern ShootSpeed shoot_speed;
+
 extern bool is_autoaim;
 
 extern osThreadId_t remoteTaskHandle;
