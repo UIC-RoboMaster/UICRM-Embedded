@@ -69,6 +69,7 @@ namespace bsp {
     CAN::CAN(CAN_HandleTypeDef* hcan, bool is_master, uint8_t ext_id_suffix)
         : hcan_(hcan), ext_id_suffix_(ext_id_suffix) {
         RM_ASSERT_FALSE(HandleExists(hcan), "Repeated CAN initialization");
+        is_master = (hcan == &hcan1);
         ConfigureFilter(is_master);
         // activate rx interrupt
         RM_ASSERT_HAL_OK(HAL_CAN_RegisterCallback(hcan, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,

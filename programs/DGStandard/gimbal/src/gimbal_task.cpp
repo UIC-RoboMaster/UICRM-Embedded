@@ -131,35 +131,33 @@ void gimbalTask(void* arg) {
         const float ratio = 0.1875;
         float speed_offset = chassis_vt * ratio;
         yaw_motor->SetSpeedOffset(speed_offset);
-        if (is_autoaim && minipc->IsOnline() && minipc->target_angle.target_robot_id != 0) {
-            gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
-            gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
-        } else {
-            switch (remote_mode) {
-                case REMOTE_MODE_SPIN:
-                case REMOTE_MODE_FOLLOW:
-                    // 如果是跟随模式或者旋转模式，将IMU作为参考系
-                    gimbal->TargetRel(pitch_diff, yaw_diff);
-                    gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
-                    break;
-                case REMOTE_MODE_ADVANCED:
-                    // 如果是高级模式，将电机获取的云台当前角度作为参考系
-                    gimbal->TargetRel(pitch_diff, yaw_diff);
-                    gimbal->Update();
-                    break;
-                    //            case REMOTE_MODE_AUTOAIM:
-                    //                gimbal->TargetReal(minipc->target_angle.target_pitch,
-                    //                                   minipc->target_angle.target_yaw);
-                    //                gimbal->Update();
-                    //                break;
-                case REMOTE_MODE_AUTOAIM:
+        switch (remote_mode) {
+            case REMOTE_MODE_SPIN:
+            case REMOTE_MODE_FOLLOW:
+                // 如果是跟随模式或者旋转模式，将IMU作为参考系
+                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+                break;
+            case REMOTE_MODE_ADVANCED:
+                // 如果是高级模式，将电机获取的云台当前角度作为参考系
+                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->Update();
+                break;
+                //            case REMOTE_MODE_AUTOAIM:
+                //                gimbal->TargetReal(minipc->target_angle.target_pitch,
+                //                                   minipc->target_angle.target_yaw);
+                //                gimbal->Update();
+                //                break;
+            case REMOTE_MODE_AUTOAIM:
+                if (minipc->target_angle.target_pitch < 10e3 &&
+                    minipc->target_angle.target_yaw < 10e3) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
-                    gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
-                    break;
-                default:
-                    break;
-            }
+                }
+                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+                break;
+            default:
+                break;
         }
 
         osDelay(GIMBAL_OS_DELAY);
