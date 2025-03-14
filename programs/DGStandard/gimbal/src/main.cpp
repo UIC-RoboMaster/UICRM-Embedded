@@ -81,8 +81,19 @@ void RM_RTOS_Threads_Init(void) {
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
-    osDelay(3000);
+    osDelay(100);
     Buzzer_Sing(DJI);
+
+    while (true) {
+        control::ConstrainedPID::PID_State_t state =
+            yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+        state.dout = -state.dout;
+        uint8_t buffer[sizeof(state) + 2] = {0xAA, 0xBB};
+        memcpy(buffer + 2, &state, sizeof(state));
+        dump(&state, sizeof(buffer));
+        osDelay(2);
+    }
+
     while (true) {
         if (referee->game_robot_status.mains_power_gimbal_output) {
             gimbal_power->High();

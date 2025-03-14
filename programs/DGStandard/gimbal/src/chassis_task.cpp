@@ -121,7 +121,7 @@ void chassisTask(void* arg) {
             }
 
             static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
+                new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
             float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;
