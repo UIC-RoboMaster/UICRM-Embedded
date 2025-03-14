@@ -117,7 +117,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         // Angle info
         print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
               ahrs->INS_angle[2]);
-        print("Vision Target: %.3f %.3f", minipc->target_angle.target_pitch,
+        print("Vision Target: %.3f %.3f [%.2f]", minipc->target_angle.target_pitch,
               minipc->target_angle.target_yaw);
         print("\r\n");
 
@@ -129,11 +129,19 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
 
         // Online info
+        print("Comm Stat:  ");
         print("[DBUS %c] ", dbus->IsOnline() ? 'Y' : 'X');
         print("[Referee %c] ", referee->IsOnline() ? 'Y' : 'X');
         print("\r\n");
+        print("Motor Stat: ");
         print("[Yaw %c] ", yaw_motor->IsOnline() ? 'Y' : 'X');
         print("[Pitch %c] ", pitch_motor->IsOnline() ? 'Y' : 'X');
+        print("\r\n");
+        print("Ref Pwr En: ");
+        print("[Chassis %c] ", referee->game_robot_status.mains_power_chassis_output ? 'Y' : 'X');
+        print("[Gimbal %c] ", referee->game_robot_status.mains_power_gimbal_output ? 'Y' : 'X');
+        print("[Shooter %c] ", referee->game_robot_status.mains_power_shooter_output ? 'Y' : 'X');
+        print("\r\n");
 
         osDelay(50);
     }
