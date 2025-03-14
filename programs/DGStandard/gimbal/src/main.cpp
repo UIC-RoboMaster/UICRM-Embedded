@@ -38,6 +38,8 @@
  * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
  */
 
+
+
 bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
@@ -133,17 +135,17 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         // Online info
         print("Comm Stat:  ");
-        print("[DBUS %c] ", dbus->IsOnline() ? 'Y' : 'N');
-        print("[Referee %c] ", referee->IsOnline() ? 'Y' : 'N');
+        print_enabled("DBUS", dbus->IsOnline());
+        print_enabled("Referee", referee->IsOnline());
         print("\r\n");
         print("Motor Stat: ");
-        print("[Yaw %c] ", yaw_motor->IsOnline() ? 'Y' : 'N');
-        print("[Pitch %c] ", pitch_motor->IsOnline() ? 'Y' : 'N');
+        print_enabled("Yaw", yaw_motor->IsOnline());
+        print_enabled("Pitch", pitch_motor->IsOnline());
         print("\r\n");
         print("Ref Pwr En: ");
-        print("[Chassis %c] ", referee->game_robot_status.mains_power_chassis_output ? 'Y' : 'N');
-        print("[Gimbal %c] ", referee->game_robot_status.mains_power_gimbal_output ? 'Y' : 'N');
-        print("[Shooter %c] ", referee->game_robot_status.mains_power_shooter_output ? 'Y' : 'N');
+        print_enabled("Chassis", referee->game_robot_status.mains_power_chassis_output);
+        print_enabled("Gimbal", referee->game_robot_status.mains_power_gimbal_output);
+        print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
         print("\r\n");
 
         osDelay(50);
