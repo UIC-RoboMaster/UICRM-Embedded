@@ -107,7 +107,8 @@ void RM_RTOS_Default_Task(const void* arg) {
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
             dbus->timestamp);
-        print("Chassis %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy, chassis->chassis_vt);
+        print("Chassis %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy,
+              chassis->chassis_vt);
         print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
               referee->power_heat_data.chassis_current / 1000.0,
               referee->power_heat_data.chassis_power);
