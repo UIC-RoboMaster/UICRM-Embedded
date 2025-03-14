@@ -100,25 +100,28 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_load_mode));
         print("\r\n");
 
-        // Movement info
+        // DBUS info
         print(
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
             dbus->timestamp);
-        print("Chassis %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy,
+        print("\r\n");
+
+        // Chassis info
+        print("Chassis speed %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy,
               chassis->chassis_vt);
         print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
               referee->power_heat_data.chassis_current / 1000.0,
               referee->power_heat_data.chassis_power);
         print("\r\n");
 
-        // Angle info
-        print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
-              ahrs->INS_angle[2]);
-        print("Vision Target: %.3f %.3f [%.2f]", minipc->target_angle.target_pitch,
-              minipc->target_angle.target_yaw);
+        // Gimbal info
+        print("Gimbal target P%.3f Y%.3f\r\n", gimbal->getPitchAngle() - gimbal_param->pitch_offset_, gimbal->getYawAngle() - gimbal_param->yaw_offset_);
+        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
+        print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
         print("\r\n");
 
         // Shoot info
@@ -130,17 +133,17 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         // Online info
         print("Comm Stat:  ");
-        print("[DBUS %c] ", dbus->IsOnline() ? 'Y' : 'X');
-        print("[Referee %c] ", referee->IsOnline() ? 'Y' : 'X');
+        print("[DBUS %c] ", dbus->IsOnline() ? 'Y' : 'N');
+        print("[Referee %c] ", referee->IsOnline() ? 'Y' : 'N');
         print("\r\n");
         print("Motor Stat: ");
-        print("[Yaw %c] ", yaw_motor->IsOnline() ? 'Y' : 'X');
-        print("[Pitch %c] ", pitch_motor->IsOnline() ? 'Y' : 'X');
+        print("[Yaw %c] ", yaw_motor->IsOnline() ? 'Y' : 'N');
+        print("[Pitch %c] ", pitch_motor->IsOnline() ? 'Y' : 'N');
         print("\r\n");
         print("Ref Pwr En: ");
-        print("[Chassis %c] ", referee->game_robot_status.mains_power_chassis_output ? 'Y' : 'X');
-        print("[Gimbal %c] ", referee->game_robot_status.mains_power_gimbal_output ? 'Y' : 'X');
-        print("[Shooter %c] ", referee->game_robot_status.mains_power_shooter_output ? 'Y' : 'X');
+        print("[Chassis %c] ", referee->game_robot_status.mains_power_chassis_output ? 'Y' : 'N');
+        print("[Gimbal %c] ", referee->game_robot_status.mains_power_gimbal_output ? 'Y' : 'N');
+        print("[Shooter %c] ", referee->game_robot_status.mains_power_shooter_output ? 'Y' : 'N');
         print("\r\n");
 
         osDelay(50);

@@ -173,6 +173,9 @@ namespace control {
          */
         void UpdateOffset(float pitch_offset, float yaw_offset);
 
+        float getPitchAngle() const;
+        float getYawAngle() const;
+
       private:
         // acquired from user
         driver::MotorCANBase* pitch_motor_ = nullptr;
