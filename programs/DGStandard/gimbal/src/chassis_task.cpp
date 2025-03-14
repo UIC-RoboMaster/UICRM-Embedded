@@ -88,12 +88,19 @@ void chassisTask(void* arg) {
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
 
-        // 云台和底盘的角度差
-        float chassis_yaw_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        // 云台相对底盘的角度，通过云台和底盘连接的电机获取
+        float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
+        // 云台当前相对云台零点的角度，通过IMU获取
+        float B = INS_Angle.yaw;
+        // 云台目标相对云台零点的角度，直接读取gimbal class获取
+        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
+        float chassis_target_diff = C - B + A;
+        chassis_target_diff = -chassis_target_diff;
+        chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
         // 底盘以底盘自己为基准的运动速度
-        float sin_yaw = arm_sin_f32(chassis_yaw_diff);
-        float cos_yaw = arm_cos_f32(chassis_yaw_diff);
+        float sin_yaw = arm_sin_f32(chassis_target_diff);
+        float cos_yaw = arm_cos_f32(chassis_target_diff);
         chassis_vx = cos_yaw * car_vx + sin_yaw * car_vy;
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
@@ -108,7 +115,7 @@ void chassisTask(void* arg) {
         if (remote_mode == REMOTE_MODE_FOLLOW) {
             // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向
             const float angle_threshold = 0.02f;
-            float chassis_vt_pid_error = chassis_yaw_diff;
+            float chassis_vt_pid_error = chassis_target_diff;
             if (fabs(chassis_vt_pid_error) < angle_threshold) {
                 chassis_vt_pid_error = 0;
             }
