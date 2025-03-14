@@ -534,6 +534,7 @@ class RampSource {
 };
 
 void EndianSwap(void* data, size_t size);
+
 class Ease {
   public:
     Ease(float initial, float step);
@@ -549,3 +550,9 @@ class Ease {
     float target_;
     float step_;
 };
+
+template <typename T>
+inline T linear_interpolation(T src_min, T src_max, T dst_min, T dst_max, T value) {
+    value = clip(value, src_min, src_max);
+    return dst_min + (dst_max - dst_min) * (value - src_min) / (src_max - src_min);
+}

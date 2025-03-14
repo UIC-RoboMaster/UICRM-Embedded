@@ -35,10 +35,10 @@ static driver::Motor3508* motor1 = nullptr;
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan1, true);
-    motor1 = new driver::Motor3508(can1, 0x201);
+    motor1 = new driver::Motor3508(can1, 0x206);
     motor1->SetTransmissionRatio(19);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 2500,
+        .kp = 500,
         .ki = 3,
         .kd = 0,
         .max_out = 30000,
@@ -76,7 +76,7 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetTarget(15 * PI);
+                motor1->SetTarget(0.5 * PI);
             } else {
                 current = 0;
                 motor1->SetTarget(0);
