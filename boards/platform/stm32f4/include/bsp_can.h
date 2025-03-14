@@ -68,10 +68,10 @@ namespace bsp {
          * @brief constructor for bsp CAN instance
          *
          * @param hcan     HAL can handle
-         * @param is_master whether this is the master node, set to true if hcan is hcan1, otherwise
-         * false
+         * @param _DEPRECATED_ (deprecated, will be set automated) whether this is the master node,
+         * set to true if hcan is hcan1, otherwise false
          */
-        CAN(CAN_HandleTypeDef* hcan, bool is_master = true, uint8_t ext_id_suffix = 8);
+        CAN(CAN_HandleTypeDef* hcan, bool _DEPRECATED_ = true, uint8_t ext_id_suffix = 8);
         /**
          * @brief 检查是否与给定的CAN句柄相关联
          *
