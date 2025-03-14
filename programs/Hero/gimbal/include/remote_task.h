@@ -71,3 +71,69 @@ const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
                                             .reserved = 0};
 void remoteTask(void* arg);
 void init_remote();
+
+inline const char* remote_mode_str(RemoteMode mode) {
+    switch (mode) {
+        case REMOTE_MODE_PREPARE:
+            return "PREPARE";
+        break;
+        case REMOTE_MODE_KILL:
+            return "KILL";
+        break;
+        case REMOTE_MODE_STOP:
+            return "STOP";
+        break;
+        case REMOTE_MODE_FOLLOW:
+            return "FOLLOW";
+        break;
+        case REMOTE_MODE_SPIN:
+            return "SPIN";
+        break;
+        case REMOTE_MODE_ADVANCED:
+            return "ADVANCED";
+        break;
+        default:
+            return "\033[31mUNKNOWN\033[0m";
+        break;
+    }
+}
+
+    inline const char* shoot_fric_mode_str(ShootFricMode mode) {
+        switch (mode) {
+            case SHOOT_FRIC_MODE_DISABLE:
+                return "\033[31mDISABLE\033[0m";
+            break;
+            case SHOOT_FRIC_MODE_STOP:
+                return "STOP";
+            break;
+            case SHOOT_FRIC_MODE_PREPARING:
+                return "PREPARING";
+            break;
+            case SHOOT_FRIC_MODE_PREPARED:
+                return "PREPARED";
+            break;
+            default:
+                return "UNKNOWN";
+            break;
+        }
+    }
+
+inline const char* shoot_load_mode_str(ShootMode mode) {
+    switch (mode) {
+        case SHOOT_MODE_DISABLE:
+            return "\033[31mDISABLE\033[0m";
+        break;
+        case SHOOT_MODE_STOP:
+            return "STOP";
+        break;
+        case SHOOT_MODE_SINGLE:
+            return "SINGLE";
+        break;
+        case SHOOT_MODE_BURST:
+            return "BURST";
+        break;
+        default:
+            return "UNKNOWN";
+        break;
+    }
+}

@@ -18,6 +18,9 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
+// 开关功率控制！ true为开false为关
+#define POWER_LIMIT_STATUS false
+
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
@@ -223,10 +226,13 @@ void chassisTask(void* arg) {
                 vz_set = manual_mode_pid_output * ratio;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(POWER_LIMIT_STATUS, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
+                vx_set = chassis_vx;
+                vy_set = chassis_vy;
+                vz_set = chassis_vz;
                 break;
             case REMOTE_MODE_SPIN:
 
@@ -238,21 +244,29 @@ void chassisTask(void* arg) {
                 vz_set = spin_speed * ratio;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(POWER_LIMIT_STATUS, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
+                vx_set = chassis_vx;
+                vy_set = chassis_vy;
+                vz_set = chassis_vz;
+
                 break;
             case REMOTE_MODE_ADVANCED:
                 vz_set = chassis_vz;
 
                 chassis->SetSpeed(chassis_vx, chassis_vy, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(POWER_LIMIT_STATUS, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
+                vx_set = chassis_vx;
+                vy_set = chassis_vy;
+                vz_set = chassis_vz;
                 break;
+
             default:
                 // Not Support
                 kill_chassis();

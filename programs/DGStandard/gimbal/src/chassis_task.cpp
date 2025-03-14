@@ -18,6 +18,11 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+// 开关功率控制！ true为开false为关
+#define POWER_LIMIT_STATUS true
+
+
+
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
@@ -144,7 +149,7 @@ void chassisTask(void* arg) {
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
         osDelay(CHASSIS_OS_DELAY);
-        chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+        chassis->SetPower(POWER_LIMIT_STATUS, referee->game_robot_status.chassis_power_limit,
                           referee->power_heat_data.chassis_power,
                           referee->power_heat_data.chassis_power_buffer, false);
         osDelay(CHASSIS_OS_DELAY);

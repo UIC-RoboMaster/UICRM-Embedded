@@ -151,7 +151,7 @@ namespace control {
         bool need_shutdown = !IsOnline();
         for (int i = 0; i < wheel_num_; i++) {
             if (!motors_[i]->IsOnline()) {
-                need_shutdown = true;
+                // need_shutdown = true;
                 break;
             }
         }

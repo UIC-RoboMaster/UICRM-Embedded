@@ -17,6 +17,8 @@
  # Public License along with this program.  If not, see     #
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
+#define DEBUG_MODE
+
 
 #include "remote_task.h"
 
@@ -76,8 +78,11 @@ void remoteTask(void* arg) {
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
                               referee->power_heat_data.shooter_id1_42mm_cooling_heat) >= 100 &&
                              imu->CaliDone();
+    #ifdef DEBUG_MODE
         is_robot_dead = false;
         is_shoot_available = true;
+    #endif
+
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;

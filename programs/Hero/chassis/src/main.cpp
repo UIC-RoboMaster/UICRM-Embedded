@@ -46,7 +46,8 @@ communication::CanBridge* can_bridge = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
-    print_use_uart(&huart5);
+    print_use_uart(&huart4,true,19200);
+    print("helloworld!");
     chassis_can = new bsp::CAN(&hcan1, true);
     bridge_can = new bsp::CAN(&hcan2, false);
     fl_motor = new driver::Motor3508(chassis_can, 0x202);
@@ -140,5 +141,7 @@ void RM_RTOS_Default_Task(const void* args) {
     while (true) {
         chassis->Update();
         osDelay(10);
+        print("helloworld\r\n");
+        Buzzer_Sing(Mario);
     }
 }
