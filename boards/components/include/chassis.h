@@ -176,6 +176,12 @@ namespace control {
         driver::SuperCap* super_capacitor_ = nullptr;
 
         float max_motor_speed_ = 2 * PI * 10;
+
+      public:
+        // Record for debugging
+        float chassis_vx = 0;
+        float chassis_vy = 0;
+        float chassis_vt = 0;
     };
 
     class ChassisCanBridgeSender {
@@ -218,6 +224,12 @@ namespace control {
         uint8_t chassis_current_power_reg_id_ = 0x00;
         communication::can_bridge_ext_id_t rx_id_;
         communication::can_bridge_data_t data_;
+
+      public:
+        // Record for debugging
+        float chassis_vx = 0;
+        float chassis_vy = 0;
+        float chassis_vt = 0;
     };
 
 }  // namespace control
