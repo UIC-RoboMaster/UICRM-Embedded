@@ -75,9 +75,10 @@ void chassisTask(void* arg) {
         //        } else
         if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
-            car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX;
-            car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX;
-            car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX;
+            const float speed_scale = 0.5;
+            car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
+            car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
+            car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
@@ -132,7 +133,7 @@ void chassisTask(void* arg) {
         chassis_vy *= chassis_max_xy_speed;
         chassis_vt *= chassis_max_t_speed;
 
-        static const float move_ease_ratio = 1.8;
+        static const float move_ease_ratio = 0.9;
         static const float turn_ease_ratio = 0.9;
         static Ease chassis_ease_vx(0, move_ease_ratio);
         static Ease chassis_ease_vy(0, move_ease_ratio);

@@ -82,6 +82,16 @@ uint32_t dump(const void* data, uint8_t length);
  */
 uint32_t print(const char* format, ...);
 
+/**
+ * @brief Print module name with color (green for enabled, red for disabled)
+ */
+inline void print_enabled(const char* name, bool enabled) {
+    if (enabled)
+        print("\033[32m[%s]\033[0m ", name);
+    else
+        print("\033[31m[%s]\033[0m ", name);
+}
+
 /* escape codes helper functions -- http://www.termsys.demon.co.uk/vtansi.htm
  */
 

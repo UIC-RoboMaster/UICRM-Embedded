@@ -92,6 +92,10 @@ namespace control {
 
     void Chassis::SetSpeed(const float x_speed, const float y_speed, const float turn_speed) {
         Heartbeat();
+        chassis_vx = x_speed;
+        chassis_vy = y_speed;
+        chassis_vt = turn_speed;
+
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
             case CHASSIS_OMNI_WHEEL: {
@@ -408,6 +412,9 @@ namespace control {
             can_bridge_->Send(rx_id_, data_);
             osDelay(1);
         }
+        chassis_vx = x_speed;
+        chassis_vy = y_speed;
+        chassis_vt = turn_speed;
     }
     void ChassisCanBridgeSender::SetPower(bool power_limit_on, float power_limit,
                                           float chassis_power, float chassis_power_buffer,
