@@ -101,9 +101,11 @@ void shootTask(void* arg) {
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL ||
-            !referee->game_robot_status.mains_power_shooter_output) {
-            // 死了
+        bool is_dead = remote_mode == REMOTE_MODE_KILL;
+#ifdef HAS_REFEREE
+        is_dead |= !referee->game_robot_status.mains_power_shooter_output;
+#endif
+        if (is_dead) {
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
@@ -146,6 +148,7 @@ void shootTask(void* arg) {
             }
         }
 
+#ifdef HAS_REFEREE
         int heat_limit = referee->game_robot_status.shooter_heat_limit;
         int heat_buffer = referee->power_heat_data.shooter_id1_17mm_cooling_heat;
         const int shooter_heat_threashold = 25;
@@ -158,6 +161,7 @@ void shootTask(void* arg) {
         }
         UNUSED(heat_limit);
         UNUSED(heat_buffer);
+#endif
 
         if (shoot_load_mode == SHOOT_MODE_SINGLE) {
             steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
