@@ -150,10 +150,16 @@ void chassisTask(void* arg) {
         chassis_vt = chassis_ease_vt.Calc(chassis_vt);
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
-        osDelay(CHASSIS_OS_DELAY);
-        chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
-                          referee->power_heat_data.chassis_power,
-                          referee->power_heat_data.chassis_power_buffer, false);
+        osDelay(1);
+
+#ifdef HAS_REFEREE
+        uint8_t buffer_percent = referee->power_heat_data.chassis_power_buffer * 100 / 60;
+        uint8_t max_watt = referee->game_robot_status.chassis_power_limit;
+#else
+        uint8_t buffer_percent = 50;
+        uint8_t max_watt = 100;
+#endif
+        chassis->UpdatePower(true, max_watt, 24, buffer_percent);
         osDelay(CHASSIS_OS_DELAY);
     }
 }
