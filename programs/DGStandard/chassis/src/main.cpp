@@ -21,6 +21,7 @@
 #include "main.h"
 
 #include "MotorCanBase.h"
+#include "bsp_batteryvol.h"
 #include "bsp_can.h"
 #include "bsp_print.h"
 #include "buzzer_notes.h"
@@ -40,6 +41,8 @@ driver::SuperCap* super_cap = nullptr;
 
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
+
+bsp::BatteryVol *battery_vol = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
@@ -124,6 +127,8 @@ void RM_RTOS_Init() {
     can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
     can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
 
+    battery_vol = new bsp::BatteryVol(&hadc3, ADC_CHANNEL_8, 1, ADC_SAMPLETIME_3CYCLES);
+
     HAL_Delay(300);
     init_buzzer();
 }
@@ -135,6 +140,7 @@ void RM_RTOS_Default_Task(const void* args) {
     Buzzer_Sing(Mario);
 
     while (true) {
+        chassis->UpdatePowerVoltage(battery_vol->GetBatteryVol());
         chassis->Update();
         osDelay(10);
     }

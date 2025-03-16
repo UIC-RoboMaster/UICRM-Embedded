@@ -142,9 +142,15 @@ namespace control {
     {
         power_limit_.enabled = enabled;
         power_limit_.buffer_percent = buffer_percent;
-        power_limit_.voltage = current_voltage;
+        // 双板通信下，云台可以选择不更新电压值，底盘可以使用自己采样的电压值
+        if (current_voltage > 1)
+            power_limit_.voltage = current_voltage;
         power_limit_.max_watt = max_watt;
         // 这里仅记录信息，实际在在所有电机的PID计算完成、准备发送CAN前，调用ApplyPowerLimit直接设置电机输出，以进行功率限制
+    }
+
+    void Chassis::UpdatePowerVoltage(float voltage) {
+        power_limit_.voltage = voltage;
     }
 
     void Chassis::Update() {

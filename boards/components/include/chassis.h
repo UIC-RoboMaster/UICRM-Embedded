@@ -105,6 +105,11 @@ namespace control {
         void UpdatePower(bool enabled, float max_watt, float current_voltage, uint8_t buffer_percent);
 
         /**
+         * @brief 在双板通信模式下，底盘使用自己采样的电压，因此需要额外暴露接口
+         */
+        void UpdatePowerVoltage(float voltage);
+
+        /**
          * @brief 将解算得到的数据（每个电机的转速）传递给电机类，由电机类进行PID控制、CAN输出等
          * @note 检测底盘是否关闭，以及电机是否掉线（电机掉线则关闭底盘，需要手动重启）。
          */
