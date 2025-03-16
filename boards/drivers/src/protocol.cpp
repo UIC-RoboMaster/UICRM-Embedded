@@ -116,6 +116,39 @@ namespace communication {
         return package;
     }
 
+
+
+    USBProtocol::USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200, uint32_t rxBufferSize = 200) : Protocol() {
+        usb_ = usb;
+        usb_->SetupTx(txBufferSize);
+        usb_->SetupRx(rxBufferSize);
+        usb_->SetupRxData(&read_ptr_, &read_len_);
+        usb_->RegisterCallback(CallbackWrapper, this);
+        bsp::thread_init_t thread_init = {
+            .func = callback_thread_func_,
+            .args = this,
+            .attr = callback_thread_attr_,
+        };
+        callback_thread_ = new bsp::EventThread(thread_init);
+    }
+    void USBProtocol::CallbackWrapper(void* args) {
+        USBProtocol* usb_protocol_ = reinterpret_cast<USBProtocol*>(args);
+        usb_protocol_->callback_thread_->Set();
+    }
+    void USBProtocol::callback_thread_func_(void* args) {
+        USBProtocol* usb_protocol_ = reinterpret_cast<USBProtocol*>(args);
+        usb_protocol_->Receive(
+            communication::package_t{usb_protocol_->read_ptr_, (int)usb_protocol_->read_len_});
+    }
+    USBProtocol::~USBProtocol() {
+        delete callback_thread_;
+    }
+    package_t USBProtocol::Transmit(int cmd_id) {
+        package_t package = Protocol::Transmit(cmd_id);
+        usb_->Write(package.data, package.length);
+        return package;
+    }
+
     Referee::Referee(bsp::UART* uart) : UARTProtocol(uart) {
         // 设置100ms离线阈值
         SetThreshold(100);
@@ -276,6 +309,96 @@ namespace communication {
     }
 
     int Host::ProcessDataTx(int cmd_id, uint8_t* data) {
+        int data_len;
+        switch (cmd_id) {
+            case PACK:
+                data_len = sizeof(pack_t);
+                memcpy(data, &pack, data_len);
+                break;
+            case TARGET_ANGLE:
+                data_len = sizeof(target_angle_t);
+                memcpy(data, &target_angle, data_len);
+                break;
+            case NO_TARGET_FLAG:
+                data_len = sizeof(no_target_flag_t);
+                memcpy(data, &no_target_flag, data_len);
+                break;
+            case SHOOT_CMD:
+                data_len = sizeof(shoot_cmd_t);
+                memcpy(data, &shoot_cmd, data_len);
+                break;
+            case ROBOT_MOVE_SPEED:
+                data_len = sizeof(robot_move_t);
+                memcpy(data, &robot_move, data_len);
+                break;
+            case ROBOT_POWER_HEAT_HP_UPLOAD:
+                data_len = sizeof(robot_power_heat_hp_upload_t);
+                memcpy(data, &robot_power_heat_hp_upload, data_len);
+                break;
+            case GIMBAL_CURRENT_STATUS:
+                data_len = sizeof(gimbal_current_status_t);
+                memcpy(data, &gimbal_current_status, data_len);
+                break;
+            case CHASSIS_CURRENT_STATUS:
+                data_len = sizeof(chassis_current_status_t);
+                memcpy(data, &chassis_current_status, data_len);
+                break;
+            case AUTOAIM_ENABLE:
+                data_len = sizeof(autoaim_enable_t);
+                memcpy(data, &autoaim_enable, data_len);
+                break;
+            case ROBOT_STATUS_UPLOAD:
+                data_len = sizeof(robot_status_upload_t);
+                memcpy(data, &robot_status_upload, data_len);
+                break;
+            default:
+                data_len = -1;
+        }
+        return data_len;
+    }
+
+    HostUSB::HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200, uint32_t rxBufferSize = 200) : USBProtocol(usb, txBufferSize, rxBufferSize) {
+    }
+    bool HostUSB::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
+        switch (cmd_id) {
+            case PACK:
+                memcpy(&pack, data, length);
+                break;
+            case TARGET_ANGLE:
+                //memset(&target_angle, 0, sizeof(target_angle));
+                memcpy(&target_angle, data, length);
+                break;
+            case NO_TARGET_FLAG:
+                memcpy(&no_target_flag, data, length);
+                break;
+            case SHOOT_CMD:
+                memcpy(&shoot_cmd, data, length);
+                break;
+            case ROBOT_MOVE_SPEED:
+                memcpy(&robot_move, data, length);
+                break;
+            case ROBOT_POWER_HEAT_HP_UPLOAD:
+                memcpy(&robot_power_heat_hp_upload, data, length);
+                break;
+            case GIMBAL_CURRENT_STATUS:
+                memcpy(&gimbal_current_status, data, length);
+                break;
+            case CHASSIS_CURRENT_STATUS:
+                memcpy(&chassis_current_status, data, length);
+                break;
+            case AUTOAIM_ENABLE:
+                memcpy(&autoaim_enable, data, length);
+                break;
+            case ROBOT_STATUS_UPLOAD:
+                memcpy(&robot_status_upload, data, length);
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
+
+    int HostUSB::ProcessDataTx(int cmd_id, uint8_t* data) {
         int data_len;
         switch (cmd_id) {
             case PACK:

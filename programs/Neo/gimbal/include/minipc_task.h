@@ -20,6 +20,7 @@
 
 #pragma once
 #include "protocol.h"
-extern communication::Host* minipc;
+//extern communication::Host* minipc;
+extern communication::HostUSB* minipc;
 
 void init_minipc();

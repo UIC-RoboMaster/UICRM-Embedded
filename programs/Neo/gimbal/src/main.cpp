@@ -43,7 +43,7 @@ void RM_RTOS_Init(void) {
     init_imu();
     init_buzzer();
     init_referee();
-    // init_minipc(); //todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
+    init_minipc(); //todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
     init_remote();
     init_shoot();
     init_gimbal();
