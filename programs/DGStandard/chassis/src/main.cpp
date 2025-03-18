@@ -42,7 +42,7 @@ driver::SuperCap* super_cap = nullptr;
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
 
-bsp::BatteryVol *battery_vol = nullptr;
+bsp::BatteryVol* battery_vol = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
