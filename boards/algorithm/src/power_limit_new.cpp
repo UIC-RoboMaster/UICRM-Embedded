@@ -22,7 +22,6 @@
 
 #include <arm_math.h>
 #include <stdint.h>
-#include <stm32f4xx_hal.h>
 
 namespace control {
     NewPowerLimit::NewPowerLimit(power_param_t params[4]) {
