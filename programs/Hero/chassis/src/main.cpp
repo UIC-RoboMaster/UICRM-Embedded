@@ -28,6 +28,8 @@
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "supercap.h"
+#include "bsp_batteryvol.h"
+
 
 // bridge_can 是与顶部大疆c板进行通信的can通道
 // chassis_can 是操控底盘四个电机的can通道
@@ -43,6 +45,8 @@ driver::SuperCap* super_cap = nullptr;
 
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
+
+bsp::BatteryVol* battery_vol = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
@@ -127,6 +131,8 @@ void RM_RTOS_Init() {
     can_bridge->RegisterRxCallback(0x71, chassis->CanBridgeUpdateEventTurnWrapper, chassis);
     can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
     can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
+
+    battery_vol = new bsp::BatteryVol(&hadc1, ADC_CHANNEL_0, 1, ADC_SAMPLETIME_3CYCLES);
 
     HAL_Delay(300);
     init_buzzer();

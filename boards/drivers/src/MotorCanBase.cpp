@@ -20,6 +20,7 @@
 
 #include "MotorCanBase.h"
 
+#define __FPU_PRESENT  1U
 #include "arm_math.h"
 #include "bsp_error_handler.h"
 #include "bsp_os.h"

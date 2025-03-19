@@ -132,6 +132,8 @@ inline const char* shoot_load_mode_str(ShootMode mode) {
         case SHOOT_MODE_BURST:
             return "BURST";
         break;
+        case SHOOT_MODE_PREPARED:
+            return "\033[31mREADY SHOOT!\033[0m";
         default:
             return "UNKNOWN";
         break;

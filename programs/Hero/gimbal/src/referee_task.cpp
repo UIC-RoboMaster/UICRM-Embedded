@@ -26,7 +26,7 @@ communication::Referee* referee = nullptr;
 communication::Referee* refereerc = nullptr;
 
 void init_referee() {
-    referee_uart = new bsp::UART(&huart6);
+    referee_uart = new bsp::UART(&BOARD_UART2);
     referee_uart->SetupRx(300);
     referee_uart->SetupTx(300);
     referee = new communication::Referee(referee_uart);

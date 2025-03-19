@@ -38,24 +38,55 @@ void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
 
     // 在这里设置串口号和输出波特率
-    print_use_uart(&huart1, true, 921600);
+    print_use_uart(&BOARD_UART1, true, 921600);
+    clear_screen();
+    print("UART init success!");
+
     init_can();
+    clear_screen();
+    print("CAN init success!");
+
     init_batt();
+    clear_screen();
+    print("BATTERTY init success!");
+
     init_imu();
+    clear_screen();
+    print("IMU init success!");
+
     init_buzzer();
+    clear_screen();
+    print("BUZZER init success!");
+
     init_referee();
+    clear_screen();
+    print("REFREE init success!");
+
     init_remote();
+    clear_screen();
+    print("REMOTE init success!");
+
     init_shoot();
+    clear_screen();
+    print("SCREEN init success!");
+
     init_gimbal();
+    clear_screen();
+    print("GIMBAL init success!");
+
     init_chassis();
+    clear_screen();
+    print("CHASSIS init success!");
+
     init_ui();
+    clear_screen();
+    print("UI init success!");
+
 }
 
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
-    //    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
-    //    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
@@ -67,6 +98,7 @@ void RM_RTOS_Threads_Init(void) {
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     osDelay(3000);
+
     Buzzer_Sing(DJI);
     while (true) {
         set_cursor(0, 0);
@@ -107,6 +139,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("[Yaw %s] ", yaw_motor->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
         print("[Pitch %s] ", pitch_motor->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("\r\n");
+        print("[Flywheel %s %s]", flywheel_left->IsOnline() ?"\033[32mOnline\033[0m" : "\033[31mOffline\033[0m",flywheel_right->IsOnline() ?"\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
         osDelay(50);
     }

@@ -18,6 +18,8 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#define __FPU_PRESENT  1U
+#include <arm_math.h>
 #include <stdint.h>
 
 namespace control {
