@@ -25,32 +25,30 @@
 /*
  * @note 适配7C制作的电流计
  */
-class power_meter : public driver::ConnectionDriver
-{
+class power_meter : public driver::ConnectionDriver {
     // Packet data structure
-    typedef struct
-    {
-        uint16_t header;  // 0xC8C8
-        uint16_t voltage; // mV
-        int16_t current;  // mA
-        uint16_t tail;    // 0x8C8C
+    typedef struct {
+        uint16_t header;   // 0xC8C8
+        uint16_t voltage;  // mV
+        int16_t current;   // mA
+        uint16_t tail;     // 0x8C8C
     } power_meter_data_t;
 
     // Callback type
     typedef void (*user_callback_t)(uint16_t voltage, int16_t current);
 
     UART_HandleTypeDef* huart;
-    bsp::UART *uart;
+    bsp::UART* uart;
 
     // Configs
     float filter_ratio;
     user_callback_t user_callback;
 
-public:
-    uint16_t voltage; // mV
-    int16_t current;  // mA
+  public:
+    uint16_t voltage;  // mV
+    int16_t current;   // mA
 
-public:
+  public:
     /*
      * @param uart 串口对象
      * @param ratio 滤波系数，0~1之间，越小的值表示更好的滤波效果
@@ -62,9 +60,9 @@ public:
     /*
      * @brief UART收到数据后调用，这个函数利用args找到是哪一个对象。
      */
-    static void uart_callback(void *args);
+    static void uart_callback(void* args);
 
-private:
+  private:
     /*
      * @brief 对象的回调函数，从UART读取数据并处理
      */

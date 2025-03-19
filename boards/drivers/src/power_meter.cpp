@@ -18,11 +18,11 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "bsp_uart.h"
 #include "power_meter.h"
 
-power_meter::power_meter(UART_HandleTypeDef* huart, float ratio, user_callback_t callback)
-{
+#include "bsp_uart.h"
+
+power_meter::power_meter(UART_HandleTypeDef* huart, float ratio, user_callback_t callback) {
     this->huart = huart;
 
     uart = new bsp::UART(huart);
@@ -33,24 +33,22 @@ power_meter::power_meter(UART_HandleTypeDef* huart, float ratio, user_callback_t
     user_callback = callback;
 }
 
-void power_meter::uart_callback(void *args)
-{
+void power_meter::uart_callback(void* args) {
     if (args == nullptr)
         return;
-    auto obj = (power_meter *)args;
+    auto obj = (power_meter*)args;
     obj->callback();
 }
 
-void power_meter::callback()
-{
+void power_meter::callback() {
     // Read data from uart
-    uint8_t *buffer_p;
+    uint8_t* buffer_p;
     uint8_t len = uart->Read<true>(&buffer_p);
     if (len != sizeof(power_meter_data_t))
         return;
 
     // Parsed as power_meter_data_t
-    auto *data = (power_meter_data_t *)buffer_p;
+    auto* data = (power_meter_data_t*)buffer_p;
     if (data->header != 0xC8C8 || data->tail != 0x8C8C)
         return;
 

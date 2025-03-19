@@ -18,9 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-
 #include <stdint.h>
-#include <arm_math.h>
 
 namespace control {
     /*
@@ -32,12 +30,12 @@ namespace control {
      * - 静态电流 = k4
      */
     class NewPowerLimit {
-    public:
+      public:
         typedef struct {
             float k1, k2, k3, k4;
         } power_param_t;
 
-    private:
+      private:
         power_param_t params[4];
 
         /**
@@ -57,10 +55,12 @@ namespace control {
          * @param target_current 目标输入电流
          * @return 要让电调消耗目标的输入电流，需要发送给电调的转矩电流
          */
-        int16_t ReversePowerModel(power_param_t param, float angular_velocity, int16_t turn_current, int16_t target_current);
-    public:
+        int16_t ReversePowerModel(power_param_t param, float angular_velocity, int16_t turn_current,
+                                  int16_t target_current);
+
+      public:
         NewPowerLimit(power_param_t params[4]);
 
-        void LimitPower(int16_t *turn_current, float *angular_velocity, uint16_t max_power);
+        void LimitPower(int16_t* turn_current, float* angular_velocity, uint16_t max_power);
     };
-}
+}  // namespace control

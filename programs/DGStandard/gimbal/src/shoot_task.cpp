@@ -101,10 +101,11 @@ void shootTask(void* arg) {
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL
-            //|| !referee->game_robot_status.mains_power_shooter_output
-            ) {
-            // 死了
+        bool is_dead = remote_mode == REMOTE_MODE_KILL;
+#ifdef HAS_REFEREE
+        is_dead |= !referee->game_robot_status.mains_power_shooter_output;
+#endif
+        if (is_dead) {
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
@@ -148,8 +149,7 @@ void shootTask(void* arg) {
         }
 
         int heat_limit = referee->game_robot_status.shooter_heat_limit;
-        // int heat_buffer = referee->power_heat_data.shooter_id1_17mm_cooling_heat;
-        int heat_buffer = -100;
+        int heat_buffer = referee->power_heat_data.shooter_id1_17mm_cooling_heat;
         const int shooter_heat_threashold = 25;
         if (heat_buffer > heat_limit - shooter_heat_threashold) {
             // 临时解决方案
@@ -187,22 +187,22 @@ void init_shoot() {
 
     steering_motor->SetTransmissionRatio(36);
     control::ConstrainedPID::PID_Init_t steering_motor_theta_pid_init = {
-        .kp = 100,
+        .kp = 20,
         .ki = 0,
-        .kd = 10,
+        .kd = 0,
         .max_out = 2 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.01,           // 输出滤波系数
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
         .kp = 1000,
-        .ki = 0,
+        .ki = 1,
         .kd = 0,
         .max_out = 10000,
         .max_iout = 4000,

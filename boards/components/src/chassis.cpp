@@ -23,7 +23,8 @@
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
 
-#define M3508_POWER_MODEL {0.000931, 0.000455, 0.000006, 39.151850}
+#define M3508_POWER_MODEL \
+    { 0.000931, 0.000455, 0.000006, 39.151850 }
 
 namespace control {
 
@@ -59,12 +60,8 @@ namespace control {
         chassis_offset_ = chassis.offset;
 
         // 功率限制系统
-        NewPowerLimit::power_param_t power_model[4] = {
-            M3508_POWER_MODEL,
-            M3508_POWER_MODEL,
-            M3508_POWER_MODEL,
-            M3508_POWER_MODEL
-        };
+        NewPowerLimit::power_param_t power_model[4] = {M3508_POWER_MODEL, M3508_POWER_MODEL,
+                                                       M3508_POWER_MODEL, M3508_POWER_MODEL};
         power_limit_.enabled = chassis.power_limit_on;
         power_limit_.limiter = new NewPowerLimit(power_model);
         driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
@@ -126,8 +123,8 @@ namespace control {
         }
     }
 
-    void Chassis::SetPower(bool enabled, float max_power, float current_power,
-                           float buffer_remain, bool enable_supercap) {
+    void Chassis::SetPower(bool enabled, float max_power, float current_power, float buffer_remain,
+                           bool enable_supercap) {
         power_limit_.enabled = enabled;
 
         UNUSED(max_power);
@@ -138,13 +135,19 @@ namespace control {
         return;
     }
 
-    void Chassis::UpdatePower(bool enabled, float max_watt, float current_voltage, uint8_t buffer_percent)
-    {
+    void Chassis::UpdatePower(bool enabled, float max_watt, float current_voltage,
+                              uint8_t buffer_percent) {
         power_limit_.enabled = enabled;
         power_limit_.buffer_percent = buffer_percent;
-        power_limit_.voltage = current_voltage;
+        // 双板通信下，云台可以选择不更新电压值，底盘可以使用自己采样的电压值
+        if (current_voltage > 1)
+            power_limit_.voltage = current_voltage;
         power_limit_.max_watt = max_watt;
         // 这里仅记录信息，实际在在所有电机的PID计算完成、准备发送CAN前，调用ApplyPowerLimit直接设置电机输出，以进行功率限制
+    }
+
+    void Chassis::UpdatePowerVoltage(float voltage) {
+        power_limit_.voltage = voltage;
     }
 
     void Chassis::Update() {
@@ -267,8 +270,8 @@ namespace control {
             }
         }
         UNUSED(data);
-        //current_chassis_power_ = data.data_two_float.data[0];
-        //current_chassis_power_buffer_ = data.data_two_float.data[1];
+        // current_chassis_power_ = data.data_two_float.data[0];
+        // current_chassis_power_buffer_ = data.data_two_float.data[1];
     }
     void Chassis::CanBridgeSetTxId(uint8_t tx_id) {
         can_bridge_tx_id_ = tx_id;
@@ -282,24 +285,24 @@ namespace control {
             return;
         }
 
-
         // 电流(A) = 功率(W) / 电压(V)
         float max_current = power_limit_.max_watt / power_limit_.voltage;
 
         // 根据缓冲区剩余能量，使用线性插值，计算最大电流。
-        max_current = max_current * linear_interpolation<int>(50, 80, 90, 120, power_limit_.buffer_percent) / 100;
+        max_current = max_current *
+                      linear_interpolation<int>(20, 80, 80, 150, power_limit_.buffer_percent) / 100;
 
         // 获取数据
         int16_t turn_current[FourWheel::motor_num];
         float angular_velocity[FourWheel::motor_num];
-        for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
-        {
+        for (uint8_t i = 0; i < FourWheel::motor_num; ++i) {
             turn_current[i] = motors_[i]->GetOutput();
             angular_velocity[i] = motors_[i]->GetOmega();
         }
 
         // 在转矩电流之上应用功率限制
-        power_limit_.limiter->LimitPower(turn_current, angular_velocity, (int16_t) (max_current * 1000));
+        power_limit_.limiter->LimitPower(turn_current, angular_velocity,
+                                         (int16_t)(max_current * 1000));
 
         // 应用限制后的转矩电流
         for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
@@ -401,7 +404,8 @@ namespace control {
             }
         }
     }
-    void ChassisCanBridgeSender::UpdatePower(bool enabled, uint8_t max_watt, float current_voltage, uint8_t buffer_percent) {
+    void ChassisCanBridgeSender::UpdatePower(bool enabled, uint8_t max_watt, float current_voltage,
+                                             uint8_t buffer_percent) {
         if (!chassis_enable_) {
             return;
         }

@@ -463,7 +463,8 @@ namespace driver {
         constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
         constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
         theta_ = raw_theta * THETA_SCALE;
-        omega_ = raw_omega * OMEGA_SCALE;
+        omega_ =
+            (raw_omega * OMEGA_SCALE) * input_speed_filter_ + omega_ * (1 - input_speed_filter_);
 
         MotorCANBase::UpdateData(data);
     }
@@ -489,6 +490,10 @@ namespace driver {
 
     uint16_t Motor6020::GetTemp() const {
         return raw_temperature_;
+    }
+
+    void Motor6020::SetSpeedFilter(float ratio) {
+        input_speed_filter_ = ratio;
     }
 
     Motor2006::Motor2006(CAN* can, uint16_t rx_id) : MotorCANBase(can, rx_id) {

@@ -15,7 +15,7 @@
 #   `make flash-hero` and / or `make debug-hero`
 #
 function(uicrm_add_arm_executable name)
-    cmake_parse_arguments(ARG "" "TARGET" "SOURCES;INCLUDES;DEPENDS" ${ARGN})
+    cmake_parse_arguments(ARG "" "TARGET" "SOURCES;INCLUDES;DEPENDS;DEFINES" ${ARGN})
     set(HEX_FILE ${CMAKE_CURRENT_BINARY_DIR}/${name}.hex)
     set(BIN_FILE ${CMAKE_CURRENT_BINARY_DIR}/${name}.bin)
     set(MAP_FILE ${CMAKE_CURRENT_BINARY_DIR}/${name}.map)
@@ -25,6 +25,7 @@ function(uicrm_add_arm_executable name)
         PRIVATE ${ARG_DEPENDS} ${ARG_TARGET} ${ARG_TARGET}_platform ${ARG_TARGET}_algorithm ${ARG_TARGET}_drivers ${ARG_TARGET}_components)
     
     target_include_directories(${name}.elf PRIVATE ${ARG_INCLUDES})
+    target_compile_definitions(${name}.elf PRIVATE ${ARG_DEFINES})
     target_link_options(${name}.elf PRIVATE -Wl,--print-memory-usage,-Map=${MAP_FILE})
 
     find_program(ARM_SIZE arm-none-eabi-size REQUIRED)
