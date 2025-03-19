@@ -81,8 +81,25 @@ void RM_RTOS_Threads_Init(void) {
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
-    osDelay(3000);
+    osDelay(100);
     Buzzer_Sing(DJI);
+
+    while (true) {
+        uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
+
+        control::ConstrainedPID::PID_State_t state;
+        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+        state.dout = -state.dout;
+        memcpy(buffer + 2, &state, sizeof(state));
+
+        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
+        state.dout = -state.dout;
+        memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
+
+        dump(&state, sizeof(buffer));
+        osDelay(4);
+    }
+
     while (true) {
         if (referee->game_robot_status.mains_power_gimbal_output) {
             gimbal_power->High();
@@ -119,8 +136,8 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         // Gimbal info
         print("Gimbal target P%.3f Y%.3f\r\n",
-              gimbal->getPitchAngle() - gimbal_param->pitch_offset_,
-              gimbal->getYawAngle() - gimbal_param->yaw_offset_);
+              gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
+              gimbal->getYawTarget() - gimbal_param->yaw_offset_);
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
         print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
               minipc->target_angle.target_yaw, minipc->target_angle.accuracy);

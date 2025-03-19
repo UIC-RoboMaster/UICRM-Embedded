@@ -67,6 +67,14 @@ uint32_t dump(const void* data, uint8_t length) {
         return 0;
 }
 
+void dump_pretty(const void* data, uint8_t length) {
+    print("Dump (len=%d) {", length);
+    for (uint8_t i = 0; i < length; i++) {
+        print("%02X ", ((uint8_t*)data)[i]);
+    }
+    print("}\r\n");
+}
+
 uint32_t print(const char* format, ...) {
 #ifdef NDEBUG
     UNUSED(format);

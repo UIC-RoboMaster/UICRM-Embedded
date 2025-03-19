@@ -300,9 +300,9 @@ namespace bsp {
     void UART::RxCompleteCallback() {
         if (rx_ptr_ != nullptr) {
             *rx_len_ = this->Read<true>(rx_ptr_);
-            if (callback_ != nullptr)
-                callback_(callback_args_);
         }
+        if (callback_ != nullptr)
+            callback_(callback_args_);
     }
     void UART::SetBaudrate(uint32_t baudrate) {
         if (HAL_UART_DeInit(huart_) != HAL_OK)

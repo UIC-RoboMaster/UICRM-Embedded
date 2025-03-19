@@ -40,6 +40,10 @@ extern UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN Private defines */
 
+#define BOARD_UART1 huart6
+#define BOARD_UART2 huart1
+#define BOARD_DBUS huart3
+
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);
