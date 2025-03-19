@@ -18,7 +18,6 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include <arm_math.h>
 #include <stdint.h>
 
 namespace control {
