@@ -93,12 +93,19 @@ void chassisTask(void* arg) {
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
 
-        // 云台和底盘的角度差
-        float chassis_yaw_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        // 云台相对底盘的角度，通过云台和底盘连接的电机获取
+        float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
+        // 云台当前相对云台零点的角度，通过IMU获取
+        float B = INS_Angle.yaw;
+        // 云台目标相对云台零点的角度，直接读取gimbal class获取
+        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
+        float chassis_target_diff = C - B + A;
+        chassis_target_diff = -chassis_target_diff;
+        chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
         // 底盘以底盘自己为基准的运动速度
-        float sin_yaw = arm_sin_f32(chassis_yaw_diff);
-        float cos_yaw = arm_cos_f32(chassis_yaw_diff);
+        float sin_yaw = arm_sin_f32(chassis_target_diff);
+        float cos_yaw = arm_cos_f32(chassis_target_diff);
         chassis_vx = cos_yaw * car_vx + sin_yaw * car_vy;
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
@@ -113,13 +120,13 @@ void chassisTask(void* arg) {
         if (remote_mode == REMOTE_MODE_FOLLOW) {
             // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向
             const float angle_threshold = 0.02f;
-            float chassis_vt_pid_error = chassis_yaw_diff;
+            float chassis_vt_pid_error = chassis_target_diff;
             if (fabs(chassis_vt_pid_error) < angle_threshold) {
                 chassis_vt_pid_error = 0;
             }
 
             static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
+                new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
             float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;
@@ -148,10 +155,17 @@ void chassisTask(void* arg) {
         chassis_vt = chassis_ease_vt.Calc(chassis_vt);
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
-        osDelay(CHASSIS_OS_DELAY);
-        chassis->SetPower(POWER_LIMIT_STATUS, referee->game_robot_status.chassis_power_limit,
-                          referee->power_heat_data.chassis_power,
-                          referee->power_heat_data.chassis_power_buffer, false);
+        osDelay(1);
+
+#ifdef HAS_REFEREE
+        uint8_t buffer_percent = referee->power_heat_data.chassis_power_buffer * 100 / 60;
+        uint8_t max_watt = referee->game_robot_status.chassis_power_limit;
+#else
+        uint8_t buffer_percent = 50;
+        uint8_t max_watt = 100;
+#endif
+        // 如果传输的电压为0，底盘不会保存这个值，随后底盘的chassis_task会采样自己的电压值并更新。
+        chassis->UpdatePower(true, max_watt, 0, buffer_percent);
         osDelay(CHASSIS_OS_DELAY);
     }
 }

@@ -374,11 +374,14 @@ namespace driver {
 
         uint16_t GetTemp() const override final;
 
+        void SetSpeedFilter(float ratio);
+
       private:
         volatile int16_t raw_current_get_ = 0;
         volatile uint8_t raw_temperature_ = 0;
         static const int16_t MAX_OUT = 25000;
         static const int16_t MAX_OUT_C = 16383;
+        float input_speed_filter_ = 0.1;
     };
 
     /**

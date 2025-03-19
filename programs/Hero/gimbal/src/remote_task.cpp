@@ -74,15 +74,15 @@ void remoteTask(void* arg) {
         // Offline Detection && Security Check
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
         // Kill Detection
+#ifdef HAS_REFEREE
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
                               referee->power_heat_data.shooter_id1_42mm_cooling_heat) >= 100 &&
                              imu->CaliDone();
-    #ifdef DEBUG_MODE
+#else
         is_robot_dead = false;
         is_shoot_available = true;
-    #endif
-
+#endif
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
