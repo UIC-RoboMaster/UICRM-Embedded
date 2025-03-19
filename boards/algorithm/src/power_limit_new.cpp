@@ -20,8 +20,11 @@
 
 #include "power_limit_new.h"
 
+// clang-format off
+#include <main.h> // add __FPU_PRESENT
 #include <arm_math.h>
 #include <stdint.h>
+// clang-format on
 
 namespace control {
     NewPowerLimit::NewPowerLimit(power_param_t params[4]) {
