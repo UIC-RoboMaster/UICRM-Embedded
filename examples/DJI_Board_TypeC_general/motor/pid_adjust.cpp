@@ -29,19 +29,19 @@
 #define KEY_GPIO_PIN KEY_Pin
 
 static bsp::CAN* can = nullptr;
-static driver::Motor6020* motor = nullptr;
+static driver::Motor2006* motor = nullptr;
 
 void PrintTask(void* argument);
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1, true, 921600);
-    can = new bsp::CAN(&hcan1, true);
-    motor = new driver::Motor6020(can, 0x206);
+    can = new bsp::CAN(&hcan2, false);
+    motor = new driver::Motor2006(can, 0x203);
     motor->SetTransmissionRatio(36);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
-        .kp = 300,
+        .kp = 30,
         .ki = 0,
-        .kd = 0,
+        .kd = 300,
         .max_out = 4 * PI,
         .max_iout = 0.25 * PI,
         .deadband = 0,                          // 死区
@@ -56,8 +56,8 @@ void RM_RTOS_Init() {
     motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 800,
-        .ki = 200,
-        .kd = 0,
+        .ki = 0,
+        .kd = 5000,
         .max_out = 10000,
         .max_iout = 0,
         .deadband = 0,                          // 死区
@@ -98,20 +98,11 @@ void RM_RTOS_Default_Task(const void* args) {
     //    {
     //        osDelay(1000);
     //    }
-
     while (true) {
-        motor->SetTarget(1 / 4 * PI, true);
-        osDelay(1000);
-        motor->SetTarget(2 / 4 * PI, true);
-        osDelay(1000);
-        motor->SetTarget(3 / 4 * PI, true);
-        osDelay(1000);
-        motor->SetTarget(4 / 4 * PI, true);
-        osDelay(1000);
-//        for (int i = 0; i < 8; i++) {
-//
-//            osDelay(2000);
-//        }
+        for (int i = 0; i < 8; i++) {
+            motor->SetTarget(i * PI / 2, true);
+            osDelay(2000);
+        }
     }
 }
 
