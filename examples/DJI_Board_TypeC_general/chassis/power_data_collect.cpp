@@ -18,11 +18,13 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "main.h"
+
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "dbus.h"
-#include "main.h"
+
 #include "power_meter.h"
 
 bsp::CAN* can = nullptr;
@@ -34,25 +36,28 @@ driver::MotorCANBase* br_motor = nullptr;
 control::Chassis* chassis = nullptr;
 remote::DBUS* dbus = nullptr;
 
-power_meter* power_meter_1 = nullptr;
+power_meter *power_meter_1 = nullptr;
 
 void Dump(void* args);
 void callback(uint16_t voltage, int16_t current);
 const osThreadAttr_t dump_thread_attr_ = {.name = "DumpThread",
-                                          .attr_bits = osThreadDetached,
-                                          .cb_mem = nullptr,
-                                          .cb_size = 0,
-                                          .stack_mem = nullptr,
-                                          .stack_size = 256 * 4,
-                                          .priority = (osPriority_t)osPriorityNormal,
-                                          .tz_module = 0,
-                                          .reserved = 0};
+                                            .attr_bits = osThreadDetached,
+                                            .cb_mem = nullptr,
+                                            .cb_size = 0,
+                                            .stack_mem = nullptr,
+                                            .stack_size = 256 * 4,
+                                            .priority = (osPriority_t)osPriorityNormal,
+                                            .tz_module = 0,
+                                            .reserved = 0};
 const bsp::thread_init_t thread_init = {
     .func = Dump,
     .args = nullptr,
     .attr = dump_thread_attr_,
 };
 bsp::Thread* dump_thread = nullptr;
+
+
+
 
 void RM_RTOS_Init() {
     HAL_Delay(200);
@@ -71,12 +76,12 @@ void RM_RTOS_Init() {
         .deadband = 0,                          // 死区
         .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.05,   // 输出滤波系数
+        .output_filtering_coefficient = 0.05,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+               control::ConstrainedPID::OutputFilter |         // 输出滤波
+               control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+               control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
     fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
@@ -135,11 +140,12 @@ void callback(uint16_t voltage, int16_t current) {
     dump_thread->Set();
 }
 
-void Dump(void* args) {
+void Dump(void* args)  {
     UNUSED(args);
     while (true) {
         dump_thread->Wait();
-        struct {
+        struct
+        {
             uint8_t header[4] = {0xAA, 0xBB, 0xCC, 0xDD};
             float angular_velocity;
             int16_t cmd_current;

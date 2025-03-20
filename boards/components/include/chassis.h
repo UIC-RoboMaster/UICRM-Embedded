@@ -91,8 +91,8 @@ namespace control {
          * @param current_power Current chassis power, in [W]
          * @param buffer_remain Current chassis power buffer, in [J]
          */
-        void SetPower(bool enabled, float max_power, float current_power, float buffer_remain,
-                      bool enable_supercap = false);
+        void SetPower(bool enabled, float max_power, float current_power,
+                      float buffer_remain, bool enable_supercap = false);
 
         /**
          * @brief 使用外部采集的底盘数据，更新功率控制信息。
@@ -102,8 +102,7 @@ namespace control {
          * @param current_voltage 电池电压，单位为V
          * @param buffer_percent 剩余缓冲能量百分比，范围为0~100，50%对应于最大电流的90%
          */
-        void UpdatePower(bool enabled, float max_watt, float current_voltage,
-                         uint8_t buffer_percent);
+        void UpdatePower(bool enabled, float max_watt, float current_voltage, uint8_t buffer_percent);
 
         /**
          * @brief 在双板通信模式下，底盘使用自己采样的电压，因此需要额外暴露接口
@@ -125,11 +124,11 @@ namespace control {
       public:
         // 在所有电机的PID计算完成、准备发送CAN前，调用此函数直接设置电机输出，以进行功率限制
         static void ApplyPowerLimitWrapper(void* args);
-
       private:
         void ApplyPowerLimit();
 
       public:
+
         void CanBridgeSetTxId(uint8_t tx_id);
 
         static void CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id,
@@ -170,9 +169,10 @@ namespace control {
 
         uint8_t wheel_num_ = 0;
 
-        struct {
+        struct
+        {
             bool enabled = false;
-            uint8_t buffer_percent = 0;  // 0~100
+            uint8_t buffer_percent = 0; // 0~100
             float max_watt = 0;
             float voltage = 0;
 
@@ -200,6 +200,13 @@ namespace control {
         float chassis_vy = 0;
         float chassis_vt = 0;
     };
+
+
+
+
+
+
+
 
     class ChassisCanBridgeSender {
       public:
@@ -230,8 +237,7 @@ namespace control {
                       bool force_update = false);
 
         // Same as Chassis::SetPower
-        void UpdatePower(bool enabled, uint8_t max_watt, float current_voltage,
-                         uint8_t buffer_percent);
+        void UpdatePower(bool enabled, uint8_t max_watt, float current_voltage, uint8_t buffer_percent);
 
       private:
         communication::CanBridge* can_bridge_;

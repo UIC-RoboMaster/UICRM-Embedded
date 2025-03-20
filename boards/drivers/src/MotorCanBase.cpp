@@ -20,7 +20,6 @@
 
 #include "MotorCanBase.h"
 
-#define __FPU_PRESENT  1U
 #include "arm_math.h"
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
@@ -464,8 +463,7 @@ namespace driver {
         constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
         constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
         theta_ = raw_theta * THETA_SCALE;
-        omega_ =
-            (raw_omega * OMEGA_SCALE) * input_speed_filter_ + omega_ * (1 - input_speed_filter_);
+        omega_ = (raw_omega * OMEGA_SCALE) * input_speed_filter_ + omega_ * (1 - input_speed_filter_);
 
         MotorCANBase::UpdateData(data);
     }

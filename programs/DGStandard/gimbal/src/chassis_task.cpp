@@ -18,11 +18,6 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-// 开关功率控制！ true为开false为关
-#define POWER_LIMIT_STATUS true
-
-
-
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 

@@ -177,6 +177,6 @@ namespace control {
         return pitch_motor_->GetTheta() - data_.pitch_offset_;
     }
     float Gimbal::getYawByMotor() const {
-        return yaw_motor_->GetTheta() - data_.yaw_offset_;
+            return yaw_motor_->GetTheta() - data_.yaw_offset_;
     }
 }  // namespace control

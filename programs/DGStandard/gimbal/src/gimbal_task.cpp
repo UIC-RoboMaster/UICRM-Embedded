@@ -127,13 +127,10 @@ void gimbalTask(void* arg) {
         //            pitch_diff = 0;
         //        }
 
-        const float offset_ratio =
-            0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
-        const float offset_filter_ratio =
-            0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
+        const float offset_ratio = 0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
+        const float offset_filter_ratio = 0.02; // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
         static float speed_offset = 0;
-        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio +
-                       speed_offset * (1 - offset_filter_ratio);
+        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
 
         yaw_motor->SetSpeedOffset(speed_offset);
         switch (remote_mode) {
@@ -222,18 +219,18 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
         .kp = 8,
         .ki = 0,
-        .kd = 200,  // 再大会在前面顿一下
-        .max_out =
-            3 *
-            PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
+        .kd = 200, // 再大会在前面顿一下
+        .max_out = 3 * PI, // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
         .max_iout = PI / 8,
         .deadband = 0,
-        .A = 0,                                    // 变速积分所能达到的最大值为A+B
-        .B = 0,                                    // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,       // 输出滤波系数
-        .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
-                control::ConstrainedPID::Integral_Limit};
+        .A = 0,                                        // 变速积分所能达到的最大值为A+B
+        .B = 0,                                        // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,          // 输出滤波系数
+        .derivative_filtering_coefficient = 0.05,       // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter |
+                control::ConstrainedPID::DerivativeFilter |
+                control::ConstrainedPID::Integral_Limit
+    };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
         .kp = 6000,
@@ -241,11 +238,11 @@ void init_gimbal() {
         .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
-        .deadband = 0,  // 死区
-        .A = 0.5 * PI,  // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,  // 启动变速积分的死区
+        .deadband = 0,                            // 死区
+        .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.5,
-        .derivative_filtering_coefficient = 0.0003,                   // 微分滤波系数
+        .derivative_filtering_coefficient = 0.0003,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
