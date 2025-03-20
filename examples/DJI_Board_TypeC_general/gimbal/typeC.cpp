@@ -231,7 +231,7 @@ void RM_RTOS_Init(void) {
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
         .kp = 20,
-        .ki = 0,
+        .ki = 5,
         .kd = 0,
         .max_out = 6 * PI,
         .max_iout = 0,
@@ -245,7 +245,7 @@ void RM_RTOS_Init(void) {
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
         .kp = 200,
-        .ki = 1,
+        .ki = 10,
         .kd = 0,
         .max_out = 16384,
         .max_iout = 2000,

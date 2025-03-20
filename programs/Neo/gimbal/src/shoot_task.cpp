@@ -68,16 +68,17 @@ void shootTask(void* arg) {
     ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+        bool is_dead = remote_mode == REMOTE_MODE_KILL;
+#ifdef HAS_REFEREE
+        is_dead |= !referee->game_robot_status.mains_power_shooter_output;
+#endif
+        if (is_dead) {
             // 死了
-            //            shoot_flywheel_offset = -5000;
-
-            //            shoot_state = 0;
-            //            shoot_state_2 = 0;
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
+
         if (!steering_motor->IsEnable()) {
             steering_motor->Enable();
         }
@@ -203,9 +204,12 @@ void init_shoot() {
         .B = 1.5 * PI,                          // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral   // 梯形积分
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
+                control::ConstrainedPID::ErrorHandle,            // 错误处理
+
     };
     steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);

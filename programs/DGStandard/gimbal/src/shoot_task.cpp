@@ -106,6 +106,7 @@ void shootTask(void* arg) {
         is_dead |= !referee->game_robot_status.mains_power_shooter_output;
 #endif
         if (is_dead) {
+            // 死了
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;

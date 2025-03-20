@@ -70,18 +70,21 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* shoot_burst_edge = new BoolEdgeDetector(false);
     while (1) {
-        // Offline Detection && Security Check
+        // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
+#ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
-                              referee->power_heat_data.shooter_id1_42mm_cooling_heat) >= 100 &&
+        is_shoot_available = (referee->game_robot_status.shooter_heat_limit - referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
+                             referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
                              imu->CaliDone();
-        //todo !!! DEBUG ONLY
-        is_robot_dead = false;//!!!
-        is_shoot_available = true;//!!!
+#else
+        is_robot_dead = false;
+        is_shoot_available = true;
+#endif
         if (is_dbus_offline || is_robot_dead) {
             if (!is_killed) {
+                // 如果遥控器离线或者机器人死亡，则进入安全模式
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
                 shoot_load_mode = SHOOT_MODE_DISABLE;
@@ -89,6 +92,7 @@ void remoteTask(void* arg) {
             }
         } else {
             if (is_killed) {
+                // 如果遥控器重新连接或者机器人复活，则恢复上一次的遥控模式
                 remote_mode = last_remote_mode;
                 shoot_load_mode = SHOOT_MODE_STOP;
                 shoot_fric_switch = SHOOT_FRIC_MODE_STOP;

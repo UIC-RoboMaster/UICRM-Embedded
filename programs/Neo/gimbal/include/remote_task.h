@@ -40,8 +40,38 @@ enum RemoteMode {
     REMOTE_MODE_SPIN = 2,
     REMOTE_MODE_ADVANCED = 3,
     REMOTE_MODE_AUTOPILOT = 4,
+    REMOTE_MODE_AUTOAIM = 5
 };
+inline const char* remote_mode_str(RemoteMode mode) {
+    switch (mode) {
+        case REMOTE_MODE_PREPARE:
+            return "PREPARE";
+            break;
+        case REMOTE_MODE_KILL:
+            return "KILL";
+            break;
+        case REMOTE_MODE_STOP:
+            return "STOP";
+            break;
+        case REMOTE_MODE_FOLLOW:
+            return "FOLLOW";
+            break;
+        case REMOTE_MODE_SPIN:
+            return "SPIN";
+            break;
+        case REMOTE_MODE_ADVANCED:
+            return "ADVANCED";
+            break;
+        case REMOTE_MODE_AUTOAIM:
+            return "AUTOAIM";
+            break;
+        default:
+            return "UNKNOWN";
+            break;
+    }
+}
 extern RemoteMode remote_mode;
+
 enum ShootFricMode {
     SHOOT_FRIC_MODE_DISABLE = -1,
     SHOOT_FRIC_MODE_STOP = 0,
@@ -50,7 +80,27 @@ enum ShootFricMode {
     SHOOT_FRIC_MODE_SPEEDUP = 3,
     SHOOT_FRIC_MODE_SPEEDOWN = 4,
 };
+inline const char* shoot_fric_mode_str(ShootFricMode mode) {
+    switch (mode) {
+        case SHOOT_FRIC_MODE_DISABLE:
+            return "DISABLE";
+            break;
+        case SHOOT_FRIC_MODE_STOP:
+            return "STOP";
+            break;
+        case SHOOT_FRIC_MODE_PREPARING:
+            return "PREPARING";
+            break;
+        case SHOOT_FRIC_MODE_PREPARED:
+            return "PREPARED";
+            break;
+        default:
+            return "UNKNOWN";
+            break;
+    }
+}
 extern ShootFricMode shoot_flywheel_mode;
+
 enum ShootMode {
     SHOOT_MODE_DISABLE = -1,
     SHOOT_MODE_STOP = 0,
@@ -59,6 +109,25 @@ enum ShootMode {
     SHOOT_MODE_SINGLE = 3,
     SHOOT_MODE_BURST = 4,
 };
+inline const char* shoot_load_mode_str(ShootMode mode) {
+    switch (mode) {
+        case SHOOT_MODE_DISABLE:
+            return "DISABLE";
+            break;
+        case SHOOT_MODE_STOP:
+            return "STOP";
+            break;
+        case SHOOT_MODE_SINGLE:
+            return "SINGLE";
+            break;
+        case SHOOT_MODE_BURST:
+            return "BURST";
+            break;
+        default:
+            return "UNKNOWN";
+            break;
+    }
+}
 extern ShootMode shoot_load_mode;
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",

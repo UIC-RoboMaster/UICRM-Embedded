@@ -16,7 +16,9 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         gimbal/src/ui_task.cpp
         gimbal/src/buzzer_task.cpp
         gimbal/src/minipc_task.cpp
-        INCLUDES gimbal/include)
+        INCLUDES gimbal/include
+        DEFINES HAS_REFEREE
+)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_chassis_typeC
         TARGET DJI_Board_TypeC_general
