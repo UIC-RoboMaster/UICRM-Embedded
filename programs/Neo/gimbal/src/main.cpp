@@ -126,7 +126,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Gimbal target P%.3f Y%.3f\r\n",
               gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
               gimbal->getYawTarget() - gimbal_param->yaw_offset_);
-        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", imu->INS_angle[2], imu->INS_angle[0], imu->INS_angle[0]);
+        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", imu->INS_angle[1], imu->INS_angle[0], imu->INS_angle[2]);
         print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
               minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
         print("\r\n");

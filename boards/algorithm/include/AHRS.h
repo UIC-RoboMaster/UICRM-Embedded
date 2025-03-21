@@ -38,7 +38,7 @@ namespace control {
 
         bool IsCailbrated();
 
-        float INS_angle[3];
+        float INS_angle[3];// yaw pitch roll
 
       private:
         float q[4];

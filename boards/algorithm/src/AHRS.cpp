@@ -124,6 +124,16 @@ namespace control {
     bool AHRS::IsCailbrated() {
         return cailb_done_;
     }
+
+    /*
+    translate quaternion to euler angle
+    reference: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+
+    formula:
+        yaw:    atan2( 2 * (q_w * q_z + q_x * q_y) , 1 - 2 * (q_y^2 + q_z^2) )
+        pitch:  arcsin( 2 * (q_w * q_y - q_x * q_z) )
+        roll:   atan2( 2 * (q_w * q_x + q_y * q_z) , 1 - 2 * (q_x^2 + q_y^2) )
+    */
     void AHRS::INSCalculate() {
         INS_angle[0] =
             atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);

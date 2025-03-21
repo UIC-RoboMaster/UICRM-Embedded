@@ -145,7 +145,7 @@ namespace communication {
     }
     package_t USBProtocol::Transmit(int cmd_id) {
         package_t package = Protocol::Transmit(cmd_id);
-        usb_->Write(package.data, package.length);
+        usb_->Write<true>(package.data, package.length);
         return package;
     }
 

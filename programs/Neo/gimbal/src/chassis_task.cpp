@@ -90,14 +90,17 @@ void chassisTask(void* arg) {
        }
 
         // 云台相对底盘的角度，通过云台和底盘连接的电机获取
-        float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
-        // 云台当前相对云台零点的角度，通过IMU获取
-        float B = imu->INS_angle[0];
-        // 云台目标相对云台零点的角度，直接读取gimbal class获取
-        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
-        float chassis_target_diff = C - B + A;
-        chassis_target_diff = -chassis_target_diff;
-        chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
+//        float A = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+//        float A = yaw_motor->GetTheta() - PI - gimbal_param->yaw_offset_
+//        // 云台当前相对云台零点的角度，通过IMU获取
+//        float B = imu->INS_angle[0];
+//        // 云台目标相对云台零点的角度，直接读取gimbal class获取
+//        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
+//        float chassis_target_diff = C - B + A;
+//        chassis_target_diff = -chassis_target_diff;
+//        chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
+       //todo temporary workable feedforward
+        float chassis_target_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);;
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
