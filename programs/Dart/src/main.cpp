@@ -33,101 +33,75 @@
 #define KEY_GPIO_PIN KEY_Pin
 
 // Refer to typeC datasheet for channel detail
-static bsp::CAN* can2 = nullptr;
-static driver::Motor3508* flywheel_motor1 = nullptr;
-static driver::Motor3508* flywheel_motor2 = nullptr;
-static driver::Motor3508* flywheel_motor3 = nullptr;
-static driver::Motor3508* flywheel_motor4 = nullptr;
+static bsp::CAN *can1 = nullptr;
+static bsp::CAN *can2 = nullptr;
 
-static bsp::CAN* can1 = nullptr;
-static driver::Motor3508* pitch_motor = nullptr;
-static driver::Motor6020* yaw_motor = nullptr;
-static driver::Motor3508* putter_motor = nullptr;
+static driver::Motor2006 *pitch_motor_l = nullptr;
+static driver::Motor2006 *pitch_motor_r = nullptr;
+static driver::Motor2006 *yaw_motor = nullptr;
+
+static driver::Motor3508 *launch_motor_l = nullptr;
+static driver::Motor3508 *launch_motor_r = nullptr;
 
 static remote::SBUS* sbus = nullptr;
 
-const float yaw_offset = 0;
-const float yaw_max = 0;
-float yaw_angle = yaw_offset;
-
 void RM_RTOS_Init() {
-    print_use_usb();
-    can1 = new bsp::CAN(&hcan1, true);
-    flywheel_motor1 = new driver::Motor3508(can1, 0x201);
-    flywheel_motor2 = new driver::Motor3508(can1, 0x202);
-    flywheel_motor3 = new driver::Motor3508(can1, 0x203);
-    flywheel_motor4 = new driver::Motor3508(can1, 0x204);
+    print_use_uart(&BOARD_UART1);
+    can1 = new bsp::CAN(&hcan1);
+    can2 = new bsp::CAN(&hcan2);
 
-    flywheel_motor1->SetTransmissionRatio(1);
-    flywheel_motor2->SetTransmissionRatio(1);
-    flywheel_motor3->SetTransmissionRatio(1);
-    flywheel_motor4->SetTransmissionRatio(1);
-
-    control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 150,
-        .ki = 0.03,
-        .kd = 1,
-        .max_out = 30000,
-        .max_iout = 10000,
+    static const control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
+        .kp = 1000,
+        .ki = 0,
+        .kd = 0,
+        .max_out = 10000,
+        .max_iout = 4000,
         .deadband = 0,                          // 死区
         .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 2 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
+                control::ConstrainedPID::ErrorHandle,            // 错误处理
+
     };
-    flywheel_motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    flywheel_motor2->SetMode(driver::MotorCANBase::OMEGA);
-    flywheel_motor3->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    flywheel_motor4->SetMode(driver::MotorCANBase::OMEGA);
-
-    can2 = new bsp::CAN(&hcan2, false);
-    pitch_motor = new driver::Motor3508(can2, 0x207);
-    yaw_motor = new driver::Motor6020(can2, 0x205);
-    putter_motor = new driver::Motor3508(can2, 0x206);
-
-    control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 20,
+    control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
+        .kp = 8,
         .ki = 0,
-        .kd = 0,
-        .max_out = 6 * PI,
-        .max_iout = 0,
-        .deadband = 0,                                 // 死区
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
-    };
-    yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
-    control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 200,
-        .ki = 1,
-        .kd = 0,
-        .max_out = 16384,
-        .max_iout = 2000,
-        .deadband = 0,                          // 死区
-        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
-    };
-    yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+        .kd = 200,
+        .max_out = 8 * PI,
+        .max_iout = PI / 8,
+        .deadband = 0,
+        .A = 0,                                    // 变速积分所能达到的最大值为A+B
+        .B = 0,                                    // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,       // 输出滤波系数
+        .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
+                control::ConstrainedPID::Integral_Limit};
 
-    control::ConstrainedPID::PID_Init_t motor_3508_omega_pid_init = {
+    pitch_motor_l = new driver::Motor2006(can1, 0x201);
+    pitch_motor_r = new driver::Motor2006(can1, 0x202);
+    yaw_motor = new driver::Motor2006(can1, 0x203);
+
+    pitch_motor_l->SetTransmissionRatio(36);
+    pitch_motor_r->SetTransmissionRatio(36);
+    yaw_motor->SetTransmissionRatio(36);
+
+    pitch_motor_l->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+    pitch_motor_r->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+    yaw_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+    pitch_motor_l->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    pitch_motor_r->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    yaw_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
+
+    pitch_motor_l->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA);
+    pitch_motor_r->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA);
+    yaw_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA);
+
+    control::ConstrainedPID::PID_Init_t launch_motor_omega_pid_init = {
         .kp = 2500,
         .ki = 3,
         .kd = 0,
@@ -143,48 +117,88 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    pitch_motor->SetTransmissionRatio(19);
-    pitch_motor->ReInitPID(motor_3508_omega_pid_init, driver::MotorCANBase::OMEGA);
-    pitch_motor->SetMode(driver::MotorCANBase::OMEGA);
+    control::ConstrainedPID::PID_Init_t launch_motor_theta_pid_init = {
+        .kp = 8,
+        .ki = 0,
+        .kd = 200,
+        .max_out = 8 * PI,
+        .max_iout = PI / 8,
+        .deadband = 0,
+        .A = 0,                                    // 变速积分所能达到的最大值为A+B
+        .B = 0,                                    // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,       // 输出滤波系数
+        .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
+                control::ConstrainedPID::Integral_Limit};
 
-    putter_motor->SetTransmissionRatio(19);
-    putter_motor->ReInitPID(motor_3508_omega_pid_init, driver::MotorCANBase::OMEGA);
-    putter_motor->SetMode(driver::MotorCANBase::OMEGA);
+    launch_motor_l = new driver::Motor3508(can2, 0x205);
+    launch_motor_r = new driver::Motor3508(can2, 0x206);
 
-    sbus = new remote::SBUS(&huart3);
+    launch_motor_l->SetTransmissionRatio(19);
+    launch_motor_r->SetTransmissionRatio(19);
 
-    HAL_Delay(1000);
+    launch_motor_l->ReInitPID(launch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+    launch_motor_r->ReInitPID(launch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+    launch_motor_l->ReInitPID(launch_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    launch_motor_r->ReInitPID(launch_motor_theta_pid_init, driver::MotorCANBase::THETA);
+
+    launch_motor_l->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA);
+    launch_motor_r->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA);
+
+    sbus = new remote::SBUS(&BOARD_DBUS);
+
+    osDelay(1000);
+}
+
+bool check_enabled()
+{
+    if (!sbus->IsOnline())
+    {
+        pitch_motor_l->Disable();
+        pitch_motor_r->Disable();
+        yaw_motor->Disable();
+        launch_motor_l->Disable();
+        launch_motor_r->Disable();
+        osDelay(10);
+        return false;
+    }
+    else
+    {
+        pitch_motor_l->Enable();
+        pitch_motor_r->Enable();
+        yaw_motor->Enable();
+        launch_motor_l->Enable();
+        launch_motor_r->Enable();
+        return true;
+    }
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
 
-    static BoolEdgeDetector flywheel_switch(false);
-    bool flywheel_flag = false;
-    const float ratio = 1.0f / 660.0f * PI * 2 * 10;  // 限定电机每秒转10圈
-    while (true) {
-        flywheel_switch.input(sbus->ch8 > 0);
-        if (flywheel_switch.posEdge()) {
-            if (flywheel_flag) {
-                flywheel_motor1->SetTarget(0);
-                flywheel_motor2->SetTarget(0);
-                flywheel_motor3->SetTarget(0);
-                flywheel_motor4->SetTarget(0);
-                flywheel_flag = false;
-            } else {
-                flywheel_motor1->SetTarget(90 * 2 * PI);
-                flywheel_motor2->SetTarget(90 * 2 * PI);
-                flywheel_motor3->SetTarget(90 * 2 * PI);
-                flywheel_motor4->SetTarget(90 * 2 * PI);
-                flywheel_flag = true;
-            }
-        }
-        pitch_motor->SetTarget(sbus->ch3 * ratio);
-        putter_motor->SetTarget(sbus->ch2 * ratio);
-        yaw_angle += (-sbus->ch4 / 18000.0 / 7.0);
-        yaw_angle = clip<float>(yaw_angle, -yaw_max + yaw_offset, yaw_max + yaw_offset);
-        yaw_motor->SetTarget(yaw_angle);
+    float pitch_angle = 0;
+    float yaw_angle = 0;
+    float launch_angle = 0;
 
-        osDelay(1);
+    while (true) {
+        if (!check_enabled())
+        {
+            osDelay(10);
+            continue;
+        }
+
+        const float pitch_ratio = 1.0 / sbus->ROCKER_MAX * 2 * PI;
+
+        pitch_angle += sbus->ch1 * pitch_ratio;
+        yaw_angle += sbus->ch2 * pitch_ratio;
+        launch_angle += sbus->ch3 * pitch_ratio;
+
+        pitch_motor_l->SetTarget(pitch_angle, true);
+        pitch_motor_r->SetTarget(pitch_angle, true);
+        yaw_motor->SetTarget(yaw_angle, true);
+        launch_motor_l->SetTarget(launch_angle, true);
+        launch_motor_r->SetTarget(launch_angle, true);
+
+        osDelay(10);
     }
 }
