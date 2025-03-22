@@ -116,9 +116,9 @@ namespace communication {
         return package;
     }
 
-
-
-    USBProtocol::USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200, uint32_t rxBufferSize = 200) : Protocol() {
+    USBProtocol::USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200,
+                             uint32_t rxBufferSize = 200)
+        : Protocol() {
         usb_ = usb;
         usb_->SetupTx(txBufferSize);
         usb_->SetupRx(rxBufferSize);
@@ -275,7 +275,7 @@ namespace communication {
                 memcpy(&pack, data, length);
                 break;
             case TARGET_ANGLE:
-                //memset(&target_angle, 0, sizeof(target_angle));
+                // memset(&target_angle, 0, sizeof(target_angle));
                 memcpy(&target_angle, data, length);
                 break;
             case NO_TARGET_FLAG:
@@ -357,7 +357,8 @@ namespace communication {
         return data_len;
     }
 
-    HostUSB::HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200, uint32_t rxBufferSize = 200) : USBProtocol(usb, txBufferSize, rxBufferSize) {
+    HostUSB::HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200, uint32_t rxBufferSize = 200)
+        : USBProtocol(usb, txBufferSize, rxBufferSize) {
     }
     bool HostUSB::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
         switch (cmd_id) {
@@ -365,7 +366,7 @@ namespace communication {
                 memcpy(&pack, data, length);
                 break;
             case TARGET_ANGLE:
-                //memset(&target_angle, 0, sizeof(target_angle));
+                // memset(&target_angle, 0, sizeof(target_angle));
                 memcpy(&target_angle, data, length);
                 break;
             case NO_TARGET_FLAG:

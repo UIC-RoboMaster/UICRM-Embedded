@@ -52,8 +52,8 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
-//    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
-//    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
+    //    refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
+    //    refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);

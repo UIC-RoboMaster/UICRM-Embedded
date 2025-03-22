@@ -28,7 +28,8 @@
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED, REMOTE_MODE_AUTOPILOT};
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
+                                      REMOTE_MODE_AUTOPILOT};
 const int8_t remote_mode_max = 4;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
@@ -75,7 +76,8 @@ void remoteTask(void* arg) {
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available = (referee->game_robot_status.shooter_heat_limit - referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
+        is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
+                              referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
                              referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
                              imu->CaliDone();
 #else
@@ -170,8 +172,7 @@ void remoteTask(void* arg) {
                 if (last_state_l == remote::MID && dbus->IsOnline()) {
                     shoot_switch = true;
                     shoot_burst_timestamp = 0;
-                }
-                else if (last_state_l == remote::DOWN && dbus->IsOnline()) {
+                } else if (last_state_l == remote::DOWN && dbus->IsOnline()) {
                     shoot_burst_timestamp++;
                     if (shoot_burst_timestamp > 300 * REMOTE_OS_DELAY) {
                         shoot_burst_switch = true;
@@ -183,7 +184,7 @@ void remoteTask(void* arg) {
                     case remote::DOWN:
                         shoot_stop_switch = true;
 
-                        //reset burst states
+                        // reset burst states
                         shoot_burst_timestamp = 0;
                         shoot_burst_switch = false;
                         break;

@@ -23,9 +23,9 @@
 #include "bsp_error_handler.h"
 #include "bsp_thread.h"
 #include "bsp_uart.h"
+#include "bsp_usb.h"
 #include "connection_driver.h"
 #include "dbus_package.h"
-#include "bsp_usb.h"
 
 namespace communication {
 
@@ -147,7 +147,7 @@ namespace communication {
 
     class USBProtocol : public Protocol {
       public:
-//        explicit USBProtocol(bsp::VirtualUSB* usb);
+        //        explicit USBProtocol(bsp::VirtualUSB* usb);
         explicit USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize, uint32_t rxBufferSize);
         ~USBProtocol();
 
@@ -795,7 +795,8 @@ namespace communication {
         int ProcessDataTx(int cmd_id, uint8_t* data) final;
     };
 
-    // TODO: basically same with class "Host", consider multiple inheritance instead new class "HostUSB"
+    // TODO: basically same with class "Host", consider multiple inheritance instead new class
+    // "HostUSB"
     class HostUSB : public USBProtocol {
       public:
         HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize, uint32_t rxBufferSize);

@@ -139,7 +139,7 @@ void gimbalTask(void* arg) {
         //            pitch_diff = 0;
         //        }
 
-        //TODO 等待标定
+        // TODO 等待标定
         const float offset_ratio =
             0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
         const float offset_filter_ratio =
@@ -164,8 +164,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_AUTOPILOT:
                 if (static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
-                    abs(minipc->target_angle.target_yaw) > 180.0f
-                    )
+                    abs(minipc->target_angle.target_yaw) > 180.0f)
                     break;
                 gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                   -minipc->target_angle.target_yaw);
@@ -224,7 +223,7 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
         .kp = 13,
         .ki = 0,
-        .kd = 4.5, //4.5
+        .kd = 4.5,  // 4.5
         .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -236,15 +235,15 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 4000, //4000
+        .kp = 4000,  // 4000
         .ki = 0,
-        .kd = 2000, //2000
+        .kd = 2000,  // 2000
         .max_out = 16383,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,    // 输出滤波系数
+        .deadband = 0,                               // 死区
+        .A = 1.5 * PI,                               // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                 // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,         // 输出滤波系数
         .derivative_filtering_coefficient = 0.0003,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波

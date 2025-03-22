@@ -23,9 +23,9 @@
 #include "pid.h"
 
 // basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 1.5F, //0.9750f 3.8F
-                                                 .yaw_offset_ = -0.5f, //1.1819f
-                                                 .pitch_max_ = 0.5F, //0.5039f
+const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 1.5F,  // 0.9750f 3.8F
+                                                 .yaw_offset_ = -0.5f,   // 1.1819f
+                                                 .pitch_max_ = 0.5F,     // 0.5039f
                                                  .yaw_max_ = PI,
                                                  .yaw_circle_ = true,
                                                  .pitch_inverted = true,
