@@ -50,7 +50,7 @@ bsp::BatteryVol* battery_vol = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
-    print_use_uart(&huart4,true,19200);
+    print_use_uart(&huart4,false,921600);
     print("helloworld!");
     chassis_can = new bsp::CAN(&hcan1, true);
     bridge_can = new bsp::CAN(&hcan2, false);
@@ -145,6 +145,7 @@ void RM_RTOS_Default_Task(const void* args) {
     Buzzer_Sing(Mario);
 
     while (true) {
+        chassis->UpdatePowerVoltage(battery_vol->GetBatteryVol());
         chassis->Update();
         osDelay(10);
         print("helloworld\r\n");
