@@ -121,6 +121,7 @@ namespace control {
         cailb_done_ = false;
     }
 
+    // 检测imu是否成功初始化
     bool AHRS::IsCailbrated() {
         return cailb_done_;
     }

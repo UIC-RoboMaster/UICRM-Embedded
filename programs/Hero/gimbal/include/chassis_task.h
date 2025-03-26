@@ -48,7 +48,7 @@ void kill_chassis();
 extern control::ChassisCanBridgeSender* chassis;
 extern float chassis_vx;
 extern float chassis_vy;
-extern float chassis_vz;
+extern float chassis_vt;
 extern bool chassis_boost_flag;
 const float chassis_vx_max = 660.0f;
 const float chassis_vy_max = 660.0f;

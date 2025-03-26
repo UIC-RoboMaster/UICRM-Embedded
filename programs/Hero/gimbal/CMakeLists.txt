@@ -16,5 +16,5 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         src/ui_task.cpp
         src/buzzer_task.cpp
         INCLUDES include
-#        DEFINES HAS_REFEREE
+        DEFINES HAS_REFEREE
 )

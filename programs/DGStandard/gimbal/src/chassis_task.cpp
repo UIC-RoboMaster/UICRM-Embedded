@@ -1,22 +1,22 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
- #                                                          #
- # This program is free software: you can redistribute it   #
- # and/or modify it under the terms of the GNU General      #
- # Public License as published by the Free Software         #
- # Foundation, either version 3 of the License, or (at      #
- # your option) any later version.                          #
- #                                                          #
- # This program is distributed in the hope that it will be  #
- # useful, but WITHOUT ANY WARRANTY; without even           #
- # the implied warranty of MERCHANTABILITY or FITNESS       #
- # FOR A PARTICULAR PURPOSE.  See the GNU General           #
- # Public License for more details.                         #
- #                                                          #
- # You should have received a copy of the GNU General       #
- # Public License along with this program.  If not, see     #
- # <https://www.gnu.org/licenses/>.                         #
- ###########################################################*/
+# Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+#                                                          #
+# This program is free software: you can redistribute it   #
+# and/or modify it under the terms of the GNU General      #
+# Public License as published by the Free Software         #
+# Foundation, either version 3 of the License, or (at      #
+# your option) any later version.                          #
+#                                                          #
+# This program is distributed in the hope that it will be  #
+# useful, but WITHOUT ANY WARRANTY; without even           #
+# the implied warranty of MERCHANTABILITY or FITNESS       #
+# FOR A PARTICULAR PURPOSE.  See the GNU General           #
+# Public License for more details.                         #
+#                                                          #
+# You should have received a copy of the GNU General       #
+# Public License along with this program.  If not, see     #
+# <https://www.gnu.org/licenses/>.                         #
+###########################################################*/
 
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
@@ -42,7 +42,7 @@ void chassisTask(void* arg) {
         osDelay(CHASSIS_OS_DELAY);
     }
 
-    while (!ahrs->IsCailbrated()) {
+    while (!imu->CaliDone()) {
         osDelay(1);
     }
 
@@ -91,7 +91,7 @@ void chassisTask(void* arg) {
         // 云台相对底盘的角度，通过云台和底盘连接的电机获取
         float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
         // 云台当前相对云台零点的角度，通过IMU获取
-        float B = INS_Angle.yaw;
+        float B = imu->INS_angle[0];
         // 云台目标相对云台零点的角度，直接读取gimbal class获取
         float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
         float chassis_target_diff = C - B + A;
@@ -105,7 +105,7 @@ void chassisTask(void* arg) {
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
-        if (remote_mode == REMOTE_MODE_ADVANCED || remote_mode == REMOTE_MODE_AUTOAIM) {
+        if (remote_mode == REMOTE_MODE_ADVANCED) {
             // 手动模式下，遥控器直接控制底盘速度
             chassis_vx = car_vx;
             chassis_vy = car_vy;
@@ -165,12 +165,10 @@ void chassisTask(void* arg) {
     }
 }
 
+
 void init_chassis() {
-    // 添加can bridge，注册本机ID
     can_bridge = new communication::CanBridge(can1, 0x51);
-    // 添加can bridge的底盘控制器
     chassis = new control::ChassisCanBridgeSender(can_bridge, 0x52);
-    // 设置底盘各目标的寄存器id
     chassis->SetChassisRegId(0x70, 0x71, 0x72, 0x73);
     chassis->Disable();
 }

@@ -76,7 +76,7 @@ void gimbalTask(void* arg) {
     yaw_curr = imu->INS_angle[0];
     float pitch_target = 0, yaw_target = 0;
 
-    float actural_chassis_turn_speed = chassis_vz / 6.0f;
+    float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();

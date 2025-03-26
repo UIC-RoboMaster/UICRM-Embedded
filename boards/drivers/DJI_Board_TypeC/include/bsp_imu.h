@@ -512,6 +512,7 @@ namespace bsp {
         bool DataReady();
 
         float INS_quat[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+        // 0是yaw，1是，2是pitch
         float INS_angle[3] = {0.0f, 0.0f, 0.0f};
         float Temp = 0;
         float TempPWM = 0;
