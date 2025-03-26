@@ -42,7 +42,7 @@ void gimbalTask(void* arg) {
     // 任务启动时先关掉两个电机，然后等待遥控器连接
     pitch_motor->Disable();
     yaw_motor->Disable();
-    osDelay(100);
+    osDelay(1500);
 
     // 遥控器连接后等待一段时间，等云台完全复位
     int i;
@@ -140,7 +140,14 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
                 // 如果是跟随模式或者旋转模式，将IMU作为参考系
-                gimbal->TargetRel(pitch_diff, yaw_diff);
+                if (minipc->target_angle.shoot_cmd && is_autoaim) {
+                    gimbal->TargetAbs(minipc->target_angle.target_pitch,
+                                      -minipc->target_angle.target_yaw);
+                }
+                else
+                {
+                    gimbal->TargetRel(pitch_diff, yaw_diff);
+                }
                 gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
                 break;
             case REMOTE_MODE_ADVANCED:
@@ -155,7 +162,8 @@ void gimbalTask(void* arg) {
                 //                break;
             case REMOTE_MODE_AUTOAIM:
                 if (minipc->target_angle.target_pitch < 10e3 &&
-                    minipc->target_angle.target_yaw < 10e3) {
+                    minipc->target_angle.target_yaw < 10e3 &&
+                    minipc->target_angle.shoot_cmd) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
                 }
