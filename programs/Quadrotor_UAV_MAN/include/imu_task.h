@@ -19,14 +19,41 @@
  ###########################################################*/
 
 #pragma once
-#include "gimbal.h"
-#include "pid.h"
+#include "AHRS.h"
+#include "MPU6500.h"
+#include "bsp_i2c.h"
+#include "bsp_pwm.h"
+#include "bsp_spi.h"
+#include "cmsis_os2.h"
+#include "heater.h"
+#include "main.h"
+#include "wit_protocol.h"
+#define RX_SIGNAL (1 << 0)
 
-// basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 1.5F, //0.9750f 3.8F
-                                                 .yaw_offset_ = -0.5F, //1.1819f -0.5
-                                                 .pitch_max_ = 0.5039F, //0.5039f
-                                                 .yaw_max_ = PI,
-                                                 .yaw_circle_ = true,
-                                                 .pitch_inverted = true,
-                                                 .yaw_inverted = false};
+// extern imu::WITUART* witimu;
+
+// extern float yaw_offset;
+// extern bool imu_ok;
+
+extern imu::MPU6500* mpu6500;
+extern control::AHRS* ahrs;
+
+// extern osThreadId_t extimuTaskHandle;
+// const osThreadAttr_t extimuTaskAttribute = {.name = "extimuTask",
+//                                             .attr_bits = osThreadDetached,
+//                                             .cb_mem = nullptr,
+//                                             .cb_size = 0,
+//                                             .stack_mem = nullptr,
+//                                             .stack_size = 128 * 4,
+//                                             .priority = (osPriority_t)osPriorityRealtime,
+//                                             .tz_module = 0,
+//                                             .reserved = 0};
+
+// void extimuTask(void* arg);
+void init_imu();
+
+void IMU_print();
+
+// typedef void (*imu_task_delay_t)(uint32_t milli);
+
+// void reset_yaw();

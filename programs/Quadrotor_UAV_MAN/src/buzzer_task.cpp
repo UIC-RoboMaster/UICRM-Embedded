@@ -18,15 +18,38 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
-#include "gimbal.h"
-#include "pid.h"
+#include "buzzer_task.h"
 
-// basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 1.5F, //0.9750f 3.8F
-                                                 .yaw_offset_ = -0.5F, //1.1819f -0.5
-                                                 .pitch_max_ = 0.5039F, //0.5039f
-                                                 .yaw_max_ = PI,
-                                                 .yaw_circle_ = true,
-                                                 .pitch_inverted = true,
-                                                 .yaw_inverted = false};
+osThreadId_t buzzerTaskHandle;
+
+driver::Buzzer* buzzer = nullptr;
+const driver::BuzzerNoteDelayed* buzzer_song = nullptr;
+
+void Buzzer_Delay(uint32_t delay) {
+    osDelay(delay);
+}
+
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song) {
+    if (buzzer_song == nullptr) {
+        buzzer_song = song;
+        osThreadFlagsSet(buzzerTaskHandle, BUZZER_SIGNAL);
+        return true;
+    }
+    return false;
+}
+void buzzerTask(void* arg) {
+    UNUSED(arg);
+    while (1) {
+        uint32_t flags = osThreadFlagsWait(BUZZER_SIGNAL, osFlagsWaitAll, osWaitForever);
+        if (flags & BUZZER_SIGNAL) {
+            if (buzzer_song != nullptr) {
+                buzzer->SingSong(buzzer_song, Buzzer_Delay);
+                buzzer_song = nullptr;
+            }
+        }
+    }
+}
+
+void init_buzzer() {
+    buzzer = new driver::Buzzer(&htim12, 1, 1000000);
+}

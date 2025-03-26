@@ -19,14 +19,41 @@
  ###########################################################*/
 
 #pragma once
-#include "gimbal.h"
-#include "pid.h"
 
-// basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 1.5F, //0.9750f 3.8F
-                                                 .yaw_offset_ = -0.5F, //1.1819f -0.5
-                                                 .pitch_max_ = 0.5039F, //0.5039f
-                                                 .yaw_max_ = PI,
-                                                 .yaw_circle_ = true,
-                                                 .pitch_inverted = true,
-                                                 .yaw_inverted = false};
+#define Debug_UART huart8
+
+#define WAIT_CHASSIS_ONLINE_OS_DELAY 5
+#define PROTECT_OS_DELAY 1
+#define SHOOT_OS_DELAY 1
+#define SHOOT_SINGLE_OS_DELAY 1
+#define GIMBAL_OS_DELAY 1
+#define REMOTE_OS_DELAY 1
+#define DETECT_OS_DELAY 30
+#define SHOOT_REFEREE 0
+#define REMOTE_MODE_OS_DELAY 0.5
+
+#define dbus_uart_post huart1
+#define sbus_uart_post huart1
+
+#define singleShotDivider 1
+
+// #define CHASSIS_DEBUG
+#define GINBAL_DEBUG
+// #define AI_AUTO_MODE
+// #define SHOOT_REAT_CONTROL
+
+// #define SBUS_MODE
+#define DBUS_MODE
+
+inline bool protect_wraning_flag = true;
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+} INS_Position_t;
+typedef struct {
+    float pitch;
+    float roll;
+    float yaw;
+} INS_Angle_t;

@@ -147,7 +147,7 @@ void gimbalTask(void* arg) {
         pitch_diff = wrap<float>(pitch_target, -PI, PI);
         yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
-        pitch_curr = imu->INS_angle[2];
+        pitch_curr = imu->INS_angle[1];
         yaw_curr = imu->INS_angle[0];
 
         gimbal->TargetRel(pitch_diff, yaw_diff);

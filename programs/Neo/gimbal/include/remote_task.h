@@ -62,6 +62,9 @@ inline const char* remote_mode_str(RemoteMode mode) {
         case REMOTE_MODE_ADVANCED:
             return "ADVANCED";
             break;
+        case REMOTE_MODE_AUTOPILOT:
+            return "AUTOPILOT";
+            break;
         case REMOTE_MODE_AUTOAIM:
             return "AUTOAIM";
             break;
@@ -129,6 +132,30 @@ inline const char* shoot_load_mode_str(ShootMode mode) {
     }
 }
 extern ShootMode shoot_load_mode;
+
+enum CapMode {
+    CAP_MODE_DISABLE = -1,
+    CAP_MODE_CLOSE = 0,
+    CAP_MODE_OPEN = 1
+};
+inline const char* cap_mode_str(CapMode mode) {
+    switch (mode) {
+        case CAP_MODE_DISABLE:
+            return "DISABLE";
+            break;
+        case CAP_MODE_CLOSE:
+            return "CLOSE";
+            break;
+        case CAP_MODE_OPEN:
+            return "OPEN";
+            break;
+        default:
+            return "UNKNOWN";
+            break;
+    }
+}
+extern CapMode cap_mode;
+
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
                                             .attr_bits = osThreadDetached,

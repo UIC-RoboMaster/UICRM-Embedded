@@ -18,15 +18,10 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
-#include "gimbal.h"
-#include "pid.h"
-
-// basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 1.5F, //0.9750f 3.8F
-                                                 .yaw_offset_ = -0.5F, //1.1819f -0.5
-                                                 .pitch_max_ = 0.5039F, //0.5039f
-                                                 .yaw_max_ = PI,
-                                                 .yaw_circle_ = true,
-                                                 .pitch_inverted = true,
-                                                 .yaw_inverted = false};
+#include "public_port.h"
+bsp::CAN* can1 = nullptr;
+bsp::CAN* can2 = nullptr;
+void init_can() {
+    can1 = new bsp::CAN(&hcan1, true);
+    can2 = new bsp::CAN(&hcan2, false);
+}

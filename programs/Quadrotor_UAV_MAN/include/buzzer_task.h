@@ -19,14 +19,24 @@
  ###########################################################*/
 
 #pragma once
-#include "gimbal.h"
-#include "pid.h"
+#include "buzzer.h"
+#include "cmsis_os2.h"
+#include "main.h"
 
-// basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 1.5F, //0.9750f 3.8F
-                                                 .yaw_offset_ = -0.5F, //1.1819f -0.5
-                                                 .pitch_max_ = 0.5039F, //0.5039f
-                                                 .yaw_max_ = PI,
-                                                 .yaw_circle_ = true,
-                                                 .pitch_inverted = true,
-                                                 .yaw_inverted = false};
+#define BUZZER_SIGNAL (1 << 0)
+
+extern driver::Buzzer* buzzer;
+
+extern osThreadId_t buzzerTaskHandle;
+const osThreadAttr_t buzzerTaskAttribute = {.name = "buzzerTask",
+                                            .attr_bits = osThreadDetached,
+                                            .cb_mem = nullptr,
+                                            .cb_size = 0,
+                                            .stack_mem = nullptr,
+                                            .stack_size = 128 * 4,
+                                            .priority = (osPriority_t)osPriorityBelowNormal,
+                                            .tz_module = 0,
+                                            .reserved = 0};
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song);
+void buzzerTask(void* arg);
+void init_buzzer();

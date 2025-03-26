@@ -72,9 +72,16 @@ namespace driver {
          */
         virtual void SetOutput(int16_t val) override;
 
+        void Enable();
+
+        void Disable();
+
+        bool isEnable() {return en_;}
+
       private:
         bsp::PWM pwm_;
         uint32_t idle_throttle_;
+        bool en_;
     };
 
     /**

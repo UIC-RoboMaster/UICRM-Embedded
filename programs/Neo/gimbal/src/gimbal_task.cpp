@@ -22,6 +22,7 @@
 
 #include "chassis_task.h"
 #include "minipc_task.h"
+#include "MotorPWMBase.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -29,6 +30,7 @@ driver::Motor6020* pitch_motor = nullptr;
 driver::Motor6020* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
+driver::MotorPWMBase* bulletCap = nullptr;
 float pitch_diff, yaw_diff;
 void gimbalTask(void* arg) {
     UNUSED(arg);
@@ -80,22 +82,35 @@ void gimbalTask(void* arg) {
     // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
     float pitch_ratio, yaw_ratio;
     float pitch_curr, yaw_curr;
-    pitch_curr = -imu->INS_angle[2];
-    yaw_curr = imu->INS_angle[0];
     float pitch_target = 0, yaw_target = 0;
 
-    float actural_chassis_turn_speed = chassis_vt / 6.0f;
+//    float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);
             continue;
         }
+
+        // 子弹盖
+        if (!bulletCap->isEnable())
+            bulletCap->Enable();
+        switch(cap_mode) {
+            case CAP_MODE_CLOSE:
+                bulletCap->SetOutput(200);
+                break;
+            case CAP_MODE_OPEN:
+                bulletCap->SetOutput(0);
+                break;
+            default:
+                break;
+        }
+
         if (!pitch_motor->IsEnable())
             pitch_motor->Enable();
         if (!yaw_motor->IsEnable())
             yaw_motor->Enable();
-        pitch_curr = -imu->INS_angle[2];
+        pitch_curr = -imu->INS_angle[1]; //todo 超级补丁
         yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -139,7 +154,7 @@ void gimbalTask(void* arg) {
         //            pitch_diff = 0;
         //        }
 
-        // TODO 等待标定
+        //TODO 等待标定
         const float offset_ratio =
             0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
         const float offset_filter_ratio =
@@ -151,6 +166,10 @@ void gimbalTask(void* arg) {
 
         float pitch_speed_offset = pitch_ratio;
         pitch_motor->SetSpeedOffset(pitch_speed_offset);
+
+        //todo debug only
+//        pitch_motor->Disable();
+
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
@@ -164,7 +183,8 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_AUTOPILOT:
                 if (static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
-                    abs(minipc->target_angle.target_yaw) > 180.0f)
+                    abs(minipc->target_angle.target_yaw) > 180.0f
+                    )
                     break;
                 gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                   -minipc->target_angle.target_yaw);
@@ -223,7 +243,7 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
         .kp = 13,
         .ki = 0,
-        .kd = 4.5,  // 4.5
+        .kd = 4.5, //4.5
         .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -235,15 +255,15 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 4000,  // 4000
+        .kp = 4000, //4000
         .ki = 0,
-        .kd = 2000,  // 2000
+        .kd = 2000, //2000
         .max_out = 16383,
         .max_iout = 10000,
-        .deadband = 0,                               // 死区
-        .A = 1.5 * PI,                               // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                                 // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,         // 输出滤波系数
+        .deadband = 0,                          // 死区
+        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,    // 输出滤波系数
         .derivative_filtering_coefficient = 0.0003,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
@@ -262,9 +282,13 @@ void init_gimbal() {
     gimbal_data.data = gimbal_init_data;
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
+
+    //init cap
+    bulletCap = new driver::MotorPWMBase(&htim1, 1, 1000000, 50, 1440);//1435
 }
 void kill_gimbal() {
     yaw_motor->Disable();
     pitch_motor->Disable();
+    bulletCap->Disable();
     // steering_motor->SetOutput(0);
 }
