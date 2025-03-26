@@ -33,6 +33,8 @@ namespace bsp {
         void Start();
         void Stop();
         uint32_t Read();
+
+        // 读取处理后的电池电压值
         float GetBatteryVol();
         static float calcBatteryPercentage(float voltage);
         float GetBatteryPercentage();

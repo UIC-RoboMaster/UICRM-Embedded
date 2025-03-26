@@ -25,12 +25,13 @@ namespace bsp {
     BatteryVol::BatteryVol(ADC_HandleTypeDef* hadc, uint32_t channel, uint32_t rank,
                            uint32_t sampling_time) {
         adc_ = new bADC(hadc, channel, rank, sampling_time);
-        adc_vrefint_ = new bADC(&hadc1, ADC_CHANNEL_VREFINT, 2, ADC_SAMPLETIME_3CYCLES);
-        adc_vrefint_->Start();
+        adc_vrefint_ = new bADC(&hadc1, ADC_CHANNEL_VREFINT, 1, ADC_SAMPLETIME_3CYCLES);
+
     }
     void BatteryVol::InitVREF() {
         unsigned char i = 0;
         unsigned int total_adc = 0;
+        adc_vrefint_->Start();
         for (i = 0; i < 200; i++) {
             total_adc += adc_vrefint_->Read();
         }
@@ -44,8 +45,10 @@ namespace bsp {
         adc_->Stop();
     }
     uint32_t BatteryVol::Read() {
+        adc_->Start();
         return adc_->Read();
     }
+
     float BatteryVol::GetBatteryVol() {
 #ifdef DJI_BOARD_TYPE_C_GENERAL
         return (float)Read() * voltage_vrefint_proportion * 10.090909090909090909090909090909f;
