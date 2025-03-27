@@ -110,6 +110,13 @@ void chassisTask(void* arg) {
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
+        // 切换模式清空导航信息
+        if (remote_mode != REMOTE_MODE_AUTOPILOT && last_remote_mode == REMOTE_MODE_AUTOPILOT) {
+            minipc->robot_move.target_x = 0;
+            minipc->robot_move.target_y = 0;
+            minipc->robot_move.target_turn = 0;
+        }
+
         if (remote_mode == REMOTE_MODE_ADVANCED) {
             // 手动模式下，遥控器直接控制底盘速度
             chassis_vx = car_vx;
@@ -187,4 +194,14 @@ void init_chassis() {
 }
 void kill_chassis() {
     chassis->Disable();
+}
+
+void goForward() {
+    float x = 10;
+    osDelay(1000);
+    chassis->SetSpeed(x, 0, 0);
+}
+
+void goBackward() {
+
 }

@@ -18,21 +18,35 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#pragma once
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+
+#include "chassis_task.h"
+#include "cmsis_os2.h"
+#include "gimbal_task.h"
+// todo:陀螺仪未上线！
+// #include "imu_task.h"
+#include "main.h"
+#include "protocol.h"
+#include "public_port.h"
 #include "referee_task.h"
-
-bsp::UART* referee_uart = nullptr;
-bsp::UART* refereerc_uart = nullptr;
-communication::Referee* referee = nullptr;
-communication::Referee* refereerc = nullptr;
-
-void init_referee() {
-    referee_uart = new bsp::UART(&BOARD_UART2);
-    referee_uart->SetupRx(300);
-    referee_uart->SetupTx(300);
-    referee = new communication::Referee(referee_uart);
-
-    //    refereerc_uart = new bsp::UART(&huart1);
-    //    refereerc_uart->SetupRx(300);
-    //    refereerc_uart->SetupTx(300);
-    //    refereerc = new communication::Referee(refereerc_uart);
-}
+#include "remote_task.h"
+#include "user_define.h"
+#include "user_interface.h"
+#include "utils.h"
+extern osThreadId_t uiTaskHandle;
+const osThreadAttr_t uiTaskAttribute = {.name = "uiTask",
+                                        .attr_bits = osThreadDetached,
+                                        .cb_mem = nullptr,
+                                        .cb_size = 0,
+                                        .stack_mem = nullptr,
+                                        .stack_size = 1024 * 4,
+                                        .priority = (osPriority_t)osPriorityBelowNormal,
+                                        .tz_module = 0,
+                                        .reserved = 0};
+void uiTask(void* arg);
+void init_ui();
+void clean_GUI();

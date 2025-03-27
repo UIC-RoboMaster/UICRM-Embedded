@@ -110,7 +110,7 @@ void gimbalTask(void* arg) {
             pitch_motor->Enable();
         if (!yaw_motor->IsEnable())
             yaw_motor->Enable();
-        pitch_curr = -imu->INS_angle[1]; //todo 超级补丁
+        pitch_curr = imu->INS_angle[2];
         yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -181,6 +181,10 @@ void gimbalTask(void* arg) {
                 gimbal->Update();
                 break;
             case REMOTE_MODE_AUTOPILOT:
+                if (minipc->target_angle.shoot_cmd == 0) {
+                    gimbal->TargetRel(0, 0.1);
+                    break;
+                }
                 if (static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
                     abs(minipc->target_angle.target_yaw) > 180.0f

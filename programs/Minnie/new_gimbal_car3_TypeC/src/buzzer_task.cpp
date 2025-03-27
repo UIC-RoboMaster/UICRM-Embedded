@@ -18,21 +18,38 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "referee_task.h"
+#include "buzzer_task.h"
 
-bsp::UART* referee_uart = nullptr;
-bsp::UART* refereerc_uart = nullptr;
-communication::Referee* referee = nullptr;
-communication::Referee* refereerc = nullptr;
+osThreadId_t buzzerTaskHandle;
 
-void init_referee() {
-    referee_uart = new bsp::UART(&BOARD_UART2);
-    referee_uart->SetupRx(300);
-    referee_uart->SetupTx(300);
-    referee = new communication::Referee(referee_uart);
+driver::Buzzer* buzzer = nullptr;
+const driver::BuzzerNoteDelayed* buzzer_song = nullptr;
 
-    //    refereerc_uart = new bsp::UART(&huart1);
-    //    refereerc_uart->SetupRx(300);
-    //    refereerc_uart->SetupTx(300);
-    //    refereerc = new communication::Referee(refereerc_uart);
+void Buzzer_Delay(uint32_t delay) {
+    osDelay(delay);
+}
+
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song) {
+    if (buzzer_song == nullptr) {
+        buzzer_song = song;
+        osThreadFlagsSet(buzzerTaskHandle, BUZZER_SIGNAL);
+        return true;
+    }
+    return false;
+}
+void buzzerTask(void* arg) {
+    UNUSED(arg);
+    while (1) {
+        uint32_t flags = osThreadFlagsWait(BUZZER_SIGNAL, osFlagsWaitAll, osWaitForever);
+        if (flags & BUZZER_SIGNAL) {
+            if (buzzer_song != nullptr) {
+                buzzer->SingSong(buzzer_song, Buzzer_Delay);
+                buzzer_song = nullptr;
+            }
+        }
+    }
+}
+
+void init_buzzer() {
+    buzzer = new driver::Buzzer(&htim4, 3, 1000000);
 }

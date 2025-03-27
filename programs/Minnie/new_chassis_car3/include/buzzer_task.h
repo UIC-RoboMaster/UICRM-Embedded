@@ -18,21 +18,25 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "referee_task.h"
+#pragma once
+#include "buzzer.h"
+#include "cmsis_os2.h"
+#include "main.h"
 
-bsp::UART* referee_uart = nullptr;
-bsp::UART* refereerc_uart = nullptr;
-communication::Referee* referee = nullptr;
-communication::Referee* refereerc = nullptr;
+#define BUZZER_SIGNAL (1 << 0)
 
-void init_referee() {
-    referee_uart = new bsp::UART(&BOARD_UART2);
-    referee_uart->SetupRx(300);
-    referee_uart->SetupTx(300);
-    referee = new communication::Referee(referee_uart);
+extern driver::Buzzer* buzzer;
 
-    //    refereerc_uart = new bsp::UART(&huart1);
-    //    refereerc_uart->SetupRx(300);
-    //    refereerc_uart->SetupTx(300);
-    //    refereerc = new communication::Referee(refereerc_uart);
-}
+extern osThreadId_t buzzerTaskHandle;
+const osThreadAttr_t buzzerTaskAttribute = {.name = "buzzerTask",
+                                            .attr_bits = osThreadDetached,
+                                            .cb_mem = nullptr,
+                                            .cb_size = 0,
+                                            .stack_mem = nullptr,
+                                            .stack_size = 128 * 4,
+                                            .priority = (osPriority_t)osPriorityBelowNormal,
+                                            .tz_module = 0,
+                                            .reserved = 0};
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song);
+void buzzerTask(void* arg);
+void init_buzzer();

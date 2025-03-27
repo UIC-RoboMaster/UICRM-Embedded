@@ -18,21 +18,10 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "referee_task.h"
-
-bsp::UART* referee_uart = nullptr;
-bsp::UART* refereerc_uart = nullptr;
-communication::Referee* referee = nullptr;
-communication::Referee* refereerc = nullptr;
-
-void init_referee() {
-    referee_uart = new bsp::UART(&BOARD_UART2);
-    referee_uart->SetupRx(300);
-    referee_uart->SetupTx(300);
-    referee = new communication::Referee(referee_uart);
-
-    //    refereerc_uart = new bsp::UART(&huart1);
-    //    refereerc_uart->SetupRx(300);
-    //    refereerc_uart->SetupTx(300);
-    //    refereerc = new communication::Referee(refereerc_uart);
+#include "public_port.h"
+bsp::CAN* can1 = nullptr;
+bsp::CAN* can2 = nullptr;
+void init_can() {
+    can1 = new bsp::CAN(&hcan1, true);
+    can2 = new bsp::CAN(&hcan2, false);
 }

@@ -18,21 +18,36 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "referee_task.h"
+#pragma once
+#include "MotorCanBase.h"
+#include "bsp_can.h"
+#include "chassis.h"
+#include "cmsis_os2.h"
+#include "main.h"
+#include "utils.h"
+#include "user_define.h"
 
-bsp::UART* referee_uart = nullptr;
-bsp::UART* refereerc_uart = nullptr;
-communication::Referee* referee = nullptr;
-communication::Referee* refereerc = nullptr;
+typedef enum {
+    REMOTE_MODE_FOLLOW = 1,
+    REMOTE_MODE_SPIN = 2,
+    REMOTE_MODE_ADVANCED = 3,
 
-void init_referee() {
-    referee_uart = new bsp::UART(&BOARD_UART2);
-    referee_uart->SetupRx(300);
-    referee_uart->SetupTx(300);
-    referee = new communication::Referee(referee_uart);
+}remote_mode;
 
-    //    refereerc_uart = new bsp::UART(&huart1);
-    //    refereerc_uart->SetupRx(300);
-    //    refereerc_uart->SetupTx(300);
-    //    refereerc = new communication::Referee(refereerc_uart);
-}
+void chassisMain();
+void init_chassis();
+void chassisDebug();
+void kill_chassis();
+
+void update_channel_data(communication::can_bridge_ext_id_t ext_id,
+                         communication::can_bridge_data_t data, void* args);
+
+extern control::Chassis* chassis;
+extern driver::MotorCANBase* fl_motor;
+extern driver::MotorCANBase* fr_motor;
+extern driver::MotorCANBase* bl_motor;
+extern driver::MotorCANBase* br_motor;
+extern float chassis_vx;
+extern float chassis_vy;
+extern float chassis_vz;
+extern bool chassis_boost_flag;

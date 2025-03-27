@@ -18,21 +18,25 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "referee_task.h"
+#pragma once
+#include "debug_model.h"
+#include "bsp_print.h"
+#include "bsp_uart.h"
+#include "cmsis_os2.h"
+#include "dbus.h"
+#include "main.h"
+#include "protocol.h"
 
-bsp::UART* referee_uart = nullptr;
-bsp::UART* refereerc_uart = nullptr;
-communication::Referee* referee = nullptr;
-communication::Referee* refereerc = nullptr;
+#define RX_SIGNAL (1 << 0)
 
-void init_referee() {
-    referee_uart = new bsp::UART(&BOARD_UART2);
-    referee_uart->SetupRx(300);
-    referee_uart->SetupTx(300);
-    referee = new communication::Referee(referee_uart);
+extern bsp::UART* referee_uart;
+extern communication::Referee* referee;
+extern bsp::UART* refereerc_uart;
+extern communication::Referee* refereerc;
+extern bsp::UART* minipc_uart;
+extern communication::HostUSB* minipc;
 
-    //    refereerc_uart = new bsp::UART(&huart1);
-    //    refereerc_uart->SetupRx(300);
-    //    refereerc_uart->SetupTx(300);
-    //    refereerc = new communication::Referee(refereerc_uart);
-}
+extern communication::DebugModel* CAR_DEBUG;
+
+
+void init_referee();
