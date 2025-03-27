@@ -21,8 +21,10 @@
 #include "main.h"
 
 #include "MotorCanBase.h"
+#include "MotorPWMBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
+#include "bsp_pwm.h"
 #include "cmsis_os.h"
 #include "pid.h"
 #include "referee_task.h"
@@ -46,6 +48,8 @@ static driver::Motor3508 *launch_motor_r = nullptr;
 static driver::Motor6020 *load_motor = nullptr;
 
 static remote::SBUS* sbus = nullptr;
+
+static driver::MotorPWMBase *servo = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&BOARD_UART2, true, 921600);
@@ -186,6 +190,9 @@ void RM_RTOS_Init() {
     load_motor->ReInitPID(pitch_omega_pid_init, driver::MotorCANBase::OMEGA);
     load_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
+    // 预分频168倍后时钟频率1000000，频率50hz，默认位置高电平时长1500us
+    servo = new driver::MotorPWMBase(&htim1, 0, 1000000, 50, 1500);
+
     sbus = new remote::SBUS(&BOARD_DBUS);
 
     osDelay(1000);
@@ -251,6 +258,17 @@ void RM_RTOS_Default_Task(const void* args) {
 
         if (sbus->ch4 > 500)
             load_motor->SetTarget(load_motor->GetTarget() + 2 * PI / 6, false);
+
+        static BoolEdgeDetector lock_detect;
+        static bool lock = false;
+        lock_detect.input(sbus->ch4 < 500);
+        if (lock_detect.posEdge())
+            lock = !lock;
+
+        if (lock)
+            servo->SetOutput(500);
+        else
+            servo->SetOutput(-500);
 
         osDelay(10);
     }
