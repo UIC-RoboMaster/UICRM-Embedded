@@ -274,13 +274,24 @@ void init_gimbal() {
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
 }
+
+inline bool gimbal_en()
+{
+    bool gimbal_en = true;
+    gimbal_en &= remote_mode != REMOTE_MODE_KILL;
+#ifdef HAS_REFEREE
+    gimbal_en &= referee->game_robot_status.mains_power_gimbal_output;
+#endif
+    return gimbal_en;
+}
+
 void check_kill() {
-    if (remote_mode == REMOTE_MODE_KILL) {
+    while (!gimbal_en())
+    {
         yaw_motor->Disable();
         pitch_motor->Disable();
         steering_motor->Disable();
-        while (remote_mode == REMOTE_MODE_KILL)
-            osDelay(1);
+        osDelay(1);
     }
     yaw_motor->Enable();
     pitch_motor->Enable();

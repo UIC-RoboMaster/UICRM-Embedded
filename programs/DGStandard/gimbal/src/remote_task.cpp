@@ -80,8 +80,10 @@ void remoteTask(void* arg) {
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available =
-            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
+//      我也不知道为什么要检测可用发弹量
+//        is_shoot_available =
+//            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
+        is_shoot_available = ahrs->IsCailbrated();
 #else
         is_robot_dead = false;
         is_shoot_available = true;
