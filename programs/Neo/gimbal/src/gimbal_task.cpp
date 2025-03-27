@@ -37,7 +37,6 @@ void gimbalTask(void* arg) {
 
     pitch_motor->Disable();
     yaw_motor->Disable();
-    osDelay(100);
 
     osDelay(1500);
     while (remote_mode == REMOTE_MODE_KILL) {
@@ -110,7 +109,7 @@ void gimbalTask(void* arg) {
             pitch_motor->Enable();
         if (!yaw_motor->IsEnable())
             yaw_motor->Enable();
-        pitch_curr = imu->INS_angle[2];
+        pitch_curr = -imu->INS_angle[2];
         yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -120,7 +119,7 @@ void gimbalTask(void* arg) {
         //      pitch_target = pitch_curr;
         //      yaw_target = yaw_curr;
         //      control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
-        //      osDelay(1);
+        //      osDelay(1);+-
         //      continue;
         //    }
         if (dbus->IsOnline()) {
@@ -167,32 +166,30 @@ void gimbalTask(void* arg) {
         float pitch_speed_offset = pitch_ratio;
         pitch_motor->SetSpeedOffset(pitch_speed_offset);
 
-        //todo debug only
-//        pitch_motor->Disable();
-
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
-                gimbal->TargetRel(pitch_diff, yaw_diff);
-                gimbal->UpdateIMU(pitch_curr, yaw_curr);
+                gimbal->TargetRel(-pitch_diff, yaw_diff);
+                gimbal->UpdateIMU(-pitch_curr, yaw_curr);
                 break;
             case REMOTE_MODE_ADVANCED:
-                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->TargetRel(-pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
             case REMOTE_MODE_AUTOPILOT:
                 if (minipc->target_angle.shoot_cmd == 0) {
-                    gimbal->TargetRel(0, 0.1);
+                    //gimbal spin when cmd is 0
+//                    gimbal->TargetRel(0, 0.5);
                     break;
                 }
-                if (static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
+                if (//static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
                     abs(minipc->target_angle.target_yaw) > 180.0f
                     )
                     break;
-                gimbal->TargetAbs(minipc->target_angle.target_pitch,
+                gimbal->TargetAbs(-minipc->target_angle.target_pitch,
                                   -minipc->target_angle.target_yaw);
-                gimbal->UpdateIMU(pitch_curr, yaw_curr);
+                gimbal->UpdateIMU(-pitch_curr, yaw_curr);
                 break;
             default:
                 kill_gimbal();
@@ -208,9 +205,9 @@ void init_gimbal() {
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 12,
-        .ki = 0,
-        .kd = 10,
+        .kp = 60,
+        .ki = 0.005,
+        .kd = 4000,
         .max_out = 6 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -222,9 +219,9 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 8192,
+        .kp = 1500,
         .ki = 0,
-        .kd = 0,
+        .kd = 500,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
         .deadband = 0,                          // 死区
@@ -245,9 +242,9 @@ void init_gimbal() {
 
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
-        .kp = 13,
+        .kp = 60,
         .ki = 0,
-        .kd = 4.5, //4.5
+        .kd = 4000, //4.5
         .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -259,9 +256,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 4000, //4000
+        .kp = 1500, //4000
         .ki = 0,
-        .kd = 2000, //2000
+        .kd = 500, //2000
         .max_out = 16383,
         .max_iout = 10000,
         .deadband = 0,                          // 死区

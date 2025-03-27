@@ -31,7 +31,9 @@
 remote::DBUS* dbus = nullptr;
 remote::SBUS* sbus = nullptr;
 
-RemoteMode remote_mode = REMOTE_MODE_SPIN;
+//RemoteMode remote_mode = REMOTE_MODE_SPIN;
+//RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
+RemoteMode remote_mode = REMOTE_MODE_AUTOAIM;
 RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
                                      REMOTE_MODE_AUTOAIM, REMOTE_MODE_PREPARE_HAND_MOVEMENT};
@@ -142,9 +144,9 @@ void remoteTask(void* arg) {
 
        // N键重新初始化
        if (dbus->IsOnline()) {
-           keyboard_N_edge->input(dbus->keyboard.bit.N);
+           keyboard_N_edge->input(dbus->keyboard.bit.C);
        } else {
-           keyboard_N_edge->input(refereerc->remote_control.keyboard.bit.N);
+           keyboard_N_edge->input(refereerc->remote_control.keyboard.bit.C);
        }
 
        if (keyboard_N_edge->posEdge()) {

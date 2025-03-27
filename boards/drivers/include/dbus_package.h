@@ -49,7 +49,7 @@ namespace remote {
             uint16_t G : 1;
             uint16_t Z : 1;
             uint16_t X : 1;
-            uint16_t N : 1;
+            uint16_t C : 1;
             uint16_t V : 1;
             uint16_t B : 1;
         } __packed bit;
