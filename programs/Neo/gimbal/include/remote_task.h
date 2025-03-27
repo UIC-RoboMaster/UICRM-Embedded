@@ -74,6 +74,7 @@ inline const char* remote_mode_str(RemoteMode mode) {
     }
 }
 extern RemoteMode remote_mode;
+extern RemoteMode last_remote_mode;
 
 enum ShootFricMode {
     SHOOT_FRIC_MODE_DISABLE = -1,

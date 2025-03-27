@@ -19,39 +19,35 @@
  ###########################################################*/
 
 #pragma once
-
+#include "MotorCanBase.h"
+#include "bsp_can.h"
+#include "chassis.h"
+#include "cmsis_os2.h"
 #include "main.h"
+#include "utils.h"
+#include "user_define.h"
 
-namespace remote {
-    typedef struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t l;
-        uint8_t r;
-    } __packed mouse_t;
+typedef enum {
+    REMOTE_MODE_FOLLOW = 1,
+    REMOTE_MODE_SPIN = 2,
+    REMOTE_MODE_ADVANCED = 3,
 
-#define mouse_xy_max 32767.0
+}remote_mode;
 
-    typedef union {
-        uint16_t code;
-        struct {
-            uint16_t W : 1;
-            uint16_t S : 1;
-            uint16_t A : 1;
-            uint16_t D : 1;
-            uint16_t SHIFT : 1;
-            uint16_t CTRL : 1;
-            uint16_t Q : 1;
-            uint16_t E : 1;
-            uint16_t R : 1;
-            uint16_t F : 1;
-            uint16_t G : 1;
-            uint16_t Z : 1;
-            uint16_t X : 1;
-            uint16_t N : 1;
-            uint16_t V : 1;
-            uint16_t B : 1;
-        } __packed bit;
-    } __packed keyboard_t;
-}  // namespace remote
+void chassisMain();
+void init_chassis();
+void chassisDebug();
+void kill_chassis();
+
+void update_channel_data(communication::can_bridge_ext_id_t ext_id,
+                         communication::can_bridge_data_t data, void* args);
+
+extern control::Chassis* chassis;
+extern driver::MotorCANBase* fl_motor;
+extern driver::MotorCANBase* fr_motor;
+extern driver::MotorCANBase* bl_motor;
+extern driver::MotorCANBase* br_motor;
+extern float chassis_vx;
+extern float chassis_vy;
+extern float chassis_vz;
+extern bool chassis_boost_flag;

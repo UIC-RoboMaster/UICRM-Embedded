@@ -19,39 +19,18 @@
  ###########################################################*/
 
 #pragma once
+#include "gimbal.h"
+#include "pid.h"
 
-#include "main.h"
-
-namespace remote {
-    typedef struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t l;
-        uint8_t r;
-    } __packed mouse_t;
-
-#define mouse_xy_max 32767.0
-
-    typedef union {
-        uint16_t code;
-        struct {
-            uint16_t W : 1;
-            uint16_t S : 1;
-            uint16_t A : 1;
-            uint16_t D : 1;
-            uint16_t SHIFT : 1;
-            uint16_t CTRL : 1;
-            uint16_t Q : 1;
-            uint16_t E : 1;
-            uint16_t R : 1;
-            uint16_t F : 1;
-            uint16_t G : 1;
-            uint16_t Z : 1;
-            uint16_t X : 1;
-            uint16_t N : 1;
-            uint16_t V : 1;
-            uint16_t B : 1;
-        } __packed bit;
-    } __packed keyboard_t;
-}  // namespace remote
+// basic information of gimbal
+const control::gimbal_data_t gimbal_init_data = {
+    .pitch_offset_ = pitch_bisa,
+    .yaw_offset_ = yaw_bisa,
+    .pitch_max_ = 0.45f,
+    .yaw_max_ = PI,
+    .yaw_circle_ = true,
+    .pitch_inverted = false,
+    .yaw_inverted = true,
+    .pitch_eposition = 0,
+    .yaw_eposition = 0,
+};

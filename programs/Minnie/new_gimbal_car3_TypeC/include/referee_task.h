@@ -19,39 +19,24 @@
  ###########################################################*/
 
 #pragma once
-
+#include "debug_model.h"
+#include "bsp_print.h"
+#include "bsp_uart.h"
+#include "cmsis_os2.h"
+#include "dbus.h"
 #include "main.h"
+#include "protocol.h"
 
-namespace remote {
-    typedef struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t l;
-        uint8_t r;
-    } __packed mouse_t;
+#define RX_SIGNAL (1 << 0)
 
-#define mouse_xy_max 32767.0
+extern bsp::UART* referee_uart;
+extern communication::Referee* referee;
+extern bsp::UART* refereerc_uart;
+extern communication::Referee* refereerc;
+extern bsp::UART* minipc_uart;
+extern communication::HostUSB* minipc;
 
-    typedef union {
-        uint16_t code;
-        struct {
-            uint16_t W : 1;
-            uint16_t S : 1;
-            uint16_t A : 1;
-            uint16_t D : 1;
-            uint16_t SHIFT : 1;
-            uint16_t CTRL : 1;
-            uint16_t Q : 1;
-            uint16_t E : 1;
-            uint16_t R : 1;
-            uint16_t F : 1;
-            uint16_t G : 1;
-            uint16_t Z : 1;
-            uint16_t X : 1;
-            uint16_t N : 1;
-            uint16_t V : 1;
-            uint16_t B : 1;
-        } __packed bit;
-    } __packed keyboard_t;
-}  // namespace remote
+extern communication::DebugModel* CAR_DEBUG;
+
+
+void init_referee();

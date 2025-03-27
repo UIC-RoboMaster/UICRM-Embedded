@@ -18,40 +18,29 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
+#include "referee_task.h"
+#include "user_define.h"
 
-#include "main.h"
+bsp::UART* referee_uart = nullptr;
+bsp::UART* refereerc_uart = nullptr;
+communication::Referee* referee = nullptr;
+communication::Referee* refereerc = nullptr;
 
-namespace remote {
-    typedef struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t l;
-        uint8_t r;
-    } __packed mouse_t;
+void init_referee() {
+    // 启动裁判系统
+    referee_uart = new bsp::UART(&referee_uart_post);
+    referee_uart->SetupRx(300);
+    referee_uart->SetupTx(300);
+    referee = new communication::Referee(referee_uart);
 
-#define mouse_xy_max 32767.0
-
-    typedef union {
-        uint16_t code;
-        struct {
-            uint16_t W : 1;
-            uint16_t S : 1;
-            uint16_t A : 1;
-            uint16_t D : 1;
-            uint16_t SHIFT : 1;
-            uint16_t CTRL : 1;
-            uint16_t Q : 1;
-            uint16_t E : 1;
-            uint16_t R : 1;
-            uint16_t F : 1;
-            uint16_t G : 1;
-            uint16_t Z : 1;
-            uint16_t X : 1;
-            uint16_t N : 1;
-            uint16_t V : 1;
-            uint16_t B : 1;
-        } __packed bit;
-    } __packed keyboard_t;
-}  // namespace remote
+#ifdef UART_PRINT_LOGO
+    print_use_uart(&debug_uart_post, true, 921600);
+#else
+    // 启动裁判系统图传链路
+    refereerc_uart = new bsp::UART(&refereerc_uart_post);
+    refereerc_uart->SetupRx(300);
+    // UART7没有打开DMA发送，所以这里需要将DMA发送关闭
+    refereerc_uart->SetupTx(300, false);
+    refereerc = new communication::Referee(refereerc_uart);
+#endif
+}

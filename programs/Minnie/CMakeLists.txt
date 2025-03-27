@@ -1,0 +1,2 @@
+add_subdirectory(new_chassis_car3)
+add_subdirectory(new_gimbal_car3_TypeC)

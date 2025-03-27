@@ -19,39 +19,24 @@
  ###########################################################*/
 
 #pragma once
-
+#include "buzzer.h"
+#include "cmsis_os2.h"
 #include "main.h"
 
-namespace remote {
-    typedef struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t l;
-        uint8_t r;
-    } __packed mouse_t;
+#define BUZZER_SIGNAL (1 << 0)
 
-#define mouse_xy_max 32767.0
+extern driver::Buzzer* buzzer;
 
-    typedef union {
-        uint16_t code;
-        struct {
-            uint16_t W : 1;
-            uint16_t S : 1;
-            uint16_t A : 1;
-            uint16_t D : 1;
-            uint16_t SHIFT : 1;
-            uint16_t CTRL : 1;
-            uint16_t Q : 1;
-            uint16_t E : 1;
-            uint16_t R : 1;
-            uint16_t F : 1;
-            uint16_t G : 1;
-            uint16_t Z : 1;
-            uint16_t X : 1;
-            uint16_t N : 1;
-            uint16_t V : 1;
-            uint16_t B : 1;
-        } __packed bit;
-    } __packed keyboard_t;
-}  // namespace remote
+extern osThreadId_t buzzerTaskHandle;
+const osThreadAttr_t buzzerTaskAttribute = {.name = "buzzerTask",
+                                            .attr_bits = osThreadDetached,
+                                            .cb_mem = nullptr,
+                                            .cb_size = 0,
+                                            .stack_mem = nullptr,
+                                            .stack_size = 128 * 4,
+                                            .priority = (osPriority_t)osPriorityBelowNormal,
+                                            .tz_module = 0,
+                                            .reserved = 0};
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song);
+void buzzerTask(void* arg);
+void init_buzzer();

@@ -20,38 +20,61 @@
 
 #pragma once
 
-#include "main.h"
+// todo:舵机引脚为PE9
+#define MG995_htim htim8
+#define MG995_channel 2
 
-namespace remote {
-    typedef struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t l;
-        uint8_t r;
-    } __packed mouse_t;
+#define WAIT_CHASSIS_ONLINE_OS_DELAY 5
+#define PROTECT_OS_DELAY 1
+#define SHOOT_OS_DELAY 1
+#define SHOOT_SINGLE_OS_DELAY 1
+#define CHASSIS_OS_DELAY 5
+#define GIMBAL_OS_DELAY 1
+#define REMOTE_OS_DELAY 1
+#define DETECT_OS_DELAY 30
+#define UI_OS_DELAY 100
+#define SHOOT_REFEREE 0
+#define ENABLE_UI 1
 
-#define mouse_xy_max 32767.0
+#define Debug_true 1
+#define Debug_false 0
 
-    typedef union {
-        uint16_t code;
-        struct {
-            uint16_t W : 1;
-            uint16_t S : 1;
-            uint16_t A : 1;
-            uint16_t D : 1;
-            uint16_t SHIFT : 1;
-            uint16_t CTRL : 1;
-            uint16_t Q : 1;
-            uint16_t E : 1;
-            uint16_t R : 1;
-            uint16_t F : 1;
-            uint16_t G : 1;
-            uint16_t Z : 1;
-            uint16_t X : 1;
-            uint16_t N : 1;
-            uint16_t V : 1;
-            uint16_t B : 1;
-        } __packed bit;
-    } __packed keyboard_t;
-}  // namespace remote
+#define Control_true 1
+#define Control_false 0
+
+#define UART_PRINT_LOGO
+
+#define pitch_bisa -2.6
+#define yaw_bisa -3
+
+#define singleShotDivider 3.5f
+
+#define REMOTE_MODE_OS_DELAY 0.5
+
+#define referee_uart_post huart6
+#define refereerc_uart_post huart1
+#define debug_uart_post huart1
+
+#define dbus_uart_post huart3
+#define sbus_uart_post huart3
+
+// #define CHASSIS_DEBUG
+// #define GINBAL_DEBUG
+// #define AI_AUTO_MODE
+// #define SHOOT_REAT_CONTROL
+
+// #define SBUS_MODE
+#define DBUS_MODE
+
+inline bool protect_wraning_flag = true;
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+} INS_Position_t;
+typedef struct {
+    float pitch;
+    float roll;
+    float yaw;
+} INS_Angle_t;

@@ -797,7 +797,7 @@ namespace communication {
 
     // TODO: basically same with class "Host", consider multiple inheritance instead new class
     // "HostUSB"
-    class HostUSB : public USBProtocol {
+    class  HostUSB : public USBProtocol {
       public:
         HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize, uint32_t rxBufferSize);
         pack_t pack{};

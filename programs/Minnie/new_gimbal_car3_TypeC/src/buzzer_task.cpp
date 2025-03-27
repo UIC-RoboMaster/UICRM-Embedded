@@ -18,40 +18,38 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
+#include "buzzer_task.h"
 
-#include "main.h"
+osThreadId_t buzzerTaskHandle;
 
-namespace remote {
-    typedef struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t l;
-        uint8_t r;
-    } __packed mouse_t;
+driver::Buzzer* buzzer = nullptr;
+const driver::BuzzerNoteDelayed* buzzer_song = nullptr;
 
-#define mouse_xy_max 32767.0
+void Buzzer_Delay(uint32_t delay) {
+    osDelay(delay);
+}
 
-    typedef union {
-        uint16_t code;
-        struct {
-            uint16_t W : 1;
-            uint16_t S : 1;
-            uint16_t A : 1;
-            uint16_t D : 1;
-            uint16_t SHIFT : 1;
-            uint16_t CTRL : 1;
-            uint16_t Q : 1;
-            uint16_t E : 1;
-            uint16_t R : 1;
-            uint16_t F : 1;
-            uint16_t G : 1;
-            uint16_t Z : 1;
-            uint16_t X : 1;
-            uint16_t N : 1;
-            uint16_t V : 1;
-            uint16_t B : 1;
-        } __packed bit;
-    } __packed keyboard_t;
-}  // namespace remote
+bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song) {
+    if (buzzer_song == nullptr) {
+        buzzer_song = song;
+        osThreadFlagsSet(buzzerTaskHandle, BUZZER_SIGNAL);
+        return true;
+    }
+    return false;
+}
+void buzzerTask(void* arg) {
+    UNUSED(arg);
+    while (1) {
+        uint32_t flags = osThreadFlagsWait(BUZZER_SIGNAL, osFlagsWaitAll, osWaitForever);
+        if (flags & BUZZER_SIGNAL) {
+            if (buzzer_song != nullptr) {
+                buzzer->SingSong(buzzer_song, Buzzer_Delay);
+                buzzer_song = nullptr;
+            }
+        }
+    }
+}
+
+void init_buzzer() {
+    buzzer = new driver::Buzzer(&htim4, 3, 1000000);
+}

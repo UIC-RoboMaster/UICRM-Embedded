@@ -1,23 +1,22 @@
 /*###########################################################
- # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
- #                                                          #
- # This program is free software: you can redistribute it   #
- # and/or modify it under the terms of the GNU General      #
- # Public License as published by the Free Software         #
- # Foundation, either version 3 of the License, or (at      #
- # your option) any later version.                          #
- #                                                          #
- # This program is distributed in the hope that it will be  #
- # useful, but WITHOUT ANY WARRANTY; without even           #
- # the implied warranty of MERCHANTABILITY or FITNESS       #
- # FOR A PARTICULAR PURPOSE.  See the GNU General           #
- # Public License for more details.                         #
- #                                                          #
- # You should have received a copy of the GNU General       #
- # Public License along with this program.  If not, see     #
- # <https://www.gnu.org/licenses/>.                         #
- ###########################################################*/
-
+# Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+#                                                          #
+# This program is free software: you can redistribute it   #
+# and/or modify it under the terms of the GNU General      #
+# Public License as published by the Free Software         #
+# Foundation, either version 3 of the License, or (at      #
+# your option) any later version.                          #
+#                                                          #
+# This program is distributed in the hope that it will be  #
+# useful, but WITHOUT ANY WARRANTY; without even           #
+# the implied warranty of MERCHANTABILITY or FITNESS       #
+# FOR A PARTICULAR PURPOSE.  See the GNU General           #
+# Public License for more details.                         #
+#                                                          #
+# You should have received a copy of the GNU General       #
+# Public License along with this program.  If not, see     #
+# <https://www.gnu.org/licenses/>.                         #
+###########################################################*/
 #pragma once
 
 #include "MotorBase.h"
@@ -84,15 +83,41 @@ namespace driver {
         bool en_;
     };
 
-    /**
-     * @brief DJI snail 2305电机的标准类
-     */
-    /**
-     * @brief DJI snail 2305 motor class
-     */
-    class Motor2305 : public MotorPWMBase {
-      public:
-        /* override base implementation with max current protection */
-        void SetOutput(int16_t val) override final;
-    };
+   /**
+    * @brief DJI snail 2305电机的标准类
+    */
+   /**
+    * @brief DJI snail 2305 motor class
+    */
+   class Motor2305 : public MotorPWMBase {
+     public:
+       Motor2305(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle);
+       /* override base implementation with max current protection */
+       void SetOutput(int16_t val) override final;
+   };
+
+   /**
+    * @brief 普通 MG995 PWM标准类舵机
+    */
+   /**
+    * @brief Ordinary MG995 PWM standard servo motor class
+    */
+
+   class ServoMG995 : public MotorPWMBase {
+     public:
+       ServoMG995(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq = 1000000, uint32_t output_freq = 50, uint32_t idle_throttle = 0);
+       /* override base implementation with max current protection */
+       void SetOutput(int16_t angle) override final;
+   };
+
+   /**
+  * @brief 普通 Lesar PWM标准激光
+    */
+
+   class Lesar : public MotorPWMBase {
+     public:
+       Lesar(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq = 1000000, uint32_t output_freq = 50, uint32_t idle_throttle = 0);
+       /* override base implementation with max current protection */
+       void SetOutput(int16_t brightness) override final;
+   };
 }  // namespace driver
