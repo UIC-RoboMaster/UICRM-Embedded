@@ -179,7 +179,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_AUTOPILOT:
                 if (minipc->target_angle.shoot_cmd == 0) {
                     //gimbal spin when cmd is 0
-//                    gimbal->TargetRel(0, 0.5);
+                    gimbal->TargetRel(0, 0.5);
                     break;
                 }
                 if (//static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
@@ -190,6 +190,9 @@ void gimbalTask(void* arg) {
                 gimbal->TargetAbs(-minipc->target_angle.target_pitch,
                                   -minipc->target_angle.target_yaw);
                 gimbal->UpdateIMU(-pitch_curr, yaw_curr);
+//                gimbal->TargetAbs(0, PI);
+//                gimbal->UpdateIMU(-pitch_curr, yaw_curr);
+
                 break;
             default:
                 kill_gimbal();
