@@ -85,7 +85,12 @@ void gimbalTask(void* arg) {
 
 //    float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+        bool gimbal_en = true;
+        gimbal_en &= remote_mode != REMOTE_MODE_KILL;
+#ifdef HAS_REFEREE
+        gimbal_en &= referee->game_robot_status.mains_power_gimbal_output;
+#endif
+        if (!gimbal_en) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);
             continue;

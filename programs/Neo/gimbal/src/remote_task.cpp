@@ -80,7 +80,7 @@ void remoteTask(void* arg) {
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
                               referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
-                             referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
+                             //referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
                              imu->CaliDone();
 #else
         is_robot_dead = false;

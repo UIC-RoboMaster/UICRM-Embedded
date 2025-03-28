@@ -68,11 +68,12 @@ void shootTask(void* arg) {
     ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
     while (true) {
-        bool is_dead = remote_mode == REMOTE_MODE_KILL;
+        bool shoot_en = true;
+        shoot_en &= remote_mode != REMOTE_MODE_KILL;
 #ifdef HAS_REFEREE
-        is_dead |= !referee->game_robot_status.mains_power_shooter_output;
+        shoot_en &= referee->game_robot_status.mains_power_shooter_output;
 #endif
-        if (is_dead) {
+        if (shoot_en) {
             // 死了
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
