@@ -132,7 +132,7 @@ void shootTask(void* arg){
         osDelay(1);
     }
 
-    const float flyWheelMaxTarget = 400.0;
+    const float flyWheelMaxTarget = 450.0;
     flyWheelEase = new Ease(0, 1);
     while (true) {
 
@@ -148,9 +148,9 @@ void shootTask(void* arg){
         if (!steering_motor->IsEnable())
             steering_motor->Enable();
 
-        if(!flyWheelEase->IsAtTarget()) {
-            shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-        }
+//        if(!flyWheelEase->IsAtTarget()) {
+//            shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+//        }
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARED:
                 // 启动摩擦轮电机(旋转)

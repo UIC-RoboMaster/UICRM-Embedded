@@ -28,6 +28,7 @@ driver::Motor6020* pitch_motor = nullptr;
 driver::Motor6020* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
+float pitch_target = 0, yaw_target = 0;
 float pitch_diff, yaw_diff;
 INS_Angle_t INS_Angle;
 
@@ -106,16 +107,28 @@ void gimbalTask(void* arg) {
 
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
-    float pitch_target = 0, yaw_target = 0;
 
     while (true) {
         // 如果遥控器处于关闭状态，关闭两个电机
         check_kill();
-        INS_Angle.pitch = 0;
-        INS_Angle.yaw = 0;
+//        INS_Angle.pitch = 0;
+//        INS_Angle.yaw = 0;
 
 
-        auto[pitch_ratio, yaw_ratio] = gimbal_remote_mode();
+//        auto[pitch_ratio, yaw_ratio] = gimbal_remote_mode();
+
+        const float mouse_ratio = 1;
+        const float remote_ratio = 0.001;
+        float pitch_ratio = 0, yaw_ratio = 0;
+        if (dbus->IsOnline()) {
+            if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
+                pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = (float)dbus->mouse.x / mouse_xy_max * mouse_ratio;
+            } else {
+                pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
+                yaw_ratio = (float)dbus->ch0 / dbus->ROCKER_MAX * remote_ratio;
+            }
+        }
 
         // 根据遥控器输入计算目标角度，并且进行限幅
         pitch_target =
@@ -123,7 +136,7 @@ void gimbalTask(void* arg) {
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
-        yaw_diff = wrap<float>(yaw_target, -PI, PI);
+        yaw_diff = wrap<float>(yaw_target, PI, PI);
 
 
         // 根据运动模式选择不同的控制方式

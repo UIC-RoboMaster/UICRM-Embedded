@@ -86,8 +86,10 @@ void RM_Main_data(bool newline = false){
         dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
         dbus->timestamp);
 
-    // print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
-    //       ahrs->INS_angle[2]);
+     print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
+           ahrs->INS_angle[2]);
+     print("yaw/pitch target: %.3f %.3f", yaw_target, pitch_target);
+     print("yaw/pitch diff: %.3f %.3f", yaw_diff, pitch_diff);
     if(newline){print("\r\n");}
 }
 

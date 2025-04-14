@@ -117,13 +117,14 @@ void shootTask(void* arg) {
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
+                    const float shootDivider = 7.5;
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5,
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / shootDivider,
                                                       false);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
-                    }
+                    }8
                     break;
                 case SHOOT_MODE_STOP:
                     // 停止发射
