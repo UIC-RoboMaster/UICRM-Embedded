@@ -42,21 +42,6 @@ T map(T value, T in_min, T in_max, T out_min, T out_max) {
     return out_min + (value - in_min) * (out_max - out_min) / (in_max - in_min);
 }
 
-void debug_gimbal_init(){
-    #ifdef GINBAL_DEBUG
-        print("GIMBAL_INIT_OK\n");
-    #endif
-}
-
-void debug_gimbal(bool newline){
-    (void)newline;
-    #ifdef GINBAL_DEBUG
-        print("Gimbal_pitch: %.2f, Gimbal_yaw: %.2f", INS_Angle.pitch, INS_Angle.yaw);
-        print("Gimbal_pitch_diff: %.2f, Gimbal_yaw_diff: %.2f\n", pitch_diff, yaw_diff);
-        if(newline){print("\r\n");}
-    #endif
-}
-
 void check_kill();
 
 void gimbalTask(void* arg) {
@@ -100,10 +85,6 @@ void gimbalTask(void* arg) {
     Buzzer_Sing(SingCaliDone);
     osDelay(100);
 
-    // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
-    // float pitch_ratio, yaw_ratio;
-    INS_Angle.pitch = ahrs->INS_angle[2];
-    INS_Angle.yaw = ahrs->INS_angle[0];
 
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -111,12 +92,10 @@ void gimbalTask(void* arg) {
     while (true) {
         // 如果遥控器处于关闭状态，关闭两个电机
         check_kill();
-//        INS_Angle.pitch = 0;
-//        INS_Angle.yaw = 0;
+        INS_Angle.pitch = ahrs->INS_angle[2];
+        INS_Angle.yaw = ahrs->INS_angle[0];
 
-
-//        auto[pitch_ratio, yaw_ratio] = gimbal_remote_mode();
-
+        // 输入
         const float mouse_ratio = 1;
         const float remote_ratio = 0.001;
         float pitch_ratio = 0, yaw_ratio = 0;
@@ -138,6 +117,15 @@ void gimbalTask(void* arg) {
         pitch_diff = clip<float>(pitch_target, -PI, PI);
         yaw_diff = wrap<float>(yaw_target, PI, PI);
 
+        if (abs(yaw_diff) < 0.00001)
+            yaw_diff = 0.0000000f;
+
+        //todo 超级补丁，完全修复需要重构云台更新逻辑，现在的逻辑是yaw_target, pitch_target实际作为作为diff，云台实际上加减target而非diff。这里作为临时限位。
+        float backVal = 0.0001;
+        float maxYaw= PI;
+        float absYaw = abs(INS_Angle.yaw);
+        if (absYaw > maxYaw)
+            yaw_diff = -INS_Angle.yaw / absYaw * backVal;
 
         // 根据运动模式选择不同的控制方式
         // const float ratio = 0.1875;
@@ -167,8 +155,6 @@ void gimbalTask(void* arg) {
 
             default:
                 break;
-
-
         }
 
         osDelay(GIMBAL_OS_DELAY);
@@ -184,9 +170,9 @@ void init_gimbal() {
     pitch_motor = new driver::Motor6020(can1, 0x208, 0x1FF);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 25,
-        .ki = 1,
-        .kd = 1000,
+        .kp = 35,
+        .ki = 20,
+        .kd = 800,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -200,9 +186,9 @@ void init_gimbal() {
 
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 1500,
-        .ki = 1,
-        .kd = 5000,
+        .kp = 2000,
+        .ki = 25,
+        .kd = 2000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                          // 死区
@@ -236,22 +222,22 @@ void init_gimbal() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.15,          // 输出滤波系数
+        .output_filtering_coefficient = 0.1,          // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |   // 积分限幅
                 control::ConstrainedPID::OutputFilter       // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 1500,
-        .ki = 1,
-        .kd = 5000,
+        .kp = 1200,
+        .ki = 5,
+        .kd = 2000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                            // 死区
         .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 0.5 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.03,     // 输出滤波系数
+        .output_filtering_coefficient = 0.1,     // 输出滤波系数
         .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
@@ -271,30 +257,6 @@ void init_gimbal() {
     gimbal_data.data = gimbal_init_data;
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
-    debug_gimbal_init();
-}
-
-Gimbal_Targe_data gimbal_remote_mode() {
-#ifdef DBUS_MODE
-    // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
-    Gimbal_Targe_data Gimbal_Targe;
-    const float mouse_ratio = 1;
-    const float remote_ratio = 0.001;
-    if (dbus->IsOnline()) {
-        if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
-            Gimbal_Targe.pitch_ratio_targe = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
-            Gimbal_Targe.yaw_ratio_targe = (float)dbus->mouse.x / mouse_xy_max * mouse_ratio;
-        } else {
-            Gimbal_Targe.pitch_ratio_targe = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
-            Gimbal_Targe.yaw_ratio_targe = (float)dbus->ch0 / dbus->ROCKER_MAX * remote_ratio;
-        }
-    } else {
-        Gimbal_Targe.pitch_ratio_targe = 0;
-        Gimbal_Targe.yaw_ratio_targe = 0;
-    }
-#endif
-
-    return Gimbal_Targe;
 }
 
 void check_kill() {
