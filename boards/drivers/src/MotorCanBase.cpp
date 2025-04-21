@@ -426,12 +426,19 @@ namespace driver {
 
     void Motor3508::PrintData() const {
         print("online: %s ", (IsOnline() ? "true" : "false"));
+        print("\r\n");
         print("theta: % .4f ", GetTheta());
+        print("\r\n");
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
+        print("\r\n");
         print("omega: % .4f ", GetOmega());
+        print("\r\n");
         print("output shaft omega: % .4f ", GetOutputShaftOmega());
+        print("\r\n");
         print("raw temperature: %3d ", raw_temperature_);
-        print("raw current get: % d \r\n", raw_current_get_);
+        print("\r\n");
+        print("raw current get: % d ", raw_current_get_);
+        print("\r\n");
     }
 
     void Motor3508::SetOutput(int16_t val) {
