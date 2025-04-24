@@ -39,7 +39,7 @@ extern bsp::UART* print_uart;
  * @param huart HAL uart handle
  * @param dma whether to use DMA
  */
-void print_use_uart(UART_HandleTypeDef* huart, bool dma = true, uint32_t baudrate = 115200);
+void print_use_uart(UART_HandleTypeDef* huart, bool dma = true, uint32_t baudrate = 912600);
 
 #ifndef NO_USB
 /**
