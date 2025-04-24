@@ -20,6 +20,8 @@
 
 
 #include "chassis_task.h"
+
+#include <sys/signal.h>
 osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
@@ -29,6 +31,8 @@ float chassis_vx = 0;
 float chassis_vy = 0;
 float chassis_vt = 0;
 bool chassis_boost_flag = true;
+
+char s[50];
 
 // 这是已经弃用的canbrige，因为云台和底盘现在已经整合在一起了。
 // communication::CanBridge* can_bridge = nullptr;
@@ -47,12 +51,12 @@ control::Chassis* chassis = nullptr;
 
 void init_chassis() {
     HAL_Delay(100);
-    can2 = new bsp::CAN(&hcan2, false);
-    can1 = new bsp::CAN(&hcan1, true);
-    fl_motor = new driver::Motor3508(can2, 0x202);
-    fr_motor = new driver::Motor3508(can2, 0x201);
-    bl_motor = new driver::Motor3508(can2, 0x203);
-    br_motor = new driver::Motor3508(can2, 0x204);
+    // can1 = new bsp::CAN(&hcan1, true);
+    // can2 = new bsp::CAN(&hcan2, false);
+    fl_motor = new driver::Motor3508(can1, 0x202);
+    fr_motor = new driver::Motor3508(can1, 0x201);
+    bl_motor = new driver::Motor3508(can1, 0x203);
+    br_motor = new driver::Motor3508(can1, 0x204);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
@@ -150,13 +154,8 @@ void chassisTask(void* arg) {
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
-            while (remote_mode == REMOTE_MODE_KILL) {
-                osDelay(CHASSIS_OS_DELAY + 2);
-            }
-            chassis->Enable();
-            continue;
+            break;
         }
-
         remote::keyboard_t keyboard;
         if (dbus->IsOnline()) {
             keyboard = dbus->keyboard;
@@ -245,6 +244,7 @@ void chassisTask(void* arg) {
         chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                           referee->power_heat_data.chassis_power,
                           referee->power_heat_data.chassis_power_buffer, false);
+        chassis->Update();
         osDelay(CHASSIS_OS_DELAY);
     }
 }

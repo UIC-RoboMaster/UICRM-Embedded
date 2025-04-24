@@ -174,7 +174,7 @@ void init_gimbal() {
     /**
      * pitch motor
      */
-    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
+    pitch_motor = new driver::Motor6020(can2, 0x208, 0x1FE);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 12,
@@ -216,24 +216,24 @@ void init_gimbal() {
     /**
      * yaw motor
      */
-    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
+    yaw_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 7,
+        .kp = 2,
         .ki = 0,
-        .kd = 50,
+        .kd = 0,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.15,          // 输出滤波系数
+        .output_filtering_coefficient = 0.16,          // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 6000,
+        .kp = 1000,
         .ki = 0,
         .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书

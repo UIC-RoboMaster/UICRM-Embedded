@@ -50,7 +50,9 @@ const bsp::thread_init_t thread_init = {
 };
 
 void init_minipc() {
-    minipc_uart = new bsp::UART(&huart6);
+
+    // miniPC uart
+    minipc_uart = new bsp::UART(&huart7);
     minipc_uart->SetBaudrate(921600);
     minipc_uart->SetupRx(300);
     minipc_uart->SetupTx(300);
