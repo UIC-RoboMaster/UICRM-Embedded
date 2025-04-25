@@ -45,6 +45,8 @@ void chassisTask(void* arg);
 void init_chassis();
 void kill_chassis();
 
+extern control::ChassisCanBridgeSender* chassis;
+
 extern float chassis_vx;
 extern float chassis_vy;
 extern float chassis_vt;

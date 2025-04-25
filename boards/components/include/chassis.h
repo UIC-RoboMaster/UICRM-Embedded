@@ -24,7 +24,7 @@
 #include "can_bridge.h"
 #include "connection_driver.h"
 #include "pid.h"
-#include "power_limit.h"
+#include "power_limit_new.h"
 #include "supercap.h"
 
 #define MAX_WHEEL_NUM 8
@@ -74,7 +74,7 @@ namespace control {
         ~Chassis() override;
 
         /**
-         * @brief set the speed for chassis motors
+         * @brief 根据底盘整体速度，解算每个电机的速度，并储存起来
          *
          * @param x_speed chassis speed on x-direction
          * @param y_speed chassis speed on y-direction
@@ -83,25 +83,53 @@ namespace control {
         void SetSpeed(const float x_speed, const float y_speed = 0, const float turn_speed = 0);
 
         /**
-         * @brief set the power limit for chassis motors
-         * @param power_limit_on whether to enable power limit
-         * @param power_limit total power limit, in [W]
-         * @param chassis_power Current chassis power, in [W]
-         * @param chassis_power_buffer Current chassis power buffer, in [J]
+         * @brief 使用外部采集的底盘数据，更新功率控制信息。
+         * @note 这里仅记录信息，实际在回调函数中进行功率控制的计算。
+         * @warning 已弃用，需要使用新的功率控制函数
+         * @param enabled 功率控制开关
+         * @param max_power total power limit, in [W]
+         * @param current_power Current chassis power, in [W]
+         * @param buffer_remain Current chassis power buffer, in [J]
          */
-        void SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                      float chassis_power_buffer, bool enable_supercap = false);
+        void SetPower(bool enabled, float max_power, float current_power, float buffer_remain,
+                      bool enable_supercap = false);
+
+        /**
+         * @brief 使用外部采集的底盘数据，更新功率控制信息。
+         * @note 这里仅记录信息，实际在回调函数中进行功率控制的计算。
+         * @param enabled 功率控制开关
+         * @param max_watt 最大功率，单位为W（根据buffer动态调整，有时会更大）
+         * @param current_voltage 电池电压，单位为V
+         * @param buffer_percent 剩余缓冲能量百分比，范围为0~100，50%对应于最大电流的90%
+         */
+        void UpdatePower(bool enabled, float max_watt, float current_voltage,
+                         uint8_t buffer_percent);
+
+        /**
+         * @brief 在双板通信模式下，底盘使用自己采样的电压，因此需要额外暴露接口
+         */
+        void UpdatePowerVoltage(float voltage);
+
+        /**
+         * @brief 将解算得到的数据（每个电机的转速）传递给电机类，由电机类进行PID控制、CAN输出等
+         * @note 检测底盘是否关闭，以及电机是否掉线（电机掉线则关闭底盘，需要手动重启）。
+         */
+        void Update();
 
         void Enable();
 
         void Disable();
 
-        /**
-         * @brief calculate the output of the motors under current configuration
-         * @note does not command the motor immediately
-         */
-        void Update();
+        void SetMaxMotorSpeed(float max_speed);
 
+      public:
+        // 在所有电机的PID计算完成、准备发送CAN前，调用此函数直接设置电机输出，以进行功率限制
+        static void ApplyPowerLimitWrapper(void* args);
+
+      private:
+        void ApplyPowerLimit();
+
+      public:
         void CanBridgeSetTxId(uint8_t tx_id);
 
         static void CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id,
@@ -132,35 +160,24 @@ namespace control {
         void CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
                                               communication::can_bridge_data_t data);
 
-        static void UpdatePowerLimitWrapper(void* args);
-
-        void UpdatePowerLimit();
-
-        void SetMaxMotorSpeed(float max_speed);
-
       private:
         // acquired from user
         driver::MotorCANBase** motors_ = nullptr;
         chassis_model_t model_;
 
         // pids and current speeds for each motor on the chassis
-        PowerLimit* power_limit_ = nullptr;
         float* speeds_ = nullptr;
 
         uint8_t wheel_num_ = 0;
 
-        bool power_limit_on_ = false;
-        power_limit_t power_limit_info_ = {
-            .power_limit = 120,
-            .WARNING_power = 108,
-            .WARNING_power_buff = 50,
-            .buffer_total_current_limit = 3500.0f * wheel_num_,
-            .power_total_current_limit =
-                5000.0f * wheel_num_ / 80.0f * power_limit_info_.power_limit,
-        };
+        struct {
+            bool enabled = false;
+            uint8_t buffer_percent = 0;  // 0~100
+            float max_watt = 0;
+            float voltage = 0;
 
-        volatile float current_chassis_power_ = 0;
-        volatile float current_chassis_power_buffer_ = 0;
+            NewPowerLimit* limiter = nullptr;
+        } power_limit_;
 
         float chassis_offset_;
 
@@ -176,6 +193,12 @@ namespace control {
         driver::SuperCap* super_capacitor_ = nullptr;
 
         float max_motor_speed_ = 2 * PI * 10;
+
+      public:
+        // Record for debugging
+        float chassis_vx = 0;
+        float chassis_vy = 0;
+        float chassis_vt = 0;
     };
 
     class ChassisCanBridgeSender {
@@ -196,6 +219,7 @@ namespace control {
 
         /**
          * @brief set the power limit for chassis motors
+         * @warning deprecated, use UpdatePower instead
          * @param power_limit_on whether to enable power limit
          * @param power_limit total power limit, in [W]
          * @param chassis_power Current chassis power, in [W]
@@ -204,6 +228,10 @@ namespace control {
         void SetPower(bool power_limit_on, float power_limit, float chassis_power,
                       float chassis_power_buffer, bool enable_supercap = false,
                       bool force_update = false);
+
+        // Same as Chassis::SetPower
+        void UpdatePower(bool enabled, uint8_t max_watt, float current_voltage,
+                         uint8_t buffer_percent);
 
       private:
         communication::CanBridge* can_bridge_;
@@ -218,6 +246,12 @@ namespace control {
         uint8_t chassis_current_power_reg_id_ = 0x00;
         communication::can_bridge_ext_id_t rx_id_;
         communication::can_bridge_data_t data_;
+
+      public:
+        // Record for debugging
+        float chassis_vx = 0;
+        float chassis_vy = 0;
+        float chassis_vt = 0;
     };
 
 }  // namespace control

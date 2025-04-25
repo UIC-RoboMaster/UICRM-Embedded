@@ -167,5 +167,16 @@ namespace control {
         pitch_angle_ = wrap<float>(pitch_motor_->GetTheta() + new_pitch, 0, 2 * PI);
         yaw_angle_ = wrap<float>(yaw_motor_->GetTheta() + new_yaw, 0, 2 * PI);
     }
-
+    float Gimbal::getPitchTarget() const {
+        return pitch_angle_;
+    }
+    float Gimbal::getYawTarget() const {
+        return yaw_angle_;
+    }
+    float Gimbal::getPitchByMotor() const {
+        return pitch_motor_->GetTheta() - data_.pitch_offset_;
+    }
+    float Gimbal::getYawByMotor() const {
+        return yaw_motor_->GetTheta() - data_.yaw_offset_;
+    }
 }  // namespace control

@@ -84,9 +84,25 @@ void RM_RTOS_Threads_Init(void) {
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
-    osDelay(3000);
+    osDelay(100);
     Buzzer_Sing(DJI);
-    char s[50];
+
+    while (true) {
+        uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
+
+        control::ConstrainedPID::PID_State_t state;
+        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+        state.dout = -state.dout;
+        memcpy(buffer + 2, &state, sizeof(state));
+
+        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
+        state.dout = -state.dout;
+        memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
+
+        dump(&state, sizeof(buffer));
+        osDelay(4);
+    }
+
     while (true) {
         if (referee->game_robot_status.mains_power_gimbal_output) {
             gimbal_power->High();
@@ -161,17 +177,31 @@ void RM_RTOS_Default_Task(const void* arg) {
         }
         print("Shoot Mode:%s\r\n", s);
         print(
-            "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d \r\nSWL: %d SWR: %d "
-            "TWL: %d "
+            "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
+            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
             dbus->timestamp);
-
-        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
-        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
-        print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
         print("\r\n");
+
+        // Chassis info
+        print("Chassis speed %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy,
+              chassis->chassis_vt);
+        print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
+              referee->power_heat_data.chassis_current / 1000.0,
+              referee->power_heat_data.chassis_power);
+        print("\r\n");
+
+        // Gimbal info
+        print("Gimbal target P%.3f Y%.3f\r\n",
+              gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
+              gimbal->getYawTarget() - gimbal_param->yaw_offset_);
+        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
+        print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
+        print("\r\n");
+
+        // Shoot info
         print("Shooter Cooling Heat: %hu\r\n",
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);

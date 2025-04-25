@@ -173,6 +173,18 @@ namespace control {
          */
         void UpdateOffset(float pitch_offset, float yaw_offset);
 
+        float getPitchTarget() const;
+        float getYawTarget() const;
+
+        /*
+         * @brief 通过电机编码器 获取 云台相对于云台参数标定的零点 的pitch
+         */
+        float getPitchByMotor() const;
+        /*
+         * @brief 通过电机编码器 获取 云台相对于云台参数标定的零点 的yaw
+         */
+        float getYawByMotor() const;
+
       private:
         // acquired from user
         driver::MotorCANBase* pitch_motor_ = nullptr;
