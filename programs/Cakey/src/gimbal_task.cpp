@@ -23,6 +23,7 @@
 #include "chassis_task.h"
 #include "dbus_package.h"
 #include "minipc_task.h"
+#include "config.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -174,8 +175,10 @@ void init_gimbal() {
     /**
      * pitch motor
      */
-    pitch_motor = new driver::Motor6020(can2, 0x208, 0x1FE);
+    pitch_motor = new driver::Motor6020(GIMBAL_CAN, PITCH_MOTOR_RX_ID, PITCH_MOTOR_TX_ID);
     pitch_motor->SetTransmissionRatio(1);
+
+    //
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 12,
         .ki = 0,
@@ -190,6 +193,8 @@ void init_gimbal() {
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
+
+
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
         .kp = 8192,
         .ki = 0,
@@ -216,7 +221,7 @@ void init_gimbal() {
     /**
      * yaw motor
      */
-    yaw_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
+    yaw_motor = new driver::Motor6020(GIMBAL_CAN, YAW_MOTOR_RX_ID, YAW_MOTOR_TX_ID);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
         .kp = 2,

@@ -24,6 +24,8 @@
 
 #include "gimbal_task.h"
 #include "imu_task.h"
+#include "config.h"
+
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;

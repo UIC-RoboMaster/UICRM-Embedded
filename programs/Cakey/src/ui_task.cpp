@@ -21,6 +21,8 @@
 #include "ui_task.h"
 
 #include "shoot_task.h"
+#include "config.h"
+
 
 osThreadId_t uiTaskHandle;
 communication::UserInterface* UI = nullptr;

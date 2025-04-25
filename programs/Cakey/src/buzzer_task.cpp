@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "buzzer_task.h"
+#include "config.h"
 
 osThreadId_t buzzerTaskHandle;
 

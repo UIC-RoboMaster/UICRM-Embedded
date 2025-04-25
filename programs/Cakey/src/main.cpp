@@ -36,6 +36,8 @@
 #include "remote_task.h"
 #include "shoot_task.h"
 #include "ui_task.h"
+#include "config.h"
+
 /**
  * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
  */

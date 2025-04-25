@@ -19,6 +19,8 @@
  ###########################################################*/
 
 #include "public_port.h"
+#include "config.h"
+
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
 void init_can() {

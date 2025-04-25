@@ -20,6 +20,7 @@
 
 
 #include "chassis_task.h"
+#include "config.h"
 
 #include <sys/signal.h>
 osThreadId_t chassisTaskHandle;
@@ -53,21 +54,21 @@ void init_chassis() {
     HAL_Delay(100);
     // can1 = new bsp::CAN(&hcan1, true);
     // can2 = new bsp::CAN(&hcan2, false);
-    fl_motor = new driver::Motor3508(can1, 0x202);
-    fr_motor = new driver::Motor3508(can1, 0x201);
-    bl_motor = new driver::Motor3508(can1, 0x203);
-    br_motor = new driver::Motor3508(can1, 0x204);
+    fl_motor = new driver::Motor3508(CHASSIS_CAN, FL_MOTOR_ID);
+    fr_motor = new driver::Motor3508(CHASSIS_CAN, FR_MOTOR_ID);
+    bl_motor = new driver::Motor3508(CHASSIS_CAN, BL_MOTOR_ID);
+    br_motor = new driver::Motor3508(CHASSIS_CAN, BR_MOTOR_ID);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 2500,
-        .ki = 3,
-        .kd = 0,
+        .kp = CHASSIS_PID_KP,
+        .ki = CHASSIS_PID_KI,
+        .kd = CHASSIS_PID_KD,
         .max_out = 30000,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
         .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .output_filtering_coefficient = CHASSIS_PID_FC,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
@@ -92,10 +93,10 @@ void init_chassis() {
     br_motor->SetTransmissionRatio(14);
 
     driver::supercap_init_t supercap_init = {
-        .can = can1,
-        .tx_id = 0x02e,
-        .tx_settings_id = 0x02f,
-        .rx_id = 0x030,
+        .can = SUPER_CAP_CAN,
+        .tx_id = SUPER_CAP_TX_ID,
+        .tx_settings_id = SUPER_CAP_TX_SETTINGS_ID,
+        .rx_id = SUPER_CAP_RX_ID,
     };
     super_cap = new driver::SuperCap(supercap_init);
     super_cap->Disable();

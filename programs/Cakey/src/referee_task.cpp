@@ -19,6 +19,8 @@
  ###########################################################*/
 
 #include "referee_task.h"
+#include "config.h"
+
 
 bsp::UART* referee_uart = nullptr;
 bsp::UART* refereerc_uart = nullptr;

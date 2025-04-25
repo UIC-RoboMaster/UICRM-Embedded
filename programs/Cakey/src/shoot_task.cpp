@@ -19,6 +19,8 @@
  ###########################################################*/
 
 #include "shoot_task.h"
+#include "config.h"
+
 
 static driver::MotorPWMBase* flywheel_left = nullptr;
 static driver::MotorPWMBase* flywheel_right = nullptr;

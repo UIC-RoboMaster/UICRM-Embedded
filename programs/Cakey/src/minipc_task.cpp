@@ -26,6 +26,8 @@
 #include "gimbal_task.h"
 #include "protocol.h"
 #include "referee_task.h"
+#include "config.h"
+
 
 bsp::UART* minipc_uart = nullptr;
 communication::Host* minipc = nullptr;

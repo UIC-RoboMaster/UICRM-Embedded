@@ -22,6 +22,7 @@
 
 #include "bsp_os.h"
 #include "bsp_uart.h"
+#include "config.h"
 
 #define ONBOARD_IMU_SPI hspi5
 #define ONBOARD_IMU_CS_GROUP GPIOF
