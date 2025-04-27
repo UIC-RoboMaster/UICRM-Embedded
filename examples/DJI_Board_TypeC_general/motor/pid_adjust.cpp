@@ -53,7 +53,7 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::OutputFilter |       // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
-    motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
+    motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 800,
         .ki = 0,
@@ -69,8 +69,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::OutputFilter |       // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
-    motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA |
+    motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::SPEED_LOOP_CONTROL |
                    driver::MotorCANBase::ABSOLUTE);
 
     // Snail need to be run at idle throttle for some
@@ -110,7 +110,7 @@ void PrintTask(void* argument) {
     UNUSED(argument);
     while (1) {
         control::ConstrainedPID::PID_State_t state =
-            motor->GetPIDState(driver::MotorCANBase::THETA);
+            motor->GetPIDState(driver::MotorCANBase::SPEED_LOOP_CONTROL);
         uint8_t buffer[sizeof(state) + 2] = {0xAA, 0xBB};
         memcpy(buffer + 2, &state, sizeof(state));
         dump(&state, sizeof(buffer));

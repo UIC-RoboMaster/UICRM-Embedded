@@ -79,14 +79,14 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    flywheel_motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    flywheel_motor2->SetMode(driver::MotorCANBase::OMEGA);
-    flywheel_motor3->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    flywheel_motor4->SetMode(driver::MotorCANBase::OMEGA);
+    flywheel_motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    flywheel_motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    flywheel_motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    flywheel_motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    flywheel_motor1->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    flywheel_motor2->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    flywheel_motor3->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    flywheel_motor4->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     can2 = new bsp::CAN(&hcan2, false);
     pitch_motor = new driver::Motor3508(can2, 0x207);
@@ -106,7 +106,7 @@ void RM_RTOS_Init() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
         .kp = 200,
         .ki = 1,
@@ -123,8 +123,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+    yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
                        driver::MotorCANBase::ABSOLUTE);
 
     control::ConstrainedPID::PID_Init_t motor_3508_omega_pid_init = {
@@ -144,12 +144,12 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     pitch_motor->SetTransmissionRatio(19);
-    pitch_motor->ReInitPID(motor_3508_omega_pid_init, driver::MotorCANBase::OMEGA);
-    pitch_motor->SetMode(driver::MotorCANBase::OMEGA);
+    pitch_motor->ReInitPID(motor_3508_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    pitch_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     putter_motor->SetTransmissionRatio(19);
-    putter_motor->ReInitPID(motor_3508_omega_pid_init, driver::MotorCANBase::OMEGA);
-    putter_motor->SetMode(driver::MotorCANBase::OMEGA);
+    putter_motor->ReInitPID(motor_3508_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    putter_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     sbus = new remote::SBUS(&huart3);
 

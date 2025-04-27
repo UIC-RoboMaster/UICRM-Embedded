@@ -147,8 +147,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_AUTOPILOT:
                 if (static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
-                    abs(minipc->target_angle.target_yaw) > 180.0f
-                    )
+                    abs(minipc->target_angle.target_yaw) > 180.0f)
                     break;
                 gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                   -minipc->target_angle.target_yaw);
@@ -180,9 +179,9 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
+    pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
-        .kp = 2500, //4500
+        .kp = 2500,  // 4500
         .ki = 0,
         .kd = 0,
         .max_out = 16383,
@@ -197,15 +196,15 @@ void init_gimbal() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    pitch_motor->ReInitPID(pitch_omega_pid_init, driver::MotorCANBase::OMEGA);
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+    pitch_motor->ReInitPID(pitch_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    pitch_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
                          driver::MotorCANBase::ABSOLUTE);
 
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
         .kp = 13,
         .ki = 0,
-        .kd = 4.5, //4.5
+        .kd = 4.5,  // 4.5
         .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -215,11 +214,11 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
+    yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 4000, //4000
+        .kp = 4000,  // 4000
         .ki = 0,
-        .kd = 2000, //2000
+        .kd = 2000,  // 2000
         .max_out = 16383,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
@@ -232,8 +231,8 @@ void init_gimbal() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    yaw_motor->ReInitPID(yaw_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+    yaw_motor->ReInitPID(yaw_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
                        driver::MotorCANBase::ABSOLUTE);
 
     control::gimbal_t gimbal_data;

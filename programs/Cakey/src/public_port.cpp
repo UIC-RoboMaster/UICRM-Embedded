@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "public_port.h"
+
 #include "config.h"
 
 bsp::CAN* can1 = nullptr;

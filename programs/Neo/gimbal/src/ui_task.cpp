@@ -213,7 +213,7 @@ void uiTask(void* arg) {
             br_motor_check_edge->input(true);
             yaw_motor_check_edge->input(yaw_motor->IsOnline());
             pitch_motor_check_edge->input(pitch_motor->IsOnline());
-            //steer_motor_check_edge->input(steering_motor->IsOnline());
+            // steer_motor_check_edge->input(steering_motor->IsOnline());
             dbus_edge->input(dbus->IsOnline());
             imu_cali_edge->input(imu->CaliDone());
             imu_temp_edge->input(true);

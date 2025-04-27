@@ -125,9 +125,12 @@ namespace bsp {
         };
 
         uint32_t mailbox = 0xff;
-        if (id_in_tx_mailbox_[0] == id) mailbox = CAN_TX_MAILBOX0;
-        else if (id_in_tx_mailbox_[1] == id) mailbox = CAN_TX_MAILBOX1;
-        else if (id_in_tx_mailbox_[2] == id) mailbox = CAN_TX_MAILBOX2;
+        if (id_in_tx_mailbox_[0] == id)
+            mailbox = CAN_TX_MAILBOX0;
+        else if (id_in_tx_mailbox_[1] == id)
+            mailbox = CAN_TX_MAILBOX1;
+        else if (id_in_tx_mailbox_[2] == id)
+            mailbox = CAN_TX_MAILBOX2;
 
         if (mailbox != 0xff) {
             if (HAL_CAN_IsTxMessagePending(hcan_, mailbox)) {
@@ -160,9 +163,12 @@ namespace bsp {
         };
 
         uint32_t mailbox = 0xff;
-        if (id_in_tx_mailbox_[0] == id) mailbox = CAN_TX_MAILBOX0;
-        else if (id_in_tx_mailbox_[1] == id) mailbox = CAN_TX_MAILBOX1;
-        else if (id_in_tx_mailbox_[2] == id) mailbox = CAN_TX_MAILBOX2;
+        if (id_in_tx_mailbox_[0] == id)
+            mailbox = CAN_TX_MAILBOX0;
+        else if (id_in_tx_mailbox_[1] == id)
+            mailbox = CAN_TX_MAILBOX1;
+        else if (id_in_tx_mailbox_[2] == id)
+            mailbox = CAN_TX_MAILBOX2;
 
         if (mailbox != 0xff) {
             if (HAL_CAN_IsTxMessagePending(hcan_, mailbox)) {
@@ -174,8 +180,8 @@ namespace bsp {
             return -1;
 
         // poll for can transmission to complete
-//        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
-//            ;
+        //        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
+        //            ;
 
         return length;
     }

@@ -170,7 +170,7 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
+    pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
         .kp = 4500,
         .ki = 0,
@@ -187,8 +187,8 @@ void init_gimbal() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    pitch_motor->ReInitPID(pitch_omega_pid_init, driver::MotorCANBase::OMEGA);
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+    pitch_motor->ReInitPID(pitch_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    pitch_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
                          driver::MotorCANBase::ABSOLUTE);
 
     yaw_motor->SetTransmissionRatio(1);
@@ -205,7 +205,7 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
+    yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
         .kp = 4000,
         .ki = 0,
@@ -222,8 +222,8 @@ void init_gimbal() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    yaw_motor->ReInitPID(yaw_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+    yaw_motor->ReInitPID(yaw_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
                        driver::MotorCANBase::ABSOLUTE);
 
     control::gimbal_t gimbal_data;

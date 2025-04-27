@@ -18,11 +18,11 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-
 #include "chassis_task.h"
-#include "config.h"
 
 #include <sys/signal.h>
+
+#include "config.h"
 osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
@@ -65,31 +65,31 @@ void init_chassis() {
         .kd = CHASSIS_PID_KD,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = CHASSIS_PID_FC,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,  // 死区
+        .A = 3 * PI,    // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,    // 启动变速积分的死区
+        .output_filtering_coefficient = CHASSIS_PID_FC,         // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
-    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    fl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     fl_motor->SetTransmissionRatio(14);
 
-    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    fr_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     fr_motor->SetTransmissionRatio(14);
 
-    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    bl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     bl_motor->SetTransmissionRatio(14);
 
-    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    br_motor->SetMode(driver::MotorCANBase::OMEGA);
+    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    br_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     br_motor->SetTransmissionRatio(14);
 
     driver::supercap_init_t supercap_init = {
@@ -129,8 +129,9 @@ void init_chassis() {
     // chassis->CanBridgeSetTxId(0x51);
     // can_bridge->RegisterRxCallback(0x70, chassis->CanBridgeUpdateEventXYWrapper, chassis);
     // can_bridge->RegisterRxCallback(0x71, chassis->CanBridgeUpdateEventTurnWrapper, chassis);
-    // can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
-    // can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
+    // can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper,
+    // chassis); can_bridge->RegisterRxCallback(0x73,
+    // chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
 
     HAL_Delay(300);
     init_buzzer();
@@ -155,7 +156,11 @@ void chassisTask(void* arg) {
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
-            break;
+            while (remote_mode == REMOTE_MODE_KILL) {
+                osDelay(CHASSIS_OS_DELAY + 2);
+            }
+            chassis->Enable();
+            continue;
         }
         remote::keyboard_t keyboard;
         if (dbus->IsOnline()) {

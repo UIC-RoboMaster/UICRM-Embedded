@@ -91,11 +91,11 @@ void RM_RTOS_Default_Task(const void* arg) {
         uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
 
         control::ConstrainedPID::PID_State_t state;
-        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+        state = yaw_motor->GetPIDState(driver::MotorCANBase::SPEED_LOOP_CONTROL);
         state.dout = -state.dout;
         memcpy(buffer + 2, &state, sizeof(state));
 
-        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
+        state = yaw_motor->GetPIDState(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
         state.dout = -state.dout;
         memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
 
@@ -208,7 +208,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
         print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
               ahrs->INS_angle[2]);
-        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
+        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw);
         print("accuracy: %.3f", minipc->target_angle.accuracy);
         osDelay(100);
     }

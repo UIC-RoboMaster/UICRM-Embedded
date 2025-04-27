@@ -23,8 +23,7 @@
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
 
-#define M3508_POWER_MODEL \
-    { 0.000931, 0.000455, 0.000006, 39.151850 }
+#define M3508_POWER_MODEL {0.000931, 0.000455, 0.000006, 39.151850}
 
 namespace control {
 
@@ -158,13 +157,14 @@ namespace control {
             // 什么几把逻辑，连报错都没有就直接禁用是吧
             if (!motors_[i]->IsOnline()) {
                 need_shutdown = true;
+                print("Checked motor offline, Kill Chassis!\r\n");
                 break;
             }
         }
 
         // 如果此标志置否，则底盘电机将被禁用
         if (need_shutdown) {
-            // Disable();
+            Disable();
         }
 
         // 根据底盘的开关，控制四个电机开关

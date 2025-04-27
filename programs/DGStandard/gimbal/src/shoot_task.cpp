@@ -198,11 +198,11 @@ void init_shoot() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.01,           // 输出滤波系数
+        .output_filtering_coefficient = 0.01,          // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
         .kp = 1000,
         .ki = 0,
@@ -221,8 +221,8 @@ void init_shoot() {
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
 
     };
-    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    steering_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
 
