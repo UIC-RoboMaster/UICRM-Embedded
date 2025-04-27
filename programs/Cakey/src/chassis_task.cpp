@@ -18,11 +18,11 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-
 #include "chassis_task.h"
-#include "config.h"
 
 #include <sys/signal.h>
+
+#include "config.h"
 osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
@@ -65,11 +65,11 @@ void init_chassis() {
         .kd = CHASSIS_PID_KD,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = CHASSIS_PID_FC,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,  // 死区
+        .A = 3 * PI,    // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,    // 启动变速积分的死区
+        .output_filtering_coefficient = CHASSIS_PID_FC,         // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -129,8 +129,9 @@ void init_chassis() {
     // chassis->CanBridgeSetTxId(0x51);
     // can_bridge->RegisterRxCallback(0x70, chassis->CanBridgeUpdateEventXYWrapper, chassis);
     // can_bridge->RegisterRxCallback(0x71, chassis->CanBridgeUpdateEventTurnWrapper, chassis);
-    // can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
-    // can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
+    // can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper,
+    // chassis); can_bridge->RegisterRxCallback(0x73,
+    // chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
 
     HAL_Delay(300);
     init_buzzer();

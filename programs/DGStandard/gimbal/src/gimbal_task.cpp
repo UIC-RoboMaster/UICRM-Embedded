@@ -162,9 +162,9 @@ void gimbalTask(void* arg) {
                         break;
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
-                }
-                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
-                break;
+            }
+            gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+            break;
             default:
                 break;
         }

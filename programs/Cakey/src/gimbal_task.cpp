@@ -21,9 +21,9 @@
 #include "gimbal_task.h"
 
 #include "chassis_task.h"
+#include "config.h"
 #include "dbus_package.h"
 #include "minipc_task.h"
-#include "config.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -193,7 +193,6 @@ void init_gimbal() {
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
-
 
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
         .kp = 8192,

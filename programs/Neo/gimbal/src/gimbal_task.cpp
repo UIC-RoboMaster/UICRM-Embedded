@@ -147,8 +147,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_AUTOPILOT:
                 if (static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
-                    abs(minipc->target_angle.target_yaw) > 180.0f
-                    )
+                    abs(minipc->target_angle.target_yaw) > 180.0f)
                     break;
                 gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                   -minipc->target_angle.target_yaw);
@@ -182,7 +181,7 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
-        .kp = 2500, //4500
+        .kp = 2500,  // 4500
         .ki = 0,
         .kd = 0,
         .max_out = 16383,
@@ -205,7 +204,7 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
         .kp = 13,
         .ki = 0,
-        .kd = 4.5, //4.5
+        .kd = 4.5,  // 4.5
         .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -217,9 +216,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 4000, //4000
+        .kp = 4000,  // 4000
         .ki = 0,
-        .kd = 2000, //2000
+        .kd = 2000,  // 2000
         .max_out = 16383,
         .max_iout = 10000,
         .deadband = 0,                          // 死区

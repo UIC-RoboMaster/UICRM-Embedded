@@ -28,7 +28,7 @@
  * @author BNU-HKBU UIC RoboMaster
  * @date   2023-10-01
  * @version 1.0
-*/
+ */
 // motor init
 #define CHASSIS_CAN can1
 #define FL_MOTOR_ID 0x202
@@ -53,7 +53,7 @@
  * @author BNU-HKBU UIC RoboMaster
  * @date   2023-10-01
  * @version 1.0
-*/
+ */
 // motor init
 #define GIMBAL_CAN can2
 #define PITCH_MOTOR_RX_ID 0x208

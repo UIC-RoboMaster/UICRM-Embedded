@@ -30,11 +30,11 @@
 #include "imu_task.h"
 #include "public_port.h"
 // #include "referee_task.h"
+#include "minipc_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"
 #include "ui_task.h"
 #include "user_define.h"
-#include "minipc_task.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
     print_use_uart(&huart1, true, 921600);
@@ -68,7 +68,7 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     osDelay(3000);
     Buzzer_Sing(DJI);
-//    Buzzer_Sing(War_Cant_of_Mars);
+    //    Buzzer_Sing(War_Cant_of_Mars);
     // while (true) {
     //     clear_screen();
     //     set_cursor(0, 0);
@@ -179,9 +179,10 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
               referee->game_robot_status.max_HP);
         print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
-//        print("\r\n");
-//        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
-//        print("Vision accuracy: %.3f", minipc->target_angle.accuracy);
+        //        print("\r\n");
+        //        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch,
+        //        minipc->target_angle.target_yaw); print("Vision accuracy: %.3f",
+        //        minipc->target_angle.accuracy);
         osDelay(75);
     }
 }

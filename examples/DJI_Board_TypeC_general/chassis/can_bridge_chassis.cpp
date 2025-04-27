@@ -81,22 +81,22 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     br_motor->SetTransmissionRatio(14);
 
-//    driver::supercap_init_t supercap_init = {
-//        .can = can2,
-//        .tx_id = 0x02e,
-//        .tx_settings_id = 0x02f,
-//        .rx_id = 0x030,
-//    };
-//    super_cap = new driver::SuperCap(supercap_init);
-//    super_cap->Disable();
-//    super_cap->TransmitSettings();
-//    super_cap->Enable();
-//    super_cap->TransmitSettings();
-//    super_cap->SetMaxVoltage(23.5f);
-//    super_cap->SetPowerTotal(120.0f);
-//    super_cap->SetMaxChargePower(150.0f);
-//    super_cap->SetMaxDischargePower(250.0f);
-//    super_cap->SetPerferBuffer(40.0f);
+    //    driver::supercap_init_t supercap_init = {
+    //        .can = can2,
+    //        .tx_id = 0x02e,
+    //        .tx_settings_id = 0x02f,
+    //        .rx_id = 0x030,
+    //    };
+    //    super_cap = new driver::SuperCap(supercap_init);
+    //    super_cap->Disable();
+    //    super_cap->TransmitSettings();
+    //    super_cap->Enable();
+    //    super_cap->TransmitSettings();
+    //    super_cap->SetMaxVoltage(23.5f);
+    //    super_cap->SetPowerTotal(120.0f);
+    //    super_cap->SetMaxChargePower(150.0f);
+    //    super_cap->SetMaxDischargePower(250.0f);
+    //    super_cap->SetPerferBuffer(40.0f);
 
     can_bridge = new communication::CanBridge(can2, 0x52);
 
