@@ -163,9 +163,9 @@ void gimbalTask(void* arg) {
                     minipc->target_angle.target_yaw < 10e3 && minipc->target_angle.shoot_cmd) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
-                }
-                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
-                break;
+            }
+            gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+            break;
             default:
                 break;
         }
@@ -182,6 +182,7 @@ void init_gimbal() {
      */
     pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
     pitch_motor->SetTransmissionRatio(1);
+
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 12,
         .ki = 0,
@@ -195,7 +196,6 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
         .kp = 8192,
         .ki = 0,
@@ -214,9 +214,12 @@ void init_gimbal() {
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
-    pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+
+    pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+    pitch_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
                          driver::MotorCANBase::ABSOLUTE);
 
     /**
@@ -239,7 +242,7 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
                 control::ConstrainedPID::Integral_Limit};
-    yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
         .kp = 6000,
         .ki = 0,
@@ -258,9 +261,9 @@ void init_gimbal() {
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
-    yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
+    yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
                        driver::MotorCANBase::ABSOLUTE);
     yaw_motor->SetSpeedFilter(0.03);
 

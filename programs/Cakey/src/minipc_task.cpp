@@ -23,11 +23,10 @@
 #include "bsp_thread.h"
 #include "bsp_uart.h"
 #include "chassis_task.h"
+#include "config.h"
 #include "gimbal_task.h"
 #include "protocol.h"
 #include "referee_task.h"
-#include "config.h"
-
 
 bsp::UART* minipc_uart = nullptr;
 communication::Host* minipc = nullptr;
@@ -52,7 +51,6 @@ const bsp::thread_init_t thread_init = {
 };
 
 void init_minipc() {
-
     // miniPC uart
     minipc_uart = new bsp::UART(&huart7);
     minipc_uart->SetBaudrate(921600);

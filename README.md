@@ -127,15 +127,19 @@ integrated build commands that can help you automatically format your changes.
 
 * Linux's users can simply install it using `sudo apt install clang-format-10`.
 * Mac and Windows users need to download prebuilt binaries from [here](https://releases.llvm.org/download.html).
+  * After install, you need to add the `bin` directory to your `PATH` environment variable.
+* Use Console Commands `clang-format --version` to check if the installation is successful.
+  
+**Format using CLion**  
 
-**Format using CLion**
+After install `clang-format`, you need to reload the CMake project in CLion.  Then CMAKE target `check-format` and `format` will be available.
 
-Choose the CMake target and compile it. CLion will automatically format the code for you.
+Choose the CMake target and **click the compile button**. CLion will automatically format the code for you.
 1. `check-format`: Check `diff` between current source and formatted source (without modifying any source file)
 2. `format`: Format all source files (**Modifies** file in place)
-
-**Format manually**
-
+  
+**Format manually**  
+  
 You can run the following commands inside `build/` to format your changes.
 
 1. `make check-format`: Check `diff` between current source and formatted source (without modifying any source file)
