@@ -134,7 +134,7 @@ integrated build commands that can help you automatically format your changes.
 
 After install `clang-format`, you need to reload the CMake project in CLion.  Then CMAKE target `check-format` and `format` will be available.
 
-Choose the CMake target and click the compile button. CLion will automatically format the code for you.
+Choose the CMake target and **click the compile button**. CLion will automatically format the code for you.
 1. `check-format`: Check `diff` between current source and formatted source (without modifying any source file)
 2. `format`: Format all source files (**Modifies** file in place)
   
