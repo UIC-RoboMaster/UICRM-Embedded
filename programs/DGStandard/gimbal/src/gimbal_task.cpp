@@ -143,9 +143,7 @@ void gimbalTask(void* arg) {
                 if (minipc->target_angle.shoot_cmd && is_autoaim) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
-                }
-                else
-                {
+                } else {
                     gimbal->TargetRel(pitch_diff, yaw_diff);
                 }
                 gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
@@ -162,8 +160,7 @@ void gimbalTask(void* arg) {
                 //                break;
             case REMOTE_MODE_AUTOAIM:
                 if (minipc->target_angle.target_pitch < 10e3 &&
-                    minipc->target_angle.target_yaw < 10e3 &&
-                    minipc->target_angle.shoot_cmd) {
+                    minipc->target_angle.target_yaw < 10e3 && minipc->target_angle.shoot_cmd) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
                 }
@@ -275,8 +272,7 @@ void init_gimbal() {
     gimbal_param = gimbal->GetData();
 }
 
-inline bool gimbal_en()
-{
+inline bool gimbal_en() {
     bool gimbal_en = true;
     gimbal_en &= remote_mode != REMOTE_MODE_KILL;
 #ifdef HAS_REFEREE
@@ -286,8 +282,7 @@ inline bool gimbal_en()
 }
 
 void check_kill() {
-    while (!gimbal_en())
-    {
+    while (!gimbal_en()) {
         yaw_motor->Disable();
         pitch_motor->Disable();
         steering_motor->Disable();
