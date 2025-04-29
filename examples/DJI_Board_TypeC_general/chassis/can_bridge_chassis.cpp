@@ -65,20 +65,20 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
-    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    fl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     fl_motor->SetTransmissionRatio(14);
 
-    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    fr_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     fr_motor->SetTransmissionRatio(14);
 
-    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    bl_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    bl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     bl_motor->SetTransmissionRatio(14);
 
-    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    br_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    br_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     br_motor->SetTransmissionRatio(14);
 
     //    driver::supercap_init_t supercap_init = {

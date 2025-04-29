@@ -229,15 +229,15 @@ void remoteTask(void* arg) {
             switch (shoot_speed) {
                 case SHOOT_FREQUENCY_NORMAL:
                     steering_motor->ReInitPID(steering_motor_theta_normal_pid_init,
-                                              driver::MotorCANBase::THETA);
+                                              driver::MotorCANBase::SPEED_LOOP_CONTROL);
                     break;
                 case SHOOT_FREQUENCY_FAST:
                     steering_motor->ReInitPID(steering_motor_theta_fast_pid_init,
-                                              driver::MotorCANBase::THETA);
+                                              driver::MotorCANBase::SPEED_LOOP_CONTROL);
                     break;
                 case SHOOT_FREQUENCY_BURST:
                     steering_motor->ReInitPID(steering_motor_theta_burst_pid_init,
-                                              driver::MotorCANBase::THETA);
+                                              driver::MotorCANBase::SPEED_LOOP_CONTROL);
                     break;
                 default:
                     break;

@@ -169,10 +169,10 @@ void init_shoot() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_left->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    flywheel_right->SetMode(driver::MotorCANBase::OMEGA);
+    flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    flywheel_left->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    flywheel_right->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     steering_motor = new driver::Motor2006(can2, 0x203);
 
@@ -192,7 +192,7 @@ void init_shoot() {
                 control::ConstrainedPID::OutputFilter |       // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
-    steering_motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
+    steering_motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t steering_omega_pid_init = {
         .kp = 800,
         .ki = 0,
@@ -208,8 +208,8 @@ void init_shoot() {
                 control::ConstrainedPID::OutputFilter |       // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
-    steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    steering_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     //    steering_motor->SetMode(driver::MotorCANBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
