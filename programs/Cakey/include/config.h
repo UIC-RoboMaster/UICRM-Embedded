@@ -57,7 +57,7 @@
 // motor init
 #define GIMBAL_CAN can2
 #define PITCH_MOTOR_RX_ID 0x208
-#define PITCH_MOTOR_TX_ID 0x1FE
+#define PITCH_MOTOR_TX_ID 0x1FF
 #define YAW_MOTOR_RX_ID 0x20A
 #define YAW_MOTOR_TX_ID 0x2FE
 
