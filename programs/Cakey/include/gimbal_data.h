@@ -21,11 +21,12 @@
 #pragma once
 #include "gimbal.h"
 #include "pid.h"
+#include "config.h"
 
 // basic information of gimbal
 const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = 7.16f,
-    .yaw_offset_ = 4.6f,
+    .pitch_offset_ = PITCH_OFFSET,
+    .yaw_offset_ = YAW_OFFSET,
     .pitch_max_ = 0.45f,
     .yaw_max_ = PI,
     .yaw_circle_ = true,

@@ -61,6 +61,10 @@
 #define YAW_MOTOR_RX_ID 0x20A
 #define YAW_MOTOR_TX_ID 0x2FE
 
+// motor offset
+#define PITCH_OFFSET 7.16f
+#define YAW_OFFSET 4.6f
+
 // pid
 #define PITCH_PID_KP 2
 #define PITCH_PID_KI 2
