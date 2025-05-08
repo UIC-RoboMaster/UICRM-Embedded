@@ -26,7 +26,7 @@
 #define M3508_POWER_MODEL \
     { 0.000931, 0.000455, 0.000006, 39.151850 }
 
-namespace control {
+    namespace control {
 
     Chassis::Chassis(const chassis_t chassis) {
         // acquired from user
@@ -154,11 +154,16 @@ namespace control {
         // 如果有电机掉线，则关闭整个底盘
         bool need_shutdown = !IsOnline();
         for (int i = 0; i < wheel_num_; i++) {
+            // 如果某个电机掉线，底盘将被禁用
+            // 什么几把逻辑，连报错都没有就直接禁用是吧
             if (!motors_[i]->IsOnline()) {
                 need_shutdown = true;
+                print("Checked motor offline, Kill Chassis!\r\n");
                 break;
             }
         }
+
+        // 如果此标志置否，则底盘电机将被禁用
         if (need_shutdown) {
             Disable();
         }
@@ -364,14 +369,17 @@ namespace control {
             data_.data_two_float.data[1] = y_speed;
             rx_id_.data.reg = chassis_xy_reg_id_;
             can_bridge_->Send(rx_id_, data_);
+            osDelay(1);
             data_.data_two_float.data[0] = 1.0f;
             data_.data_two_float.data[1] = turn_speed;
             rx_id_.data.reg = chassis_turn_on_reg_id_;
             can_bridge_->Send(rx_id_, data_);
+            osDelay(1);
         } else {
             data_.data_two_float.data[0] = 0.0f;
             data_.data_two_float.data[1] = 0.0f;
             can_bridge_->Send(rx_id_, data_);
+            osDelay(1);
         }
         chassis_vx = x_speed;
         chassis_vy = y_speed;
@@ -390,12 +398,14 @@ namespace control {
                 data_.data_two_float.data[1] = power_limit;
                 rx_id_.data.reg = chassis_power_limit_reg_id_;
                 can_bridge_->Send(rx_id_, data_);
+                osDelay(1);
             }
             {
                 data_.data_two_float.data[0] = chassis_power;
                 data_.data_two_float.data[1] = chassis_power_buffer;
                 rx_id_.data.reg = chassis_current_power_reg_id_;
                 can_bridge_->Send(rx_id_, data_);
+                osDelay(1);
             }
         }
     }
