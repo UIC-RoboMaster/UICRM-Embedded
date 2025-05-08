@@ -136,6 +136,30 @@ void gimbalTask(void* arg) {
                        speed_offset * (1 - offset_filter_ratio);
 
         yaw_motor->SetSpeedOffset(speed_offset);
+        if (is_autoaim && minipc->IsOnline() && minipc->target_angle.target_robot_id != 0) {
+            gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
+            gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+        } else {
+            switch (remote_mode) {
+                case REMOTE_MODE_SPIN:
+                case REMOTE_MODE_FOLLOW:
+                    // 如果是跟随模式或者旋转模式，将IMU作为参考系
+                    gimbal->TargetRel(pitch_diff, yaw_diff);
+                    gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+                    break;
+                case REMOTE_MODE_ADVANCED:
+                    // 如果是高级模式，将电机获取的云台当前角度作为参考系
+                    gimbal->TargetRel(pitch_diff, yaw_diff);
+                    gimbal->Update();
+                    break;
+                    //            case REMOTE_MODE_AUTOAIM:
+                    //                gimbal->TargetReal(minipc->target_angle.target_pitch,
+                    //                                   minipc->target_angle.target_yaw);
+                    //                gimbal->Update();
+                    //                break;
+                case REMOTE_MODE_AUTOAIM:
+                    if (static_cast<float>(minipc->target_angle.accuracy) < 60.0f)
+                        break;
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:

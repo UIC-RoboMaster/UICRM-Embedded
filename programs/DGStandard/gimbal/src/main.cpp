@@ -113,14 +113,69 @@ void RM_RTOS_Default_Task(const void* arg) {
         //        osDelay(2);
         set_cursor(0, 0);
         clear_screen();
-
-        // Mode info
-        print("Mode:%s\r\n", remote_mode_str(remote_mode));
-        print("Shoot Fric Mode:%s\r\n", shoot_fric_mode_str(shoot_flywheel_mode));
-        print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_load_mode));
-        print("\r\n");
-
-        // DBUS info
+        switch (remote_mode) {
+            case REMOTE_MODE_PREPARE:
+                strcpy(s, "PREPARE");
+                break;
+            case REMOTE_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case REMOTE_MODE_KILL:
+                strcpy(s, "KILL");
+                break;
+            case REMOTE_MODE_FOLLOW:
+                strcpy(s, "FOLLOW");
+                break;
+            case REMOTE_MODE_AUTOAIM:
+                strcpy(s, "AUTOAIM");
+                break;
+            case REMOTE_MODE_ADVANCED:
+                strcpy(s, "ADVANCED");
+                break;
+            case REMOTE_MODE_SPIN:
+                strcpy(s, "SPIN");
+                break;
+            default:
+                strcpy(s, "UNKNOWN");
+                break;
+        }
+        print("Mode:%s\r\n", s);
+        switch (shoot_flywheel_mode) {
+            case SHOOT_FRIC_MODE_PREPARING:
+                strcpy(s, "PREPARE");
+                break;
+            case SHOOT_FRIC_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case SHOOT_FRIC_MODE_PREPARED:
+                strcpy(s, "PREPARED");
+                break;
+            case SHOOT_FRIC_MODE_DISABLE:
+                strcpy(s, "DISABLE");
+                break;
+            default:
+                strcpy(s, "UNKNOWN");
+                break;
+        }
+        print("Shoot Fric Mode:%s\r\n", s);
+        switch (shoot_load_mode) {
+            case SHOOT_MODE_STOP:
+                strcpy(s, "STOP");
+                break;
+            case SHOOT_MODE_IDLE:
+                strcpy(s, "IDLE");
+                break;
+            case SHOOT_MODE_DISABLE:
+                strcpy(s, "DISABLE");
+                break;
+            case SHOOT_MODE_SINGLE:
+                strcpy(s, "SINGLE");
+                break;
+            case SHOOT_MODE_BURST:
+                strcpy(s, "BURST");
+                break;
+        }
+        print("Shoot Mode:%s\r\n", s);
         print(
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
@@ -151,23 +206,11 @@ void RM_RTOS_Default_Task(const void* arg) {
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        print("\r\n");
-
-        // Online info
-        print("Comm Stat:  ");
-        print_enabled("DBUS", dbus->IsOnline());
-        print_enabled("Referee", referee->IsOnline());
-        print("\r\n");
-        print("Motor Stat: ");
-        print_enabled("Yaw", yaw_motor->IsOnline());
-        print_enabled("Pitch", pitch_motor->IsOnline());
-        print("\r\n");
-        print("Ref Pwr En: ");
-        print_enabled("Chassis", referee->game_robot_status.mains_power_chassis_output);
-        print_enabled("Gimbal", referee->game_robot_status.mains_power_gimbal_output);
-        print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
-        print("\r\n");
-
-        osDelay(50);
+        print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
+              ahrs->INS_angle[2]);
+        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw);
+        print("accuracy: %.3f", minipc->target_angle.accuracy);
+        osDelay(100);
     }
 }

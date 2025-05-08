@@ -162,6 +162,10 @@ void chassisTask(void* arg) {
         // 如果传输的电压为0，底盘不会保存这个值，随后底盘的chassis_task会采样自己的电压值并更新。
         chassis->UpdatePower(true, max_watt, 0, buffer_percent);
         osDelay(CHASSIS_OS_DELAY);
+        chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
+                          referee->power_heat_data.chassis_power,
+                          referee->power_heat_data.chassis_power_buffer, false);
+        osDelay(CHASSIS_OS_DELAY);
     }
 }
 
