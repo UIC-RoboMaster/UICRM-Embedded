@@ -242,6 +242,7 @@ namespace communication {
                 memcpy(&pack, data, length);
                 break;
             case TARGET_ANGLE:
+                // memset(&target_angle, 0, sizeof(target_angle));
                 memcpy(&target_angle, data, length);
                 break;
             case NO_TARGET_FLAG:

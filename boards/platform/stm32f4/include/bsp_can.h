@@ -212,6 +212,8 @@ namespace bsp {
 
         uint8_t ext_id_suffix_;
 
+        uint32_t id_in_tx_mailbox_[3] = {0};
+
         static std::unordered_map<CAN_HandleTypeDef*, CAN*> ptr_map;
         static CAN* FindInstance(CAN_HandleTypeDef* hcan);
         static bool HandleExists(CAN_HandleTypeDef* hcan);
