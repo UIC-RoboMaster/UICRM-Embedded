@@ -163,9 +163,9 @@ void gimbalTask(void* arg) {
                     minipc->target_angle.target_yaw < 10e3 && minipc->target_angle.shoot_cmd) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
-                }
-                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
-                break;
+            }
+            gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+            break;
             default:
                 break;
         }
@@ -182,6 +182,7 @@ void init_gimbal() {
      */
     pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
     pitch_motor->SetTransmissionRatio(1);
+
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 12,
         .ki = 0,
