@@ -25,8 +25,6 @@
 #include "bsp_uart.h"
 #include "usart.h"
 
-extern bsp::UART* print_uart;
-
 /**
  * @brief 使用串口进行调试打印
  *
