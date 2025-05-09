@@ -217,8 +217,8 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    pitch_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
-                         driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
+                         driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::ABSOLUTE);
 
     /**
      * yaw motor
@@ -261,8 +261,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
+                       driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetSpeedFilter(0.03);
 
     // 初始化云台对象
     gimbal_data.pitch_motor = pitch_motor;
