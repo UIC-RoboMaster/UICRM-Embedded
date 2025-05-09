@@ -68,9 +68,11 @@ void RM_RTOS_Init() {
     motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    motor1->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    motor1->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                    driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     motor2->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    motor3->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    motor3->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                    driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     motor4->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     // Snail need to be run at idle throttle for some

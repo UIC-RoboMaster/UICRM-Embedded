@@ -68,7 +68,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    motor1->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    motor1->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
+                    driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);

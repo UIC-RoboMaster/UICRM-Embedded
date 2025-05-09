@@ -175,7 +175,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
         print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
               ahrs->INS_angle[2]);
-        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
+        print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw);
         print("accuracy: %.3f", minipc->target_angle.accuracy);
         osDelay(100);
     }
