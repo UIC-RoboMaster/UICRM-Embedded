@@ -74,11 +74,13 @@ void RM_RTOS_Init() {
     fr_motor->SetTransmissionRatio(14);
 
     bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    bl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    bl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                      driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     bl_motor->SetTransmissionRatio(14);
 
     br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    br_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    br_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                      driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     br_motor->SetTransmissionRatio(14);
 
     //    driver::supercap_init_t supercap_init = {

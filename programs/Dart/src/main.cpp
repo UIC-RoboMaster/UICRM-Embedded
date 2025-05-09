@@ -83,9 +83,11 @@ void RM_RTOS_Init() {
     flywheel_motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     flywheel_motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     flywheel_motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    flywheel_motor1->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    flywheel_motor1->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                             driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     flywheel_motor2->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    flywheel_motor3->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    flywheel_motor3->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                             driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     flywheel_motor4->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     can2 = new bsp::CAN(&hcan2, false);
@@ -124,8 +126,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
+                       driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::ABSOLUTE);
 
     control::ConstrainedPID::PID_Init_t motor_3508_omega_pid_init = {
         .kp = 2500,
