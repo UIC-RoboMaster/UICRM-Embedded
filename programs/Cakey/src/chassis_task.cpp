@@ -76,20 +76,20 @@ void init_chassis() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
-    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    fl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
     fl_motor->SetTransmissionRatio(14);
 
-    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    fr_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
     fr_motor->SetTransmissionRatio(14);
 
-    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    bl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
     bl_motor->SetTransmissionRatio(14);
 
-    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    br_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(14);
 
     driver::supercap_init_t supercap_init = {
@@ -156,11 +156,7 @@ void chassisTask(void* arg) {
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
-            while (remote_mode == REMOTE_MODE_KILL) {
-                osDelay(CHASSIS_OS_DELAY + 2);
-            }
-            chassis->Enable();
-            continue;
+            break;
         }
         remote::keyboard_t keyboard;
         if (dbus->IsOnline()) {

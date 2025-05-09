@@ -19,14 +19,13 @@
  ###########################################################*/
 
 #pragma once
-#include "config.h"
 #include "gimbal.h"
 #include "pid.h"
 
 // basic information of gimbal
 const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = PITCH_OFFSET,
-    .yaw_offset_ = YAW_OFFSET,
+    .pitch_offset_ = 5.05,
+    .yaw_offset_ = 3.1761f,
     .pitch_max_ = 0.45f,
     .yaw_max_ = PI,
     .yaw_circle_ = true,
