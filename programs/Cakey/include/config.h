@@ -57,13 +57,9 @@
 // motor init
 #define GIMBAL_CAN can2
 #define PITCH_MOTOR_RX_ID 0x208
-#define PITCH_MOTOR_TX_ID 0x1FF
+#define PITCH_MOTOR_TX_ID 0x1FE
 #define YAW_MOTOR_RX_ID 0x20A
 #define YAW_MOTOR_TX_ID 0x2FE
-
-// motor offset
-#define PITCH_OFFSET 7.16f
-#define YAW_OFFSET 4.6f
 
 // pid
 #define PITCH_PID_KP 2
