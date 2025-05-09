@@ -27,7 +27,7 @@
 
 #define MAX_PRINT_LEN 256
 
-bsp::UART* print_uart = NULL;
+static bsp::UART* print_uart = NULL;
 #ifndef NO_USB
 static bsp::VirtualUSB* print_usb = NULL;
 #endif
