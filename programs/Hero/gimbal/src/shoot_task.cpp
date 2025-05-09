@@ -163,7 +163,8 @@ void init_shoot() {
     flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     flywheel_left->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    flywheel_right->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    flywheel_right->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                            driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
 
     steering_motor = new driver::Motor3508(can1, 0x202);
 
@@ -201,7 +202,8 @@ void init_shoot() {
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
     };
     steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    steering_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    steering_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
+                            driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);

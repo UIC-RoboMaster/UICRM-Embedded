@@ -171,7 +171,8 @@ void init_shoot() {
     };
     flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    flywheel_left->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    flywheel_left->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                           driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
     flywheel_right->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
 
     steering_motor = new driver::Motor2006(can2, 0x203);
@@ -209,7 +210,8 @@ void init_shoot() {
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
     steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    steering_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    steering_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
+                            driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     //    steering_motor->SetMode(driver::MotorCANBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);

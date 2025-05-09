@@ -23,10 +23,9 @@
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
 
-#define M3508_POWER_MODEL \
-    { 0.000931, 0.000455, 0.000006, 39.151850 }
+#define M3508_POWER_MODEL {0.000931, 0.000455, 0.000006, 39.151850}
 
-    namespace control {
+namespace control {
 
     Chassis::Chassis(const chassis_t chassis) {
         // acquired from user
