@@ -192,6 +192,8 @@ namespace bsp {
          * @note should not be called explicitly form the application side
          */
         void RxExtendCallback(CAN_RxHeaderTypeDef header, uint8_t* data);
+        // 将FindInstance从private改到public以便访问
+        static CAN* FindInstance(CAN_HandleTypeDef* hcan);
 
       private:
         void ConfigureFilter(bool is_master);
@@ -213,7 +215,6 @@ namespace bsp {
         uint8_t ext_id_suffix_;
 
         static std::unordered_map<CAN_HandleTypeDef*, CAN*> ptr_map;
-        static CAN* FindInstance(CAN_HandleTypeDef* hcan);
         static bool HandleExists(CAN_HandleTypeDef* hcan);
         static void RxFIFO0MessagePendingCallback(CAN_HandleTypeDef* hcan);
     };
