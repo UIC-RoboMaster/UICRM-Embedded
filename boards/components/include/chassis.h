@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <adernal_supercap.h>
+
 #include "MotorCanBase.h"
 #include "can_bridge.h"
 #include "connection_driver.h"
@@ -45,7 +47,7 @@ namespace control {
         float offset = 0;
         bool power_limit_on = false;
         bool has_super_capacitor = false;
-        driver::SuperCap* super_capacitor = nullptr;
+        driver::Adernal_SuperCap* super_capacitor = nullptr;
     };
 
     /**

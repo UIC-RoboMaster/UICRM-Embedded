@@ -20,11 +20,12 @@
 // Created by Peter Jiang on 25-6-10.
 //
 #include "main.h"
-#include "usart.h"
+
+#include "adernal_supercap.h"
 #include "bsp_can.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "adernal_supercap.h"
+#include "usart.h"
 
 // CAN实例
 static bsp::CAN* can1 = nullptr;
@@ -63,13 +64,14 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(500);
 
     // 设置预期功率为50W，Work模式，不开启Exceed
-    if (adernal_supercap->setControl(50, driver::Adernal_CtrlMode_Work, driver::Adernal_CtrlExceed_Off)) {
+    if (adernal_supercap->setControl(50, driver::Adernal_CtrlMode_Work,
+                                     driver::Adernal_CtrlExceed_Off)) {
         print("Set Expect Power to 50W, Work mode, Exceed OFF\r\n");
     } else {
         print("Failed to set SuperCap parameters\r\n");
     }
 
-    while(true) {
+    while (true) {
         // 处理就绪状态打印
         if (adernal_supercap->hasNewReadyStatus()) {
             print("SuperCap Ready: %s\r\n", adernal_supercap->isReady() ? "Yes" : "No");
@@ -79,21 +81,17 @@ void RM_RTOS_Default_Task(const void* arg) {
         // 处理反馈数据打印
         if (adernal_supercap->hasNewFeedback()) {
             const driver::Adernal_Fb_Typedef& feedback = adernal_supercap->getFeedback();
-            print("Voltage: %.2fV Power: %.2fW Work1:%d%% Work2:%d%%\r\n",
-                  feedback.Voltage_NoESR,
-                  feedback.Power_Battery,
-                  feedback.Work_Sentry1,
-                  feedback.Work_Sentry2);
+            print("Voltage: %.2fV Power: %.2fW Work1:%d%% Work2:%d%%\r\n", feedback.Voltage_NoESR,
+                  feedback.Power_Battery, feedback.Work_Sentry1, feedback.Work_Sentry2);
             adernal_supercap->clearFeedbackFlag();
         }
 
         // 处理安全等级打印
         if (adernal_supercap->hasNewSafetyInfo()) {
-            const driver::Adernal_SafetyLevel_Typedef* safety_levels = adernal_supercap->getSafetyLevels();
-            print("Safety Levels: %d %d %d %d %d %d %d %d\r\n",
-                  safety_levels[0], safety_levels[1],
-                  safety_levels[2], safety_levels[3],
-                  safety_levels[4], safety_levels[5],
+            const driver::Adernal_SafetyLevel_Typedef* safety_levels =
+                adernal_supercap->getSafetyLevels();
+            print("Safety Levels: %d %d %d %d %d %d %d %d\r\n", safety_levels[0], safety_levels[1],
+                  safety_levels[2], safety_levels[3], safety_levels[4], safety_levels[5],
                   safety_levels[6], safety_levels[7]);
             adernal_supercap->clearSafetyFlag();
         }
