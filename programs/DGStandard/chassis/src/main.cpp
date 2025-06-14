@@ -20,6 +20,8 @@
 
 #include "main.h"
 
+#include <adernal_supercap.h>
+
 #include "MotorCanBase.h"
 #include "bsp_batteryvol.h"
 #include "bsp_can.h"
@@ -37,7 +39,7 @@ driver::MotorCANBase* fr_motor = nullptr;
 driver::MotorCANBase* bl_motor = nullptr;
 driver::MotorCANBase* br_motor = nullptr;
 
-driver::SuperCap* super_cap = nullptr;
+driver::Adernal_SuperCap* super_cap = nullptr;
 
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
@@ -53,6 +55,9 @@ void RM_RTOS_Init() {
     fr_motor = new driver::Motor3508(can2, 0x201);
     bl_motor = new driver::Motor3508(can2, 0x203);
     br_motor = new driver::Motor3508(can2, 0x204);
+
+    // 初始化超级电容控制器
+    super_cap = new driver::Adernal_SuperCap(can1);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
@@ -87,23 +92,6 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     br_motor->SetTransmissionRatio(14);
 
-    driver::supercap_init_t supercap_init = {
-        .can = can1,
-        .tx_id = 0x02e,
-        .tx_settings_id = 0x02f,
-        .rx_id = 0x030,
-    };
-    super_cap = new driver::SuperCap(supercap_init);
-    super_cap->Disable();
-    super_cap->TransmitSettings();
-    super_cap->Enable();
-    super_cap->TransmitSettings();
-    super_cap->SetMaxVoltage(24.0f);
-    super_cap->SetPowerTotal(100.0f);
-    super_cap->SetMaxChargePower(150.0f);
-    super_cap->SetMaxDischargePower(250.0f);
-    super_cap->SetPerferBuffer(50.0f);
-
     can_bridge = new communication::CanBridge(can1, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
@@ -135,7 +123,20 @@ void RM_RTOS_Init() {
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
+    // 初始化超级电容 - 选择类型2 (28V)
+    if (super_cap->initialize(driver::Adernal_Init_CapType2)) {
+        print("SuperCap initialized with Type 2 (28V)\r\n");
+    } else {
+        print("Failed to initialize SuperCap\r\n");
+    }
+    osDelay(500);
 
+    // 设置预期功率为80W，Work模式，不开启Exceed
+    if (super_cap->setControl(80, driver::Adernal_CtrlMode_Work, driver::Adernal_CtrlExceed_Off)) {
+        print("Set Expect Power to 80W, Work mode, Exceed OFF\r\n");
+    } else {
+        print("Failed to set SuperCap parameters\r\n");
+    }
     osDelay(500);
     Buzzer_Sing(Mario);
 
