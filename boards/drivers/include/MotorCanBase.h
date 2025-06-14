@@ -468,7 +468,7 @@ namespace driver {
  * more details
  */
 #define M3508P19_RATIO (3591.0 / 187) /* Transmission ratio of M3508P19 */
-#define M2006P36_RATIO 36             /* Transmission ratio of M2006P36 */
+#define M2006P36_RATIO 36 /* Transmission ratio of M2006P36 */
 
     typedef struct {
         servo_mode_t mode; /* turning mode of servomotor, refer to type servo_mode_t */

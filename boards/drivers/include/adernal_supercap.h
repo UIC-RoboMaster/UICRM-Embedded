@@ -25,13 +25,13 @@
 #include "main.h"
 namespace driver {
 #define USR_CAN_IDTYPE_STANDARD 0x00  // 标准数据帧ID
-#define USR_CAN_FRAMETYPE_DATA 0x00   // 数据帧
-                                      /** @defgroup Adernal_bxCAN_RxID
-                                       * @{
-                                       */
-#define __ADERNAL_CANID_STDBY 0x005   // 就绪帧
-#define __ADERNAL_CANID_FB 0x003      // 反馈帧
-#define __ADERNAL_CANID_SAFE 0x001    // 安全提示帧
+#define USR_CAN_FRAMETYPE_DATA 0x00  // 数据帧
+    /** @defgroup Adernal_bxCAN_RxID
+     * @{
+     */
+#define __ADERNAL_CANID_STDBY 0x005  // 就绪帧
+#define __ADERNAL_CANID_FB 0x003  // 反馈帧
+#define __ADERNAL_CANID_SAFE 0x001  // 安全提示帧
     /**
      * @}
      */

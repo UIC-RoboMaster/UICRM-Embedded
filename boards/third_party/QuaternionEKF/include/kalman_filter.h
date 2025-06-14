@@ -57,8 +57,8 @@ typedef struct kf_t {
     uint8_t UseAutoAdjustment;
     uint8_t MeasurementValidNum;
 
-    uint8_t* MeasurementMap;       // 量测与状态的关系 how measurement relates to the state
-    float* MeasurementDegree;      // 测量值对应H矩阵元素值 elements of each measurement in H
+    uint8_t* MeasurementMap;   // 量测与状态的关系 how measurement relates to the state
+    float* MeasurementDegree;  // 测量值对应H矩阵元素值 elements of each measurement in H
     float* MatR_DiagonalElements;  // 量测方差 variance for each measurement
     float* StateMinVariance;  // 最小方差 避免方差过度收敛 suppress filter excessive convergence
     uint8_t* temp;
