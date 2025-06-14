@@ -80,7 +80,7 @@ uint32_t print(const char* format, ...) {
     UNUSED(format);
     UNUSED(print_buffer);
     return 0;
-#else   // == #ifdef DEBUG
+#else  // == #ifdef DEBUG
     va_list args;
     int length;
 

@@ -743,7 +743,7 @@ namespace bsp {
 
         __HAL_DMA_CLEAR_FLAG(hdma_spi_rx_, DMA_LISR_TCIF2);
 
-        hdma_spi_rx_->Instance->PAR = (uint32_t)&(SPI1->DR);
+        hdma_spi_rx_->Instance->PAR = (uint32_t) & (SPI1->DR);
         // memory buffer 1
         hdma_spi_rx_->Instance->M0AR = (uint32_t)(rx_buf);
         // data length
@@ -760,7 +760,7 @@ namespace bsp {
 
         __HAL_DMA_CLEAR_FLAG(hdma_spi_tx_, DMA_LISR_TCIF3);
 
-        hdma_spi_tx_->Instance->PAR = (uint32_t)&(SPI1->DR);
+        hdma_spi_tx_->Instance->PAR = (uint32_t) & (SPI1->DR);
         // memory buffer 1
         hdma_spi_tx_->Instance->M0AR = (uint32_t)(tx_buf);
         // data length

@@ -36,7 +36,7 @@ namespace driver {
      * @{
      */
 #define USR_CAN_FRAMETYPE_REMOTE 0x00  // 远程帧
-#define USR_CAN_FRAMETYPE_DATA 0x00    // 数据帧
+#define USR_CAN_FRAMETYPE_DATA 0x00  // 数据帧
     /**
      * @}
      */
