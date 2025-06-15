@@ -1,6 +1,6 @@
 project(Quadrotor_UAV_MAN ASM C CXX)
 
-uicrm_add_arm_executable(${PROJECT_NAME}_typeC
+uicrm_add_arm_executable(${PROJECT_NAME}_typeA
         TARGET DJI_Board_TypeA_general
         SOURCES
         src/main.cpp
