@@ -70,7 +70,7 @@ void gimbalTask(void* arg) {
 
     // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
     float pitch_ratio, yaw_ratio;
-    INS_Angle.pitch = ahrs->INS_angle[2];
+    INS_Angle.pitch = ahrs->INS_angle[1];
     INS_Angle.yaw = ahrs->INS_angle[0];
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -81,7 +81,7 @@ void gimbalTask(void* arg) {
         check_kill();
 
         // 获取当前陀螺仪角度
-        INS_Angle.pitch = ahrs->INS_angle[2];
+        INS_Angle.pitch = ahrs->INS_angle[1];
         INS_Angle.yaw = ahrs->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);

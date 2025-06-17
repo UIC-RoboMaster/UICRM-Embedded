@@ -72,21 +72,21 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(100);
     Buzzer_Sing(DJI);
 
-    while (true) {
-        uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
-
-        control::ConstrainedPID::PID_State_t state;
-        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
-        state.dout = -state.dout;
-        memcpy(buffer + 2, &state, sizeof(state));
-
-        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
-        state.dout = -state.dout;
-        memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
-
-        dump(&state, sizeof(buffer));
-        osDelay(4);
-    }
+    // while (true) {
+    //     uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
+    //
+    //     control::ConstrainedPID::PID_State_t state;
+    //     state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+    //     state.dout = -state.dout;
+    //     memcpy(buffer + 2, &state, sizeof(state));
+    //
+    //     state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
+    //     state.dout = -state.dout;
+    //     memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
+    //
+    //     dump(&state, sizeof(buffer));
+    //     osDelay(4);
+    // }
 
     while (true) {
         //        print("%.4f %.4f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
@@ -125,6 +125,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print_enabled("Yaw", yaw_motor->IsOnline());
         print_enabled("Pitch", pitch_motor->IsOnline());
         print("\r\n");
+
 
         osDelay(50);
     }
