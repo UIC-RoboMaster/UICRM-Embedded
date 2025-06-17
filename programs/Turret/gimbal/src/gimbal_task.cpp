@@ -167,22 +167,22 @@ void init_gimbal() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
+        .output_filtering_coefficient = 0.3,           // 输出滤波系数
+        .derivative_filtering_coefficient = 0.2,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 8192,
+        .kp = 4000,
         .ki = 0,
-        .kd = 0,
+        .kd = 200,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
         .deadband = 0,                          // 死区
         .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
         .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .output_filtering_coefficient = 0.3,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0.2,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
@@ -201,32 +201,30 @@ void init_gimbal() {
     yaw_motor = new driver::Motor6020(can1, 0x206, 0x1FF);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 8,
+        .kp = 6,
         .ki = 0,
-        .kd = 200,  // 再大会在前面顿一下
-        .max_out =
-            3 *
-            PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
+        .kd = 100,  // 再大会在前面顿一下
+        .max_out =3 *PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
         .max_iout = PI / 8,
         .deadband = 0,
         .A = 0,                                    // 变速积分所能达到的最大值为A+B
         .B = 0,                                    // 启动变速积分的死区
         .output_filtering_coefficient = 0.5,       // 输出滤波系数
-        .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
+        .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
                 control::ConstrainedPID::Integral_Limit};
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 6000,
+        .kp = 4000,
         .ki = 0,
-        .kd = 0,
+        .kd = 400,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,  // 死区
         .A = 0.5 * PI,  // 变速积分所能达到的最大值为A+B
         .B = 0.5 * PI,  // 启动变速积分的死区
         .output_filtering_coefficient = 0.5,
-        .derivative_filtering_coefficient = 0.0003,                   // 微分滤波系数
+        .derivative_filtering_coefficient = 0.05,                   // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
