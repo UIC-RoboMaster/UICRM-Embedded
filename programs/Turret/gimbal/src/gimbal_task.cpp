@@ -70,7 +70,7 @@ void gimbalTask(void* arg) {
 
     // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
     float pitch_ratio, yaw_ratio;
-    INS_Angle.pitch = ahrs->INS_angle[1];
+    INS_Angle.pitch = ahrs->INS_angle[2];
     INS_Angle.yaw = ahrs->INS_angle[0];
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -81,7 +81,7 @@ void gimbalTask(void* arg) {
         check_kill();
 
         // 获取当前陀螺仪角度
-        INS_Angle.pitch = ahrs->INS_angle[1];
+        INS_Angle.pitch = ahrs->INS_angle[2];
         INS_Angle.yaw = ahrs->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -130,7 +130,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_FOLLOW:
                 // 如果是跟随模式或者旋转模式，将IMU作为参考系
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+                gimbal->UpdateIMU(-INS_Angle.pitch, -INS_Angle.yaw);
                 break;
             case REMOTE_MODE_ADVANCED:
                 // 如果是高级模式，将电机获取的云台当前角度作为参考系
