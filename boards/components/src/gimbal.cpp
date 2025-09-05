@@ -102,9 +102,10 @@ namespace control {
         //        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         //        float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
 
-        float yt_diff = yaw_angle_ - data_.yaw_offset_ - yaw;
-        float actual_yaw_angle = yaw_motor_->GetTheta();
-        if (!data_.yaw_circle_) {
+    float yt_diff = yaw_angle_ - data_.yaw_offset_ - yaw;
+    // 对于允许环绕的云台，使用电机“输出轴累计角度”作为基准，避免跨圈时因编码器回绕导致的大步误差
+    float actual_yaw_angle = data_.yaw_circle_ ? yaw_motor_->GetOutputShaftTheta() : yaw_motor_->GetTheta();
+    if (!data_.yaw_circle_) {
             float new_yaw_diff = wrapping_clip<float>(yt_diff + actual_yaw_angle, yaw_lower_limit_,
                                                       yaw_upper_limit_, 0, 2 * PI);
             new_yaw_diff = new_yaw_diff - actual_yaw_angle;
@@ -139,7 +140,8 @@ namespace control {
         pitch_angle_ = wrapping_clip<float>(clipped_pitch + data_.pitch_offset_, pitch_lower_limit_,
                                             pitch_upper_limit_, 0, 2 * PI);
         if (data_.yaw_circle_) {
-            yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
+            // 多圈模式：不对目标角做单圈包裹，保持连续目标，避免跨 ±π 折返
+            yaw_angle_ = clipped_yaw + data_.yaw_offset_;
         } else {
             yaw_angle_ = wrapping_clip<float>(clipped_yaw + data_.yaw_offset_, yaw_lower_limit_,
                                               yaw_upper_limit_, 0, 2 * PI);
@@ -152,7 +154,12 @@ namespace control {
         if (data_.yaw_inverted)
             rel_yaw = -rel_yaw;
         pitch_angle_ = wrap<float>(pitch_angle_ + rel_pitch, 0, 2 * PI);
-        yaw_angle_ = wrap<float>(yaw_angle_ + rel_yaw, 0, 2 * PI);
+        if (data_.yaw_circle_) {
+            // 多圈模式下保持连续累加
+            yaw_angle_ = yaw_angle_ + rel_yaw;
+        } else {
+            yaw_angle_ = wrap<float>(yaw_angle_ + rel_yaw, 0, 2 * PI);
+        }
     }
 
     void Gimbal::UpdateOffset(float pitch_offset, float yaw_offset) {

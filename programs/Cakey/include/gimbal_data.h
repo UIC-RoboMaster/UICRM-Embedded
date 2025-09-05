@@ -24,8 +24,9 @@
 
 // basic information of gimbal
 const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = 5.05,
-    .yaw_offset_ = 3.1761f,
+    // 在这里设置云台的默认角度
+    .pitch_offset_ = -2.0f, // 数越大，云台头越低
+    .yaw_offset_ = -2.1f,
     .pitch_max_ = 0.45f,
     .yaw_max_ = PI,
     .yaw_circle_ = true,
