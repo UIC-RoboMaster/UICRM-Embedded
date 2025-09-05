@@ -227,9 +227,9 @@ void init_gimbal() {
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
 
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 4096,
-        .ki = 0,
-        .kd = 1200,
+        .kp = 6000,
+        .ki = 200,
+        .kd = 500,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
         .deadband = 0,                          // 死区
@@ -269,9 +269,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 1000,
+        .kp = 2000,
         .ki = 0,
-        .kd = 0,
+        .kd = 100,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                            // 死区
