@@ -33,8 +33,8 @@ remote::SBUS* sbus = nullptr;
 
 //RemoteMode remote_mode = REMOTE_MODE_SPIN;
 //RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
-RemoteMode remote_mode = REMOTE_MODE_AUTOAIM;
-RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
+RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
+RemoteMode last_remote_mode = REMOTE_MODE_AUTOAIM;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
                                      REMOTE_MODE_AUTOAIM, REMOTE_MODE_PREPARE_HAND_MOVEMENT};
 const int8_t remote_mode_max = 4;

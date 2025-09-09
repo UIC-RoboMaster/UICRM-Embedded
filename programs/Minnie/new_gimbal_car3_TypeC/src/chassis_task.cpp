@@ -21,8 +21,10 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
-const float chassis_max_xy_speed = 4 * PI;
-const float chassis_max_t_speed = 12 * PI;
+//const float chassis_max_xy_speed = 4 * PI;
+//const float chassis_max_t_speed = 12 * PI;
+const float chassis_max_xy_speed = 8 * PI;
+const float chassis_max_t_speed = 36 * PI;
 
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -172,18 +174,18 @@ void chassisTask(void* arg) {
         chassis_vy *= chassis_max_xy_speed;
         chassis_vt *= chassis_max_t_speed;
 
-        static const float move_ease_ratio = 0.5;
-        static const float turn_ease_ratio = 0.9;
-        static Ease chassis_ease_vx(0, move_ease_ratio);
-        static Ease chassis_ease_vy(0, move_ease_ratio);
-        static Ease chassis_ease_vt(0, turn_ease_ratio);
-        chassis_vx = chassis_ease_vx.Calc(chassis_vx);
-        chassis_vy = chassis_ease_vy.Calc(chassis_vy);
-        chassis_vt = chassis_ease_vt.Calc(chassis_vt);
+//        static const float move_ease_ratio = 0.5;
+//        static const float turn_ease_ratio = 0.9;
+//        static Ease chassis_ease_vx(0, move_ease_ratio);
+//        static Ease chassis_ease_vy(0, move_ease_ratio);
+//        static Ease chassis_ease_vt(0, turn_ease_ratio);
+//        chassis_vx = chassis_ease_vx.Calc(chassis_vx);
+//        chassis_vy = chassis_ease_vy.Calc(chassis_vy);
+//        chassis_vt = chassis_ease_vt.Calc(chassis_vt);
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
         osDelay(CHASSIS_OS_DELAY);
-        chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+        chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                           referee->power_heat_data.chassis_power,
                           referee->power_heat_data.chassis_power_buffer, false);
         osDelay(CHASSIS_OS_DELAY);

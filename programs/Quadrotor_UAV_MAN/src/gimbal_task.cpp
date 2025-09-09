@@ -36,12 +36,6 @@ control::gimbal_t gimbal_data;
 
 bool LAST_REMOTE_MODE = false;
 
-
-template <typename T>
-T map(T value, T in_min, T in_max, T out_min, T out_max) {
-    return out_min + (value - in_min) * (out_max - out_min) / (in_max - in_min);
-}
-
 void check_kill();
 
 void gimbalTask(void* arg) {
@@ -149,7 +143,6 @@ void gimbalTask(void* arg) {
                 // 遥控器手动控制模式，将电机获取的云台当前角度作为参考系，直接通过遥控控制
 
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                print("pitch_motor: %.2f pitch_diff: %.2f\r\n", map<float>(pitch_motor->GetTheta(), 0, 2 * PI, -PI, PI));
                 gimbal->Update();
                 break;
 
