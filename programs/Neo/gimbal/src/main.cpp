@@ -35,11 +35,12 @@
 #include "shoot_task.h"
 #include "ui_task.h"
 #include "user_define.h"
+#include "usart.h"
 
 //bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
-//    print_use_uart(&BOARD_UART1, true, 921600);
+    print_use_uart(&BOARD_UART1, true, 921600);
     init_can();
     init_batt();
     init_imu();
