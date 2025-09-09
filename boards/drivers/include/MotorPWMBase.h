@@ -75,7 +75,9 @@ namespace driver {
 
         void Disable();
 
-        bool isEnable() {return en_;}
+        bool isEnable() {
+            return en_;
+        }
 
       private:
         bsp::PWM pwm_;
@@ -83,41 +85,44 @@ namespace driver {
         bool en_;
     };
 
-   /**
-    * @brief DJI snail 2305电机的标准类
-    */
-   /**
-    * @brief DJI snail 2305 motor class
-    */
-   class Motor2305 : public MotorPWMBase {
-     public:
-       Motor2305(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle);
-       /* override base implementation with max current protection */
-       void SetOutput(int16_t val) override final;
-   };
+    /**
+     * @brief DJI snail 2305电机的标准类
+     */
+    /**
+     * @brief DJI snail 2305 motor class
+     */
+    class Motor2305 : public MotorPWMBase {
+      public:
+        Motor2305(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,
+                  uint32_t output_freq, uint32_t idle_throttle);
+        /* override base implementation with max current protection */
+        void SetOutput(int16_t val) override final;
+    };
 
-   /**
-    * @brief 普通 MG995 PWM标准类舵机
-    */
-   /**
-    * @brief Ordinary MG995 PWM standard servo motor class
-    */
+    /**
+     * @brief 普通 MG995 PWM标准类舵机
+     */
+    /**
+     * @brief Ordinary MG995 PWM standard servo motor class
+     */
 
-   class ServoMG995 : public MotorPWMBase {
-     public:
-       ServoMG995(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq = 1000000, uint32_t output_freq = 50, uint32_t idle_throttle = 0);
-       /* override base implementation with max current protection */
-       void SetOutput(int16_t angle) override final;
-   };
+    class ServoMG995 : public MotorPWMBase {
+      public:
+        ServoMG995(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq = 1000000,
+                   uint32_t output_freq = 50, uint32_t idle_throttle = 0);
+        /* override base implementation with max current protection */
+        void SetOutput(int16_t angle) override final;
+    };
 
-   /**
-  * @brief 普通 Lesar PWM标准激光
-    */
+    /**
+     * @brief 普通 Lesar PWM标准激光
+     */
 
-   class Lesar : public MotorPWMBase {
-     public:
-       Lesar(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq = 1000000, uint32_t output_freq = 50, uint32_t idle_throttle = 0);
-       /* override base implementation with max current protection */
-       void SetOutput(int16_t brightness) override final;
-   };
+    class Lesar : public MotorPWMBase {
+      public:
+        Lesar(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq = 1000000,
+              uint32_t output_freq = 50, uint32_t idle_throttle = 0);
+        /* override base implementation with max current protection */
+        void SetOutput(int16_t brightness) override final;
+    };
 }  // namespace driver

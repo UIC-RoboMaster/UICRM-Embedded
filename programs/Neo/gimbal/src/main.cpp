@@ -36,23 +36,24 @@
 #include "ui_task.h"
 #include "user_define.h"
 
-//bsp::GPIO* gimbal_power = nullptr;
+// bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
-//    print_use_uart(&BOARD_UART1, true, 921600);
+    //    print_use_uart(&BOARD_UART1, true, 921600);
     init_can();
     init_batt();
     init_imu();
     init_buzzer();
-    init_referee(); // todo referee线程由父类UARTProtocal构造函数创建，考虑转移到RM_RTOS_Threads_Init
-    init_minipc(); //todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
+    init_referee();  // todo
+                     // referee线程由父类UARTProtocal构造函数创建，考虑转移到RM_RTOS_Threads_Init
+    init_minipc();   // todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
     init_remote();
     init_shoot();
     init_gimbal();
     init_chassis();
     init_ui();
-//    gimbal_power = new bsp::GPIO(MOS_CTL2_GPIO_Port, MOS_CTL2_Pin);
-//    gimbal_power->Low();
+    //    gimbal_power = new bsp::GPIO(MOS_CTL2_GPIO_Port, MOS_CTL2_Pin);
+    //    gimbal_power->Low();
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -71,28 +72,28 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(100);
     Buzzer_Sing(DJI);
 
-//    while (true) {
-//        uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
-//
-//        control::ConstrainedPID::PID_State_t state;
-//        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
-//        state.dout = -state.dout;
-//        memcpy(buffer + 2, &state, sizeof(state));
-//
-//        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
-//        state.dout = -state.dout;
-//        memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
-//
-//        dump(&state, sizeof(buffer));
-//        osDelay(4);
-//    }
+    //    while (true) {
+    //        uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
+    //
+    //        control::ConstrainedPID::PID_State_t state;
+    //        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+    //        state.dout = -state.dout;
+    //        memcpy(buffer + 2, &state, sizeof(state));
+    //
+    //        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
+    //        state.dout = -state.dout;
+    //        memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
+    //
+    //        dump(&state, sizeof(buffer));
+    //        osDelay(4);
+    //    }
 
     while (true) {
-//        if (referee->game_robot_status.mains_power_gimbal_output) {
-//            gimbal_power->High();
-//        } else {
-//            gimbal_power->Low();
-//        }
+        //        if (referee->game_robot_status.mains_power_gimbal_output) {
+        //            gimbal_power->High();
+        //        } else {
+        //            gimbal_power->Low();
+        //        }
         //        print("%.4f %.4f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
         //        osDelay(2);
         set_cursor(0, 0);
@@ -124,7 +125,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Gimbal target P%.3f Y%.3f\r\n",
               gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
               gimbal->getYawTarget() - gimbal_param->yaw_offset_);
-        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", imu->INS_angle[1], imu->INS_angle[0], imu->INS_angle[2]);
+        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", imu->INS_angle[1], imu->INS_angle[0],
+              imu->INS_angle[2]);
         print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
               minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
         print("\r\n");

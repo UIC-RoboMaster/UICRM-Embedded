@@ -26,4 +26,4 @@
 void cs_init();
 void cs_main();
 
-#endif //tinyML_H
+#endif  // tinyML_H

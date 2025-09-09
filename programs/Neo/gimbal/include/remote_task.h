@@ -134,11 +134,7 @@ inline const char* shoot_load_mode_str(ShootMode mode) {
 }
 extern ShootMode shoot_load_mode;
 
-enum CapMode {
-    CAP_MODE_DISABLE = -1,
-    CAP_MODE_CLOSE = 0,
-    CAP_MODE_OPEN = 1
-};
+enum CapMode { CAP_MODE_DISABLE = -1, CAP_MODE_CLOSE = 0, CAP_MODE_OPEN = 1 };
 inline const char* cap_mode_str(CapMode mode) {
     switch (mode) {
         case CAP_MODE_DISABLE:

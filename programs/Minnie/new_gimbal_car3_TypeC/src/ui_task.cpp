@@ -37,7 +37,6 @@ communication::DiagGUI* diagGUI = nullptr;
 communication::StringGUI* BombchamberGUI = nullptr;
 communication::StringGUI* initGUI = nullptr;
 
-
 void UI_Delay(uint32_t delay) {
     osDelay(delay);
 }
@@ -84,7 +83,6 @@ void uiTask(void* arg) {
     batteryGUI->InitName();
     osDelay(110);
 
-
     // Initialize Gimbal GUI
     gimbalGUI = new communication::GimbalGUI(UI);
     osDelay(110);
@@ -117,7 +115,8 @@ void uiTask(void* arg) {
     // Initialize current mode GUI
     char ShootFrequencyStr[15] = "NORMAL";
     int8_t ShootFrequencyColor = UI_Color_Green;
-    shootFrequencyGUI = new communication::StringGUI(UI, ShootFrequencyStr, 1500, 460, ShootFrequencyColor);
+    shootFrequencyGUI =
+        new communication::StringGUI(UI, ShootFrequencyStr, 1500, 460, ShootFrequencyColor);
 
     char BombchamberOnStr[15] = "MagazineON ";
     BombchamberGUI = new communication::StringGUI(UI, BombchamberOnStr, 1500, 490, UI_Color_Orange);
@@ -198,7 +197,7 @@ void uiTask(void* arg) {
             strcpy(initstr, "INIT False");
             modeColor = UI_Color_Purplish_red;
             initGUI->Update(initstr, modeColor);
-        }else {
+        } else {
             strcpy(initstr, "INIT Ture");
             modeColor = UI_Color_Green;
             initGUI->Update(initstr, modeColor);
@@ -240,11 +239,11 @@ void uiTask(void* arg) {
             case Magazine_MODE_ON:
                 strcpy(BombchamberStr, "MODE_ON");
                 modeColor = UI_Color_Green;
-            break;
+                break;
             case Magazine_MODE_OFF:
                 strcpy(BombchamberStr, "MODE_OFF");
                 modeColor = UI_Color_Purplish_red;
-            break;
+                break;
             default:
                 break;
         }

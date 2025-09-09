@@ -20,9 +20,9 @@
 
 #include "gimbal_task.h"
 
+#include "MotorPWMBase.h"
 #include "chassis_task.h"
 #include "minipc_task.h"
-#include "MotorPWMBase.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -83,7 +83,7 @@ void gimbalTask(void* arg) {
     float pitch_curr, yaw_curr;
     float pitch_target = 0, yaw_target = 0;
 
-//    float actural_chassis_turn_speed = chassis_vt / 6.0f;
+    //    float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
         bool gimbal_en = true;
         gimbal_en &= remote_mode != REMOTE_MODE_KILL;
@@ -99,7 +99,7 @@ void gimbalTask(void* arg) {
         // 子弹盖
         if (!bulletCap->isEnable())
             bulletCap->Enable();
-        switch(cap_mode) {
+        switch (cap_mode) {
             case CAP_MODE_CLOSE:
                 bulletCap->SetOutput(200);
                 break;
@@ -158,7 +158,7 @@ void gimbalTask(void* arg) {
         //            pitch_diff = 0;
         //        }
 
-        //TODO 等待标定
+        // TODO 等待标定
         const float offset_ratio =
             0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
         const float offset_filter_ratio =
@@ -183,20 +183,19 @@ void gimbalTask(void* arg) {
                 break;
             case REMOTE_MODE_AUTOPILOT:
                 if (minipc->target_angle.shoot_cmd == 0) {
-                    //gimbal spin when cmd is 0
+                    // gimbal spin when cmd is 0
                     gimbal->TargetRel(0, 0.5);
                     break;
                 }
-                if (//static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
+                if (  // static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
-                    abs(minipc->target_angle.target_yaw) > 180.0f
-                    )
+                    abs(minipc->target_angle.target_yaw) > 180.0f)
                     break;
                 gimbal->TargetAbs(-minipc->target_angle.target_pitch,
                                   -minipc->target_angle.target_yaw);
                 gimbal->UpdateIMU(-pitch_curr, yaw_curr);
-//                gimbal->TargetAbs(0, PI);
-//                gimbal->UpdateIMU(-pitch_curr, yaw_curr);
+                //                gimbal->TargetAbs(0, PI);
+                //                gimbal->UpdateIMU(-pitch_curr, yaw_curr);
 
                 break;
             default:
@@ -232,15 +231,15 @@ void init_gimbal() {
         .kd = 500,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
-        .deadband = 0,                          // 死区
-        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
-                control::ConstrainedPID::OutputFilter |               // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
+        .deadband = 0,                                           // 死区
+        .A = 1.5 * PI,                                           // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                             // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
@@ -252,7 +251,7 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
         .kp = 60,
         .ki = 0,
-        .kd = 4000, //4.5
+        .kd = 4000,  // 4.5
         .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -264,16 +263,16 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 1500, //4000
+        .kp = 1500,  // 4000
         .ki = 0,
-        .kd = 500, //2000
+        .kd = 500,  // 2000
         .max_out = 16383,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0.0003,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 1.5 * PI,                                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0.0003,             // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -292,8 +291,8 @@ void init_gimbal() {
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
 
-    //init cap
-    bulletCap = new driver::MotorPWMBase(&htim1, 1, 1000000, 50, 1440);//1435
+    // init cap
+    bulletCap = new driver::MotorPWMBase(&htim1, 1, 1000000, 50, 1440);  // 1435
 }
 void kill_gimbal() {
     yaw_motor->Disable();

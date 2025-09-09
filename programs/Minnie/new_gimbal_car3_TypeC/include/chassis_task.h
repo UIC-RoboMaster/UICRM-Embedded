@@ -48,7 +48,8 @@ void chassis_remote_mode();
 void init_chassis();
 void kill_chassis();
 
-void updateCarVelocity(float& car_vx, float& car_vy, float& car_vt, float deltaTime, const float acceleration = 0.1f);
+void updateCarVelocity(float& car_vx, float& car_vy, float& car_vt, float deltaTime,
+                       const float acceleration = 0.1f);
 void Slow_start(float& in_val, float deltaTime, const float acceleration = 0.1f);
 
 void chassis_ADVANCED();

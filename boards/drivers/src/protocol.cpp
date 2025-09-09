@@ -44,7 +44,8 @@ namespace communication {
             if (end_idx - start_idx > FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN) {
                 int DATA_LENGTH = bufferRx[start_idx + 2] << BYTE | bufferRx[start_idx + 1];
                 bool val8 = VerifyHeader(bufferRx + start_idx, FRAME_HEADER_LEN);
-                bool val16 = VerifyFrame(bufferRx + start_idx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN);
+                bool val16 = VerifyFrame(bufferRx + start_idx, FRAME_HEADER_LEN + CMD_ID_LEN +
+                                                                   DATA_LENGTH + FRAME_TAIL_LEN);
                 if (val8 && val16) {
                     int cmd_id = bufferRx[start_idx + FRAME_HEADER_LEN + 1] << BYTE |
                                  bufferRx[start_idx + FRAME_HEADER_LEN];
@@ -137,8 +138,8 @@ namespace communication {
     }
     void USBProtocol::callback_thread_func_(void* args) {
         USBProtocol* usb_protocol_ = reinterpret_cast<USBProtocol*>(args);
-        usb_protocol_->Receive(
-            communication::package_t{usb_protocol_->read_ptr_, static_cast<int>(usb_protocol_->read_len_)});
+        usb_protocol_->Receive(communication::package_t{
+            usb_protocol_->read_ptr_, static_cast<int>(usb_protocol_->read_len_)});
     }
     USBProtocol::~USBProtocol() {
         delete callback_thread_;

@@ -20,8 +20,8 @@
 
 #include "shoot_task_CAM.h"
 
-//static driver::MotorPWMBase* flywheel_left = nullptr;
-//static driver::MotorPWMBase* flywheel_right = nullptr;
+// static driver::MotorPWMBase* flywheel_left = nullptr;
+// static driver::MotorPWMBase* flywheel_right = nullptr;
 
 static driver::Motor3508* flywheel_left = nullptr;
 static driver::Motor3508* flywheel_right = nullptr;
@@ -40,11 +40,11 @@ control::ConstrainedPID::PID_Init_t flywheel_pid_init = {
     .kd = 0,
     .max_out = 1000,
     .max_iout = 4000,
-    .deadband = 0,                          // 死区
-    .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-    .B = 2 * PI,                            // 启动变速积分的死区
-    .output_filtering_coefficient = 0.1,    // 输出滤波系数
-    .derivative_filtering_coefficient = 0,  // 微分滤波系数
+    .deadband = 0,                                          // 死区
+    .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+    .B = 2 * PI,                                            // 启动变速积分的死区
+    .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+    .derivative_filtering_coefficient = 0,                  // 微分滤波系数
     .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
             control::ConstrainedPID::OutputFilter |         // 输出滤波
             control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -64,7 +64,8 @@ void jam_callback(void* args) {
     }
 }
 
-bool steering_SetTarget(driver::MotorCANBase* motor, float SetTarget ,float threshold, bool locked_rotor = true, bool ABS = false){
+bool steering_SetTarget(driver::MotorCANBase* motor, float SetTarget, float threshold,
+                        bool locked_rotor = true, bool ABS = false) {
     motor->Enable();
     bool Steering_Mode = false;
     bool motor_flag = false;
@@ -72,20 +73,19 @@ bool steering_SetTarget(driver::MotorCANBase* motor, float SetTarget ,float thre
 
     if (motor->GetOutomega() >= -0.5f && motor->GetOutomega() <= 0.5f) {
         motor_flag = false;
-    }else {
+    } else {
         motor_flag = true;
     }
 
     motor->SetTarget(SetTarget);
     osDelay(500);
-    while(locked_rotor) {
-
+    while (locked_rotor) {
         if (motor_flag == true) {
             print("%f\n", SetTarget - motor->GetOutputShaftOmega());
-            if(SetTarget - motor->GetOutputShaftOmega() >= (threshold*36*SetTarget)/1000) {
+            if (SetTarget - motor->GetOutputShaftOmega() >= (threshold * 36 * SetTarget) / 1000) {
                 osDelay(10);
                 locked_rotor_ticks++;
-            }else {
+            } else {
                 break;
             }
         } else {
@@ -114,30 +114,31 @@ void steering_unload(bool unload_sign) {
             if (steering_motor->GetTheta() != last_theta) {
                 // steering_motor->SetTarget(0);
                 break;
-            }else {
-                steering_motor->SetTarget(-PI/2);
+            } else {
+                steering_motor->SetTarget(-PI / 2);
                 osDelay(500);
-                steering_motor->SetTarget(PI/4);
+                steering_motor->SetTarget(PI / 4);
                 osDelay(500);
-                steering_motor->SetTarget(-PI/2);
+                steering_motor->SetTarget(-PI / 2);
                 osDelay(500);
             }
         }
     }
 }
 
-void steering_stop(){
+void steering_stop() {
     steering_motor->SetTarget(0);
     steering_motor->Hold(true);
 }
 
-void Steering_SINGLE(){
+void Steering_SINGLE() {
     int last_steering_target = steering_motor->GetTheta();
-    bool Shoot_Steering_Mode = steering_SetTarget(steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
+    bool Shoot_Steering_Mode = steering_SetTarget(
+        steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
     steering_unload(Shoot_Steering_Mode);
-    shooter_17mm_num ++;
-    while (true){
-        if(steering_motor->GetTheta() != last_steering_target){
+    shooter_17mm_num++;
+    while (true) {
+        if (steering_motor->GetTheta() != last_steering_target) {
             break;
         } else {
             osDelay(SHOOT_SINGLE_OS_DELAY);
@@ -147,13 +148,14 @@ void Steering_SINGLE(){
     shoot_load_mode = SHOOT_MODE_IDLE;
 }
 
-void Stering_BURST(){
+void Stering_BURST() {
     int last_steering_target = steering_motor->GetTheta();
-    bool Shoot_Steering_Mode = steering_SetTarget(steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
+    bool Shoot_Steering_Mode = steering_SetTarget(
+        steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
     steering_unload(Shoot_Steering_Mode);
-    shooter_17mm_num ++;
-    while (true){
-        if(steering_motor->GetTheta() != last_steering_target){
+    shooter_17mm_num++;
+    while (true) {
+        if (steering_motor->GetTheta() != last_steering_target) {
             break;
         } else {
             osDelay(SHOOT_SINGLE_OS_DELAY);
@@ -163,7 +165,7 @@ void Stering_BURST(){
     shoot_load_mode = SHOOT_MODE_IDLE;
 }
 
-void Streeing_Reloading(){
+void Streeing_Reloading() {
     steering_stop();
 }
 
@@ -193,7 +195,6 @@ void shootTask(void* arg) {
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
     while (true) {
-
         if (remote_mode == REMOTE_MODE_KILL ||
             !referee->game_robot_status.mains_power_shooter_output) {
             // 死了
@@ -209,7 +210,7 @@ void shootTask(void* arg) {
             flywheel_speed_ease->SetTarget(10 * PI);  // 摩擦轮转速(转速控制)
         } else {
             // 关闭摩擦轮电机(停止旋转)
-            flywheel_speed_ease->SetTarget(0);    // 摩擦轮转速(转速控制)
+            flywheel_speed_ease->SetTarget(0);  // 摩擦轮转速(转速控制)
             shoot_load_mode = SHOOT_MODE_STOP;
         }
 
@@ -253,10 +254,10 @@ void shootTask(void* arg) {
         switch (magazine_Mode) {
             case Magazine_MODE_ON:
                 MG995->SetOutput(0);
-            break;
+                break;
             case Magazine_MODE_OFF:
                 MG995->SetOutput(90);
-            break;
+                break;
             default:
                 break;
         }
@@ -265,7 +266,6 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-
     flywheel_left = new driver::Motor3508(can2, 0x202);
     flywheel_right = new driver::Motor3508(can2, 0x201);
     steering_motor = new driver::Motor2006(can2, 0x203);
@@ -294,11 +294,11 @@ void init_shoot() {
         .kd = 0,
         .max_out = 10000,
         .max_iout = 4000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                           // 死区
+        .A = 3 * PI,                                             // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                             // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
                 control::ConstrainedPID::OutputFilter |          // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
@@ -321,7 +321,7 @@ void init_shoot() {
     flywheel_left->SetTarget(0);
     flywheel_right->SetTarget(0);
 
-    if(CAR_DEBUG->RM_Debug_mode.shooter_debug_mode == Debug_true){
+    if (CAR_DEBUG->RM_Debug_mode.shooter_debug_mode == Debug_true) {
         print("SHOOT_INIT_OK\n");
     }
 }
@@ -334,7 +334,7 @@ void kill_shoot() {
     flywheel_right->SetTarget(0);
 }
 
-void shoot_remote_mode(){
+void shoot_remote_mode() {
     char s[20];
     switch (shoot_flywheel_mode) {
         case SHOOT_FRIC_MODE_PREPARING:
@@ -386,12 +386,12 @@ void shoot_remote_mode(){
     switch (magazine_Mode) {
         case Magazine_MODE_ON:
             strcpy(s, "MODE_ON");
-        break;
+            break;
         case Magazine_MODE_OFF:
             strcpy(s, "MODE_OFF");
-        break;
+            break;
         default:
-        break;
+            break;
     }
     print("Magazine Mode:%s\r\n", s);
 }

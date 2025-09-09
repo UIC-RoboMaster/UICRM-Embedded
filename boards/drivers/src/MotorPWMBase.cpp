@@ -35,46 +35,52 @@ namespace driver {
         pwm_.SetPulseWidth(val + idle_throttle_);
     }
 
-    void MotorPWMBase::Enable() {pwm_.Start();}
+    void MotorPWMBase::Enable() {
+        pwm_.Start();
+    }
 
-    void MotorPWMBase::Disable() {pwm_.Stop();}
+    void MotorPWMBase::Disable() {
+        pwm_.Stop();
+    }
 
     template <typename T>
-    T map(T value,T frommin,T frommax,T tomin,T tomax)
-    {
-       return ((value-frommin)*(tomax-tomin)/(frommax-frommin)+tomin);
+    T map(T value, T frommin, T frommax, T tomin, T tomax) {
+        return ((value - frommin) * (tomax - tomin) / (frommax - frommin) + tomin);
     }
 
     /*======================== Motor2305 PWM control ========================*/
-    Motor2305::Motor2305(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,uint32_t output_freq, uint32_t idle_throttle):MotorPWMBase(htim, channel, clock_freq,output_freq, idle_throttle) {
-
+    Motor2305::Motor2305(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,
+                         uint32_t output_freq, uint32_t idle_throttle)
+        : MotorPWMBase(htim, channel, clock_freq, output_freq, idle_throttle) {
     }
 
-   void Motor2305::SetOutput(int16_t val) {
-       constexpr int16_t MIN_OUTPUT = 0;
-       constexpr int16_t MAX_OUTPUT = 700;
-       MotorPWMBase::SetOutput(clip<int16_t>(val, MIN_OUTPUT, MAX_OUTPUT));
-   }
+    void Motor2305::SetOutput(int16_t val) {
+        constexpr int16_t MIN_OUTPUT = 0;
+        constexpr int16_t MAX_OUTPUT = 700;
+        MotorPWMBase::SetOutput(clip<int16_t>(val, MIN_OUTPUT, MAX_OUTPUT));
+    }
 
-   /*======================== ServoMG995 PWM control ========================*/
-   ServoMG995::ServoMG995(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,uint32_t output_freq, uint32_t idle_throttle):MotorPWMBase(htim, channel, clock_freq,output_freq, idle_throttle) {
+    /*======================== ServoMG995 PWM control ========================*/
+    ServoMG995::ServoMG995(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,
+                           uint32_t output_freq, uint32_t idle_throttle)
+        : MotorPWMBase(htim, channel, clock_freq, output_freq, idle_throttle) {
+    }
 
-   }
+    void ServoMG995::SetOutput(int16_t angle) {
+        constexpr int16_t MIN_OUTPUT = 500;
+        constexpr int16_t MAX_OUTPUT = 2000;
+        MotorPWMBase::SetOutput(map<int16_t>(angle, 0, 180, MIN_OUTPUT, MAX_OUTPUT));
+    }
 
-   void ServoMG995::SetOutput(int16_t angle) {
-       constexpr int16_t MIN_OUTPUT = 500;
-       constexpr int16_t MAX_OUTPUT = 2000;
-       MotorPWMBase::SetOutput(map<int16_t>(angle, 0, 180, MIN_OUTPUT, MAX_OUTPUT));
-   }
+    /*======================== Lesar PWM control ========================*/
+    Lesar::Lesar(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,
+                 uint32_t output_freq, uint32_t idle_throttle)
+        : MotorPWMBase(htim, channel, clock_freq, output_freq, idle_throttle) {
+    }
 
-   /*======================== Lesar PWM control ========================*/
-   Lesar::Lesar(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,uint32_t output_freq, uint32_t idle_throttle):MotorPWMBase(htim, channel, clock_freq,output_freq, idle_throttle) {
-
-   }
-
-   void Lesar::SetOutput(int16_t brightness) {
-       constexpr int16_t MIN_OUTPUT = 0;
-       constexpr int16_t MAX_OUTPUT = 1000;
-       MotorPWMBase::SetOutput(map<int16_t>(brightness, 0, 100, MIN_OUTPUT, MAX_OUTPUT));
-   }
+    void Lesar::SetOutput(int16_t brightness) {
+        constexpr int16_t MIN_OUTPUT = 0;
+        constexpr int16_t MAX_OUTPUT = 1000;
+        MotorPWMBase::SetOutput(map<int16_t>(brightness, 0, 100, MIN_OUTPUT, MAX_OUTPUT));
+    }
 }  // namespace driver

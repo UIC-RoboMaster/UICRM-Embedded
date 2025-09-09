@@ -49,7 +49,8 @@ bsp::SPIMaster* spi5_master = nullptr;
 
 void IMU_print() {
     print("IMU data:\r\n");
-    print("gyro: x:%.2f, y:%.2f, z:%.2f\r\n", mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2]);
+    print("gyro: x:%.2f, y:%.2f, z:%.2f\r\n", mpu6500->gyro_[0], mpu6500->gyro_[1],
+          mpu6500->gyro_[2]);
     print("accel: x:%.2f, y:%.2f, z:%.2f\r\n", mpu6500->accel_[0], mpu6500->accel_[1],
           mpu6500->accel_[2]);
     print("INS Angle: yaw:%.3f pitch:%.3f roll:%.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],

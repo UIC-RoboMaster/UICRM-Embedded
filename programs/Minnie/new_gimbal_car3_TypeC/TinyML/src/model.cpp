@@ -1,5 +1,7 @@
-#include <math.h>
 #include "model.h"
+
+#include <math.h>
+
 #include "weight.h"
 
 CCMRAM float w1[DENSE1_SIZE];

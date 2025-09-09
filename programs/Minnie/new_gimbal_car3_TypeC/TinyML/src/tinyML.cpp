@@ -21,18 +21,16 @@
 //
 
 #include "TinyML.h"
-#include "cmsis_os.h"
+
 #include "bsp_print.h"
+#include "cmsis_os.h"
 #include "model.h"
 
 void cs_init() {
-
 }
 
 void cs_main() {
-
-    float label = predict(1.46544762,0.16031256);
+    float label = predict(1.46544762, 0.16031256);
     print("label: %.2f \r\n", label);
     osDelay(1);
-
 }

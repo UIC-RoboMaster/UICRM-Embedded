@@ -100,5 +100,3 @@ void IMU_Init() {
     bmi088->RegisterCallback(BMI088ReceiveDone);
     osDelay(500);
 }
-
-

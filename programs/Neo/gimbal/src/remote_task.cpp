@@ -26,7 +26,7 @@
 #include "minipc_task.h"
 
 remote::DBUS* dbus = nullptr;
-RemoteMode remote_mode = REMOTE_MODE_AUTOPILOT; //todo
+RemoteMode remote_mode = REMOTE_MODE_AUTOPILOT;  // todo
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
                                       REMOTE_MODE_AUTOPILOT};
@@ -80,7 +80,7 @@ void remoteTask(void* arg) {
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
                               referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
-                             //referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
+                             // referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
                              imu->CaliDone();
 #else
         is_robot_dead = false;
@@ -156,8 +156,8 @@ void remoteTask(void* arg) {
         if (mode_switch) {
             mode_switch = false;
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
-//            if (next_mode == RemoteMode::REMOTE_MODE_AUTOPILOT && !minipc->IsOnline())
-//                next_mode = (RemoteMode)(next_mode + 1);
+            //            if (next_mode == RemoteMode::REMOTE_MODE_AUTOPILOT && !minipc->IsOnline())
+            //                next_mode = (RemoteMode)(next_mode + 1);
             if ((int8_t)next_mode > (int8_t)remote_mode_max) {
                 next_mode = (RemoteMode)remote_mode_min;
             }
@@ -171,10 +171,10 @@ void remoteTask(void* arg) {
                 }
                 break;
             case remote::DOWN:
-                if (last_state_l == remote::MID && dbus->IsOnline() && shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+                if (last_state_l == remote::MID && dbus->IsOnline() &&
+                    shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
                     cap_switch = true;
-                }
-                else if (last_state_l == remote::MID && dbus->IsOnline()) {
+                } else if (last_state_l == remote::MID && dbus->IsOnline()) {
                     shoot_switch = true;
                     shoot_burst_timestamp = 0;
                 } else if (last_state_l == remote::DOWN && dbus->IsOnline()) {
@@ -257,7 +257,7 @@ void remoteTask(void* arg) {
             shoot_load_mode = SHOOT_MODE_PREPARED;
         }
 
-        //子弹盖状态
+        // 子弹盖状态
         if (cap_switch) {
             if (cap_mode == CAP_MODE_CLOSE)
                 cap_mode = CAP_MODE_OPEN;

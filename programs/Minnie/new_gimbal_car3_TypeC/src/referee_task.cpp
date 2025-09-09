@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "referee_task.h"
+
 #include "user_define.h"
 
 bsp::UART* referee_uart = nullptr;

@@ -24,15 +24,15 @@
 #include "chassis.h"
 #include "cmsis_os2.h"
 #include "main.h"
-#include "utils.h"
 #include "user_define.h"
+#include "utils.h"
 
 typedef enum {
     REMOTE_MODE_FOLLOW = 1,
     REMOTE_MODE_SPIN = 2,
     REMOTE_MODE_ADVANCED = 3,
 
-}remote_mode;
+} remote_mode;
 
 void chassisMain();
 void init_chassis();

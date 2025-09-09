@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "shoot_task.h"
 #include "MotorCanBase.h"
 #include "bsp_can.h"
 #include "buzzer_notes.h"
@@ -32,6 +31,7 @@
 #include "main.h"
 #include "public_port.h"
 #include "remote_task.h"
+#include "shoot_task.h"
 #include "user_define.h"
 extern osThreadId_t gimbalTaskHandle;
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
@@ -58,7 +58,7 @@ void debug_gimbal_init();
 void debug_gimbal(bool newline = false);
 void gimbal_TargeRel(float rel_pitch, float rel_yaw, bool buffer_mode = false);
 
-struct Gimbal_Ratio_data{
+struct Gimbal_Ratio_data {
     float pitch_ratio_ratio;
     float yaw_ratio_ratio;
 };

@@ -19,11 +19,11 @@
  ###########################################################*/
 
 #include "remote_task.h"
-#include "user_define.h"
 
 #include <string.h>
 
 #include "gimbal_task.h"
+#include "user_define.h"
 // #include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
@@ -31,8 +31,8 @@ remote::SBUS* sbus = nullptr;
 
 RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW,
-                                      REMOTE_MODE_ADVANCED, REMOTE_MODE_PREPARE_HAND_MOVEMENT};// disactivate currently
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_ADVANCED,
+                                      REMOTE_MODE_PREPARE_HAND_MOVEMENT};  // disactivate currently
 
 const int8_t remote_mode_max = 1;
 const int8_t remote_mode_min = 1;
@@ -129,7 +129,7 @@ void remoteTask(void* arg) {
             keyboard = dbus->keyboard;
             mouse = dbus->mouse;
         }
-       // } else if (refereerc->IsOnline()) {
+        // } else if (refereerc->IsOnline()) {
         //     state_r = remote::MID;
         //     state_l = remote::MID;
         //     keyboard = refereerc->remote_control.keyboard;
@@ -160,14 +160,14 @@ void remoteTask(void* arg) {
         }
 
         // 切换摩擦轮
-        
+
         // 遥控器左拨杆,控制摩擦轮开关
         static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
         flywheel_switch_edge->input(state_l == remote::DOWN);
         // 键盘Z键,控制摩擦轮开关
         keyboard_Z_edge->input(keyboard.bit.Z);
         if (flywheel_switch_edge->posEdge() || keyboard_Z_edge->posEdge()) {
-            if (remote_mode != REMOTE_MODE_STOP){
+            if (remote_mode != REMOTE_MODE_STOP) {
                 if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
                     shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
                     shoot_load_mode = SHOOT_MODE_IDLE;
@@ -202,7 +202,8 @@ void remoteTask(void* arg) {
         }
 
         // 不发射
-        if (mouse_left_edge->negEdge() || mouse_right_edge->negEdge() || keyboard_X_edge->negEdge()) {
+        if (mouse_left_edge->negEdge() || mouse_right_edge->negEdge() ||
+            keyboard_X_edge->negEdge()) {
             shoot_load_mode = SHOOT_MODE_STOP;
             shoot_burst_timestamp = 0;
         }

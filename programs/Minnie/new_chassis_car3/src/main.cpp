@@ -19,31 +19,32 @@
 ###########################################################*/
 
 #include "main.h"
-#include "chassis_task.h"
-#include "buzzer_task.h"
+
+#include "bsp_print.h"
 #include "buzzer_notes.h"
-#include  "bsp_print.h"
+#include "buzzer_task.h"
+#include "chassis_task.h"
 
 #define CHASSIS_DEBUG
 
 void RM_RTOS_Init(void) {
-   // 初始化串口
-   print_use_uart(&huart1, true, 115200);
+    // 初始化串口
+    print_use_uart(&huart1, true, 115200);
 
-   init_chassis();
-   init_buzzer();
-   osDelay(50);
+    init_chassis();
+    init_buzzer();
+    osDelay(50);
 }
 
 void RM_RTOS_Threads_Init(void) {
-   buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
+    buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
-   UNUSED(args);
-   osDelay(100);
-   Buzzer_Sing(Mario);
-   while (true) {
-      chassisMain();
-   }
+    UNUSED(args);
+    osDelay(100);
+    Buzzer_Sing(Mario);
+    while (true) {
+        chassisMain();
+    }
 }

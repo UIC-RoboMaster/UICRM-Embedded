@@ -21,8 +21,8 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
-//const float chassis_max_xy_speed = 4 * PI;
-//const float chassis_max_t_speed = 12 * PI;
+// const float chassis_max_xy_speed = 4 * PI;
+// const float chassis_max_t_speed = 12 * PI;
 const float chassis_max_xy_speed = 8 * PI;
 const float chassis_max_t_speed = 36 * PI;
 
@@ -36,19 +36,19 @@ float car_vx, car_vy, car_vt;
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
 
-void debug_chassis_init(){
-    #ifdef CHASSIS_DEBUG
-        print("CHASSIS_INIT_OK\n");
-    #endif
+void debug_chassis_init() {
+#ifdef CHASSIS_DEBUG
+    print("CHASSIS_INIT_OK\n");
+#endif
 }
 
 void debug_chassis(bool retprint, bool newline) {
     (void)retprint;
     (void)newline;
-    #ifdef CHASSIS_DEBUG
-        chassis->debug_chassis_can_model(retprint, newline);
-        chassis->debug_chassis_RCCH(0x74);
-    #endif
+#ifdef CHASSIS_DEBUG
+    chassis->debug_chassis_can_model(retprint, newline);
+    chassis->debug_chassis_RCCH(0x74);
+#endif
 }
 
 void chassis_ADVANCED() {
@@ -82,10 +82,10 @@ void chassis_FOLLOW(float chassis_yaw_diff) {
 
 void chassis_SPIN() {
     // 小陀螺模式，拨盘用来控制底盘加速度
-    static float spin_speed = 2*PI;
+    static float spin_speed = 2 * PI;
     spin_speed = spin_speed + car_vt * 0.1;
     // spin_speed = clip<float>(spin_speed, -1, 1);
-    spin_speed = clip<float>(spin_speed, -4*PI, 4*PI);
+    spin_speed = clip<float>(spin_speed, -4 * PI, 4 * PI);
     chassis_vt = spin_speed;
 }
 
@@ -118,8 +118,8 @@ void chassisTask(void* arg) {
     chassis->Enable();
 
     while (true) {
-
-        if (remote_mode == REMOTE_MODE_KILL || !referee->game_robot_status.mains_power_chassis_output) {
+        if (remote_mode == REMOTE_MODE_KILL ||
+            !referee->game_robot_status.mains_power_chassis_output) {
             kill_chassis();
             while (remote_mode == REMOTE_MODE_KILL) {
                 osDelay(CHASSIS_OS_DELAY + 2);
@@ -174,14 +174,14 @@ void chassisTask(void* arg) {
         chassis_vy *= chassis_max_xy_speed;
         chassis_vt *= chassis_max_t_speed;
 
-//        static const float move_ease_ratio = 0.5;
-//        static const float turn_ease_ratio = 0.9;
-//        static Ease chassis_ease_vx(0, move_ease_ratio);
-//        static Ease chassis_ease_vy(0, move_ease_ratio);
-//        static Ease chassis_ease_vt(0, turn_ease_ratio);
-//        chassis_vx = chassis_ease_vx.Calc(chassis_vx);
-//        chassis_vy = chassis_ease_vy.Calc(chassis_vy);
-//        chassis_vt = chassis_ease_vt.Calc(chassis_vt);
+        //        static const float move_ease_ratio = 0.5;
+        //        static const float turn_ease_ratio = 0.9;
+        //        static Ease chassis_ease_vx(0, move_ease_ratio);
+        //        static Ease chassis_ease_vy(0, move_ease_ratio);
+        //        static Ease chassis_ease_vt(0, turn_ease_ratio);
+        //        chassis_vx = chassis_ease_vx.Calc(chassis_vx);
+        //        chassis_vy = chassis_ease_vy.Calc(chassis_vy);
+        //        chassis_vt = chassis_ease_vt.Calc(chassis_vt);
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
         osDelay(CHASSIS_OS_DELAY);
@@ -225,12 +225,11 @@ void chassis_remote_mode() {
         updateCarVelocity(car_vx, car_vy, car_vt, 0.01, 0.1f);
     }
 #endif
-
 }
 
 // 假设这是你的更新函数
-void updateCarVelocity(float& car_vx, float& car_vy, float& car_vt, float deltaTime, const float acceleration) {
-
+void updateCarVelocity(float& car_vx, float& car_vy, float& car_vt, float deltaTime,
+                       const float acceleration) {
     // 根据时间增量逐步增加速度
     car_vx += acceleration * deltaTime;
     car_vy += acceleration * deltaTime;

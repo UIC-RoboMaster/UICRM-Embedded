@@ -41,7 +41,6 @@ const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .tz_module = 0,
                                            .reserved = 0};
 
-
 extern bool jam_notify_flags;
 
 extern driver::ServoMG995* MG995;

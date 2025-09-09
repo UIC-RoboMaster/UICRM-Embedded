@@ -120,12 +120,12 @@ void shootTask(void* arg) {
                     const float shootDivider = 7.5;
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / shootDivider,
-                                                      false);
+                            steering_motor->SetTarget(
+                                steering_motor->GetTarget() + 2 * PI / shootDivider, false);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
-                    }8
-                    break;
+                    }
+                    8 break;
                 case SHOOT_MODE_STOP:
                     // 停止发射
                     break;
@@ -151,11 +151,11 @@ void init_shoot() {
         .kd = 1,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -190,11 +190,11 @@ void init_shoot() {
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                           // 死区
+        .A = 3 * PI,                                             // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                             // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
                 control::ConstrainedPID::OutputFilter |          // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分

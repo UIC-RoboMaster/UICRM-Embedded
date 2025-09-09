@@ -18,10 +18,11 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "chassis.h"
 #include "chassis_task.h"
+
 #include "bsp_os.h"
 #include "bsp_print.h"
+#include "chassis.h"
 #include "user_define.h"
 
 driver::MotorCANBase* fl_motor = nullptr;
@@ -49,13 +50,11 @@ void update_channel_data(communication::can_bridge_ext_id_t ext_id,
             ch1 = data.data_four_int16.data[1];
             ch2 = data.data_four_int16.data[2];
             ch3 = data.data_four_int16.data[3];
-
         }
     }
 }
 
 void init_chassis() {
-
     // 初始化CAN
     can1 = new bsp::CAN(&hcan1, true, 8);
 
@@ -72,16 +71,16 @@ void init_chassis() {
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
-     };
+    };
 
     fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     fl_motor->SetMode(driver::MotorCANBase::OMEGA);
@@ -124,7 +123,6 @@ void init_chassis() {
 
     can_bridge = new communication::CanBridge(can1, 0x52);
 
-
     // 底盘初始化
     control::chassis_t chassis_data;
     chassis_data.motors = motors;
@@ -144,31 +142,30 @@ void init_chassis() {
     can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
     can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
     chassisDebug();
-    #ifdef CHASSIS_DEBUG
-        can_bridge->RegisterRxCallback(0x74, update_channel_data, nullptr);
-        print("DEBUG_ING\r\n");
-    #endif
+#ifdef CHASSIS_DEBUG
+    can_bridge->RegisterRxCallback(0x74, update_channel_data, nullptr);
+    print("DEBUG_ING\r\n");
+#endif
 
     HAL_Delay(300);
 }
 
 void chassisMain() {
-    #ifdef CHASSIS_DEBUG
-        print("CH0:%d CH1:%d CH2:%d CH3:%d\r\n", ch0, ch1, ch2, ch3);
-        chassis->Chassis_DeBug_model(true);
-    #endif
+#ifdef CHASSIS_DEBUG
+    print("CH0:%d CH1:%d CH2:%d CH3:%d\r\n", ch0, ch1, ch2, ch3);
+    chassis->Chassis_DeBug_model(true);
+#endif
 
     chassis->Update();
     osDelay(10);
 }
 
 void chassisDebug() {
-    #ifdef CHASSIS_DEBUG
-        print("RM_CHASSIS_DEBUG_RING\r\n");
-    #else
-        print("RM_CHASSIS_RING\r\n");
-    #endif
-
+#ifdef CHASSIS_DEBUG
+    print("RM_CHASSIS_DEBUG_RING\r\n");
+#else
+    print("RM_CHASSIS_RING\r\n");
+#endif
 }
 
 void kill_chassis() {

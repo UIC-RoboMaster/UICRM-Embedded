@@ -19,11 +19,11 @@
  ###########################################################*/
 
 #pragma once
-#include "debug_model.h"
 #include "bsp_print.h"
 #include "bsp_uart.h"
 #include "cmsis_os2.h"
 #include "dbus.h"
+#include "debug_model.h"
 #include "main.h"
 #include "protocol.h"
 
@@ -37,6 +37,5 @@ extern bsp::UART* minipc_uart;
 extern communication::HostUSB* minipc;
 
 extern communication::DebugModel* CAR_DEBUG;
-
 
 void init_referee();

@@ -56,7 +56,7 @@ void debug_gimbal_init();
 void debug_gimbal(bool newline = false);
 void gimbal_TargeRel(float rel_pitch, float rel_yaw, bool buffer_mode = false);
 
-struct Gimbal_Targe_data{
+struct Gimbal_Targe_data {
     float pitch_ratio_targe;
     float yaw_ratio_targe;
 };

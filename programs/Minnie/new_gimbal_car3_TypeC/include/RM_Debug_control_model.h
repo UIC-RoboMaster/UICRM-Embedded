@@ -5,7 +5,6 @@
 
 #include "bsp_print.h"
 
-
 namespace communication {
     /* ===== Debug_mode 0x0601 ===== */
     typedef struct {
@@ -26,14 +25,13 @@ namespace communication {
 
     } RM_Control_model_t;
 
-
     class DebugModel {
       public:
         RM_Debug_mode_t RM_Debug_mode{};
         RM_Control_model_t RM_Control_model{};
     };
 
-}
+}  // namespace communication
 
 void init_rm_debug();
 

@@ -33,10 +33,10 @@
 #include "referee_task.h"
 #include "remote_task.h"
 // #include "shoot_task_CAM.h"
-#include "shoot_task.h"
 #include "MotorPWMBase.h"
-#include "ui_task.h"
+#include "shoot_task.h"
 #include "tinyML.h"
+#include "ui_task.h"
 
 /**
  * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
@@ -45,7 +45,7 @@
 // static ::GPIO* gimbal_power = nullptr;
 static driver::MotorPWMBase* Laser = nullptr;
 
-void RM_Car_main_remote_mode(){
+void RM_Car_main_remote_mode() {
     char s[20];
     switch (remote_mode) {
         case REMOTE_MODE_PREPARE:
@@ -78,9 +78,9 @@ void RM_Car_main_remote_mode(){
     print("Mode:%s\r\n", s);
 }
 
-void RM_Car_main_data(bool newline = false){
+void RM_Car_main_data(bool newline = false) {
     print(
-    "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
+        "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
         "@ %d "
         "ms\r\n",
         dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
@@ -90,15 +90,16 @@ void RM_Car_main_data(bool newline = false){
     print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
     print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
     print("\r\n");
-    print("Shooter Cooling Heat: %hu\r\n",
-          referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+    print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
     print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
     print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
     print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
           ahrs->INS_angle[2]);
     print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch,
           minipc->target_angle.target_yaw);
-    if(newline){print("\r\n");}
+    if (newline) {
+        print("\r\n");
+    }
 }
 
 void RM_MODEL_INIT(void) {
@@ -124,13 +125,13 @@ void RM_MODEL_INIT(void) {
     init_ui();
 
     // gimbal_power = new bsp::GPIO(LED_B_GPIO_Port, LED_B_Pin);
-    Laser = new driver::Lesar(&htim3, 3,1000000, 50, 0);
+    Laser = new driver::Lesar(&htim3, 3, 1000000, 50, 0);
     Laser->SetOutput(50);
 
     print("RM_ALL_INIT_OK\n");
 }
 
-void RM_RTOS_Init(void){
+void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
     bsp::SetHighresClockTimer(&htim8);
     // 初始化调试串口，使print()函数能够输出调试信息
@@ -162,10 +163,10 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Waiting model to go online\r\n");
         osDelay(WAIT_CHASSIS_ONLINE_OS_DELAY);
     }
-//    while (remote_mode != REMOTE_MODE_KILL) {
-//        Buzzer_Sing(ProtectWarning);
-//        osDelay(PROTECT_OS_DELAY);
-//    }
+    //    while (remote_mode != REMOTE_MODE_KILL) {
+    //        Buzzer_Sing(ProtectWarning);
+    //        osDelay(PROTECT_OS_DELAY);
+    //    }
     protect_wraning_flag = false;
 
     osDelay(500);
