@@ -43,7 +43,7 @@ bsp::BatteryVol* battery_vol = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(200);
-    print_use_uart(&huart1);
+    print_use_uart(&BOARD_UART2);
     can1 = new bsp::CAN(&hcan1, true);
     can2 = new bsp::CAN(&hcan2, false);
     fl_motor = new driver::Motor3508(can2, 0x201);
