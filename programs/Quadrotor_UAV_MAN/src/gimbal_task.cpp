@@ -152,7 +152,8 @@ void gimbalTask(void* arg) {
                 // 遥控器手动控制模式，将电机获取的云台当前角度作为参考系，直接通过遥控控制
 
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                print("pitch_motor: %.2f pitch_diff: %.2f\r\n", map<float>(pitch_motor->GetTheta(), 0, 2 * PI, -PI, PI));
+                print("pitch_motor: %.2f pitch_diff: %.2f\r\n",
+                      map<float>(pitch_motor->GetTheta(), 0, 2 * PI, -PI, PI));
                 gimbal->Update();
                 break;
 

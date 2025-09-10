@@ -34,8 +34,8 @@
 #include "remote_task.h"
 #include "shoot_task.h"
 #include "ui_task.h"
-#include "user_define.h"
 #include "usart.h"
+#include "user_define.h"
 
 // bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {

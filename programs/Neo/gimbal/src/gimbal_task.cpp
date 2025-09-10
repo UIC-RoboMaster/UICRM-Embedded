@@ -20,9 +20,9 @@
 
 #include "gimbal_task.h"
 
+#include "MotorPWMBase.h"
 #include "chassis_task.h"
 #include "minipc_task.h"
-#include "MotorPWMBase.h"
 
 osThreadId_t gimbalTaskHandle;
 

@@ -17,6 +17,7 @@
 // <https://www.gnu.org/licenses/>.
 
 #include "shoot_task.h"
+
 #include "MotorPWMBase.h"
 
 #define LEFT_MOTOR_PWM_CHANNEL 1
@@ -82,7 +83,7 @@ void jam_callback(void* args) {
 
 osThreadId_t shootTaskHandle;
 
-void init_shoot(){
+void init_shoot() {
     init_pwm();
 
     steering_motor = new driver::Motor2006(can1, 0x201);
@@ -95,8 +96,10 @@ void init_shoot(){
 }
 
 void init_pwm() {
-    flyWheelL = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
-    flyWheelR = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
+    flyWheelL = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+                                         MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
+    flyWheelR = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+                                         MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
 
     flyWheelL->Disable();
     flyWheelR->Disable();

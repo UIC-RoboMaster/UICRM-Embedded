@@ -54,6 +54,10 @@ namespace driver {
             // 2PI]之间，如果目标在相反的半圈，则从另一侧绕过去
             ABSOLUTE = 0x80,
         };
+        // for compatibility
+        static constexpr motor_mode OMEGA = ANGLE_LOOP_CONTROL;
+        static constexpr motor_mode THETA = SPEED_LOOP_CONTROL;
+        static constexpr motor_mode INVERTED = REVERSE_MOTOR_OPERATE;
 
         /**
          * @brief 堵转回调函数模板

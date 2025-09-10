@@ -20,15 +20,15 @@
 // Created by Administrator on 2025/3/22.
 //
 
-#include "public_port.h"
-#include "remote_task.h"
-#include "user_define.h"
+#include "bsp_print.h"
+#include "buzzer_task.h"
 #include "gimbal_data.h"
 #include "gimbal_task.h"
-#include "buzzer_task.h"
 #include "imu_task.h"
+#include "public_port.h"
+#include "remote_task.h"
 #include "shoot_task.h"
-#include "bsp_print.h"
+#include "user_define.h"
 
 void RM_RTOS_Init() {
     print_use_uart(&Debug_UART, true, 921600);
