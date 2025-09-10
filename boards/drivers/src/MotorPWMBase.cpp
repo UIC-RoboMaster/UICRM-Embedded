@@ -35,9 +35,13 @@ namespace driver {
         pwm_.SetPulseWidth(val + idle_throttle_);
     }
 
-    void MotorPWMBase::Enable() {pwm_.Start();}
+    void MotorPWMBase::Enable() {
+        pwm_.Start();
+    }
 
-    void MotorPWMBase::Disable() {pwm_.Stop();}
+    void MotorPWMBase::Disable() {
+        pwm_.Stop();
+    }
 
     void Motor2305::SetOutput(int16_t val) {
         constexpr int16_t MIN_OUTPUT = 0;

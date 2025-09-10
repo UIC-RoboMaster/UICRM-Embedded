@@ -17,6 +17,7 @@
 // <https://www.gnu.org/licenses/>.
 
 #include "shoot_task.h"
+
 #include "MotorPWMBase.h"
 
 #define LEFT_MOTOR_PWM_CHANNEL 1
@@ -53,11 +54,11 @@ control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
     .kd = 10000,
     .max_out = 10000,
     .max_iout = 4000,
-    .deadband = 0,                          // 死区
-    .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-    .B = 2 * PI,                            // 启动变速积分的死区
-    .output_filtering_coefficient = 0.1,    // 输出滤波系数
-    .derivative_filtering_coefficient = 0,  // 微分滤波系数
+    .deadband = 0,                                           // 死区
+    .A = 3 * PI,                                             // 变速积分所能达到的最大值为A+B
+    .B = 2 * PI,                                             // 启动变速积分的死区
+    .output_filtering_coefficient = 0.1,                     // 输出滤波系数
+    .derivative_filtering_coefficient = 0,                   // 微分滤波系数
     .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
             control::ConstrainedPID::OutputFilter |          // 输出滤波
             control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
@@ -82,7 +83,7 @@ void jam_callback(void* args) {
 
 osThreadId_t shootTaskHandle;
 
-void init_shoot(){
+void init_shoot() {
     init_pwm();
 
     steering_motor = new driver::Motor2006(can1, 0x201);
@@ -92,12 +93,13 @@ void init_shoot(){
     steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
-
 }
 
 void init_pwm() {
-    flyWheelL = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
-    flyWheelR = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
+    flyWheelL = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+                                         MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
+    flyWheelR = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
+                                         MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
 
     flyWheelL->Disable();
     flyWheelR->Disable();
@@ -115,7 +117,7 @@ void init_pwm() {
     HAL_Delay(2000);  // 等待电调完成校准
 }
 
-void shootTask(void* arg){
+void shootTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
 
@@ -123,7 +125,7 @@ void shootTask(void* arg){
         osDelay(PROTECT_OS_DELAY);
     }
 
-    while(remote_mode == REMOTE_MODE_KILL) {
+    while (remote_mode == REMOTE_MODE_KILL) {
         osDelay(SHOOT_OS_DELAY);
     }
 
@@ -135,8 +137,7 @@ void shootTask(void* arg){
     const float flyWheelMaxTarget = 400.0;
     flyWheelEase = new Ease(0, 1);
     while (true) {
-
-        while(remote_mode == REMOTE_MODE_KILL) {
+        while (remote_mode == REMOTE_MODE_KILL) {
             shoot_kill();
             osDelay(SHOOT_OS_DELAY);
         }
@@ -148,7 +149,7 @@ void shootTask(void* arg){
         if (!steering_motor->IsEnable())
             steering_motor->Enable();
 
-        if(!flyWheelEase->IsAtTarget()) {
+        if (!flyWheelEase->IsAtTarget()) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
         }
         switch (shoot_flywheel_mode) {
@@ -187,8 +188,9 @@ void shootTask(void* arg){
         // uint16_t game_progress_shifted = game_progress >> 3;
         // uint8_t game_progress_bit = game_progress_shifted & 0x01;
         // if (game_progress_bit == 4) {
-        //     uint16_t bullet_remaining_num_17mm = referee->bullet_remaining.bullet_remaining_num_17mm;
-        //     if (bullet_remaining_num_17mm == 0) {
+        //     uint16_t bullet_remaining_num_17mm =
+        //     referee->bullet_remaining.bullet_remaining_num_17mm; if (bullet_remaining_num_17mm ==
+        //     0) {
         //         print("not have bullet!\n");
         //         steering_motor->Hold();
         //         continue;
@@ -215,8 +217,7 @@ void shootTask(void* arg){
         // UNUSED(heat_buffer);
         // UNUSED(bullet_speed);
 
-
-        switch (shoot_load_mode){
+        switch (shoot_load_mode) {
             case SHOOT_MODE_STOP:
                 steering_motor->Hold(true);
                 break;
@@ -243,8 +244,8 @@ void Shoot_Mode_SINGLE(float target, int num) {
     int last_steering_target = steering_motor->GetTheta();
     steering_motor->SetTarget(target, true);
     shoot_17mm_num += num;
-    while (true){
-        if(steering_motor->GetTheta() != last_steering_target){
+    while (true) {
+        if (steering_motor->GetTheta() != last_steering_target) {
             break;
         } else {
             osDelay(SHOOT_SINGLE_OS_DELAY);
@@ -262,8 +263,8 @@ void Shoot_Mode_BURST(float target, int num) {
 void Shoot_Mode_UNLOAD(float target) {
     int last_steering_target = steering_motor->GetTheta();
     steering_motor->SetTarget(target, true);
-    while (true){
-        if(steering_motor->GetTheta() != last_steering_target){
+    while (true) {
+        if (steering_motor->GetTheta() != last_steering_target) {
             break;
         } else {
             osDelay(SHOOT_SINGLE_OS_DELAY);
@@ -272,60 +273,58 @@ void Shoot_Mode_UNLOAD(float target) {
     shoot_load_mode = SHOOT_MODE_IDLE;
 }
 
-
 void shoot_kill() {
     steering_motor->Hold(true);
     flyWheelL->Disable();
     flyWheelR->Disable();
 }
 
-void shoot_remote_mode(){
+void shoot_remote_mode() {
     char s[20];
     switch (shoot_flywheel_mode) {
         case SHOOT_FRIC_MODE_PREPARING:
             strcpy(s, "PREPAREING");
-        break;
+            break;
         case SHOOT_FRIC_MODE_STOP:
             strcpy(s, "STOP");
-        break;
+            break;
         case SHOOT_FRIC_MODE_PREPARED:
             strcpy(s, "PREPARED");
-        break;
+            break;
         case SHOOT_FRIC_MODE_DISABLE:
             strcpy(s, "DISABLE");
-        break;
+            break;
         default:
             strcpy(s, "UNKNOWN");
-        break;
+            break;
     }
 
     print("Shoot Fric Mode:%s\r\n", s);
     switch (shoot_load_mode) {
         case SHOOT_MODE_STOP:
             strcpy(s, "STOP");
-        break;
+            break;
         case SHOOT_MODE_IDLE:
             strcpy(s, "IDLE");
-        break;
+            break;
         case SHOOT_MODE_DISABLE:
             strcpy(s, "DISABLE");
-        break;
+            break;
         case SHOOT_MODE_UNLOAD:
             strcpy(s, "UNLOAD");
-        break;
+            break;
         case SHOOT_MODE_SINGLE:
             strcpy(s, "SINGLE");
-        break;
+            break;
         case SHOOT_MODE_BURST:
             strcpy(s, "BURST");
-        break;
+            break;
         case SHOOT_MODE_RELOADING:
             strcpy(s, "RELOADING");
-        break;
+            break;
         default:
             strcpy(s, "UNKNOWN");
-        break;
+            break;
     }
     print("Shoot Lode Mode:%s\r\n", s);
-
 }

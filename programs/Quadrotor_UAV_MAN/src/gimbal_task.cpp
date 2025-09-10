@@ -35,25 +35,26 @@ control::gimbal_t gimbal_data;
 
 bool LAST_REMOTE_MODE = false;
 
-
 template <typename T>
 T map(T value, T in_min, T in_max, T out_min, T out_max) {
     return out_min + (value - in_min) * (out_max - out_min) / (in_max - in_min);
 }
 
-void debug_gimbal_init(){
-    #ifdef GINBAL_DEBUG
-        print("GIMBAL_INIT_OK\n");
-    #endif
+void debug_gimbal_init() {
+#ifdef GINBAL_DEBUG
+    print("GIMBAL_INIT_OK\n");
+#endif
 }
 
-void debug_gimbal(bool newline){
+void debug_gimbal(bool newline) {
     (void)newline;
-    #ifdef GINBAL_DEBUG
-        print("Gimbal_pitch: %.2f, Gimbal_yaw: %.2f", INS_Angle.pitch, INS_Angle.yaw);
-        print("Gimbal_pitch_diff: %.2f, Gimbal_yaw_diff: %.2f\n", pitch_diff, yaw_diff);
-        if(newline){print("\r\n");}
-    #endif
+#ifdef GINBAL_DEBUG
+    print("Gimbal_pitch: %.2f, Gimbal_yaw: %.2f", INS_Angle.pitch, INS_Angle.yaw);
+    print("Gimbal_pitch_diff: %.2f, Gimbal_yaw_diff: %.2f\n", pitch_diff, yaw_diff);
+    if (newline) {
+        print("\r\n");
+    }
+#endif
 }
 
 void check_kill();
@@ -81,7 +82,6 @@ void gimbalTask(void* arg) {
     // 云台复位完成后，播放一段音乐，代表开始校准陀螺仪
     // 校准陀螺仪会对陀螺仪进行2000次的读取，然后取平均值作为校准值
     Buzzer_Sing(SingCaliStart);
-
 
     ahrs->Cailbrate();
     i = 0;
@@ -114,8 +114,7 @@ void gimbalTask(void* arg) {
         INS_Angle.pitch = 0;
         INS_Angle.yaw = 0;
 
-
-        auto[pitch_ratio, yaw_ratio] = gimbal_remote_mode();
+        auto [pitch_ratio, yaw_ratio] = gimbal_remote_mode();
 
         // 根据遥控器输入计算目标角度，并且进行限幅
         pitch_target =
@@ -124,7 +123,6 @@ void gimbalTask(void* arg) {
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
         yaw_diff = wrap<float>(yaw_target, -PI, PI);
-
 
         // 根据运动模式选择不同的控制方式
         // const float ratio = 0.1875;
@@ -148,14 +146,13 @@ void gimbalTask(void* arg) {
                 // 遥控器手动控制模式，将电机获取的云台当前角度作为参考系，直接通过遥控控制
 
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                print("pitch_motor: %.2f pitch_diff: %.2f\r\n", map<float>(pitch_motor->GetTheta(), 0, 2 * PI, -PI, PI));
+                print("pitch_motor: %.2f pitch_diff: %.2f\r\n",
+                      map<float>(pitch_motor->GetTheta(), 0, 2 * PI, -PI, PI));
                 gimbal->Update();
                 break;
 
             default:
                 break;
-
-
         }
 
         osDelay(GIMBAL_OS_DELAY);
@@ -176,13 +173,13 @@ void init_gimbal() {
         .kd = 1000,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
-        .deadband = 0,                                 // 死区
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit | // 积分限幅
-                control::ConstrainedPID::OutputFilter  // 输出滤波
+        .deadband = 0,                                     // 死区
+        .A = 0,                                            // 变速积分所能达到的最大值为A+B
+        .B = 0,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,               // 输出滤波系数
+        .derivative_filtering_coefficient = 0,             // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter      // 输出滤波
     };
 
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
@@ -192,15 +189,15 @@ void init_gimbal() {
         .kd = 5000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
-        .deadband = 0,                          // 死区
-        .A = 0.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
-                control::ConstrainedPID::OutputFilter |               // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
+        .deadband = 0,                                           // 死区
+        .A = 0.5 * PI,                                           // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,                                           // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
@@ -220,13 +217,13 @@ void init_gimbal() {
         .kd = 1000,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
-        .deadband = 0,                                 // 死区
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.15,          // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |   // 积分限幅
-                control::ConstrainedPID::OutputFilter       // 输出滤波
+        .deadband = 0,                                     // 死区
+        .A = 0,                                            // 变速积分所能达到的最大值为A+B
+        .B = 0,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.15,              // 输出滤波系数
+        .derivative_filtering_coefficient = 0,             // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter      // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
@@ -235,15 +232,15 @@ void init_gimbal() {
         .kd = 5000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
-        .deadband = 0,                            // 死区
-        .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.03,     // 输出滤波系数
-        .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
-                control::ConstrainedPID::OutputFilter |               // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
+        .deadband = 0,                                           // 死区
+        .A = 0.5 * PI,                                           // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,                                           // 启动变速积分的死区
+        .output_filtering_coefficient = 0.03,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0.1,                 // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
+                control::ConstrainedPID::OutputFilter |          // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };

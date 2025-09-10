@@ -76,7 +76,9 @@ namespace driver {
 
         void Disable();
 
-        bool isEnable() {return en_;}
+        bool isEnable() {
+            return en_;
+        }
 
       private:
         bsp::PWM pwm_;
