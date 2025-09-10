@@ -28,6 +28,7 @@ driver::Motor6020* pitch_motor = nullptr;
 driver::Motor6020* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
+float pitch_target = 0, yaw_target = 0;
 float pitch_diff, yaw_diff;
 INS_Angle_t INS_Angle;
 
@@ -99,20 +100,14 @@ void gimbalTask(void* arg) {
     Buzzer_Sing(SingCaliDone);
     osDelay(100);
 
-    // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
-    // float pitch_ratio, yaw_ratio;
-    INS_Angle.pitch = ahrs->INS_angle[2];
-    INS_Angle.yaw = ahrs->INS_angle[0];
-
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
-    float pitch_target = 0, yaw_target = 0;
 
     while (true) {
         // 如果遥控器处于关闭状态，关闭两个电机
         check_kill();
-        INS_Angle.pitch = 0;
-        INS_Angle.yaw = 0;
+        INS_Angle.pitch = ahrs->INS_angle[2];
+        INS_Angle.yaw = ahrs->INS_angle[0];
 
         auto [pitch_ratio, yaw_ratio] = gimbal_remote_mode();
 
@@ -122,7 +117,18 @@ void gimbalTask(void* arg) {
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
-        yaw_diff = wrap<float>(yaw_target, -PI, PI);
+        yaw_diff = wrap<float>(yaw_target, PI, PI);
+
+        if (abs(yaw_diff) < 0.00001)
+            yaw_diff = 0.0000000f;
+
+        // todo 超级补丁，完全修复需要重构云台更新逻辑，现在的逻辑是yaw_target,
+        // pitch_target实际作为作为diff，云台实际上加减target而非diff。这里作为临时限位。
+        float backVal = 0.0001;
+        float maxYaw = PI;
+        float absYaw = abs(INS_Angle.yaw);
+        if (absYaw > maxYaw)
+            yaw_diff = -INS_Angle.yaw / absYaw * backVal;
 
         // 根据运动模式选择不同的控制方式
         // const float ratio = 0.1875;
@@ -146,8 +152,7 @@ void gimbalTask(void* arg) {
                 // 遥控器手动控制模式，将电机获取的云台当前角度作为参考系，直接通过遥控控制
 
                 gimbal->TargetRel(pitch_diff, yaw_diff);
-                print("pitch_motor: %.2f pitch_diff: %.2f\r\n",
-                      map<float>(pitch_motor->GetTheta(), 0, 2 * PI, -PI, PI));
+                print("pitch_motor: %.2f pitch_diff: %.2f\r\n", map<float>(pitch_motor->GetTheta(), 0, 2 * PI, -PI, PI));
                 gimbal->Update();
                 break;
 
@@ -168,9 +173,9 @@ void init_gimbal() {
     pitch_motor = new driver::Motor6020(can1, 0x208, 0x1FF);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 25,
-        .ki = 1,
-        .kd = 1000,
+        .kp = 35,
+        .ki = 20,
+        .kd = 800,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                     // 死区
@@ -184,9 +189,9 @@ void init_gimbal() {
 
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 1500,
-        .ki = 1,
-        .kd = 5000,
+        .kp = 2000,
+        .ki = 25,
+        .kd = 2000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                                           // 死区
@@ -220,22 +225,22 @@ void init_gimbal() {
         .deadband = 0,                                     // 死区
         .A = 0,                                            // 变速积分所能达到的最大值为A+B
         .B = 0,                                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.15,              // 输出滤波系数
+        .output_filtering_coefficient = 0.1,               // 输出滤波系数
         .derivative_filtering_coefficient = 0,             // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
                 control::ConstrainedPID::OutputFilter      // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 1500,
-        .ki = 1,
-        .kd = 5000,
+        .kp = 1200,
+        .ki = 5,
+        .kd = 2000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0,                                           // 死区
         .A = 0.5 * PI,                                           // 变速积分所能达到的最大值为A+B
         .B = 0.5 * PI,                                           // 启动变速积分的死区
-        .output_filtering_coefficient = 0.03,                    // 输出滤波系数
+        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
         .derivative_filtering_coefficient = 0.1,                 // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
                 control::ConstrainedPID::OutputFilter |          // 输出滤波

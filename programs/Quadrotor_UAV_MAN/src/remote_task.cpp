@@ -19,11 +19,11 @@
  ###########################################################*/
 
 #include "remote_task.h"
+#include "user_define.h"
 
 #include <string.h>
 
 #include "gimbal_task.h"
-#include "user_define.h"
 // #include "imu_task.h"
 
 remote::DBUS* dbus = nullptr;
@@ -31,10 +31,10 @@ remote::SBUS* sbus = nullptr;
 
 RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_ADVANCED,
-                                      REMOTE_MODE_PREPARE_HAND_MOVEMENT};
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_ADVANCED, REMOTE_MODE_PREPARE_HAND_MOVEMENT};
 
-const int8_t remote_mode_max = 3;
+const int8_t remote_mode_max = 1;
+//const int8_t remote_mode_max = 3;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
@@ -202,8 +202,7 @@ void remoteTask(void* arg) {
         }
 
         // 不发射
-        if (mouse_left_edge->negEdge() || mouse_right_edge->negEdge() ||
-            keyboard_X_edge->negEdge()) {
+        if (mouse_left_edge->negEdge() || mouse_right_edge->negEdge() || keyboard_X_edge->negEdge()) {
             shoot_load_mode = SHOOT_MODE_STOP;
             shoot_burst_timestamp = 0;
         }

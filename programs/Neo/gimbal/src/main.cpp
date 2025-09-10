@@ -35,11 +35,12 @@
 #include "shoot_task.h"
 #include "ui_task.h"
 #include "user_define.h"
+#include "usart.h"
 
 // bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
-    print_use_uart(&huart1, true, 921600);
+    print_use_uart(&BOARD_UART1, true, 921600);
     init_can();
     init_batt();
     init_imu();
@@ -59,8 +60,6 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
-    // refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
-    // refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
@@ -74,21 +73,21 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(100);
     Buzzer_Sing(DJI);
 
-    while (true) {
-        uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
-
-        control::ConstrainedPID::PID_State_t state;
-        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
-        state.dout = -state.dout;
-        memcpy(buffer + 2, &state, sizeof(state));
-
-        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
-        state.dout = -state.dout;
-        memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
-
-        dump(&state, sizeof(buffer));
-        osDelay(4);
-    }
+    //    while (true) {
+    //        uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
+    //
+    //        control::ConstrainedPID::PID_State_t state;
+    //        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+    //        state.dout = -state.dout;
+    //        memcpy(buffer + 2, &state, sizeof(state));
+    //
+    //        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
+    //        state.dout = -state.dout;
+    //        memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
+    //
+    //        dump(&state, sizeof(buffer));
+    //        osDelay(4);
+    //    }
 
     while (true) {
         //        if (referee->game_robot_status.mains_power_gimbal_output) {

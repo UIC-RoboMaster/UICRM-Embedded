@@ -17,7 +17,6 @@
 // <https://www.gnu.org/licenses/>.
 
 #include "shoot_task.h"
-
 #include "MotorPWMBase.h"
 
 #define LEFT_MOTOR_PWM_CHANNEL 1
@@ -83,7 +82,7 @@ void jam_callback(void* args) {
 
 osThreadId_t shootTaskHandle;
 
-void init_shoot() {
+void init_shoot(){
     init_pwm();
 
     steering_motor = new driver::Motor2006(can1, 0x201);
@@ -96,10 +95,8 @@ void init_shoot() {
 }
 
 void init_pwm() {
-    flyWheelL = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
-                                         MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
-    flyWheelR = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ,
-                                         MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
+    flyWheelL = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
+    flyWheelR = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
 
     flyWheelL->Disable();
     flyWheelR->Disable();
@@ -134,7 +131,7 @@ void shootTask(void* arg) {
         osDelay(1);
     }
 
-    const float flyWheelMaxTarget = 400.0;
+    const float flyWheelMaxTarget = 450.0;
     flyWheelEase = new Ease(0, 1);
     while (true) {
         while (remote_mode == REMOTE_MODE_KILL) {
@@ -149,9 +146,9 @@ void shootTask(void* arg) {
         if (!steering_motor->IsEnable())
             steering_motor->Enable();
 
-        if (!flyWheelEase->IsAtTarget()) {
-            shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-        }
+        //        if(!flyWheelEase->IsAtTarget()) {
+        //            shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+        //        }
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARED:
                 // 启动摩擦轮电机(旋转)

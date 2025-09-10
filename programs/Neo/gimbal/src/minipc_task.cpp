@@ -27,12 +27,13 @@
 #include "protocol.h"
 #include "referee_task.h"
 
-// bsp::UART* minipc_usb = nullptr;
+// bsp::UART* minipc_uart = nullptr;
 // communication::Host* minipc = nullptr;
 bsp::VirtualUSB* minipc_usb = nullptr;
 communication::HostUSB* minipc = nullptr;
 
 bsp::Thread* minipc_thread = nullptr;
+
 const osThreadAttr_t minipc_thread_attr_ = {.name = "MiniPCTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,
@@ -53,10 +54,12 @@ const bsp::thread_init_t thread_init = {
 
 void init_minipc() {
     minipc_usb = new bsp::VirtualUSB();
+    //    minipc_uart = new bsp::UART(&BOARD_UART1);
     //    minipc_uart->SetBaudrate(921600);
     //    minipc_uart->SetupRx(300);
     //    minipc_uart->SetupTx(300);
     minipc = new communication::HostUSB(minipc_usb, 300, 300);
+    //    minipc = new communication::Host(minipc_uart);
 
     // Start mini pc thread
     minipc_thread = new bsp::Thread(thread_init);
