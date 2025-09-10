@@ -15,6 +15,7 @@ set(MCU_OPTIONS -mcpu=${MCU_ARCH} -mthumb -mthumb-interwork
 ######################################################
 add_library(${PROJECT_NAME}_interface INTERFACE)
 target_compile_definitions(${PROJECT_NAME}_interface INTERFACE ${MCU_LINE}
+        NO_USB #To enable usb, compat virtual usb interface and remove this macro
         ARM_MATH_CM7)
 target_compile_options(${PROJECT_NAME}_interface INTERFACE ${MCU_OPTIONS})
 target_link_options(${PROJECT_NAME}_interface INTERFACE

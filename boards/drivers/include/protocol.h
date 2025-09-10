@@ -23,9 +23,16 @@
 #include "bsp_error_handler.h"
 #include "bsp_thread.h"
 #include "bsp_uart.h"
-#include "bsp_usb.h"
 #include "connection_driver.h"
 #include "dbus_package.h"
+
+#ifndef NO_USB
+#include "bsp_usb.h"
+#else
+namespace bsp {
+    class VirtualUSB;
+}
+#endif
 
 namespace communication {
 
@@ -145,6 +152,7 @@ namespace communication {
                                                       .reserved = 0};
     };
 
+#if !defined(NO_USB)
     class USBProtocol : public Protocol {
       public:
         //        explicit USBProtocol(bsp::VirtualUSB* usb);
@@ -173,6 +181,7 @@ namespace communication {
                                                       .tz_module = 0,
                                                       .reserved = 0};
     };
+#endif  // #if !defined(NO_USB)
 
     /* Command for Referee */
 
@@ -795,6 +804,7 @@ namespace communication {
         int ProcessDataTx(int cmd_id, uint8_t* data) final;
     };
 
+#if !defined(NO_USB)
     // TODO: basically same with class "Host", consider multiple inheritance instead new class
     // "HostUSB"
     class HostUSB : public USBProtocol {
@@ -832,5 +842,6 @@ namespace communication {
          */
         int ProcessDataTx(int cmd_id, uint8_t* data) final;
     };
+#endif  // #if !defined(NO_USB)
 
 } /* namespace communication */

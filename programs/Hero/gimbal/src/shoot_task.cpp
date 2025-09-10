@@ -115,7 +115,7 @@ void shootTask(void* arg) {
                     //                        steering_motor->SetTarget(steering_motor->GetTheta());
                     //                    }
                     break;
-                case SHOOT_MODE_SINGLE:
+                case SHOOT_MODE_SINGLE: {
                     // 发射一枚子弹
                     const float shootDivider = 7.5;
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
@@ -125,9 +125,11 @@ void shootTask(void* arg) {
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
-                    8 break;
-                case SHOOT_MODE_STOP:
-                    // 停止发射
+                    break;
+                }
+                case SHOOT_MODE_BURST:
+                case SHOOT_MODE_STOP:  // 停止发射
+                case SHOOT_MODE_DISABLE:
                     break;
                 default:
                     break;
