@@ -58,10 +58,11 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::OMEGA);
-    motor2->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    motor1->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    motor2->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+                    driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
