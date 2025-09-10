@@ -34,7 +34,7 @@ static bsp::GPIT* bmi088_accel_int = nullptr;
 static bsp::GPIT* bmi088_gyro_int = nullptr;
 
 void RM_RTOS_Init(void) {
-    print_use_usb();
+    //    print_use_usb();
     bsp::spi_init_t spiInit = {
         .hspi = &hspi2,
         .mode = bsp::SPI_MODE_BLOCKED,

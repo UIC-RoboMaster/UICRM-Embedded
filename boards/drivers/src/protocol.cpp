@@ -117,6 +117,7 @@ namespace communication {
         return package;
     }
 
+#if !defined(NO_USB)
     USBProtocol::USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200,
                              uint32_t rxBufferSize = 200)
         : Protocol() {
@@ -149,6 +150,7 @@ namespace communication {
         usb_->Write<false>(package.data, package.length);
         return package;
     }
+#endif  // #if !defined(NO_USB)
 
     Referee::Referee(bsp::UART* uart) : UARTProtocol(uart) {
         // 设置100ms离线阈值
@@ -358,6 +360,7 @@ namespace communication {
         return data_len;
     }
 
+#if !defined(NO_USB)
     HostUSB::HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200, uint32_t rxBufferSize = 200)
         : USBProtocol(usb, txBufferSize, rxBufferSize) {
     }
@@ -448,5 +451,6 @@ namespace communication {
         }
         return data_len;
     }
+#endif  // #if !defined(NO_USB)
 
 } /* namespace communication */

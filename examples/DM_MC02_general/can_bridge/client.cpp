@@ -47,7 +47,7 @@ void update_channel_data(communication::can_bridge_ext_id_t ext_id,
 }
 
 void RM_RTOS_Init(void) {
-    print_use_usb();
+    //    print_use_usb();
 
     can1 = new bsp::CAN(&hfdcan1, true, 8);
     can_bridge = new communication::CanBridge(can1, 0x01);
