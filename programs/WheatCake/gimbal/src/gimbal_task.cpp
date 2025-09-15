@@ -172,11 +172,11 @@ void init_gimbal() {
         .kd = 0,
         .max_out = 6 * PI,
         .max_iout = 0,
-        .deadband = 0,                          // 死区
-        .A = 0,                                 // 变速积分所能达到的最大值为A+B
-        .B = 0,                                 // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                 // 死区
+        .A = 0,                                        // 变速积分所能达到的最大值为A+B
+        .B = 0,                                        // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
@@ -207,11 +207,11 @@ void init_gimbal() {
         .kd = 4.5,  // 4.5
         .max_out = 6 * PI,
         .max_iout = 0,
-        .deadband = 0,                          // 死区
-        .A = 0,                                 // 变速积分所能达到的最大值为A+B
-        .B = 0,                                 // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                 // 死区
+        .A = 0,                                        // 变速积分所能达到的最大值为A+B
+        .B = 0,                                        // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
