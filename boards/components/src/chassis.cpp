@@ -65,12 +65,13 @@ namespace control {
         power_limit_.enabled = chassis.power_limit_on;
         power_limit_.limiter = new NewPowerLimit(power_model);
         driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
-
+        /*
         // 底盘是否有超级电容
         if (chassis.has_super_capacitor) {
             has_super_capacitor_ = true;
             super_capacitor_ = chassis.super_capacitor;
         }
+        */
     }
 
     Chassis::~Chassis() {
