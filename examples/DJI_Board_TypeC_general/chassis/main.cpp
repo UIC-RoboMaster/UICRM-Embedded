@@ -36,8 +36,10 @@ remote::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(200);
+    // uart2 use huart1
     print_use_uart(&huart1);
-    can = new bsp::CAN(&hcan1, true);
+    // use can2
+    can = new bsp::CAN(&hcan2, false);
     fl_motor = new driver::Motor3508(can, 0x202);
     fr_motor = new driver::Motor3508(can, 0x201);
     bl_motor = new driver::Motor3508(can, 0x203);
@@ -92,11 +94,13 @@ void RM_RTOS_Init() {
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
-
+    print("chassis example init done\n");
     osDelay(500);  // DBUS initialization needs time
 
     while (true) {
         const float ratio = 1.0f / 660.0f * 6 * PI;
+        // print("%d %d %d %d", dbus->ch0, dbus->ch1, dbus->ch2);
+        // encounter any remote bug when debugging, try directly run!
         chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
 
         // Kill switch
