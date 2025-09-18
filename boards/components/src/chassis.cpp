@@ -65,13 +65,13 @@ namespace control {
         power_limit_.enabled = chassis.power_limit_on;
         power_limit_.limiter = new NewPowerLimit(power_model);
         driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
-        /*
-        // 底盘是否有超级电容
+
+        // 底盘是否有超级电容，用于控制超电的开启与关闭
         if (chassis.has_super_capacitor) {
             has_super_capacitor_ = true;
             super_capacitor_ = chassis.super_capacitor;
         }
-        */
+
     }
 
     Chassis::~Chassis() {
@@ -317,13 +317,13 @@ namespace control {
     void Chassis::Enable() {
         chassis_enable_ = true;
         if (has_super_capacitor_) {
-            super_capacitor_->Enable();
+            super_capacitor_->setControl(60, driver::Adernal_CtrlMode_Work, driver::Adernal_CtrlExceed_Off);
         }
     }
     void Chassis::Disable() {
         chassis_enable_ = false;
         if (has_super_capacitor_) {
-            super_capacitor_->Disable();
+            super_capacitor_->setControl(60, driver::Adernal_CtrlMode_Silent, driver::Adernal_CtrlExceed_Off);
         }
     }
 

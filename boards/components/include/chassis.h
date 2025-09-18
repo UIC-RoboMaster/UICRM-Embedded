@@ -19,15 +19,15 @@
  ###########################################################*/
 
 #pragma once
-
-#include <adernal_supercap.h>
-
 #include "MotorCanBase.h"
 #include "can_bridge.h"
 #include "connection_driver.h"
 #include "pid.h"
 #include "power_limit_new.h"
-#include "supercap.h"
+//#include "supercap.h"
+// use new adernal_supercap
+#include "adernal_supercap.h"
+
 
 #define MAX_WHEEL_NUM 8
 
@@ -192,7 +192,7 @@ namespace control {
 
         bool has_super_capacitor_ = false;
         bool super_capacitor_enable_ = false;
-        driver::SuperCap* super_capacitor_ = nullptr;
+        driver::Adernal_SuperCap* super_capacitor_ = nullptr;
 
         float max_motor_speed_ = 2 * PI * 10;
 

@@ -63,7 +63,7 @@ void RM_RTOS_Default_Task(const void* arg) {
     }
     osDelay(500);
 
-    // 设置预期功率为50W，Work模式，不开启Exceed
+    // 维持电源输入为50W，Work模式，不开启Exceed
     if (adernal_supercap->setControl(50, driver::Adernal_CtrlMode_Work,
                                      driver::Adernal_CtrlExceed_Off)) {
         print("Set Expect Power to 50W, Work mode, Exceed OFF\r\n");
