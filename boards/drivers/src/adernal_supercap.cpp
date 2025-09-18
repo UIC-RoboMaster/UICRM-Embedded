@@ -276,8 +276,8 @@ This parameter must be a number between:1~8     */
 
         // 初始化控制结构
         current_ctrl_.ExpectPwr = 50;  // 默认50W
-        current_ctrl_.Mode = Adernal_CtrlMode_Work;
-        current_ctrl_.Exceed = Adernal_CtrlExceed_Off;
+        current_ctrl_.Mode = Adernal_CtrlMode_Silent; // 默认关闭
+        current_ctrl_.Exceed = Adernal_CtrlExceed_Off; // 默认关闭
     }
 
     Adernal_SuperCap::~Adernal_SuperCap() {

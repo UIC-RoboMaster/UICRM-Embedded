@@ -100,7 +100,7 @@ void RM_RTOS_Default_Task(const void* args) {
     while (true) {
         const float ratio = 1.0f / 660.0f * 6 * PI;
         // print("%d %d %d %d", dbus->ch0, dbus->ch1, dbus->ch2);
-        // encounter any remote bug when debugging, try directly run!
+        // encounter any remote bug when debugging or running, try resetting the MCU (press the reset button)
         chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
 
         // Kill switch
