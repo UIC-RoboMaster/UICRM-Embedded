@@ -242,6 +242,20 @@ namespace driver {
 
         float target = target_;
 
+        uint32_t update_time_us = GetLastUptimeMicrosec();
+        uint32_t update_time_diff = update_time_us - last_update_time_us_;
+        if (update_time_diff > 65535)
+            update_time_diff += 65536;
+        last_update_time_us_ = update_time_diff;
+        motor_update_time_interval = 1000;
+        uint32_t times = (update_time_diff + motor_update_time_interval / 2) / motor_update_time_interval;
+
+        if (times == 0)
+        {
+            //print("Motor %x packet missing at %d\n", rx_id_, bsp::GetHighresTickMilliSec());
+            return;
+        }
+
         // 处理角度环PID，输入角度差，输出速度值
         if (mode_ & THETA) {
             if (mode_ & ABSOLUTE) {
