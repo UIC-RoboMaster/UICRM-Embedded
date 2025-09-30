@@ -38,7 +38,7 @@ namespace bsp {
      *
      * @return high res tick in [us] (0 if highres clock not set)
      */
-    uint64_t GetHighresTickMicroSec(void);
+    uint16_t GetHighresTickMicroSec(void);
 
     /**
      * @brief get the current counter value of the highres timer in [ms]

@@ -41,11 +41,17 @@ namespace driver {
          */
         uint32_t GetLastUptime();
 
+        /**
+         * @return 获取节点上一个心跳包的时间（以微秒为单位）
+         */
+        uint32_t GetLastUptimeMicrosec();
+
         void SetThreshold(uint32_t threshold);
 
       protected:
         /* 节点上一个心跳包的时间 */
         volatile uint32_t last_uptime_ = 0;
+        volatile uint32_t last_uptime_microsec_ = 0;
         /* 判断节点离线的时间 */
         uint32_t online_threshold_ = 500;
         /**
