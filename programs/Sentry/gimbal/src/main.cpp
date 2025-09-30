@@ -41,7 +41,7 @@
 bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
-    bsp::SetHighresClockTimer(&htim5);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     // 初始化调试串口，使print()函数能够输出调试信息
     // print_use_uart(&huart8, true, 921600);
     print_use_usb();

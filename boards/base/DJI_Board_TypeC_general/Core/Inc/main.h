@@ -87,8 +87,6 @@ void RM_RTOS_Default_Task(const void *argument);
 #define BAT_VCCIN_GPIO_Port GPIOF
 #define LED_G_Pin GPIO_PIN_11
 #define LED_G_GPIO_Port GPIOH
-#define LED_B_Pin GPIO_PIN_10
-#define LED_B_GPIO_Port GPIOH
 #define HW1_Pin GPIO_PIN_0
 #define HW1_GPIO_Port GPIOC
 #define HW2_Pin GPIO_PIN_1
