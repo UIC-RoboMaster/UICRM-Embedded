@@ -123,7 +123,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             "@ %d "
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
-            dbus->timestamp);
+            dbus->GetLastUptime());
         print("\r\n");
 
         // Chassis info

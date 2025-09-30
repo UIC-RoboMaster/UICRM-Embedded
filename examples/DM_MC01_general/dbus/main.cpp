@@ -47,7 +47,7 @@ void RM_RTOS_Default_Task(const void* arguments) {
             "@ %d "
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
-            dbus->timestamp);
+            dbus->GetLastUptime());
         print("W: %d A: %d S: %d D: %d\r\n", dbus->keyboard.bit.W, dbus->keyboard.bit.A,
               dbus->keyboard.bit.S, dbus->keyboard.bit.D);
         print("Q: %d E: %d R: %d F: %d G: %d\r\n", dbus->keyboard.bit.Q, dbus->keyboard.bit.E,

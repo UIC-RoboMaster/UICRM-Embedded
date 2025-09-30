@@ -116,8 +116,6 @@ namespace remote {
 
         static const int16_t ROCKER_MIN = -660;
         static const int16_t ROCKER_MAX = 660;
-
-        uint32_t timestamp;
     };
 
 } /* namespace remote */
