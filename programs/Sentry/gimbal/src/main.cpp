@@ -151,7 +151,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             "@ %d "
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
-            dbus->timestamp);
+            dbus->GetLastUptime());
 
         print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
         print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
