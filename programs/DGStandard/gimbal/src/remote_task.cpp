@@ -157,6 +157,17 @@ void remoteTask(void* arg) {
             }
         }
 
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+            static BoolEdgeDetector* test_edge = new BoolEdgeDetector(false);
+            test_edge->input(state_l == remote::DOWN);
+            if (test_edge->posEdge()) {
+                gimbal->TargetReal(0, PI / 1.5);
+            }
+            if (test_edge->negEdge()) {
+                gimbal->TargetReal(0, -PI / 1.5);
+            }
+        }
+
         /*
          * 射击模式控制
          * shoot_flywheel_mode：设置PREPARING/STOP控制摩擦轮启停，就绪后由shoot_task转为PREPARED

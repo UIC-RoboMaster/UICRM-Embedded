@@ -30,9 +30,13 @@ namespace driver {
     }
     void ConnectionDriver::Heartbeat() {
         last_uptime_ = bsp::GetHighresTickMilliSec();
+        last_uptime_microsec_ = bsp::GetHighresTickMicroSec();
     }
     uint32_t ConnectionDriver::GetLastUptime() {
         return last_uptime_;
+    }
+    uint32_t ConnectionDriver::GetLastUptimeMicrosec() {
+        return last_uptime_microsec_;
     }
     void ConnectionDriver::SetThreshold(uint32_t threshold) {
         online_threshold_ = threshold;

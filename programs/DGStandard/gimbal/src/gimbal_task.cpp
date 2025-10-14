@@ -226,14 +226,14 @@ void init_gimbal() {
     yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 8,
+        .kp = 12,
         .ki = 0,
         .kd = 200,  // 再大会在前面顿一下
         .max_out =
             3 *
             PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
-        .max_iout = PI / 8,
-        .deadband = 0,
+        .max_iout = PI / 4,
+        .deadband = PI / 180,
         .A = 0,                                    // 变速积分所能达到的最大值为A+B
         .B = 0,                                    // 启动变速积分的死区
         .output_filtering_coefficient = 0.5,       // 输出滤波系数
@@ -242,14 +242,14 @@ void init_gimbal() {
                 control::ConstrainedPID::Integral_Limit};
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 6000,
+        .kp = 5000,
         .ki = 0,
-        .kd = 0,
+        .kd = 10000000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
-        .deadband = 0,  // 死区
-        .A = 0.5 * PI,  // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,  // 启动变速积分的死区
+        .deadband = 0.3,  // 死区
+        .A = 0.5 * PI,    // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,    // 启动变速积分的死区
         .output_filtering_coefficient = 0.5,
         .derivative_filtering_coefficient = 0.0003,                   // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
@@ -261,9 +261,9 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
-                       driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::ABSOLUTE);
-    yaw_motor->SetSpeedFilter(0.03);
+    yaw_motor->SetSpeedFilter(0.1);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
+                       driver::MotorCANBase::ABSOLUTE);
 
     // 初始化云台对象
     gimbal_data.pitch_motor = pitch_motor;
