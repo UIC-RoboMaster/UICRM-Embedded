@@ -49,7 +49,7 @@ namespace bsp {
         htim_os = htim;
     }
 
-    uint64_t GetHighresTickMicroSec(void) {
+    uint16_t GetHighresTickMicroSec(void) {
         return getRunTimeCounterValue();
     }
     uint32_t GetHighresTickMilliSec(void) {

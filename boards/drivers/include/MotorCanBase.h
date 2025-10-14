@@ -254,6 +254,10 @@ namespace driver {
         uint8_t mode_ = 0;
         control::ConstrainedPID omega_pid_;
         control::ConstrainedPID theta_pid_;
+        // use to calculate the delta time between two received data packets
+        uint32_t last_update_time_us_;
+        //
+        uint32_t motor_update_time_interval;
 
         // 目标，取决于电机的模式，可以是角度[RAD]、角速度[RAD/S]
         float target_;
