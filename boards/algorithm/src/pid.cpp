@@ -173,13 +173,11 @@ namespace control {
 
             // 微分限幅
             PID_ProportionLimit();
-        }
-        else
-        {
+        } else {
             iout_ = 0;
             pout_ = 0;
             dout_ = 0;
-                output_ = 0;
+            output_ = 0;
         }
 
         // 将本次计算的值保存，用于下一次计算

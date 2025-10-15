@@ -259,7 +259,6 @@ namespace driver {
         //
         uint32_t motor_update_time_interval;
 
-
         // 目标，取决于电机的模式，可以是角度[RAD]、角速度[RAD/S]
         float target_;
 

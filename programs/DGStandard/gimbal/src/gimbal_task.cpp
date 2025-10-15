@@ -247,8 +247,8 @@ void init_gimbal() {
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0.3,  // 死区
-        .A = 0.5 * PI,  // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,  // 启动变速积分的死区
+        .A = 0.5 * PI,    // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,    // 启动变速积分的死区
         .output_filtering_coefficient = 0.5,
         .derivative_filtering_coefficient = 0.0003,                   // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
