@@ -24,7 +24,6 @@
 #include "config.h"
 #include "dbus_package.h"
 #include "minipc_task.h"
-#include "config.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -141,7 +140,7 @@ void gimbalTask(void* arg) {
                 case REMOTE_MODE_SPIN:
                 case REMOTE_MODE_FOLLOW:
                     // 如果是跟随模式或者旋转模式，将IMU作为参考系
-                    gimbal->TargetRel(-pitch_diff, yaw_diff);
+                    gimbal->TargetRel(pitch_diff, yaw_diff);
                     gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
                     break;
                 case REMOTE_MODE_ADVANCED:

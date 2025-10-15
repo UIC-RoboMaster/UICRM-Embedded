@@ -156,11 +156,7 @@ void chassisTask(void* arg) {
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
-            while (remote_mode == REMOTE_MODE_KILL) {
-                osDelay(CHASSIS_OS_DELAY + 2);
-            }
-            chassis->Enable();
-            continue;
+            break;
         }
         remote::keyboard_t keyboard;
         if (dbus->IsOnline()) {

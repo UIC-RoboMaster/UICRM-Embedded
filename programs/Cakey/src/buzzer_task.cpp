@@ -22,8 +22,6 @@
 
 #include "config.h"
 
-#include "config.h"
-
 osThreadId_t buzzerTaskHandle;
 
 driver::Buzzer* buzzer = nullptr;
