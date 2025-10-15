@@ -41,7 +41,7 @@
 bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
-    bsp::SetHighresClockTimer(&htim7);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     // 初始化调试串口，使print()函数能够输出调试信息
     print_use_uart(&huart8, true, 921600);
     // 初始化can总线，can在各个进程中都需要被使用所以在这里独立初始化
@@ -123,7 +123,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             "@ %d "
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
-            dbus->timestamp);
+            dbus->GetLastUptime());
         print("\r\n");
 
         // Chassis info
