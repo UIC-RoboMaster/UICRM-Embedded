@@ -158,3 +158,17 @@ Thought directly using `openocd` is possible, but it is only recommended for adv
 
 The main branch is protected. You need to create a new branch and make a pull request to merge your changes. You need to
 <u>pass the CI check (formatting check and build check)</u> before merging.
+
+You should write a meaningful commit message like  
+`feat: add a new module to control the gimbal`.
+ 
+The type must be one of the following:
+
+- **feat** for a new feature for the user, not a new feature for build script.
+- **fix** for a bug fix for the user, not a fix to a build script.
+- **perf** for performance improvements.
+- **docs** for changes to the documentation.
+- **style** for formatting changes, missing semicolons, etc.
+- **refactor** for refactoring production code, e.g. renaming a variable.
+- **test** for adding missing tests, refactoring tests; no production code change.
+- **build** for updating build configuration, development tools or other changes irrelevant to the user.
