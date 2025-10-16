@@ -221,8 +221,8 @@ void init_shoot() {
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
 
     };
-    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    steering_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::ANGEL_LOOP_CONTROL);
+    steering_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL | driver::MotorCANBase::ANGEL_LOOP_CONTROL);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
 

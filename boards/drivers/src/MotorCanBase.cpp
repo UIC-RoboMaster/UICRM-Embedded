@@ -207,7 +207,7 @@ namespace driver {
         // 目标值的单位取决于电机的模式
         // 如果电机启动了角度环PID，则目标值为角度，单位为Rad
         // 如果电机没启动角度环PID的情况下启动了速度环PID，则目标值为角速度，单位为Rad/s
-        if (mode_ & INVERTED) {
+        if (mode_ & REVERSE_MOTOR_OPERATE) {
             target = -target;
         }
 
@@ -218,12 +218,12 @@ namespace driver {
         target_ = target;
 
         // ABSOLUTE模式下，认为输出轴只有一圈。
-        if ((mode_ & THETA) && (mode_ & ABSOLUTE)) {
+        if ((mode_ & ANGEL_LOOP_CONTROL) && (mode_ & ABSOLUTE)) {
             target_ = wrap<float>(target_, -PI, PI);
         }
 
         // 重新计算是否Holding
-        if (mode_ & THETA) {
+        if (mode_ & ANGEL_LOOP_CONTROL) {
             float diff = target_ - GetOutputShaftTheta();
             if (mode_ & ABSOLUTE)
                 diff = wrap<float>(diff, -PI, PI);
@@ -243,7 +243,7 @@ namespace driver {
         float target = target_;
 
         // 处理角度环PID，输入角度差，输出速度值
-        if (mode_ & THETA) {
+        if (mode_ & ANGEL_LOOP_CONTROL) {
             if (mode_ & ABSOLUTE) {
                 // 在ABSOLUTE模式下，如果输出轴到目标要转动大于半圈，则从另一侧转过去
                 if (target - output_shaft_theta_ > PI)
@@ -258,7 +258,7 @@ namespace driver {
         target += speed_offset_;
 
         // 处理速度环PID，输入速度差，输出电流值
-        if (mode_ & OMEGA) {
+        if (mode_ & SPEED_LOOP_CONTROL) {
             target = omega_pid_.ComputeOutput(target, GetOutputShaftOmega());
         }
 
@@ -268,16 +268,16 @@ namespace driver {
         }
     }
     void MotorCANBase::ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode) {
-        if (mode & OMEGA) {
+        if (mode & SPEED_LOOP_CONTROL) {
             omega_pid_.Reinit(pid_init);
-        } else if (mode & THETA) {
+        } else if (mode & ANGEL_LOOP_CONTROL) {
             theta_pid_.Reinit(pid_init);
         }
     }
     control::ConstrainedPID::PID_State_t MotorCANBase::GetPIDState(uint8_t mode) const {
-        if (mode & OMEGA && mode_ & OMEGA) {
+        if (mode & SPEED_LOOP_CONTROL && mode_ & SPEED_LOOP_CONTROL) {
             return omega_pid_.State();
-        } else if (mode & THETA && mode_ & THETA) {
+        } else if (mode & ANGEL_LOOP_CONTROL && mode_ & ANGEL_LOOP_CONTROL) {
             return theta_pid_.State();
         }
         return control::ConstrainedPID::PID_State_t();
@@ -333,7 +333,7 @@ namespace driver {
         output_shaft_omega_ = omega_ / transmission_ratio_;
 
         // 重新计算是否Holding
-        if (mode_ & THETA) {
+        if (mode_ & ANGEL_LOOP_CONTROL) {
             float diff = target_ - GetOutputShaftTheta();
             if (mode_ & ABSOLUTE)
                 diff = wrap<float>(diff, -PI, PI);
@@ -367,7 +367,7 @@ namespace driver {
     void MotorCANBase::RegisterErrorCallback(MotorCANBase::callback_t callback, void* instance) {
         error_callback_ = callback;
         error_callback_instance_ = instance;
-        if (!(mode_ & OMEGA)) {
+        if (!(mode_ & SPEED_LOOP_CONTROL)) {
             // 角度环才需要注册错误回调
             RM_ASSERT_TRUE(false, "Only theta mode motor can register error callback");
         } else {
@@ -386,7 +386,7 @@ namespace driver {
     }
 
     void MotorCANBase::Hold(bool override) {
-        if (!IsHolding() && mode_ & THETA) {
+        if (!IsHolding() && mode_ & ANGEL_LOOP_CONTROL) {
             SetTarget(GetOutputShaftTheta(), override);
         }
     }
@@ -426,12 +426,19 @@ namespace driver {
 
     void Motor3508::PrintData() const {
         print("online: %s ", (IsOnline() ? "true" : "false"));
+        print("\r\n");
         print("theta: % .4f ", GetTheta());
+        print("\r\n");
         print("output shaft theta: % .4f ", GetOutputShaftTheta());
+        print("\r\n");
         print("omega: % .4f ", GetOmega());
+        print("\r\n");
         print("output shaft omega: % .4f ", GetOutputShaftOmega());
+        print("\r\n");
         print("raw temperature: %3d ", raw_temperature_);
-        print("raw current get: % d \r\n", raw_current_get_);
+        print("\r\n");
+        print("raw current get: % d ", raw_current_get_);
+        print("\r\n");
     }
 
     void Motor3508::SetOutput(int16_t val) {

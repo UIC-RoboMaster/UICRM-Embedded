@@ -43,11 +43,11 @@ namespace driver {
             // 未使用
             CURRENT = 0x01,
             // 启用角度环控制
-            OMEGA = 0x02,
+            SPEED_LOOP_CONTROL = 0x02,
             // 启用速度环控制
-            THETA = 0x04,
+            ANGEL_LOOP_CONTROL = 0x04,
             // 反转电机方向
-            INVERTED = 0x40,
+            REVERSE_MOTOR_OPERATE = 0x40,
             // ABSOLUTE模式下，认为输出轴只有一圈。电机输出轴角度不会累计，被限制在[0,
             // 2PI]之间，如果目标在相反的半圈，则从另一侧绕过去
             ABSOLUTE = 0x80,

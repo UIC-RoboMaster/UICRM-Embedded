@@ -81,20 +81,20 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
-    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    fl_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL);
     fl_motor->SetTransmissionRatio(19);
 
-    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    fr_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL);
     fr_motor->SetTransmissionRatio(19);
 
-    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    bl_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL);
     bl_motor->SetTransmissionRatio(19);
 
-    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    br_motor->SetMode(driver::MotorCANBase::OMEGA);
+    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    br_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL);
     br_motor->SetTransmissionRatio(19);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];

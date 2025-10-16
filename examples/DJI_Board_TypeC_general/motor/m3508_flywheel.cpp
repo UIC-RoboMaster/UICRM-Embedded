@@ -64,14 +64,16 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    motor2->SetMode(driver::MotorCANBase::OMEGA);
-    motor3->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    motor4->SetMode(driver::MotorCANBase::OMEGA);
+    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    motor1->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
+                    driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    motor2->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL);
+    motor3->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
+                    driver::MotorCANBase::REVERSE_MOTOR_OPERATE);
+    motor4->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
