@@ -82,10 +82,10 @@ void gimbalTask(void* arg) {
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
     float pitch_target = 0, yaw_target = 0;
-        // 绝对目标（基于连续 IMU 角）用于环绕模式避免跨 ±π 跳变
-        static bool abs_target_inited = false;
-        static float pitch_abs_target = 0.0f;
-        static float yaw_abs_target = 0.0f;
+    // 绝对目标（基于连续 IMU 角）用于环绕模式避免跨 ±π 跳变
+    static bool abs_target_inited = false;
+    static float pitch_abs_target = 0.0f;
+    static float yaw_abs_target = 0.0f;
 
     while (true) {
         // 如果遥控器处于关闭状态，关闭两个电机
@@ -97,8 +97,10 @@ void gimbalTask(void* arg) {
         // 生成连续的 IMU Yaw
         float yaw_raw = INS_Angle.yaw;
         float dy = yaw_raw - yaw_last_raw;
-        if (dy > PI)       yaw_unwrap_offset -= 2 * PI;
-        else if (dy < -PI) yaw_unwrap_offset += 2 * PI;
+        if (dy > PI)
+            yaw_unwrap_offset -= 2 * PI;
+        else if (dy < -PI)
+            yaw_unwrap_offset += 2 * PI;
         float yaw_continuous = yaw_raw + yaw_unwrap_offset;
         yaw_last_raw = yaw_raw;
 
@@ -129,32 +131,35 @@ void gimbalTask(void* arg) {
         // pitch_diff = clip<float>(pitch_target, -PI, PI);
         // yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
-            // 初始化一次绝对目标为当前 IMU 连续角
-            if (!abs_target_inited) {
-                pitch_abs_target = INS_Angle.pitch;
-                yaw_abs_target = yaw_continuous;
-                abs_target_inited = true;
-            }
+        // 初始化一次绝对目标为当前 IMU 连续角
+        if (!abs_target_inited) {
+            pitch_abs_target = INS_Angle.pitch;
+            yaw_abs_target = yaw_continuous;
+            abs_target_inited = true;
+        }
 
-            // 根据遥控器输入更新绝对目标（每周期增量积分）
-            // PITCH 受物理最大范围限制
-            pitch_abs_target += pitch_ratio;
-            pitch_abs_target = clip<float>(pitch_abs_target, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        // 根据遥控器输入更新绝对目标（每周期增量积分）
+        // PITCH 受物理最大范围限制
+        pitch_abs_target += pitch_ratio;
+        pitch_abs_target =
+            clip<float>(pitch_abs_target, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
 
-            if (gimbal_param->yaw_circle_) {
-                // YAW 环绕：允许多圈，直接积分
-                yaw_abs_target += yaw_ratio;
-            } else {
-                // YAW 非环绕：限制在设定范围
-                yaw_abs_target += yaw_ratio;
-                yaw_abs_target = wrap<float>(yaw_abs_target, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
-            }
+        if (gimbal_param->yaw_circle_) {
+            // YAW 环绕：允许多圈，直接积分
+            yaw_abs_target += yaw_ratio;
+        } else {
+            // YAW 非环绕：限制在设定范围
+            yaw_abs_target += yaw_ratio;
+            yaw_abs_target =
+                wrap<float>(yaw_abs_target, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
+        }
 
-            // 计算用于 UI 的误差（目标-当前），避免显示跳变
-            pitch_diff = clip<float>(pitch_abs_target - INS_Angle.pitch, -PI, PI);
-            yaw_diff = wrap<float>(yaw_abs_target - yaw_continuous, -PI, PI);
+        // 计算用于 UI 的误差（目标-当前），避免显示跳变
+        pitch_diff = clip<float>(pitch_abs_target - INS_Angle.pitch, -PI, PI);
+        yaw_diff = wrap<float>(yaw_abs_target - yaw_continuous, -PI, PI);
 
-        pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        pitch_target =
+            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         if (gimbal_param->yaw_circle_) {
             // 环绕模式：使用增量控制，不做 ±π 包裹
             yaw_target = yaw_ratio;
@@ -177,8 +182,8 @@ void gimbalTask(void* arg) {
             switch (remote_mode) {
                 case REMOTE_MODE_SPIN:
                 case REMOTE_MODE_FOLLOW:
-                        // 如果是跟随模式或者旋转模式，使用绝对目标避免跨 ±π 抖动
-                        gimbal->TargetAbs(pitch_abs_target, yaw_abs_target);
+                    // 如果是跟随模式或者旋转模式，使用绝对目标避免跨 ±π 抖动
+                    gimbal->TargetAbs(pitch_abs_target, yaw_abs_target);
                     gimbal->UpdateIMU(INS_Angle.pitch, yaw_continuous);
                     break;
                 case REMOTE_MODE_ADVANCED:
@@ -286,10 +291,11 @@ void init_gimbal() {
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
-    yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::ANGEL_LOOP_CONTROL );
+    yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::ANGEL_LOOP_CONTROL);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
     // yaw_motor->SetMode(driver::MotorCANBase::SPEED_LOOP_CONTROL |
-    //                    driver::MotorCANBase::ANGLE_LOOP_CONTROL | driver::MotorCANBase::ABSOLUTE);
+    //                    driver::MotorCANBase::ANGLE_LOOP_CONTROL |
+    //                    driver::MotorCANBase::ABSOLUTE);
 
     // 环绕模式下禁用单圈绝对角度模式，避免跨 ±π 折返
     if (gimbal_init_data.yaw_circle_) {

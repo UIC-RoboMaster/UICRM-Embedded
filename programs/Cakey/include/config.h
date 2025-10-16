@@ -70,7 +70,7 @@
 /**
  * @note Shoot Config
  *
-*/
+ */
 #define STEERING_MOTOR can2
 #define STEERING_RX_ID 0x207
 
