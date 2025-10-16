@@ -254,9 +254,9 @@ namespace driver {
         uint8_t mode_ = 0;
         control::ConstrainedPID omega_pid_;
         control::ConstrainedPID theta_pid_;
-        // use to calculate the delta time between two received data packets
+        // 上次运行CalcOutput时，最新收到的CAN数据包的时间戳
         uint32_t last_update_time_us_;
-        //
+        // 电机CAN数据包回传间隔，单位为微秒
         uint32_t motor_update_time_interval;
 
 
