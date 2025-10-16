@@ -37,6 +37,8 @@ namespace driver {
      */
     class MotorCANBase : public MotorBase, public ConnectionDriver {
       public:
+        // 电机控制模式
+        // 如果需要让电机转动到指定位置，需要同时使能角度环和速度环
         enum motor_mode {
             // 未使用
             NONE = 0x00,
