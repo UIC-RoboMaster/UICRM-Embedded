@@ -67,6 +67,13 @@
 #define PITCH_PID_KD 0
 #define PITCH_PID_FC 0.1
 
+/**
+ * @note Shoot Config
+ *
+*/
+#define STEERING_MOTOR can2
+#define STEERING_RX_ID 0x207
+
 // Remote Config
 
 // MiniPC Config

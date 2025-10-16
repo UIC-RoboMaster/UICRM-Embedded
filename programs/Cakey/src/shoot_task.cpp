@@ -181,12 +181,15 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
+    // 摩擦轮电机
+    // 跑example验证PWM电机能否正常运作
     flywheel_left = new driver::MotorPWMBase(&htim1, 1, 1000000, 500, 1000);
     flywheel_right = new driver::MotorPWMBase(&htim1, 4, 1000000, 500, 1000);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
 
-    steering_motor = new driver::Motor2006(can1, 0x207);
+    // 供弹电机
+    steering_motor = new driver::Motor2006(STEERING_MOTOR, STEERING_RX_ID);
 
     steering_motor->SetTransmissionRatio(36);
     control::ConstrainedPID::PID_Init_t steering_motor_theta_pid_init = {
