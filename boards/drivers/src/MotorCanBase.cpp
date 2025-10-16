@@ -132,6 +132,9 @@ namespace driver {
         target_ = 0;
 
         enable_ = true;
+
+        // Check if the high resolution timer is initialized
+        RM_ASSERT_TRUE(bsp::GetHighresTickMicroSec() != 0, "Highres timer not initialized");
     }
 
     void MotorCANBase::SetFrequency(uint32_t freq) {
