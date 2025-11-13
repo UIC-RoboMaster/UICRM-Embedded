@@ -42,6 +42,7 @@ void RM_RTOS_Init() {
     HAL_Delay(200);
     // uart2 use huart1
     print_use_uart(&huart1); // use print() to send debugging message
+    print("Initializing...\r\n");
 
     // use can1 to control the supercap
     can1 = new bsp::CAN(&hcan1, true);
@@ -92,6 +93,7 @@ void RM_RTOS_Init() {
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;
     motors[control::FourWheel::back_right] = br_motor;
+    print("Motors initialized\r\n");
 
     // init chassis data
     control::chassis_t chassis_data;
@@ -104,24 +106,24 @@ void RM_RTOS_Init() {
     // enable remote
     dbus = new remote::DBUS(&huart3);
     HAL_Delay(300);
+
+    print("Initializing done!\r\n");
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     print("Waiting for SuperCap to be ready...\r\n");
-
-    // 等待超级电容就绪
-    while (!adernal_supercap->isReady()) {
-        print("Waiting...\r\n");
-        osDelay(100);
-    }
-
+    osDelay(3000);
+    print("Try to config the SuperCap:\r\n");
     // 初始化超级电容 - 选择类型3 (最大30V)
-    if (adernal_supercap->initialize(driver::Adernal_Init_CapType3)) {
+    if (adernal_supercap->initialize(driver::Adernal_Init_30V)) {
         print("SuperCap initialized with Type 3 (30V)\r\n");
     } else {
         print("Failed to initialize SuperCap\r\n");
     }
+
+    osDelay(100);
+
     // 维持电源输出为60W，Work模式，不开启Exceed
     if (adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Work,
                                      driver::Adernal_CtrlExceed_Off)) {
@@ -130,13 +132,10 @@ void RM_RTOS_Default_Task(const void* args) {
                                          print("Failed to set SuperCap parameters\r\n");
                                      }
 
-    print("chassis_supercap example init done\n");
-    osDelay(500);  // DBUS initialization needs time
-
     while (true) {
         const float ratio = 3.0f / 660.0f * 6 * PI; // 直接修改这个来改转速
         // print("%d %d %d %d", dbus->ch0, dbus->ch1, dbus->ch2);
-        // encounter any remote bug when debugging, try reset MCU
+        // encounter any remote bug when debugging, try to reset the MCU
         chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
 
         // Kill switch

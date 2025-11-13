@@ -20,17 +20,14 @@
 
 #include "main.h"
 
-#include <adernal_supercap.h>
+#include "adernal_supercap.h"
 
 #include "MotorCanBase.h"
 #include "bsp_batteryvol.h"
 #include "bsp_can.h"
 #include "bsp_print.h"
-#include "buzzer_notes.h"
-#include "buzzer_task.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "supercap.h"
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -39,7 +36,7 @@ driver::MotorCANBase* fr_motor = nullptr;
 driver::MotorCANBase* bl_motor = nullptr;
 driver::MotorCANBase* br_motor = nullptr;
 
-driver::Adernal_SuperCap* super_cap = nullptr;
+driver::Adernal_SuperCap* adernal_supercap = nullptr;
 
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
@@ -57,7 +54,7 @@ void RM_RTOS_Init() {
     br_motor = new driver::Motor3508(can2, 0x204);
 
     // 初始化超级电容控制器
-    super_cap = new driver::Adernal_SuperCap(can1);
+    adernal_supercap = new driver::Adernal_SuperCap(can1);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
@@ -104,7 +101,7 @@ void RM_RTOS_Init() {
     chassis_data.motors = motors;
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
     chassis_data.has_super_capacitor = true;
-    chassis_data.super_capacitor = super_cap;
+    chassis_data.super_capacitor = adernal_supercap;
     chassis = new control::Chassis(chassis_data);
 
     chassis->SetMaxMotorSpeed(2 * PI * 7);
@@ -118,17 +115,57 @@ void RM_RTOS_Init() {
     battery_vol = new bsp::BatteryVol(&hadc3, ADC_CHANNEL_8, 1, ADC_SAMPLETIME_3CYCLES);
 
     HAL_Delay(300);
-    init_buzzer();
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
-    osDelay(500);
-    Buzzer_Sing(Mario);
+    print("Waiting for SuperCap to be ready...\r\n");
+    osDelay(3000);
+    print("Try to config the SuperCap:\r\n");
+    // 初始化超级电容 - 选择类型3 (最大30V)
+    if (adernal_supercap->initialize(driver::Adernal_Init_30V)) {
+        print("SuperCap initialized with Type 3 (30V)\r\n");
+    } else {
+        print("Failed to initialize SuperCap\r\n");
+    }
+
+    osDelay(100);
+
+    // 维持电源输出为60W，Work模式，不开启Exceed
+    if (adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Work,
+                                     driver::Adernal_CtrlExceed_Off)) {
+        print("Set Expect Power to 60W, Work mode, Exceed OFF\r\n");
+                                     } else {
+                                         print("Failed to set SuperCap parameters\r\n");
+                                     }
 
     while (true) {
         chassis->UpdatePowerVoltage(battery_vol->GetBatteryVol());
         chassis->Update();
+        // 处理超级电容就绪状态打印
+        // 处理就绪状态打印
+        if (adernal_supercap->hasNewReadyStatus()) {
+            print("SuperCap Ready: %s\r\n", adernal_supercap->isReady() ? "Yes" : "No");
+            adernal_supercap->clearReadyFlag();
+        }
+
+        // 处理反馈数据打印
+        if (adernal_supercap->hasNewFeedback()) {
+            const driver::Adernal_Fb_Typedef& feedback = adernal_supercap->getFeedback();
+            print("Voltage: %.2fV Power: %.2fW Work1:%d%% Work2:%d%%\r\n", feedback.Voltage_NoESR,
+                  feedback.Power_Battery, feedback.Work_Sentry1, feedback.Work_Sentry2);
+            adernal_supercap->clearFeedbackFlag();
+        }
+
+        // 处理安全等级打印
+        if (adernal_supercap->hasNewSafetyInfo()) {
+            const driver::Adernal_SafetyLevel_Typedef* safety_levels =
+                adernal_supercap->getSafetyLevels();
+            print("Safety Levels: %d %d %d %d %d %d %d %d\r\n", safety_levels[0], safety_levels[1],
+                  safety_levels[2], safety_levels[3], safety_levels[4], safety_levels[5],
+                  safety_levels[6], safety_levels[7]);
+            adernal_supercap->clearSafetyFlag();
+        }
         osDelay(10);
     }
 }
