@@ -74,9 +74,9 @@ ID可以为tx的ID或者rx的ID*/
      * @brief  Adernal initialization Frame structure and enum definition
      */
     typedef enum {
-        Adernal_Init_CapType1,  // MAX:24V
-        Adernal_Init_CapType2,  // MAX:28V
-        Adernal_Init_CapType3   // MAX:30V
+        Adernal_Init_24V,  // MAX:24V
+        Adernal_Init_28V,  // MAX:28V
+        Adernal_Init_30V   // MAX:30V
     } Adernal_Init_Typedef;     // 初始化帧中对超级电容类型的选择
 
     /**
@@ -168,7 +168,7 @@ This parameter must be a value of enum Adernal_CtrlMode_Typedef
         ~Adernal_SuperCap();
 
         // 初始化方法
-        bool initialize(Adernal_Init_Typedef cap_type = Adernal_Init_CapType1);
+        bool initialize(Adernal_Init_Typedef cap_type = Adernal_Init_24V);
 
         // 设置控制参数
         bool setControl(uint8_t expect_power,

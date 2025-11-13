@@ -123,20 +123,6 @@ void RM_RTOS_Init() {
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
-    // 初始化超级电容 - 选择类型2 (28V)
-    if (super_cap->initialize(driver::Adernal_Init_CapType2)) {
-        print("SuperCap initialized with Type 2 (28V)\r\n");
-    } else {
-        print("Failed to initialize SuperCap\r\n");
-    }
-    osDelay(500);
-
-    // 设置预期功率为80W，Work模式，不开启Exceed
-    if (super_cap->setControl(80, driver::Adernal_CtrlMode_Work, driver::Adernal_CtrlExceed_Off)) {
-        print("Set Expect Power to 80W, Work mode, Exceed OFF\r\n");
-    } else {
-        print("Failed to set SuperCap parameters\r\n");
-    }
     osDelay(500);
     Buzzer_Sing(Mario);
 

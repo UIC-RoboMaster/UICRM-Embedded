@@ -33,9 +33,10 @@ static bsp::CAN* can1 = nullptr;
 static driver::Adernal_SuperCap* adernal_supercap = nullptr;
 
 void RM_RTOS_Init(void) {
+    HAL_Delay(200);
     // 设置串口打印
-    print_use_uart(&BOARD_UART2, true, 961200);
-    print("Initializing... \r\n");
+    print_use_uart(&huart1);
+    print("Initializing the system...\r\n");
 
     // 初始化CAN
     can1 = new bsp::CAN(&hcan1, true);
@@ -48,20 +49,16 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     print("Waiting for SuperCap to be ready...\r\n");
-
-    // 等待超级电容就绪
-    while (!adernal_supercap->isReady()) {
-        print("Waiting...\r\n");
-        osDelay(100);
-    }
-
-    // 初始化超级电容 - 选择类型1 (24V)
-    if (adernal_supercap->initialize(driver::Adernal_Init_CapType1)) {
-        print("SuperCap initialized with Type 1 (24V)\r\n");
+    osDelay(3000);
+    print("Try to config the SuperCap:\r\n");
+    // 初始化超级电容 - 选择类型3 (30V)
+    if (adernal_supercap->initialize(driver::Adernal_Init_30V)) {
+        print("SuperCap initialized with Type 3 (30V)\r\n");
     } else {
         print("Failed to initialize SuperCap\r\n");
     }
-    osDelay(500);
+
+    osDelay(100);
 
     // 维持电源输入为50W，Work模式，不开启Exceed
     if (adernal_supercap->setControl(50, driver::Adernal_CtrlMode_Work,
