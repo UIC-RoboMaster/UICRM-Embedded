@@ -114,7 +114,7 @@ void gimbalTask(void* arg) {
             pitch_motor->Enable();
         if (!yaw_motor->IsEnable())
             yaw_motor->Enable();
-        pitch_curr = -imu->INS_angle[2];
+        pitch_curr = -imu->INS_angle[1];
         yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -124,7 +124,7 @@ void gimbalTask(void* arg) {
         //      pitch_target = pitch_curr;
         //      yaw_target = yaw_curr;
         //      control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
-        //      osDelay(1);+-
+        //      osDelay(1);
         //      continue;
         //    }
         if (dbus->IsOnline()) {
@@ -154,9 +154,12 @@ void gimbalTask(void* arg) {
         pitch_diff = clip<float>(pitch_target, -PI, PI);
         yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
-        //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
-        //            pitch_diff = 0;
-        //        }
+        pitch_diff *= -1;
+        yaw_diff *= -1;
+
+        // if (-0.005 < pitch_diff && pitch_diff < 0.005) {
+        //     pitch_diff = 0;
+        // }
 
         // TODO 等待标定
         const float offset_ratio =
@@ -168,8 +171,8 @@ void gimbalTask(void* arg) {
                        speed_offset * (1 - offset_filter_ratio);
         yaw_motor->SetSpeedOffset(speed_offset);
 
-        float pitch_speed_offset = pitch_ratio;
-        pitch_motor->SetSpeedOffset(pitch_speed_offset);
+        // float pitch_speed_offset = pitch_ratio;
+        // pitch_motor->SetSpeedOffset(pitch_speed_offset);
 
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
@@ -184,15 +187,15 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_AUTOPILOT:
                 if (minipc->target_angle.shoot_cmd == 0) {
                     // gimbal spin when cmd is 0
-                    gimbal->TargetRel(0, 0.5);
+                    gimbal->TargetRel(0, 5);
                     break;
                 }
-                if (  // static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 ||
+                if (  // static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 || //accuracy not implemented yet
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
                     abs(minipc->target_angle.target_yaw) > 180.0f)
                     break;
                 gimbal->TargetAbs(-minipc->target_angle.target_pitch,
-                                  -minipc->target_angle.target_yaw);
+                                  minipc->target_angle.target_yaw);
                 gimbal->UpdateIMU(-pitch_curr, yaw_curr);
                 //                gimbal->TargetAbs(0, PI);
                 //                gimbal->UpdateIMU(-pitch_curr, yaw_curr);
