@@ -137,6 +137,7 @@ void RM_RTOS_Default_Task(const void* arg) {
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        print_enabled("MiniPC Shoot CMD", minipc->target_angle.shoot_cmd);
         print("\r\n");
 
         // Online info

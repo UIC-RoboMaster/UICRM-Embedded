@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "shoot_task.h"
+#include  "minipc_task.h"
 
 driver::Motor3508* flywheel_left = nullptr;
 driver::Motor3508* flywheel_right = nullptr;
@@ -109,6 +110,14 @@ void shootTask(void* arg) {
                 // laser->SetOutput(0);
                 break;
         }
+
+        if (remote_mode == REMOTE_MODE_AUTOPILOT) {
+            if (!minipc->target_angle.shoot_cmd) {
+                steering_motor->Hold(true);
+                shoot_load_mode = shoot_load_mode == SHOOT_MODE_STOP ? shoot_load_mode : SHOOT_MODE_PREPARED;
+            }
+        }
+
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             switch (shoot_load_mode) {
                 case SHOOT_MODE_PREPARING:
