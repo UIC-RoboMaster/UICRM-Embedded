@@ -154,8 +154,8 @@ void gimbalTask(void* arg) {
         pitch_diff = clip<float>(pitch_target, -PI, PI);
         yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
-        pitch_diff *= -1;
-        yaw_diff *= -1;
+        // pitch_diff *= -1;
+        // yaw_diff *= -1;
 
         // if (-0.005 < pitch_diff && pitch_diff < 0.005) {
         //     pitch_diff = 0;
@@ -185,11 +185,13 @@ void gimbalTask(void* arg) {
                 gimbal->Update();
                 break;
             case REMOTE_MODE_AUTOPILOT:
-                if (minipc->target_angle.shoot_cmd == 0) {
-                    // gimbal spin when cmd is 0
-                    gimbal->TargetRel(0, 5);
-                    break;
-                }
+                // if (minipc->target_angle.shoot_cmd == 0) {
+                //     // gimbal spin when cmd is 0
+                //     gimbal->TargetRel(0, 5);
+                //     break;
+                // }
+                // pitch_diff *= -1;
+                // yaw_diff *= -1;
                 if (  // static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 || //accuracy not implemented yet
                     abs(minipc->target_angle.target_pitch) > 90.0f ||
                     abs(minipc->target_angle.target_yaw) > 180.0f)
