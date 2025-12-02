@@ -180,15 +180,26 @@ namespace control {
             if (!motors_[i]->IsEnable())
                 motors_[i]->Enable();
         }
-
+        const float power_boost_factor = 1.75f;
         // 将解算得到的数据（每个电机的转速）传递给电机类，由电机类进行PID控制、CAN输出等
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
             case CHASSIS_OMNI_WHEEL: {
+                // 保存原始速度值用于后续恢复
+                // float original_speeds[FourWheel::motor_num];
+                for(int i = 0; i < FourWheel::motor_num; i++) {
+                    // original_speeds[i] = speeds_[i];
+                    speeds_[i] *= power_boost_factor;  // 应用功率提升系数
+                }
+
                 motors_[FourWheel::front_left]->SetTarget(speeds_[FourWheel::front_left]);
                 motors_[FourWheel::front_right]->SetTarget(speeds_[FourWheel::front_right]);
                 motors_[FourWheel::back_left]->SetTarget(speeds_[FourWheel::back_left]);
                 motors_[FourWheel::back_right]->SetTarget(speeds_[FourWheel::back_right]);
+                // 恢复原始速度值（如果需要的话）
+                // for(int i = 0; i < FourWheel::motor_num; i++) {
+                //    speeds_[i] = original_speeds[i];
+                // }
                 break;
             }
 

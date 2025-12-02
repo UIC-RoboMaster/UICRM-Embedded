@@ -46,21 +46,28 @@ void RM_RTOS_Default_Task(const void* arguments) {
     UNUSED(arguments);
 
     osDelay(2000);
-    supercap->SetPowerTotal(120.0f);
-    supercap->SetMaxChargePower(150.0f);
-    supercap->SetMaxDischargePower(250.0f);
+    supercap->SetPowerTotal(60.0f);
+    supercap->SetMaxChargePower(100.0f);
+    supercap->SetMaxDischargePower(100.0f);
     supercap->SetPerferBuffer(40.0f);
     supercap->Enable();
     supercap->TransmitSettings();
     while (true) {
-        set_cursor(0, 0);
+        // set_cursor(0, 0);
         clear_screen();
         supercap->UpdateCurrentBuffer(50.0f);
+        print("================================\n");
         print("Cap Voltage: %.2fV\n", supercap->GetCapVoltage());
         print("Cap Power: %.2fW\n", supercap->GetCapPower());
         print("Output Power: %.2fW\n", supercap->GetOutputPower());
         print("Output Voltage: %.2fV\n", supercap->GetOutputVoltage());
-
-        osDelay(50);
+        // add status feedback
+        print("Is Enable: %d\n", supercap->GetStatus().flags.enable);
+        print("Cap Low Voltage: %d\n", supercap->GetStatus().flags.cap_low_voltage);
+        print("Power Overload: %d\n",supercap->GetStatus().flags.power_overload);
+        print("CAN Error: %d\n",supercap->GetStatus().flags.can_error);
+        print("Cap Error: %d\n",supercap->GetStatus().flags.cap_error);
+        // !!! don't change the delay time !!!
+        osDelay(10);
     }
 }

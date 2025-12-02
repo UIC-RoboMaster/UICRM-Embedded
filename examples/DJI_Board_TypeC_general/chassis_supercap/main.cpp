@@ -115,9 +115,9 @@ void RM_RTOS_Default_Task(const void* args) {
     print("Waiting for SuperCap to be ready...\r\n");
     osDelay(3000);
     print("Try to config the SuperCap:\r\n");
-    // 初始化超级电容 - 选择类型3 (最大30V)
-    if (adernal_supercap->initialize(driver::Adernal_Init_30V)) {
-        print("SuperCap initialized with Type 3 (30V)\r\n");
+    // 初始化超级电容 - 选择类型1 (最大24V)
+    if (adernal_supercap->initialize(driver::Adernal_Init_24V)) {
+        print("SuperCap initialized with Type 1 (24V)\r\n");
     } else {
         print("Failed to initialize SuperCap\r\n");
     }
