@@ -123,15 +123,15 @@ void RM_RTOS_Default_Task(const void* args) {
     osDelay(3000);
     print("Try to config the SuperCap:\r\n");
     // 初始化超级电容 - 选择类型3 (最大30V)
-    if (adernal_supercap->initialize(driver::Adernal_Init_30V)) {
-        print("SuperCap initialized with Type 3 (30V)\r\n");
+    if (adernal_supercap->initialize(driver::Adernal_Init_24V)) {
+        print("SuperCap initialized with Type 1 (24V)\r\n");
     } else {
         print("Failed to initialize SuperCap\r\n");
     }
 
     osDelay(100);
 
-    // 维持电源输出为60W，Work模式，不开启Exceed
+    // 维持电源输出最大为60W，Work模式，不开启Exceed
     if (adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Work,
                                      driver::Adernal_CtrlExceed_Off)) {
         print("Set Expect Power to 60W, Work mode, Exceed OFF\r\n");
