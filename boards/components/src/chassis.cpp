@@ -54,6 +54,24 @@ namespace control {
                 break;
             }
 
+                // 舵轮底盘
+            case CHASSIS_STEER_WHEEL: {
+                // 新建电机关联 - 8个电机（4个驱动 + 4个转向）
+                motors_ = new driver::MotorCANBase*[SteerWheel::motor_num];
+                for (int i = 0; i < SteerWheel::motor_num; ++i) {
+                    motors_[i] = chassis.motors[i];
+                }
+
+                // 速度初始化 - 驱动电机4个 + 转向电机角度4个
+                speeds_ = new float[SteerWheel::motor_num];
+                for (int i = 0; i < SteerWheel::motor_num; ++i)
+                    speeds_[i] = 0;
+
+                // 轮子数
+                wheel_num_ = SteerWheel::motor_num;
+                break;
+            }
+
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
@@ -90,6 +108,18 @@ namespace control {
                 break;
             }
 
+            case CHASSIS_STEER_WHEEL: {
+                for (int i = 0; i < SteerWheel::motor_num; ++i) {
+                    motors_[i] = nullptr;
+                }
+                delete[] motors_;
+                motors_ = nullptr;
+
+                delete[] speeds_;
+                speeds_ = nullptr;
+                break;
+            }
+
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
         }
@@ -115,6 +145,105 @@ namespace control {
                     -scale * (y_speed - x_speed - turn_speed * (1 - chassis_offset_));  // 1
                 speeds_[FourWheel::back_right] =
                     -scale * (y_speed + x_speed - turn_speed * (1 + chassis_offset_));  // 4
+                break;
+            }
+
+            case CHASSIS_STEER_WHEEL: {
+                // 舵轮底盘运动学解算 (45°对角线布局)
+                // 参考: https://github.com/scutrobotlab/RM2010_AGVinfantry
+                //
+                // 四个轮子相对于底盘中心呈45°对角线分布:
+                //        1(前左)          4(前右)
+                //              \        /
+                //               \  w  /
+                //                \  /
+                //                 中心
+                //                /  \
+                //               /    \
+                //        2(后左)          3(后右)
+                //
+                // R: 底盘中心到各轮子的距离 (对角线半径)
+                // 需要根据实际机器人尺寸设置，单位：米
+                const float R = 0.4f;  // 建议范围: 0.3-0.5米，根据实际调整
+
+                // 45度角的三角函数值
+                const float cos45 = 0.707106781f;  // cos(45°) = √2/2
+                const float sin45 = 0.707106781f;  // sin(45°) = √2/2
+
+                // 各轮组的平移速度分量 (Vx1-4, Vy1-4)
+                // 对于45°布局，所有轮子的Vx和Vy都等于底盘整体速度
+                float Vx1 = x_speed, Vy1 = y_speed;
+                float Vx2 = x_speed, Vy2 = y_speed;
+                float Vx3 = x_speed, Vy3 = y_speed;
+                float Vx4 = x_speed, Vy4 = y_speed;
+
+                // 各轮组的旋转速度分量 (Vw1-4)
+                // Vw = turn_speed × R
+                float Vw1 = turn_speed * R;
+                float Vw2 = turn_speed * R;
+                float Vw3 = turn_speed * R;
+                float Vw4 = turn_speed * R;
+
+                // 轮1 (前左): 位于第二象限，角度135°
+                // V1 = √[(Vy1 - Vw1*cos45°)² + (Vx1 - Vw1*sin45°)²]
+                // θ1 = atan2((Vy1 - Vw1*cos45°), (Vx1 - Vw1*sin45°))
+                float vy1_comp = Vy1 - Vw1 * cos45;
+                float vx1_comp = Vx1 - Vw1 * sin45;
+                float speed_1 = sqrt(vy1_comp * vy1_comp + vx1_comp * vx1_comp);
+                float angle_1 = atan2(vy1_comp, vx1_comp);
+
+                // 轮2 (后左): 位于第三象限，角度225°
+                // V2 = √[(Vy2 - Vw2*cos45°)² + (Vx2 + Vw2*sin45°)²]
+                // θ2 = atan2((Vy2 - Vw2*cos45°), (Vx2 + Vw2*sin45°))
+                float vy2_comp = Vy2 - Vw2 * cos45;
+                float vx2_comp = Vx2 + Vw2 * sin45;
+                float speed_2 = sqrt(vy2_comp * vy2_comp + vx2_comp * vx2_comp);
+                float angle_2 = atan2(vy2_comp, vx2_comp);
+
+                // 轮3 (后右): 位于第四象限，角度315°
+                // V3 = √[(Vy3 + Vw3*cos45°)² + (Vx3 + Vw3*sin45°)²]
+                // θ3 = atan2((Vy3 + Vw3*cos45°), (Vx3 + Vw3*sin45°))
+                float vy3_comp = Vy3 + Vw3 * cos45;
+                float vx3_comp = Vx3 + Vw3 * sin45;
+                float speed_3 = sqrt(vy3_comp * vy3_comp + vx3_comp * vx3_comp);
+                float angle_3 = atan2(vy3_comp, vx3_comp);
+
+                // 轮4 (前右): 位于第一象限，角度45°
+                // V4 = √[(Vy4 + Vw4*cos45°)² + (Vx4 - Vw4*sin45°)²]
+                // θ4 = atan2((Vy4 + Vw4*cos45°), (Vx4 - Vw4*sin45°))
+                float vy4_comp = Vy4 + Vw4 * cos45;
+                float vx4_comp = Vx4 - Vw4 * sin45;
+                float speed_4 = sqrt(vy4_comp * vy4_comp + vx4_comp * vx4_comp);
+                float angle_4 = atan2(vy4_comp, vx4_comp);
+
+                // 找到最大速度用于归一化
+                float max_speed = speed_1;
+                if (speed_2 > max_speed)
+                    max_speed = speed_2;
+                if (speed_3 > max_speed)
+                    max_speed = speed_3;
+                if (speed_4 > max_speed)
+                    max_speed = speed_4;
+
+                // 如果最大速度超过限制，进行缩放
+                float scale = 1.0f;
+                if (max_speed > max_motor_speed_) {
+                    scale = max_motor_speed_ / max_speed;
+                }
+
+                // 设置驱动电机速度 (索引 0-3)
+                // 注意：电机索引对应: 0=前左, 1=前右, 2=后左, 3=后右
+                speeds_[SteerWheel::drive_front_left] = speed_1 * scale;   // 轮1
+                speeds_[SteerWheel::drive_front_right] = speed_4 * scale;  // 轮4
+                speeds_[SteerWheel::drive_back_left] = speed_2 * scale;    // 轮2
+                speeds_[SteerWheel::drive_back_right] = speed_3 * scale;   // 轮3
+
+                // 设置转向电机角度 (索引 4-7)
+                speeds_[SteerWheel::steer_front_left] = angle_1;   // 轮1
+                speeds_[SteerWheel::steer_front_right] = angle_4;  // 轮4
+                speeds_[SteerWheel::steer_back_left] = angle_2;    // 轮2
+                speeds_[SteerWheel::steer_back_right] = angle_3;   // 轮3
+
                 break;
             }
 
@@ -183,6 +312,28 @@ namespace control {
                 motors_[FourWheel::front_right]->SetTarget(speeds_[FourWheel::front_right]);
                 motors_[FourWheel::back_left]->SetTarget(speeds_[FourWheel::back_left]);
                 motors_[FourWheel::back_right]->SetTarget(speeds_[FourWheel::back_right]);
+                break;
+            }
+
+            case CHASSIS_STEER_WHEEL: {
+                // 驱动电机设置速度 (索引 0-3，使用速度控制模式 OMEGA)
+                motors_[SteerWheel::drive_front_left]->SetTarget(
+                    speeds_[SteerWheel::drive_front_left]);
+                motors_[SteerWheel::drive_front_right]->SetTarget(
+                    speeds_[SteerWheel::drive_front_right]);
+                motors_[SteerWheel::drive_back_left]->SetTarget(speeds_[SteerWheel::drive_back_left]);
+                motors_[SteerWheel::drive_back_right]->SetTarget(
+                    speeds_[SteerWheel::drive_back_right]);
+
+                // 转向电机设置角度 (索引 4-7，使用角度控制模式 THETA + ABSOLUTE)
+                motors_[SteerWheel::steer_front_left]->SetTarget(
+                    speeds_[SteerWheel::steer_front_left]);
+                motors_[SteerWheel::steer_front_right]->SetTarget(
+                    speeds_[SteerWheel::steer_front_right]);
+                motors_[SteerWheel::steer_back_left]->SetTarget(
+                    speeds_[SteerWheel::steer_back_left]);
+                motors_[SteerWheel::steer_back_right]->SetTarget(
+                    speeds_[SteerWheel::steer_back_right]);
                 break;
             }
 

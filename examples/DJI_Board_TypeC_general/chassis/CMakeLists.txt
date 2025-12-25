@@ -22,3 +22,8 @@ uicrm_add_arm_executable(${PROJECT_NAME}_power_limit_test
         TARGET ${BOARD_NAME}
         SOURCES power_limit_test.cpp
 )
+
+uicrm_add_arm_executable(${PROJECT_NAME}_steer_wheel
+        TARGET ${BOARD_NAME}
+        SOURCES steer_wheel.cpp
+)

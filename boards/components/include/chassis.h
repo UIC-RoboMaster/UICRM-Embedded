@@ -34,7 +34,11 @@ namespace control {
     /**
      * @brief chassis models
      */
-    typedef enum { CHASSIS_MECANUM_WHEEL, CHASSIS_OMNI_WHEEL } chassis_model_t;
+    typedef enum {
+        CHASSIS_MECANUM_WHEEL,
+        CHASSIS_OMNI_WHEEL,
+        CHASSIS_STEER_WHEEL  // 舵轮底盘
+    } chassis_model_t;
 
     /**
      * @brief structure used when chassis instance is initialized
@@ -53,6 +57,26 @@ namespace control {
      */
     struct FourWheel {
         enum { front_left, front_right, back_left, back_right, motor_num };
+    };
+
+    /**
+     * @brief motor configs for steer wheel vehicles
+     * @note 舵轮底盘需要8个电机：4个驱动电机(3508)和4个转向电机(6020/4310)
+     */
+    struct SteerWheel {
+        enum {
+            // 驱动电机索引 (3508电机)
+            drive_front_left,
+            drive_front_right,
+            drive_back_left,
+            drive_back_right,
+            // 转向电机索引 (6020/4310电机，具备绝对编码器)
+            steer_front_left,
+            steer_front_right,
+            steer_back_left,
+            steer_back_right,
+            motor_num
+        };
     };
 
     /**
