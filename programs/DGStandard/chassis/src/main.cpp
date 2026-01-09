@@ -129,6 +129,10 @@ void RM_RTOS_Default_Task(const void* args) {
     while (true) {
         chassis->UpdatePowerVoltage(battery_vol->GetBatteryVol());
         chassis->Update();
+        print_enabled("fl_motor", fl_motor->IsEnable());
+        print_enabled("fr_motor", fr_motor->IsEnable());
+        print_enabled("bl_motor", bl_motor->IsEnable());
+        print_enabled("br_motor", br_motor->IsEnable());
         osDelay(10);
     }
 }
