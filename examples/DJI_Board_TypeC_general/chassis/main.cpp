@@ -40,8 +40,8 @@ void RM_RTOS_Init() {
     can = new bsp::CAN(&hcan1, true);
     fl_motor = new driver::Motor3508(can, 0x202);
     fr_motor = new driver::Motor3508(can, 0x201);
-    bl_motor = new driver::Motor3508(can, 0x203);
-    br_motor = new driver::Motor3508(can, 0x204);
+    bl_motor = new driver::Motor3508(can, 0x204);
+    br_motor = new driver::Motor3508(can, 0x203);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
         .ki = 3,

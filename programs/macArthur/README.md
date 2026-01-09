@@ -2,7 +2,7 @@
 
 ## 程序指南
 
-本程序为步兵的云台程序，底盘程序直接使用 `example_chassis_DJI_Board_TypeC_general_can_bridge`。
+本程序为21莞工英雄的云台程序，底盘程序直接使用 `example_chassis_DJI_Board_TypeC_general_can_bridge`。
 
 ## 接线相关
 
