@@ -102,7 +102,6 @@ void chassisTask(void* arg) {
         //        chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
         // todo temporary workable feedforward
         float chassis_target_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-        ;
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
@@ -196,12 +195,12 @@ void init_chassis() {
 void kill_chassis() {
     chassis->Disable();
 }
-
-void goForward() {
-    float x = 10;
-    osDelay(1000);
-    chassis->SetSpeed(x, 0, 0);
-}
-
-void goBackward() {
-}
+//
+// void goForward() {
+//     float x = 10;
+//     osDelay(1000);
+//     chassis->SetSpeed(x, 0, 0);
+// }
+//
+// void goBackward() {
+// }

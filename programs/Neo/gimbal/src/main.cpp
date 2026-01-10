@@ -45,8 +45,7 @@ void RM_RTOS_Init(void) {
     init_batt();
     init_imu();
     init_buzzer();
-    init_referee();  // todo
-                     // referee线程由父类UARTProtocal构造函数创建，考虑转移到RM_RTOS_Threads_Init
+    init_referee();  // todo referee线程由父类UARTProtocal构造函数创建，考虑转移到RM_RTOS_Threads_Init
     init_minipc();   // todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
     init_remote();
     init_shoot();
@@ -120,6 +119,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
               referee->power_heat_data.chassis_current / 1000.0,
               referee->power_heat_data.chassis_power);
+        print("Navigation Target X%.3f Y%.3f Spin%.3f\r\n",
+            minipc->robot_move.target_x,  minipc->robot_move.target_y, minipc->robot_move.target_turn);
         print("\r\n");
 
         // Gimbal info
@@ -128,7 +129,7 @@ void RM_RTOS_Default_Task(const void* arg) {
               gimbal->getYawTarget() - gimbal_param->yaw_offset_);
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", imu->INS_angle[1], imu->INS_angle[0],
               imu->INS_angle[2]);
-        print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
+        print("Vision Target: P%.3f Y%.3f Acc[%d]\r\n", minipc->target_angle.target_pitch,
               minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
         print("\r\n");
 
