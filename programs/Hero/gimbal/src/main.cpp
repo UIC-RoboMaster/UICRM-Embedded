@@ -38,7 +38,7 @@ void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&htim5);
 
     // 在这里设置串口号和输出波特率
-    print_use_uart(&BOARD_UART1, true, 921600);
+    print_use_uart(&BOARD_UART2, true, 921600);
     clear_screen();
     print("UART init success!");
 
