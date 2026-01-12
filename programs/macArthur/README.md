@@ -2,11 +2,15 @@
 
 ## 程序指南
 
+#### for底盘
+chassis有一个单独的example，直接用底部c板控制4个3508电机。
+chassis_can_bridge为上下板通信用的
+
 本程序为21莞工英雄的云台程序，底盘程序直接使用 `example_chassis_DJI_Board_TypeC_general_can_bridge`。
 
 ## 接线相关
 
-云台上开发板是一块 RoboMaster 开发板A，使用的电机如下：
+云台上开发板是一块 RoboMaster 开发板C，使用的电机如下：
 - pitch电机：GM6020 can2+0x20A 电流控制模式
 - yaw电机：GM6020 can1+0x209 电流控制模式
 - 拨弹电机：M2006 can1+0x207 使用老的ServoMotor类

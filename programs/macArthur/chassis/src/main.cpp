@@ -51,8 +51,8 @@ void RM_RTOS_Init() {
     can1 = new bsp::CAN(&hcan1, true);
     fl_motor = new driver::Motor3508(can2, 0x202);
     fr_motor = new driver::Motor3508(can2, 0x201);
-    bl_motor = new driver::Motor3508(can2, 0x203);
-    br_motor = new driver::Motor3508(can2, 0x204);
+    bl_motor = new driver::Motor3508(can2, 0x204);
+    br_motor = new driver::Motor3508(can2, 0x203);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
@@ -71,20 +71,20 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
-    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    fl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
     fl_motor->SetTransmissionRatio(14);
 
-    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    fr_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
     fr_motor->SetTransmissionRatio(14);
 
-    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    bl_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
     bl_motor->SetTransmissionRatio(14);
 
-    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::ANGLE_LOOP_CONTROL);
-    br_motor->SetMode(driver::MotorCANBase::ANGLE_LOOP_CONTROL);
+    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(14);
 
     driver::supercap_init_t supercap_init = {
