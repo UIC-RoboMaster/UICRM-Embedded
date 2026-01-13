@@ -36,7 +36,7 @@ driver::MotorCANBase* bl_motor = nullptr;
 driver::MotorCANBase* br_motor = nullptr;
 
 control::Chassis* chassis = nullptr;
-remote::DBUS* dbus = nullptr;
+remote::DBUS* dbus = nullptr; // 控制器请接在底盘C板
 
 void RM_RTOS_Init() {
     HAL_Delay(200);
@@ -125,17 +125,17 @@ void RM_RTOS_Default_Task(const void* args) {
     osDelay(100);
 
     // 维持电源输出为60W，Work模式，不开启Exceed
-    if (adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Work,
-                                     driver::Adernal_CtrlExceed_Off)) {
+    if (adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Work, driver::Adernal_CtrlExceed_Off)) {
         print("Set Expect Power to 60W, Work mode, Exceed OFF\r\n");
-                                     } else {
-                                         print("Failed to set SuperCap parameters\r\n");
-                                     }
+    } else {
+        print("Failed to set SuperCap parameters\r\n");
+    }
 
     while (true) {
-        const float ratio = 3.0f / 660.0f * 6 * PI; // 直接修改这个来改转速
-        // print("%d %d %d %d", dbus->ch0, dbus->ch1, dbus->ch2);
+        // print("%d %d %d %d", dbus->ch0, dbus->ch1, dbus->ch2); // 查看控制器数据是否异常
         // encounter any remote bug when debugging, try to reset the MCU
+        // 如果启动后无法控制移动，请按下C板的重置键
+        const float ratio = 1.0f / 660.0f * 6 * PI;
         chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
 
         // Kill switch
@@ -153,12 +153,24 @@ void RM_RTOS_Default_Task(const void* args) {
             adernal_supercap->clearReadyFlag();
         }
 
-        // 处理反馈数据打印
+        // 处理反馈数据打印和模式切换
         if (adernal_supercap->hasNewFeedback()) {
             const driver::Adernal_Fb_Typedef& feedback = adernal_supercap->getFeedback();
             print("Voltage: %.2fV Power: %.2fW Work1:%d%% Work2:%d%%\r\n", feedback.Voltage_NoESR,
                   feedback.Power_Battery, feedback.Work_Sentry1, feedback.Work_Sentry2);
             adernal_supercap->clearFeedbackFlag();
+            // 小于10V时攒一波
+            if(adernal_supercap->getCurrentMode() == driver::Adernal_CtrlMode_Work && feedback.Voltage_NoESR <= 10) {
+                print("Low voltage, switch to charge mode\r\n");
+                adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Charge, driver::Adernal_CtrlExceed_Off);
+                chassis->SetSpeedRatio(1.0f); // 恢复限制
+            }
+            // 充到20V切换回工作模式
+            if(adernal_supercap->getCurrentMode() == driver::Adernal_CtrlMode_Charge && feedback.Voltage_NoESR >= 20) {
+                print("Charge completed, switch to work mode\r\n");
+                adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Work, driver::Adernal_CtrlExceed_Off);
+                chassis->SetSpeedRatio(1.5f); // 突破限制
+            }
         }
 
         // 处理安全等级打印

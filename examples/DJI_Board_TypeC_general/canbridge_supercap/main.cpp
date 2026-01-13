@@ -122,7 +122,7 @@ void RM_RTOS_Default_Task(const void* args) {
     print("Waiting for SuperCap to be ready...\r\n");
     osDelay(3000);
     print("Try to config the SuperCap:\r\n");
-    // 初始化超级电容 - 选择类型3 (最大30V)
+    // 初始化超级电容
     if (adernal_supercap->initialize(driver::Adernal_Init_24V)) {
         print("SuperCap initialized with Type 1 (24V)\r\n");
     } else {
@@ -149,12 +149,24 @@ void RM_RTOS_Default_Task(const void* args) {
             adernal_supercap->clearReadyFlag();
         }
 
-        // 处理反馈数据打印
+        // 处理反馈数据打印和模式切换
         if (adernal_supercap->hasNewFeedback()) {
             const driver::Adernal_Fb_Typedef& feedback = adernal_supercap->getFeedback();
             print("Voltage: %.2fV Power: %.2fW Work1:%d%% Work2:%d%%\r\n", feedback.Voltage_NoESR,
                   feedback.Power_Battery, feedback.Work_Sentry1, feedback.Work_Sentry2);
             adernal_supercap->clearFeedbackFlag();
+            // 小于10V时攒一波
+            if(adernal_supercap->getCurrentMode() == driver::Adernal_CtrlMode_Work && feedback.Voltage_NoESR <= 10) {
+                print("Low voltage, switch to charge mode\r\n");
+                adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Charge, driver::Adernal_CtrlExceed_Off);
+                chassis->SetSpeedRatio(1.0f); // 恢复限制
+            }
+            // 充到20V切换回工作模式
+            if(adernal_supercap->getCurrentMode() == driver::Adernal_CtrlMode_Charge && feedback.Voltage_NoESR >= 20) {
+                print("Charge completed, switch to work mode\r\n");
+                adernal_supercap->setControl(60, driver::Adernal_CtrlMode_Work, driver::Adernal_CtrlExceed_Off);
+                chassis->SetSpeedRatio(1.5f); // 突破限制
+            }
         }
 
         // 处理安全等级打印

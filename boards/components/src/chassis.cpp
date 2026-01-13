@@ -179,15 +179,10 @@ namespace control {
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
             case CHASSIS_OMNI_WHEEL: {
-                /*
-                for(int i = 0; i < FourWheel::motor_num; i++) {
-                    // original_speeds[i] = speeds_[i];
-                    speeds_[i] *= 1.5f;  // 应用功率提升系数
-                }*/
-                motors_[FourWheel::front_left]->SetTarget(speeds_[FourWheel::front_left]);
-                motors_[FourWheel::front_right]->SetTarget(speeds_[FourWheel::front_right]);
-                motors_[FourWheel::back_left]->SetTarget(speeds_[FourWheel::back_left]);
-                motors_[FourWheel::back_right]->SetTarget(speeds_[FourWheel::back_right]);
+                motors_[FourWheel::front_left]->SetTarget(speeds_[FourWheel::front_left] * speed_ratio);
+                motors_[FourWheel::front_right]->SetTarget(speeds_[FourWheel::front_right] * speed_ratio);
+                motors_[FourWheel::back_left]->SetTarget(speeds_[FourWheel::back_left] * speed_ratio);
+                motors_[FourWheel::back_right]->SetTarget(speeds_[FourWheel::back_right] * speed_ratio);
                 break;
             }
 

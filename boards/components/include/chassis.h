@@ -201,6 +201,13 @@ namespace control {
         float chassis_vx = 0;
         float chassis_vy = 0;
         float chassis_vt = 0;
+
+        // 为测试超级电容，引入功率提升系数来突破60W底盘功率限制，实现高速移动
+      private:
+        float speed_ratio = 1.0f;  // 速度系数
+      public:
+        void SetSpeedRatio(float ratio) { speed_ratio = ratio; }
+        float GetSpeedRatio() const { return speed_ratio; }
     };
 
     class ChassisCanBridgeSender {

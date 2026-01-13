@@ -175,6 +175,10 @@ This parameter must be a value of enum Adernal_CtrlMode_Typedef
                         Adernal_CtrlMode_Typedef mode = Adernal_CtrlMode_Silent,
                         Adernal_CtrlExceed_Typedef exceed = Adernal_CtrlExceed_Off);
 
+        uint8_t getCurrentMode() const {
+            return current_ctrl_.Mode;
+        }
+
         // 获取状态信息
         bool isReady() const {
             return ready_;
