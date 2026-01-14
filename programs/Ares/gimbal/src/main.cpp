@@ -38,7 +38,7 @@ void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     print_use_uart(&huart1, true, 921600);
     init_can();
-    init_batt();
+    //init_batt();
     init_imu();
     init_buzzer();
     init_referee();
@@ -46,7 +46,7 @@ void RM_RTOS_Init(void) {
     init_shoot();
     init_gimbal();
     init_chassis();
-    init_ui();
+    //init_ui();
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -58,21 +58,21 @@ void RM_RTOS_Threads_Init(void) {
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
-    if (ENABLE_UI)
-        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
+    // if (ENABLE_UI)
+    //     uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     osDelay(3000);
     Buzzer_Sing(DJI);
-    //    while (true) {
-    //        clear_screen();
-    //        set_cursor(0, 0);
-    //        flywheel_left->PrintData();
-    //        flywheel_right->PrintData();
-    //        osDelay(10);
-    //    }
+    // while (true) {
+    //     clear_screen();
+    //     set_cursor(0, 0);
+    //     flywheel_left->PrintData();
+    //     flywheel_right->PrintData();
+    //     osDelay(10);
+    // }
     char s[50];
     while (true) {
         set_cursor(0, 0);
@@ -98,21 +98,21 @@ void RM_RTOS_Default_Task(const void* arg) {
                 break;
         }
         print("Mode:%s\r\n", s);
-        //        switch (shoot_fric_mode) {
-        //            case SHOOT_FRIC_MODE_PREPARING:
-        //                strcpy(s, "PREPARE");
-        //                break;
-        //            case SHOOT_FRIC_MODE_STOP:
-        //                strcpy(s, "STOP");
-        //                break;
-        //            case SHOOT_FRIC_MODE_PREPARED:
-        //                strcpy(s, "PREPARED");
-        //                break;
-        //            case SHOOT_FRIC_MODE_DISABLE:
-        //                strcpy(s, "DISABLE");
-        //                break;
-        //        }
-        //        print("Shoot Fric Mode:%s\r\n", s);
+        // switch (shoot_fric_mode) {
+        //     case SHOOT_FRIC_MODE_PREPARING:
+        //         strcpy(s, "PREPARE");
+        //         break;
+        //     case SHOOT_FRIC_MODE_STOP:
+        //         strcpy(s, "STOP");
+        //         break;
+        //     case SHOOT_FRIC_MODE_PREPARED:
+        //         strcpy(s, "PREPARED");
+        //         break;
+        //     case SHOOT_FRIC_MODE_DISABLE:
+        //         strcpy(s, "DISABLE");
+        //         break;
+        // }
+        // print("Shoot Fric Mode:%s\r\n", s);
         switch (shoot_load_mode) {
             case SHOOT_MODE_PREPARING:
                 strcpy(s, "PREPARE");
