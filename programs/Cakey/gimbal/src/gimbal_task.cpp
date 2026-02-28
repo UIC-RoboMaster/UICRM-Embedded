@@ -70,9 +70,10 @@ void gimbalTask(void* arg) {
     Buzzer_Sing(SingCaliDone);
     osDelay(100);
 
-    // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
+    // 初始化当前角度、遥控器输入转换的角度、目标角度
+    // pitch = 电机编码器（云台相对底盘）+ IMU（底盘倾斜补偿），yaw = IMU直接获取
     float pitch_ratio, yaw_ratio;
-    INS_Angle.pitch = ahrs->INS_angle[2];
+    INS_Angle.pitch = gimbal->getPitchByMotor() + ahrs->INS_angle[2];
     INS_Angle.yaw = ahrs->INS_angle[0];
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -82,8 +83,8 @@ void gimbalTask(void* arg) {
         // 如果遥控器处于关闭状态，关闭两个电机
         check_kill();
 
-        // 获取当前陀螺仪角度
-        INS_Angle.pitch = ahrs->INS_angle[2];
+        // 获取当前角度：pitch由电机编码器+IMU底盘倾斜融合，yaw由IMU直接获取
+        INS_Angle.pitch = gimbal->getPitchByMotor() + ahrs->INS_angle[2];
         INS_Angle.yaw = ahrs->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
