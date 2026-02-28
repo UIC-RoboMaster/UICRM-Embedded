@@ -23,7 +23,7 @@
 #include "bsp_os.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "dbus.h"
+#include "dji_dbus.h"
 #include "main.h"
 
 bsp::CAN* can2 = NULL;

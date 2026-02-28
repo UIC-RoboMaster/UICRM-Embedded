@@ -21,7 +21,7 @@
 #include "bsp_imu.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "dbus.h"
+#include "dji_dbus.h"
 #include "gimbal.h"
 #include "i2c.h"
 #include "main.h"

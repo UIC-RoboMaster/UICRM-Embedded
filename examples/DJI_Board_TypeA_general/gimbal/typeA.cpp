@@ -26,7 +26,7 @@
 #include "bsp_os.h"
 #include "bsp_spi.h"
 #include "cmsis_os.h"
-#include "dbus.h"
+#include "dji_dbus.h"
 #include "gimbal.h"
 #include "heater.h"
 #include "main.h"

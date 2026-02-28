@@ -22,7 +22,7 @@
 
 #include "bsp_os.h"
 #include "chassis_task.h"
-#include "dbus_package.h"
+#include "dji_remote.h"
 #include "minipc_task.h"
 
 osThreadId_t gimbalTaskHandle;
