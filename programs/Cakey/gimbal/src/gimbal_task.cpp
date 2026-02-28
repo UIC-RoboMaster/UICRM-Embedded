@@ -179,33 +179,39 @@ void init_gimbal() {
 
     /**
      * pitch motor
+     * 文档参考：https://rm-static.djicdn.com/tem/17348/RoboMaster%20GM6020%E7%9B%B4%E6%B5%81%E6%97%A0%E5%88%B7%E7%94%B5%E6%9C%BA%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E20231013.pdf
      */
-    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
+    pitch_motor = new driver::Motor6020(can2, 0x208, 0x1FF);
     pitch_motor->SetTransmissionRatio(1);
+
+    // 角度环
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 12,
-        .ki = 0,
-        .kd = 10,
-        .max_out = 6 * PI,  // 最高旋转速度
-        .max_iout = 0,
-        .deadband = 0,                                 // 死区
+        .kp = 5,
+        .ki = 1,      // 平衡重力
+        .kd = 0,
+        .max_out = 4 * PI,  // 最高旋转速度
+        .max_iout = 4,
+        .deadband = 0.005,                             // 死区（覆盖虚位范围）
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 0.2,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
+        .mode = control::ConstrainedPID::OutputFilter | // 输出滤波
+            control::ConstrainedPID::Integral_Limit     // 积分限幅
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
+
+    // 速度环
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 8192,
-        .ki = 0,
+        .kp = 1800,
+        .ki = 200,
         .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
-        .max_iout = 4000,
-        .deadband = 0,                          // 死区
+        .max_iout = 3000,
+        .deadband = 0.5,                         // 死区（忽略微小速度波动）
         .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
         .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .output_filtering_coefficient = 0.3,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
@@ -222,7 +228,7 @@ void init_gimbal() {
     /**
      * yaw motor
      */
-    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
+    yaw_motor = new driver::Motor6020(can2, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
         .kp = 12,

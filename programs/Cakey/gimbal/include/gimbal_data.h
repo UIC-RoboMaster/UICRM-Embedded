@@ -24,9 +24,9 @@
 
 // basic information of gimbal
 const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = 5.05,
+    .pitch_offset_ = 2.1533f,
     .yaw_offset_ = 3.1761f,
-    .pitch_max_ = 0.45f,
+    .pitch_max_ = 0.4038f,
     .yaw_max_ = PI,
     .yaw_circle_ = true,
     .pitch_inverted = false,
