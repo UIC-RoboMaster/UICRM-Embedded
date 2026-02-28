@@ -126,7 +126,9 @@ integrated build commands that can help you automatically format your changes.
 **Prerequisite**: install `clang-format`. (otherwise CMake will not create the format target)
 
 * Linux's users can simply install it using `sudo apt install clang-format-10`.
-* Mac and Windows users need to download prebuilt binaries from [here](https://releases.llvm.org/download.html).
+* For Mac and Windows users, `clang-format` is included in the LLVM toolchain, which can be downloaded from [here](https://releases.llvm.org/download.html).
+* For Windows users, `clang-format` is a single-file executable, and can be downloaded from [here](https://github.com/PolarGoose/clang-format-for-Windows).
+* You can also install `clang-format` using `pip install clang-format` if you have Python installed.
 
 **Format using CLion**
 
