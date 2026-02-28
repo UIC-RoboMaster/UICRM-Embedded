@@ -1,4 +1,4 @@
-project(DGStandard_chassis ASM C CXX)
+project(Cakey_chassis ASM C CXX)
 
 
 uicrm_add_arm_executable(${PROJECT_NAME}_typeC

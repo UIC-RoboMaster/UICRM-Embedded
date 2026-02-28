@@ -1,4 +1,4 @@
-project(DGStandard_gimbal ASM C CXX)
+project(Cakey_gimbal ASM C CXX)
 
 
 uicrm_add_arm_executable(${PROJECT_NAME}_typeA
