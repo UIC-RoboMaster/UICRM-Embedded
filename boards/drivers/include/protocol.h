@@ -61,6 +61,12 @@ namespace communication {
         uint8_t bufferRx[MAX_FRAME_LEN] = {0};
         uint8_t bufferTx[MAX_FRAME_LEN] = {0};
 
+        struct
+        {
+            int idx = 0;
+            bool started = false;
+        } rx_state;
+
         /**
          * @brief verify the header of frame with crc8
          *

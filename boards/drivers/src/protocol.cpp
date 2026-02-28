@@ -34,22 +34,29 @@ namespace communication {
 
     bool Protocol::Receive(package_t package) {
         Heartbeat();
-        memcpy(bufferRx, package.data, package.length);
-        int start_idx;
-        int end_idx = 0;
-        while (end_idx < package.length) {
-            start_idx = end_idx;
-            while (++end_idx < package.length && bufferRx[end_idx] != SOF)
-                ;
-            if (end_idx - start_idx > FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN) {
-                int DATA_LENGTH = bufferRx[start_idx + 2] << BYTE | bufferRx[start_idx + 1];
-                if (VerifyHeader(bufferRx + start_idx, FRAME_HEADER_LEN) &&
-                    VerifyFrame(bufferRx + start_idx,
-                                FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN)) {
-                    int cmd_id = bufferRx[start_idx + FRAME_HEADER_LEN + 1] << BYTE |
-                                 bufferRx[start_idx + FRAME_HEADER_LEN];
-                    ProcessDataRx(cmd_id, bufferRx + start_idx + FRAME_HEADER_LEN + CMD_ID_LEN,
-                                  DATA_LENGTH);
+        for (int i = 0; i < package.length; ++i)
+        {
+            if (!rx_state.started) {
+                if (package.data[i] == SOF) {
+                    rx_state.started = true;
+                    bufferRx[0] = SOF;
+                    rx_state.idx = 1;
+                }
+            } else {
+                bufferRx[rx_state.idx++] = package.data[i];
+
+                if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN)
+                {
+                    int DATA_LENGTH = bufferRx[2] << BYTE | bufferRx[1];
+                    if (rx_state.idx == FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
+                        if (VerifyHeader(bufferRx, FRAME_HEADER_LEN) &&
+                            VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN)) {
+                            int cmd_id = bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
+                            ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN, DATA_LENGTH);
+                            }
+                        rx_state.started = false;
+                        rx_state.idx = 0;
+                    }
                 }
             }
         }
