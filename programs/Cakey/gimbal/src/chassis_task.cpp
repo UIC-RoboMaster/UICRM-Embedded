@@ -29,8 +29,14 @@ float chassis_vy = 0;
 float chassis_vt = 0;
 bool chassis_boost_flag = true;
 
-communication::CanBridge* can_bridge = nullptr;
-control::ChassisCanBridgeSender* chassis = nullptr;
+driver::MotorCANBase* fl_motor = nullptr;
+driver::MotorCANBase* fr_motor = nullptr;
+driver::MotorCANBase* bl_motor = nullptr;
+driver::MotorCANBase* br_motor = nullptr;
+
+driver::SuperCap* super_cap = nullptr;
+control::Chassis* chassis = nullptr;
+// bsp::BatteryVol* battery_vol = nullptr;
 
 void chassisTask(void* arg) {
     UNUSED(arg);
@@ -67,12 +73,6 @@ void chassisTask(void* arg) {
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
         float car_vx, car_vy, car_vt;
-        //        if (keyboard.bit.X) {
-        //            // 刹车
-        //            car_vx = 0;
-        //            car_vy = 0;
-        //            car_vt = 0;
-        //        } else
         if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
             const float speed_scale = 0.5;
@@ -150,7 +150,6 @@ void chassisTask(void* arg) {
         chassis_vt = chassis_ease_vt.Calc(chassis_vt);
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
-        osDelay(1);
 
 #ifdef HAS_REFEREE
         uint8_t buffer_percent = referee->power_heat_data.chassis_power_buffer * 100 / 60;
@@ -159,21 +158,93 @@ void chassisTask(void* arg) {
         uint8_t buffer_percent = 50;
         uint8_t max_watt = 100;
 #endif
-        // 如果传输的电压为0，底盘不会保存这个值，随后底盘的chassis_task会采样自己的电压值并更新。
+        // chassis->UpdatePowerVoltage(battery_vol->GetBatteryVol());
         chassis->UpdatePower(true, max_watt, 0, buffer_percent);
+        chassis->Update();
         osDelay(CHASSIS_OS_DELAY);
     }
 }
 
 void init_chassis() {
-    // 添加can bridge，注册本机ID
-    can_bridge = new communication::CanBridge(can1, 0x51);
-    // 添加can bridge的底盘控制器
-    chassis = new control::ChassisCanBridgeSender(can_bridge, 0x52);
-    // 设置底盘各目标的寄存器id
-    chassis->SetChassisRegId(0x70, 0x71, 0x72, 0x73);
+    // 初始化底盘电机
+    fl_motor = new driver::Motor3508(can1, 0x201);
+    fr_motor = new driver::Motor3508(can1, 0x202);
+    bl_motor = new driver::Motor3508(can1, 0x203);
+    br_motor = new driver::Motor3508(can1, 0x204);
+
+    // 底盘电机PID参数
+    control::ConstrainedPID::PID_Init_t omega_pid_init = {
+        .kp = 2500,
+        .ki = 3,
+        .kd = 0,
+        .max_out = 30000,
+        .max_iout = 10000,
+        .deadband = 0,                          // 死区
+        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+
+    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fl_motor->SetTransmissionRatio(14);
+
+    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fr_motor->SetTransmissionRatio(14);
+
+    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    bl_motor->SetTransmissionRatio(14);
+
+    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
+    br_motor->SetMode(driver::MotorCANBase::OMEGA);
+    br_motor->SetTransmissionRatio(14);
+
+    // 初始化超级电容
+    driver::supercap_init_t supercap_init = {
+        .can = can1,
+        .tx_id = 0x02e,
+        .tx_settings_id = 0x02f,
+        .rx_id = 0x030,
+    };
+    super_cap = new driver::SuperCap(supercap_init);
+    super_cap->Disable();
+    super_cap->TransmitSettings();
+    super_cap->Enable();
+    super_cap->TransmitSettings();
+    super_cap->SetMaxVoltage(24.0f);
+    super_cap->SetPowerTotal(100.0f);
+    super_cap->SetMaxChargePower(150.0f);
+    super_cap->SetMaxDischargePower(250.0f);
+    super_cap->SetPerferBuffer(50.0f);
+
+    // 初始化电池电压采样
+    // battery_vol = new bsp::BatteryVol(&hadc3, ADC_CHANNEL_8, 1, ADC_SAMPLETIME_3CYCLES);
+
+    // 初始化底盘
+    driver::MotorCANBase* motors[control::FourWheel::motor_num];
+    motors[control::FourWheel::front_left] = fl_motor;
+    motors[control::FourWheel::front_right] = fr_motor;
+    motors[control::FourWheel::back_left] = bl_motor;
+    motors[control::FourWheel::back_right] = br_motor;
+
+    control::chassis_t chassis_data;
+    chassis_data.motors = motors;
+    chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
+    chassis_data.has_super_capacitor = true;
+    chassis_data.super_capacitor = super_cap;
+    chassis = new control::Chassis(chassis_data);
+
+    chassis->SetMaxMotorSpeed(2 * PI * 7);
     chassis->Disable();
 }
+
 void kill_chassis() {
     chassis->Disable();
 }

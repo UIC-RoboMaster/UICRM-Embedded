@@ -20,8 +20,8 @@
 
 #pragma once
 #include "MotorCanBase.h"
+// #include "bsp_batteryvol.h"
 #include "bsp_can.h"
-#include "can_bridge.h"
 #include "chassis.h"
 #include "cmsis_os2.h"
 #include "gimbal_task.h"
@@ -30,6 +30,7 @@
 #include "public_port.h"
 #include "referee_task.h"
 #include "remote_task.h"
+#include "supercap.h"
 #include "utils.h"
 extern osThreadId_t chassisTaskHandle;
 const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
@@ -45,7 +46,7 @@ void chassisTask(void* arg);
 void init_chassis();
 void kill_chassis();
 
-extern control::ChassisCanBridgeSender* chassis;
+extern control::Chassis* chassis;
 
 extern float chassis_vx;
 extern float chassis_vy;
