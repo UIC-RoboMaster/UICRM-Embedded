@@ -52,6 +52,11 @@ void print_use_usb();
 #endif
 
 /**
+ * @brief 使用SEGGER RTT进行调试打印
+ */
+void print_use_rtt();
+
+/**
  * @brief dump raw array data to uart or usb
  */
 uint32_t dump(const void* data, uint8_t length);
