@@ -2,16 +2,19 @@
 
 ## 程序指南
 
-本程序为步兵的云台程序，底盘程序直接使用 `example_chassis_DJI_Board_TypeC_general_can_bridge`。
+本程序为哨兵 【小蛋糕】 的云台程序，底盘程序直接使用 `example_chassis_DJI_Board_TypeC_general_can_bridge`。
 
 ## 接线相关
 
 云台上开发板是一块 RoboMaster 开发板A，使用的电机如下：
-- pitch电机：GM6020 can2+0x20A 电流控制模式
-- yaw电机：GM6020 can1+0x209 电流控制模式
+- pitch电机：GM6020 can2 + 0x208, 0x1FF
+- yaw电机：GM6020 can2 + 0x209, 0x2FE
+- 摩擦轮电机：SNAIL PWM 定时器1+通道1/通道4
 - 拨弹电机：M2006 can1+0x207 使用老的ServoMotor类
-- 摩擦轮电机：M2305 PWM 定时器1+通道1/通道4
-- 底盘：通过 Can Bridge 连接控制4个底盘3508电机
+
+底盘上开发板是一块 RoboMaster 开发板C，使用的电机如下：
+- 4个3508车轮电机
+
 
 使用的其他接口如下：
 - UART8：调试接口
