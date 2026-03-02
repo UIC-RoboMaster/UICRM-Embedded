@@ -23,5 +23,5 @@ bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
 void init_can() {
     can1 = new bsp::CAN(&hcan1, true);
-    can2 = new bsp::CAN(&hcan2, false);
+    can2 = new bsp::CAN(&hcan2, true);
 }

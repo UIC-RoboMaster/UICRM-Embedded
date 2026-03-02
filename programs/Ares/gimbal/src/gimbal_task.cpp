@@ -87,7 +87,8 @@ void gimbalTask(void* arg) {
     // reset position
     float pitch_target = 0, yaw_target = 0;
 
-    float actural_chassis_turn_speed = chassis_vz / 6.0f;
+    // TODO: chassis_vz
+    // float actural_chassis_turn_speed = chassis_vz / 6.0f;
 
     while (true) { // TODO dup?
         // if killed
@@ -147,9 +148,11 @@ void gimbalTask(void* arg) {
         //        }
 
         // when SPIN mode, make up spped
-        float yaw_speed_offset = actural_chassis_turn_speed + yaw_ratio;
+        // TODO: actural_chassis_turn_speed
+        // float yaw_speed_offset = actural_chassis_turn_speed + yaw_ratio;
         float pitch_speed_offset = pitch_ratio;
-        yaw_motor->SetSpeedOffset(yaw_speed_offset);
+        // TODO: yaw_speed_offset
+        // yaw_motor->SetSpeedOffset(yaw_speed_offset);
         pitch_motor->SetSpeedOffset(pitch_speed_offset);
 
         switch (remote_mode) {

@@ -20,9 +20,11 @@
 
 #include "shoot_task.h"
 
+// 摩擦轮
 driver::Motor3508* flywheel_left = nullptr;
 driver::Motor3508* flywheel_right = nullptr;
 
+// 供弹
 driver::Motor3508* steering_motor = nullptr;
 
 // 卡弹
@@ -69,10 +71,10 @@ void shootTask(void* arg) {
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             // 死了
-            //            shoot_flywheel_offset = -5000;
-
-            //            shoot_state = 0;
-            //            shoot_state_2 = 0;
+            // shoot_flywheel_offset = -5000;
+            //
+            // shoot_state = 0;
+            // shoot_state_2 = 0;
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
@@ -102,7 +104,7 @@ void shootTask(void* arg) {
                 // laser->SetOutput(0);
                 break;
             default:
-                //                shoot_flywheel_offset = -1000;
+                // shoot_flywheel_offset = -1000;
                 // laser->SetOutput(0);
                 break;
         }
@@ -112,15 +114,15 @@ void shootTask(void* arg) {
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
-                    //                    if (!steering_motor->IsHolding()) {
-                    //                        steering_motor->SetTarget(steering_motor->GetTheta());
-                    //                    }
+                    // if (!steering_motor->IsHolding()) {
+                    //     steering_motor->SetTarget(steering_motor->GetTheta());
+                    // }
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5,
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 20 * PI,
                                                       false);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
@@ -140,8 +142,8 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::Motor3508(can2, 0x201);
-    flywheel_right = new driver::Motor3508(can2, 0x202);
+    flywheel_left = new driver::Motor3508(can2, 0x207);
+    flywheel_right = new driver::Motor3508(can2, 0x208);
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
 
@@ -166,7 +168,7 @@ void init_shoot() {
     flywheel_left->SetMode(driver::MotorCANBase::OMEGA);
     flywheel_right->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
 
-    steering_motor = new driver::Motor3508(can1, 0x202);
+    steering_motor = new driver::Motor3508(can1, 0x201);
 
     steering_motor->SetTransmissionRatio(19);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
@@ -204,7 +206,7 @@ void init_shoot() {
     steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
-    steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
+    // steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {

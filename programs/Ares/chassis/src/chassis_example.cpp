@@ -35,11 +35,11 @@ remote::DBUS* dbus = nullptr;
 void RM_RTOS_Init() {
     HAL_Delay(200);
 
-    // 调试信息通过 UART1 输出
+    // 调试信息通过 UART2 输出
     print_use_uart(&huart1);
 
     // 初始化 CAN 设备和电机对象
-    can = new bsp::CAN(&hcan1, true);
+    can = new bsp::CAN(&hcan2, true);
     fl_motor = new driver::Motor3508(can, 0x202);
     fr_motor = new driver::Motor3508(can, 0x201);
     bl_motor = new driver::Motor3508(can, 0x204);
@@ -109,6 +109,13 @@ void RM_RTOS_Default_Task(const void* args) {
         }
         chassis->SetPower(false, 30, 20, 60);
         chassis->Update();
+
+
+        print("Chassis Volt: %.3f\r\n");
+        print("Chassis Curr: %.3f\r\n");
+        print("Chassis Power: %.3f\r\n");
+        print("\r\n");
+
         osDelay(10);
     }
 }

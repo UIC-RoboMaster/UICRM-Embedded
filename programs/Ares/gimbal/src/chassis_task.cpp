@@ -42,7 +42,7 @@ void chassisTask(void* arg) {
         osDelay(CHASSIS_OS_DELAY);
     }
 
-    while (!ahrs->IsCailbrated()) {
+    while (!imu->CaliDone()) {
         osDelay(1);
     }
 
@@ -91,10 +91,12 @@ void chassisTask(void* arg) {
         // 云台相对底盘的角度，通过云台和底盘连接的电机获取
         float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
         // 云台当前相对云台零点的角度，通过IMU获取
-        float B = INS_Angle.yaw;
+        // TODO: INS_Angle
+        // float B = INS_Angle.yaw;
         // 云台目标相对云台零点的角度，直接读取gimbal class获取
         float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
-        float chassis_target_diff = C - B + A;
+        // TODO: B
+        float chassis_target_diff = C - /*B*/ + A;
         chassis_target_diff = -chassis_target_diff;
         chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
@@ -105,7 +107,7 @@ void chassisTask(void* arg) {
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
-        if (remote_mode == REMOTE_MODE_ADVANCED || remote_mode == REMOTE_MODE_AUTOAIM) {
+        if (remote_mode == REMOTE_MODE_ADVANCED) {
             // 手动模式下，遥控器直接控制底盘速度
             chassis_vx = car_vx;
             chassis_vy = car_vy;
