@@ -28,6 +28,7 @@ driver::MotorCANBase* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
+float pitch_curr = 0, yaw_curr = 0;
 
 void gimbalTask(void* arg) {
     UNUSED(arg);
@@ -176,8 +177,8 @@ void gimbalTask(void* arg) {
 
 // init gimbal
 void init_gimbal() {
-    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
-    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
+    pitch_motor = new driver::Motor6020(can2, 0x208, 0x1FE);
+    yaw_motor = new driver::Motor6020(can1, 0x205, 0x1FE);
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {
