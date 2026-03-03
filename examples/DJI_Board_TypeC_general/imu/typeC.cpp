@@ -89,7 +89,7 @@ void RM_RTOS_Init(void) {
     imu_init.hdma_spi_tx = &hdma_spi1_tx;
     imu_init.Accel_INT_pin_ = INT1_ACCEL_Pin;
     imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
-    imu = new IMU(imu_init, true);
+    imu = new IMU(imu_init, false);
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -109,6 +109,10 @@ void RM_RTOS_Default_Task(const void* arg) {
               imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
         print("Is Calibrated: %s\r\n",
               imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+        print("Accel X: %.3f m/s²\r\n", imu->INS_accel[0]);
+        print("Accel Y: %.3f m/s²\r\n", imu->INS_accel[1]);
+        print("Accel Z: %.3f m/s²\r\n", imu->INS_accel[2]);
+
         osDelay(50);
     }
 }
