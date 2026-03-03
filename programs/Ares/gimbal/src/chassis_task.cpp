@@ -67,12 +67,12 @@ void chassisTask(void* arg) {
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
         float car_vx, car_vy, car_vt;
-        //        if (keyboard.bit.X) {
-        //            // 刹车
-        //            car_vx = 0;
-        //            car_vy = 0;
-        //            car_vt = 0;
-        //        } else
+        // if (keyboard.bit.X) {
+        //     // 刹车
+        //     car_vx = 0;
+        //     car_vy = 0;
+        //     car_vt = 0;
+        // } else
         if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
             const float speed_scale = 0.5;

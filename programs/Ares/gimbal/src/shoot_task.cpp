@@ -166,7 +166,7 @@ void init_shoot() {
     flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     flywheel_left->SetMode(driver::MotorCANBase::OMEGA);
-    flywheel_right->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    flywheel_right->SetMode(driver::MotorCANBase::OMEGA);
 
     steering_motor = new driver::Motor3508(can1, 0x201);
 

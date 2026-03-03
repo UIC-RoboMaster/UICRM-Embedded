@@ -36,7 +36,9 @@
 #include "user_define.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
-    print_use_uart(&huart1);
+
+    print_use_uart(&huart1, true, 921600);
+
     init_can();
     // init_batt();
     init_imu();
@@ -146,7 +148,12 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Is Calibrated: %s\r\n",
               imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
 
-
+        // Gimbal info
+        print("Gimbal target P%.3f Y%.3f\r\n",
+              gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
+              gimbal->getYawTarget() - gimbal_param->yaw_offset_);
+        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
+        print("\r\n");
 
         print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
         print_enabled("yaw", yaw_motor->IsOnline());
