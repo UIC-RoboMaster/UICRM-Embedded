@@ -142,8 +142,8 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::Motor3508(can2, 0x207);
-    flywheel_right = new driver::Motor3508(can2, 0x208);
+    flywheel_left = new driver::Motor3508(can2, 0x201);
+    flywheel_right = new driver::Motor3508(can2, 0x202);
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
 
@@ -166,16 +166,16 @@ void init_shoot() {
     flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     flywheel_left->SetMode(driver::MotorCANBase::OMEGA);
-    flywheel_right->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
+    flywheel_right->SetMode(driver::MotorCANBase::OMEGA);
 
     steering_motor = new driver::Motor3508(can1, 0x201);
 
-    steering_motor->SetTransmissionRatio(19);
+    steering_motor->SetTransmissionRatio(81);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
         .kp = 20,
         .ki = 0,
         .kd = 0,
-        .max_out = 2 * PI,
+        .max_out = 15 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
