@@ -32,6 +32,7 @@
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
+
 driver::MotorCANBase* fl_motor = nullptr;
 driver::MotorCANBase* fr_motor = nullptr;
 driver::MotorCANBase* bl_motor = nullptr;
@@ -40,15 +41,19 @@ driver::MotorCANBase* br_motor = nullptr;
 driver::SuperCap* super_cap = nullptr;
 
 control::Chassis* chassis = nullptr;
+
 communication::CanBridge* can_bridge = nullptr;
 
 bsp::BatteryVol* battery_vol = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
-    print_use_uart(&huart1);
-    can2 = new bsp::CAN(&hcan2, false);
+
+    //print_use_uart(&huart1);
+
     can1 = new bsp::CAN(&hcan1, true);
+    can2 = new bsp::CAN(&hcan2, true);
+
     fl_motor = new driver::Motor3508(can2, 0x202);
     fr_motor = new driver::Motor3508(can2, 0x201);
     bl_motor = new driver::Motor3508(can2, 0x204);
@@ -87,22 +92,23 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(14);
 
-    driver::supercap_init_t supercap_init = {
-        .can = can1,
-        .tx_id = 0x02e,
-        .tx_settings_id = 0x02f,
-        .rx_id = 0x030,
-    };
-    super_cap = new driver::SuperCap(supercap_init);
-    super_cap->Disable();
-    super_cap->TransmitSettings();
-    super_cap->Enable();
-    super_cap->TransmitSettings();
-    super_cap->SetMaxVoltage(24.0f);
-    super_cap->SetPowerTotal(100.0f);
-    super_cap->SetMaxChargePower(150.0f);
-    super_cap->SetMaxDischargePower(250.0f);
-    super_cap->SetPerferBuffer(50.0f);
+    // driver::supercap_init_t supercap_init = {
+    //     .can = can1,
+    //     .tx_id = 0x02e,
+    //     .tx_settings_id = 0x02f,
+    //     .rx_id = 0x030,
+    // };
+    //
+    // super_cap = new driver::SuperCap(supercap_init);
+    // super_cap->Disable();
+    // super_cap->TransmitSettings();
+    // super_cap->Enable();
+    // super_cap->TransmitSettings();
+    // super_cap->SetMaxVoltage(24.0f);
+    // super_cap->SetPowerTotal(100.0f);
+    // super_cap->SetMaxChargePower(150.0f);
+    // super_cap->SetMaxDischargePower(250.0f);
+    // super_cap->SetPerferBuffer(50.0f);
 
     can_bridge = new communication::CanBridge(can1, 0x52);
 
@@ -115,8 +121,10 @@ void RM_RTOS_Init() {
     control::chassis_t chassis_data;
     chassis_data.motors = motors;
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
-    chassis_data.has_super_capacitor = true;
-    chassis_data.super_capacitor = super_cap;
+
+    // chassis_data.has_super_capacitor = false;
+    // chassis_data.super_capacitor = super_cap;
+
     chassis = new control::Chassis(chassis_data);
 
     chassis->SetMaxMotorSpeed(2 * PI * 7);

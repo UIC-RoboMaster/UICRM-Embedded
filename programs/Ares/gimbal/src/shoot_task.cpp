@@ -122,7 +122,7 @@ void shootTask(void* arg) {
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 20 * PI,
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 6 ,
                                                       false);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
@@ -142,8 +142,8 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::Motor3508(can2, 0x207);
-    flywheel_right = new driver::Motor3508(can2, 0x208);
+    flywheel_left = new driver::Motor3508(can2, 0x201);
+    flywheel_right = new driver::Motor3508(can2, 0x202);
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
 
@@ -170,7 +170,7 @@ void init_shoot() {
 
     steering_motor = new driver::Motor3508(can1, 0x201);
 
-    steering_motor->SetTransmissionRatio(19);
+    steering_motor->SetTransmissionRatio(81);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
         .kp = 20,
         .ki = 0,

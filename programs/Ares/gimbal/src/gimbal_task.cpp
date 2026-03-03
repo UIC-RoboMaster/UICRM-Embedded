@@ -87,8 +87,8 @@ void gimbalTask(void* arg) {
     // reset position
     float pitch_target = 0, yaw_target = 0;
 
-    // TODO: chassis_vz
-    // float actural_chassis_turn_speed = chassis_vz / 6.0f;
+
+    float actural_chassis_turn_speed = chassis_vz / 6.0f;
 
     while (true) { // TODO dup?
         // if killed
@@ -148,11 +148,9 @@ void gimbalTask(void* arg) {
         //        }
 
         // when SPIN mode, make up spped
-        // TODO: actural_chassis_turn_speed
-        // float yaw_speed_offset = actural_chassis_turn_speed + yaw_ratio;
+        float yaw_speed_offset = actural_chassis_turn_speed + yaw_ratio;
         float pitch_speed_offset = pitch_ratio;
-        // TODO: yaw_speed_offset
-        // yaw_motor->SetSpeedOffset(yaw_speed_offset);
+        yaw_motor->SetSpeedOffset(yaw_speed_offset);
         pitch_motor->SetSpeedOffset(pitch_speed_offset);
 
         switch (remote_mode) {
@@ -176,8 +174,8 @@ void gimbalTask(void* arg) {
 
 // init gimbal
 void init_gimbal() {
-    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
-    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
+    pitch_motor = new driver::Motor6020(can2, 0x206, 0x2FE);
+    yaw_motor = new driver::Motor6020(can1, 0x205, 0x2FE);
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {

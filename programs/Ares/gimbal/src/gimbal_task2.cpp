@@ -48,10 +48,10 @@ static bool check_safety_and_enable() {
 /**
  * @brief 更新当前位姿反馈
  */
-static void update_feedback() {
-    pitch_curr = -imu->INS_angle[2];
-    yaw_curr = imu->INS_angle[0];
-}
+// static void update_feedback() {
+//     pitch_curr = -imu->INS_angle[2];
+//     yaw_curr = imu->INS_angle[0];
+// }
 
 
 
@@ -84,7 +84,7 @@ void gimbalTask(void* arg) {
             cali_started = true;
         }
 
-        update_feedback();
+        // update_feedback();
 
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
@@ -182,8 +182,8 @@ void gimbalTask(void* arg) {
 
 // init gimbal
 void init_gimbal() {
-    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
-    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
+    pitch_motor = new driver::Motor6020(can2, 0x206, 0x2FE);
+    yaw_motor = new driver::Motor6020(can1, 0x205, 0x2FE);
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {

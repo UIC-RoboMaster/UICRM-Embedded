@@ -8,7 +8,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         src/public_port.cpp
         src/imu_task.cpp
         src/gimbal_data.cpp
-        src/gimbal_task.cpp
+        src/gimbal_task3.cpp
         #src/minipc_task.cpp
         src/shoot_task.cpp
         src/remote_task.cpp
@@ -17,5 +17,5 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         #src/ui_task.cpp
         src/buzzer_task.cpp
         INCLUDES include
-        DEFINES HAS_REFEREE
+        #DEFINES HAS_REFEREE
 )

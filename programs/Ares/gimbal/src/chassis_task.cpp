@@ -91,12 +91,10 @@ void chassisTask(void* arg) {
         // 云台相对底盘的角度，通过云台和底盘连接的电机获取
         float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
         // 云台当前相对云台零点的角度，通过IMU获取
-        // TODO: INS_Angle
-        // float B = INS_Angle.yaw;
+        float B = imu->INS_angle[0];
         // 云台目标相对云台零点的角度，直接读取gimbal class获取
         float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
-        // TODO: B
-        float chassis_target_diff = C - /*B*/ + A;
+        float chassis_target_diff = C - B + A;
         chassis_target_diff = -chassis_target_diff;
         chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
 

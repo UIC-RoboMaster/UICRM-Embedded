@@ -52,8 +52,8 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Threads_Init(void) {
     imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
-    // refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);
-    // refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);
+    // refereeTaskHandle = osThreadNew(refereeTask, nullptr, &refereeTaskAttribute);        // 裁判系统
+    // refereercTaskHandle = osThreadNew(refereercTask, nullptr, &refereercTaskAttribute);  // 裁判系统图传链路
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
@@ -133,6 +133,8 @@ void RM_RTOS_Default_Task(const void* arg) {
                 strcpy(s, "BURST");
                 break;
         }
+
+
         print("Shoot Mode:%s\r\n", s);
 
         print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
@@ -143,13 +145,26 @@ void RM_RTOS_Default_Task(const void* arg) {
               imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
         print("Is Calibrated: %s\r\n",
               imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+
+
+
         print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
+        print_enabled("yaw", yaw_motor->IsOnline());
+        print("yaw current i: %.2f\r\n", yaw_motor->GetCurr());
+
         print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(), pitch_motor->GetOmega());
+        print_enabled("pitch", pitch_motor->IsOnline());
+        print("pitch current i: %.2f\r\n", pitch_motor->GetCurr());
 
+        // 发射供弹
         print("flywheel_left Motor: %.2f, %.2f\r\n", flywheel_left->GetTheta(), flywheel_left->GetOmega());
-        print("flywheel_right Motor: %.2f, %.2f\r\n", flywheel_right->GetTheta(), flywheel_right->GetOmega());
-        print("steering Motor: %.2f, %.2f\r\n", steering_motor->GetTheta(), steering_motor->GetOmega());
+        print_enabled("flywheel_left", flywheel_left->IsOnline());
 
+        print("flywheel_right Motor: %.2f, %.2f\r\n", flywheel_right->GetTheta(), flywheel_right->GetOmega());
+        print_enabled("flywheel_right", flywheel_right->IsOnline());
+
+        print("steering Motor: %.2f, %.2f\r\n", steering_motor->GetTheta(), steering_motor->GetOmega());
+        print_enabled("steering_motor", steering_motor->IsOnline());
 
         print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
         print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
@@ -163,6 +178,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
               referee->game_robot_status.max_HP);
         print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
-        osDelay(75);
+
+
+        osDelay(100);
     }
 }
