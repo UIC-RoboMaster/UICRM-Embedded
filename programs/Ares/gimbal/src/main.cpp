@@ -25,7 +25,6 @@
 #include "buzzer_notes.h"
 #include "buzzer_task.h"
 #include "chassis_task.h"
-#include "cmsis_os.h"
 #include "gimbal_task.h"
 #include "imu_task.h"
 #include "public_port.h"
@@ -99,6 +98,7 @@ void RM_RTOS_Default_Task(const void* arg) {
                 strcpy(s, "UNKNOWN");
                 break;
         }
+        print("\n");
         print("Mode:%s\r\n", s);
         // switch (shoot_fric_mode) {
         //     case SHOOT_FRIC_MODE_PREPARING:
@@ -143,16 +143,17 @@ void RM_RTOS_Default_Task(const void* arg) {
               imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
         print("Temp: %.2f\r\n", imu->Temp);
         print("Heater: %.2f\r\n", imu->TempPWM);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
+        print("Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0], imu->INS_angle[1] , imu->INS_angle[2]);
+        print("Euler Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0] / PI * 180,
               imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
         print("Is Calibrated: %s\r\n",
               imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
 
         // Gimbal info
-        print("Gimbal target P%.3f Y%.3f\r\n",
+        print("Gimbal target Pitch %.3f Yaw %.3f\r\n",
               gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
               gimbal->getYawTarget() - gimbal_param->yaw_offset_);
-        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
+        print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
         print("\r\n");
 
         print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
@@ -185,6 +186,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
               referee->game_robot_status.max_HP);
         print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
+        print("\n");
 
 
         osDelay(100);

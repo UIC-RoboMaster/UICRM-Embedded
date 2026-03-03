@@ -206,7 +206,7 @@ void init_shoot() {
     steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
-    // steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
+    steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {

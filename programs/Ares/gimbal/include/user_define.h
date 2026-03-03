@@ -28,9 +28,3 @@
 #define UI_OS_DELAY 40
 #define SHOOT_REFEREE 1
 #define ENABLE_UI 1
-
-typedef struct {
-    float pitch;
-    float roll;
-    float yaw;
-} INS_Angle_t;
