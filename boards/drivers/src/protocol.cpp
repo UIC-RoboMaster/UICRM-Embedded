@@ -23,6 +23,7 @@
 #include <cstring>
 
 #include "crc_check.h"
+#include "dji_remote.h"
 
 static const uint8_t SOF = 0xA5;
 static const int FRAME_HEADER_LEN = 5;
@@ -36,27 +37,43 @@ namespace communication {
         Heartbeat();
         for (int i = 0; i < package.length; ++i)
         {
-            if (!rx_state.started) {
+            if (rx_state.mode == 0) {
                 if (package.data[i] == SOF) {
-                    rx_state.started = true;
+                    rx_state.mode = rx_state.mode::RECEIVING;
                     bufferRx[0] = SOF;
                     rx_state.idx = 1;
                 }
-            } else {
+                else if (package.data[i] == remote::vt13_packet_t::SOF) {
+                    rx_state.mode = rx_state.mode::RECEIVING_VT13;
+                    bufferRx[0] = remote::vt13_packet_t::SOF;
+                    rx_state.idx = 1;
+                }
+            } else if (rx_state.mode == rx_state.RECEIVING) {
                 bufferRx[rx_state.idx++] = package.data[i];
 
                 if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN)
                 {
                     int DATA_LENGTH = bufferRx[2] << BYTE | bufferRx[1];
-                    if (rx_state.idx == FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
+                    if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
                         if (VerifyHeader(bufferRx, FRAME_HEADER_LEN) &&
                             VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN)) {
                             int cmd_id = bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
                             ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN, DATA_LENGTH);
                             }
-                        rx_state.started = false;
+                        rx_state.mode = rx_state.WAITING_FOR_SOF;
                         rx_state.idx = 0;
                     }
+                }
+            } else if (rx_state.mode == rx_state.mode::RECEIVING_VT13) {
+                // VT13遥控器与图传链路从同一个UART输出，包头不同。
+                // Todo: 应该把图传链路和遥控器数据分开处理
+                bufferRx[rx_state.idx++] = package.data[i];
+                if (rx_state.idx >= static_cast<int>(sizeof(remote::vt13_packet_t))) {
+                    if (verify_crc16_check_sum(bufferRx, sizeof(remote::vt13_packet_t))) {
+                        ProcessDataRx(REMOTE_CONTROL_VT13, bufferRx, sizeof(remote::vt13_packet_t));
+                    }
+                    rx_state.mode = rx_state.WAITING_FOR_SOF;
+                    rx_state.idx = 0;
                 }
             }
         }
@@ -183,6 +200,9 @@ namespace communication {
                 break;
             case REMOTE_CONTROL_DATA:
                 memcpy(&remote_control, data, length);
+                break;
+            case REMOTE_CONTROL_VT13:
+                memcpy(&vt13_packet, data, length);
                 break;
             default:
                 return false;
