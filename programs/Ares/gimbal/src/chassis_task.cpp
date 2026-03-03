@@ -96,9 +96,14 @@ void chassisTask(void* arg) {
         // 云台目标相对云台零点的角度，直接读取gimbal class获取
         float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
         // TODO: B
-        float chassis_target_diff = C - /*B*/ + A;
+        float B = yaw_curr;
+        // 先wrap每个角度到[-PI, PI]，再计算差值
+        A = wrap<float>(A, -PI, PI);
+        B = wrap<float>(B, -PI, PI);
+        C = wrap<float>(C, -PI, PI);
+        float chassis_target_diff = wrap<float>(C - B + A, -PI, PI);
         chassis_target_diff = -chassis_target_diff;
-        chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
+        chassis_target_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
@@ -116,14 +121,14 @@ void chassisTask(void* arg) {
 
         if (remote_mode == REMOTE_MODE_FOLLOW) {
             // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向
-            const float angle_threshold = 0.02f;
+            const float angle_threshold = 0.05f;
             float chassis_vt_pid_error = chassis_target_diff;
             if (fabs(chassis_vt_pid_error) < angle_threshold) {
                 chassis_vt_pid_error = 0;
             }
 
             static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
+                new control::ConstrainedPID(4.5 / (2 * PI), 0, 0.3 / (2 * PI), 0.5, 1);
             float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;
@@ -143,7 +148,7 @@ void chassisTask(void* arg) {
         chassis_vt *= chassis_max_t_speed;
 
         static const float move_ease_ratio = 0.9;
-        static const float turn_ease_ratio = 0.9;
+        static const float turn_ease_ratio = 0.6;
         static Ease chassis_ease_vx(0, move_ease_ratio);
         static Ease chassis_ease_vy(0, move_ease_ratio);
         static Ease chassis_ease_vt(0, turn_ease_ratio);

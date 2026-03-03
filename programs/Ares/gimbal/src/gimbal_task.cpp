@@ -247,8 +247,7 @@ void init_gimbal() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     yaw_motor->ReInitPID(yaw_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
     control::gimbal_t gimbal_data;
     gimbal_data.pitch_motor = pitch_motor;
