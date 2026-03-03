@@ -43,7 +43,7 @@ void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     // 初始化调试串口，使print()函数能够输出调试信息
-    print_use_uart(&huart8, true, 921600);
+    print_use_rtt();
     // 初始化can总线，can在各个进程中都需要被使用所以在这里独立初始化
     init_can();
     // 初始化IMU
@@ -84,21 +84,21 @@ void RM_RTOS_Default_Task(const void* arg) {
     osDelay(100);
     Buzzer_Sing(DJI);
 
-    while (true) {
-        uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
-
-        control::ConstrainedPID::PID_State_t state;
-        state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
-        state.dout = -state.dout;
-        memcpy(buffer + 2, &state, sizeof(state));
-
-        state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
-        state.dout = -state.dout;
-        memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
-
-        dump(&state, sizeof(buffer));
-        osDelay(4);
-    }
+    // while (true) {
+    //     uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
+    //
+    //     control::ConstrainedPID::PID_State_t state;
+    //     state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+    //     state.dout = -state.dout;
+    //     memcpy(buffer + 2, &state, sizeof(state));
+    //
+    //     state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
+    //     state.dout = -state.dout;
+    //     memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
+    //
+    //     dump(&state, sizeof(buffer));
+    //     osDelay(4);
+    // }
 
     while (true) {
         if (referee->game_robot_status.mains_power_gimbal_output) {
@@ -124,6 +124,15 @@ void RM_RTOS_Default_Task(const void* arg) {
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
             dbus->GetLastUptime());
+        print("\r\n");
+
+        // Remote info
+        print("VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [MODE: %d] [SWL: %d] [SWR: %d] [TRG: %d]",
+              refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1, refereerc->vt13_packet.remote.ch2,
+              refereerc->vt13_packet.remote.ch3, refereerc->vt13_packet.remote.ch4,
+              refereerc->vt13_packet.remote.mode_sw,
+              refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
+              refereerc->vt13_packet.remote.trigger);
         print("\r\n");
 
         // Chassis info
@@ -154,6 +163,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Comm Stat:  ");
         print_enabled("DBUS", dbus->IsOnline());
         print_enabled("Referee", referee->IsOnline());
+        print_enabled("Referee RC", refereerc->IsOnline());
         print("\r\n");
         print("Motor Stat: ");
         print_enabled("Yaw", yaw_motor->IsOnline());
