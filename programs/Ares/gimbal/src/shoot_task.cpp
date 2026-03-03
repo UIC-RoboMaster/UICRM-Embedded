@@ -71,10 +71,10 @@ void shootTask(void* arg) {
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             // 死了
-            // shoot_flywheel_offset = -5000;
-            //
-            // shoot_state = 0;
-            // shoot_state_2 = 0;
+            //            shoot_flywheel_offset = -5000;
+
+            //            shoot_state = 0;
+            //            shoot_state_2 = 0;
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
@@ -104,7 +104,7 @@ void shootTask(void* arg) {
                 // laser->SetOutput(0);
                 break;
             default:
-                // shoot_flywheel_offset = -1000;
+                //                shoot_flywheel_offset = -1000;
                 // laser->SetOutput(0);
                 break;
         }
@@ -114,15 +114,15 @@ void shootTask(void* arg) {
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
                     // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
-                    // if (!steering_motor->IsHolding()) {
-                    //     steering_motor->SetTarget(steering_motor->GetTheta());
-                    // }
+                    //                    if (!steering_motor->IsHolding()) {
+                    //                        steering_motor->SetTarget(steering_motor->GetTheta());
+                    //                    }
                     break;
                 case SHOOT_MODE_SINGLE:
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 20 * PI,
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 5,
                                                       false);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
