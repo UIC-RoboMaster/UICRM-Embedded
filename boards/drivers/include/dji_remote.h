@@ -67,6 +67,7 @@ namespace remote {
             MODE_N = 1,
             MODE_S = 2,
         } mode_sw : 2;
+        uint64_t pause: 1;
         uint64_t swl : 1;
         uint64_t swr : 1;
         uint64_t ch4 : 11;
@@ -86,6 +87,16 @@ namespace remote {
             uint8_t r: 1;
             uint8_t mid: 1;
         };
+        explicit operator mouse_t() const
+        {
+            mouse_t result;
+            result.x = x;
+            result.y = y;
+            result.z = roll;
+            result.l = l;
+            result.r = r;
+            return result;
+        }
     } __packed vt13_mouse_t;
 
     typedef struct vt13_packet_t

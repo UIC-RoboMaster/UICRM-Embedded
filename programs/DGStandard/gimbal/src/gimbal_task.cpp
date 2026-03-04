@@ -108,8 +108,15 @@ void gimbalTask(void* arg) {
                 yaw_ratio = (float)dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
             }
         } else if (refereerc->IsOnline()) {
-            pitch_ratio = -refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
-            yaw_ratio = -refereerc->remote_control.mouse.x / mouse_xy_max * mouse_ratio;
+            // pitch_ratio = -refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
+            // yaw_ratio = -refereerc->remote_control.mouse.x / mouse_xy_max * mouse_ratio;
+            if (refereerc->vt13_packet.remote.ch3 != 0 || refereerc->vt13_packet.remote.ch2 != 0) {
+                pitch_ratio = (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) / remote::vt13_remote_t::ROCKER_RANGE * remote_ratio;
+                yaw_ratio = (float)(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) / remote::vt13_remote_t::ROCKER_RANGE * remote_ratio;
+            } else {
+                pitch_ratio = -refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = -refereerc->remote_control.mouse.x / mouse_xy_max * mouse_ratio;
+            }
         } else {
             pitch_ratio = 0;
             yaw_ratio = 0;
