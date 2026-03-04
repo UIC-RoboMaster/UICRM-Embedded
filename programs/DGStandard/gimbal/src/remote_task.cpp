@@ -64,6 +64,7 @@ void remoteTask(void* arg) {
     memset(&keyboard, 0, sizeof(keyboard));
     memset(&mouse, 0, sizeof(mouse));
     bool is_dbus_offline;
+    bool is_vt13_offline;
     bool is_robot_dead;
     bool is_shoot_available;
 
@@ -73,10 +74,15 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* keyboard_G_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* keyboard_B_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* vt13_pause_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* vt13_left_edge = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* vt13_right_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* vt13_trigger_edge = new BoolEdgeDetector(false);
 
     while (1) {
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
+        is_vt13_offline = (!refereerc->IsOnline()) || refereerc->vt13_packet.remote.mode_sw!= remote::vt13_remote_t::MODE_C;
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
@@ -89,7 +95,7 @@ void remoteTask(void* arg) {
         is_robot_dead = false;
         is_shoot_available = true;
 #endif
-        if (is_dbus_offline || is_robot_dead) {
+        if ((is_dbus_offline && is_vt13_offline) || is_robot_dead) {
             if (!is_killed) {
                 // 如果遥控器离线或者机器人死亡，则进入安全模式
                 last_remote_mode = remote_mode;
@@ -118,25 +124,25 @@ void remoteTask(void* arg) {
             keyboard = dbus->keyboard;
             mouse = dbus->mouse;
         } else if (refereerc->IsOnline()) {
-            state_r = remote::MID;
-            state_l = remote::MID;
-            keyboard = refereerc->remote_control.keyboard;
-            mouse = refereerc->remote_control.mouse;
+            keyboard = refereerc->vt13_packet.keyboard;
+            mouse = (remote::mouse_t)refereerc->vt13_packet.mouse;
         }
 
-        // Update Timestamp
         mouse_left_edge->input(mouse.l);
         mouse_right_edge->input(mouse.r);
-        keyboard_ctrl_edge->input(keyboard.bit.CTRL);
 
         keyboard_G_edge->input(keyboard.bit.G);
         keyboard_B_edge->input(keyboard.bit.B);
 
-        // remote mode switch
+        // DT7遥控器 右摇杆切换模式
         static BoolEdgeDetector* mode_switch_edge = new BoolEdgeDetector(false);
         mode_switch_edge->input(state_r == remote::UP);
+        // 键盘 左CTRL切换模式
+        keyboard_ctrl_edge->input(keyboard.bit.CTRL);
+        // VT13 暂停键切换模式
+        vt13_pause_edge->input(refereerc->vt13_packet.remote.pause);
 
-        if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge()) {
+        if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge() || vt13_pause_edge->posEdge()) {
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
             if ((int8_t)next_mode > (int8_t)remote_mode_max) {
                 next_mode = (RemoteMode)remote_mode_min;
@@ -148,7 +154,8 @@ void remoteTask(void* arg) {
                 is_autoaim = false;
             }
         }
-        // 右键切换自瞄
+
+        // 鼠标 右键切换自瞄
         if (mouse_right_edge->posEdge()) {
             is_autoaim = !is_autoaim;
             if (is_autoaim == false) {
@@ -157,6 +164,7 @@ void remoteTask(void* arg) {
             }
         }
 
+        /* 测试PID，摩擦轮关闭时，左摇杆下拨测试云台转动
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
             static BoolEdgeDetector* test_edge = new BoolEdgeDetector(false);
             test_edge->input(state_l == remote::DOWN);
@@ -166,7 +174,7 @@ void remoteTask(void* arg) {
             if (test_edge->negEdge()) {
                 gimbal->TargetReal(0, -PI / 1.5);
             }
-        }
+        } */
 
         /*
          * 射击模式控制
@@ -179,11 +187,15 @@ void remoteTask(void* arg) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
         }
 
-        // 切换摩擦轮
+        // DT7 左摇杆上拨 切换摩擦轮
         static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
         flywheel_switch_edge->input(state_l == remote::UP);
+        // 键盘 Z键 切换摩擦轮
         keyboard_Z_edge->input(keyboard.bit.Z);
-        if (flywheel_switch_edge->posEdge() || keyboard_Z_edge->posEdge()) {
+        // VT13 左键 切换摩擦轮
+        vt13_left_edge->input(refereerc->vt13_packet.remote.swl);
+
+        if (flywheel_switch_edge->posEdge() || keyboard_Z_edge->posEdge() || vt13_left_edge->posEdge()) {
             if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
                 shoot_load_mode = SHOOT_MODE_IDLE;
@@ -195,17 +207,19 @@ void remoteTask(void* arg) {
         }
 
         if (!is_autoaim || !minipc->IsOnline()) {
-            // 单发
+            // DT7 左摇杆下拨
             static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
             shoot_switch_edge->input(state_l == remote::DOWN);
+            // VT13 扳机键
+            vt13_trigger_edge->input(refereerc->vt13_packet.remote.trigger);
 
-            if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge()) {
+            if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge() || vt13_trigger_edge->posEdge()) {
                 shoot_load_mode = SHOOT_MODE_SINGLE;
                 shoot_burst_timestamp = 0;
             }
 
             // 连发
-            if (state_l == remote::DOWN || mouse.l) {
+            if (state_l == remote::DOWN || mouse.l || refereerc->vt13_packet.remote.trigger) {
                 shoot_burst_timestamp++;
             }
             static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);
@@ -215,7 +229,7 @@ void remoteTask(void* arg) {
             }
 
             // 不发射
-            if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge()) {
+            if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() || vt13_trigger_edge->negEdge()) {
                 shoot_load_mode = SHOOT_MODE_STOP;
                 shoot_burst_timestamp = 0;
             }

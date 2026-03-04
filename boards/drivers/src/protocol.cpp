@@ -37,9 +37,10 @@ namespace communication {
         Heartbeat();
         for (int i = 0; i < package.length; ++i)
         {
-            if (rx_state.mode == 0) {
+            if (rx_state.mode == rx_state.mode::WAITING_FOR_SOF) {
+                // 还未接收到帧头，检测是否为帧头
                 if (package.data[i] == SOF) {
-                    rx_state.mode = rx_state.mode::RECEIVING;
+                    rx_state.mode = rx_state.mode::RECEIVING_REFEREE;
                     bufferRx[0] = SOF;
                     rx_state.idx = 1;
                 }
@@ -48,7 +49,8 @@ namespace communication {
                     bufferRx[0] = remote::vt13_packet_t::SOF;
                     rx_state.idx = 1;
                 }
-            } else if (rx_state.mode == rx_state.RECEIVING) {
+            } else if (rx_state.mode == rx_state.RECEIVING_REFEREE) {
+                // 接收裁判系统的数据
                 bufferRx[rx_state.idx++] = package.data[i];
 
                 if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN)
