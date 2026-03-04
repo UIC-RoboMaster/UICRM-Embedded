@@ -1,0 +1,28 @@
+# 可可爱爱小蛋糕
+
+## 程序指南
+
+本程序为哨兵 【小蛋糕】 的云台程序，底盘程序直接使用 `example_chassis_DJI_Board_TypeC_general_can_bridge`。
+
+## 接线相关
+
+云台上开发板是一块 RoboMaster 开发板A，使用的电机如下：
+- pitch电机：GM6020 can2 + 0x208, 0x1FF
+- yaw电机：GM6020 can2 + 0x209, 0x2FE
+- 摩擦轮电机：SNAIL PWM 定时器1+通道1/通道4
+- 拨弹电机：M2006 can1 0x207 使用老的ServoMotor类
+
+底盘电机分电板直接通过滑环连接到云台
+- 4个3508车轮电机 can1
+    - 左前：0x201
+    - 右前：0x202
+    - 左后：0x203
+    - 右后：0x204
+
+使用的其他接口如下：
+- UART8：调试接口
+- UART3：裁判系统串口 // 实际未连接
+- UART2：裁判系统图传链路 // 实际未连接
+- UART6：minipc // 实际未连接
+- UART1：D-Bus接收机
+
