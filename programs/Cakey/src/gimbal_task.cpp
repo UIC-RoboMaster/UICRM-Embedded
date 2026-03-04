@@ -188,17 +188,17 @@ void init_gimbal() {
     // 角度环
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 5,
-        .ki = 1,      // 平衡重力
+        .ki = 1,  // 平衡重力
         .kd = 0,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 4,
-        .deadband = 0.005,                             // 死区（覆盖虚位范围）
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.2,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter | // 输出滤波
-            control::ConstrainedPID::Integral_Limit     // 积分限幅
+        .deadband = 0.005,                      // 死区（覆盖虚位范围）
+        .A = 0,                                 // 变速积分所能达到的最大值为A+B
+        .B = 0,                                 // 启动变速积分的死区
+        .output_filtering_coefficient = 0.2,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter |  // 输出滤波
+                control::ConstrainedPID::Integral_Limit  // 积分限幅
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
 
@@ -209,7 +209,7 @@ void init_gimbal() {
         .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 3000,
-        .deadband = 0.5,                         // 死区（忽略微小速度波动）
+        .deadband = 0.5,                        // 死区（忽略微小速度波动）
         .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
         .B = 1 * PI,                            // 启动变速积分的死区
         .output_filtering_coefficient = 0.3,    // 输出滤波系数

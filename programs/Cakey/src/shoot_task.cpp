@@ -29,9 +29,9 @@
 
 // 请参考C615电调使用说明书
 // https://rm-static.djicdn.com/tem/17348/RoboMaster%20C615%20%E6%97%A0%E5%88%B7%E7%94%B5%E6%9C%BA%E8%B0%83%E9%80%9F%E5%99%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.pdf
-#define TIM_CLOCK_FREQ 1000000         // 定时器时钟频率 (1MHz)
-#define MOTOR_OUT_FREQ 500             // 电机输出频率 (500Hz)
-#define IDLE_THROTTLE 400             // 摩擦轮停转时PWM脉宽 (SNAIL电调怠速约400us)
+#define TIM_CLOCK_FREQ 1000000  // 定时器时钟频率 (1MHz)
+#define MOTOR_OUT_FREQ 500      // 电机输出频率 (500Hz)
+#define IDLE_THROTTLE 400       // 摩擦轮停转时PWM脉宽 (SNAIL电调怠速约400us)
 
 static driver::MotorPWMBase* flywheel_left = nullptr;
 static driver::MotorPWMBase* flywheel_right = nullptr;
@@ -196,9 +196,9 @@ void shootTask(void* arg) {
 
 void init_shoot() {
     flywheel_left = new driver::MotorPWMBase(&htim1, LEFT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ,
-                                              MOTOR_OUT_FREQ, IDLE_THROTTLE);
+                                             MOTOR_OUT_FREQ, IDLE_THROTTLE);
     flywheel_right = new driver::MotorPWMBase(&htim1, RIGHT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ,
-                                               MOTOR_OUT_FREQ, IDLE_THROTTLE);
+                                              MOTOR_OUT_FREQ, IDLE_THROTTLE);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
     // 等待电调上电初始化校准完成（SNAIL电调需要在稳定的最低油门信号下完成校准）
@@ -247,7 +247,6 @@ void init_shoot() {
 
     shoot_key = new bsp::GPIO(TRIG_KEY_GPIO_Port, TRIG_KEY_Pin);
     // laser = new bsp::Laser(&htim3, 3, 1000000);
-
 }
 void kill_shoot() {
     steering_motor->SetOutput(0);
