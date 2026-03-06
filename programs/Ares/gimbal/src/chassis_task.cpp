@@ -88,13 +88,15 @@ void chassisTask(void* arg) {
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
 
-        // 云台相对底盘的角度，通过云台和底盘连接的电机获取
-        float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
-        // 云台当前相对云台零点的角度，通过IMU获取
-        float B = imu->INS_angle[0];
-        // 云台目标相对云台零点的角度，直接读取gimbal class获取
-        float C = wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI);
-        float chassis_target_diff = -(C - B + A);
+        // 计算底盘相对云台的角度差（用于底盘跟随控制）
+        // yaw电机角度：云台相对底盘的机械角度
+        float gimbal_relative_angle = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
+        // IMU角度：云台当前实际朝向（相对零点）
+        float gimbal_current_angle = imu->INS_angle[0];
+        // 目标角度：云台期望朝向（相对零点）
+        float gimbal_target_angle = wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI);
+        // 底盘需要跟随的角度差 = -(目标角度 - 当前角度 + 电机角度)
+        float chassis_target_diff = -(gimbal_target_angle - gimbal_current_angle + gimbal_relative_angle);
 
         chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
