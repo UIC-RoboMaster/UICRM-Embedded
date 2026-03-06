@@ -23,6 +23,7 @@
 // 摩擦轮
 driver::Motor3508* flywheel_left = nullptr;
 driver::Motor3508* flywheel_right = nullptr;
+driver::Motor2006* flywheel_up = nullptr;
 
 // 供弹
 driver::Motor3508* steering_motor = nullptr;
@@ -93,6 +94,7 @@ void shootTask(void* arg) {
             case SHOOT_FRIC_MODE_PREPARING:
                 flywheel_left->SetTarget(120.0f * 2 * PI);
                 flywheel_right->SetTarget(120.0f * 2 * PI);
+                flywheel_up->SetTarget(120.0f * 2 * PI);
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
                 shoot_load_mode = SHOOT_MODE_PREPARED;
                 break;
@@ -101,6 +103,7 @@ void shootTask(void* arg) {
             case SHOOT_FRIC_MODE_STOP:
                 flywheel_left->SetTarget(0);
                 flywheel_right->SetTarget(0);
+                flywheel_up->SetTarget(0);
                 // laser->SetOutput(0);
                 break;
             default:
@@ -165,8 +168,31 @@ void init_shoot() {
     };
     flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
     flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_left->SetMode(driver::MotorCANBase::OMEGA);
+
+    flywheel_left->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     flywheel_right->SetMode(driver::MotorCANBase::OMEGA);
+
+    flywheel_up = new driver::Motor2006(can2, 0x203);
+    flywheel_up->SetTransmissionRatio(36);
+    control::ConstrainedPID::PID_Init_t enhance_omega_pid_init = {
+        .kp = 1000,
+        .ki = 1,
+        .kd = 0,
+        .max_out = 10000,
+        .max_iout = 4000,
+        .deadband = 0,                          // 死区
+        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+    flywheel_up->ReInitPID(enhance_omega_pid_init, driver::MotorCANBase::OMEGA);
+    flywheel_up->SetMode(driver::MotorCANBase::OMEGA);
+
 
     steering_motor = new driver::Motor3508(can1, 0x201);
 
@@ -212,5 +238,6 @@ void init_shoot() {
 void kill_shoot() {
     steering_motor->Disable();
     flywheel_left->Disable();
+    flywheel_up->Disable();
     flywheel_right->Disable();
 }
