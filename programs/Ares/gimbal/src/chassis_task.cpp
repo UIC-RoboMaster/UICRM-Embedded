@@ -93,16 +93,16 @@ void chassisTask(void* arg) {
         // 云台当前相对云台零点的角度，通过IMU获取
         float B = imu->INS_angle[0];
         // 云台目标相对云台零点的角度，直接读取gimbal class获取
-        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
-        float chassis_target_diff = C - B + A;
-        chassis_target_diff = -chassis_target_diff;
+        float C = wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI);
+        float chassis_target_diff = -(C - B + A);
+
         chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
         float cos_yaw = arm_cos_f32(chassis_target_diff);
-        chassis_vx = cos_yaw * car_vx + sin_yaw * car_vy;
-        chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
+        chassis_vx = cos_yaw * car_vx - sin_yaw * car_vy;
+        chassis_vy = sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
         if (remote_mode == REMOTE_MODE_ADVANCED) {

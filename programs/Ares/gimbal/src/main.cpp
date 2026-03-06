@@ -156,6 +156,15 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
         print("\r\n");
 
+        // // 添加在 print("Yaw Motor: ...") 附近
+        // print("=== Chassis Debug ===\r\n");
+        // print("A (yaw_motor - offset): %.4f\r\n", yaw_motor->GetTheta() - gimbal_param->yaw_offset_);
+        // print("B (IMU yaw): %.4f\r\n", imu->INS_angle[0]);
+        // print("C (gimbal target): %.4f\r\n", gimbal->getYawTarget());
+        // print("chassis_target_diff: %.4f\r\n", gimbal->getYawTarget() - imu->INS_angle[0] + (yaw_motor->GetTheta() - gimbal_param->yaw_offset_));
+        // print("yaw_offset_: %.4f\r\n", gimbal_param->yaw_offset_);
+
+
         print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
         print_enabled("yaw", yaw_motor->IsOnline());
         print("yaw current i: %.2f\r\n", yaw_motor->GetCurr());
