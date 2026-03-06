@@ -29,6 +29,7 @@ control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
 float pitch_curr, yaw_curr;
+float pitch_target, yaw_target;
 
 control::gimbal_t gimbal_data;
 
@@ -69,18 +70,18 @@ void gimbalTask(void* arg) {
 
     // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
     float pitch_ratio, yaw_ratio;
-    pitch_curr = -imu->INS_angle[1];
+    pitch_curr = imu->INS_angle[1];
     yaw_curr = imu->INS_angle[0];
     // pitch_curr = witimu->INS_angle[0];
     // yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
-    float pitch_target = 0, yaw_target = 0;
+    // float pitch_target, yaw_target;
 
     while (true) {
         // 如果遥控器处于关闭状态，关闭两个电机
         check_kill();
 
         // 获取当前陀螺仪角度
-        pitch_curr = -imu->INS_angle[1];
+        pitch_curr = imu->INS_angle[1];
         yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
@@ -113,13 +114,13 @@ void gimbalTask(void* arg) {
         }
 
         // 根据遥控器输入计算目标角度，并且进行限幅
-        pitch_target =
-            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        pitch_target = pitch_ratio;
+            // clip<float>(pitch_ratio,-gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
-        pitch_diff = clip<float>(pitch_target, -PI, PI);
-        yaw_diff = wrap<float>(yaw_target, -PI, PI);
-
+        // pitch_diff
+        // yaw_diff
+        //
         //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
         //            pitch_diff = 0;
         //        }
@@ -136,7 +137,7 @@ void gimbalTask(void* arg) {
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
-                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->TargetRel(pitch_target, yaw_target);
                 gimbal->UpdateIMU(pitch_curr, yaw_curr);
                 break;
             case REMOTE_MODE_ADVANCED:
@@ -144,14 +145,14 @@ void gimbalTask(void* arg) {
                 gimbal->TargetRel(pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
-                //            case REMOTE_MODE_AUTOAIM:
-
-                //                gimbal->TargetReal(minipc->target_angle.target_pitch,
-                //                                   minipc->target_angle.target_yaw);
-                //                gimbal->Update();
-                //                break;
-                gimbal->UpdateIMU(pitch_curr, yaw_curr);
-                break;
+                // case REMOTE_MODE_AUTOAIM:
+                //
+                //     gimbal->TargetReal(minipc->target_angle.target_pitch,
+                //                        minipc->target_angle.target_yaw);
+                //     gimbal->Update();
+                //     break;
+                // gimbal->UpdateIMU(pitch_curr, yaw_curr);
+                // break;
             default:
                 break;
         }

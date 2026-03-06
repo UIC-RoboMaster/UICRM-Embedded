@@ -151,7 +151,7 @@ namespace control {
             rel_pitch = -rel_pitch;
         if (data_.yaw_inverted)
             rel_yaw = -rel_yaw;
-        pitch_angle_ = wrap<float>(pitch_angle_ + rel_pitch, 0, 2 * PI);
+        pitch_angle_ = wrap<float>(pitch_angle_ + rel_pitch, - PI, PI);
         yaw_angle_ = wrap<float>(yaw_angle_ + rel_yaw, 0, 2 * PI);
     }
 
