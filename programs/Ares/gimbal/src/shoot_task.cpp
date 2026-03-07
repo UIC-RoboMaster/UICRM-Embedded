@@ -196,7 +196,7 @@ void init_shoot() {
 
     steering_motor = new driver::Motor3508(can1, 0x201);
 
-    steering_motor->SetTransmissionRatio(81);
+    steering_motor->SetTransmissionRatio(71);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
         .kp = 20,
         .ki = 0,
