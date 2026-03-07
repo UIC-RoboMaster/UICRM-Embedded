@@ -1,0 +1,3 @@
+[submodule "boards/third_party/tinyusb"]
+	path = boards/third_party/tinyusb
+	url = https://github.com/UIC-RoboMaster/tinyusb.git
