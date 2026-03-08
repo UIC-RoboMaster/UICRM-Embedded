@@ -178,6 +178,11 @@ standard names. */
 /* USER CODE BEGIN Defines */
 /* Section where parameter definitions can be added (for instance, to override default ones in FreeRTOS.h) */
 #define configUSE_STATS_FORMATTING_FUNCTIONS 1
+
+/* Compatibility macros for TinyUSB (FreeRTOS 10.3.1 doesn't have pdTICKS_TO_MS) */
+#ifndef pdTICKS_TO_MS
+#define pdTICKS_TO_MS(xTicks) ((TickType_t)(((TickType_t)(xTicks) * (TickType_t)1000) / (TickType_t)configTICK_RATE_HZ))
+#endif
 /* USER CODE END Defines */
 
 #endif /* FREERTOS_CONFIG_H */

@@ -157,7 +157,9 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* init code for USB_DEVICE */
+#ifndef USE_TINYUSB
   MX_USB_DEVICE_Init();
+#endif
   /* USER CODE BEGIN StartDefaultTask */
   RM_RTOS_Default_Task(argument);
   /* Infinite loop */
