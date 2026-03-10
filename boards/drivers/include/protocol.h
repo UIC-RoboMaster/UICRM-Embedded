@@ -656,6 +656,7 @@ namespace communication {
         float target_yaw;
         uint8_t accuracy;  // 置信度 0-100
         uint8_t shoot_cmd;
+        uint8_t time_stamp;
     } __packed target_angle_t;
 
     /* ===== NO_TARGET_FLAG 0x0403 ===== */
@@ -698,6 +699,7 @@ namespace communication {
         float current_imu_yaw;
         uint8_t robot_id;
         uint8_t shooter_id;
+        uint8_t time_stamp;
     } __packed gimbal_current_status_t;
 
     /* ===== CHASSIS_CURRENT_STATUS 0x0503 100Hz ===== */

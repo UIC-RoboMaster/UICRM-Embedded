@@ -148,8 +148,11 @@ void chassisTask(void* arg) {
         }
 
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
-            chassis_vx = minipc->robot_move.target_x;
-            chassis_vy = minipc->robot_move.target_y;
+            // chassis_vx = minipc->robot_move.target_x;
+            // chassis_vy = minipc->robot_move.target_y;
+            // todo unaligned directions
+            chassis_vy = minipc->robot_move.target_x;
+            chassis_vx = -minipc->robot_move.target_y;
             chassis_vt = minipc->robot_move.target_turn;
         }
 
@@ -158,7 +161,7 @@ void chassisTask(void* arg) {
         chassis_vy *= chassis_max_xy_speed;
         chassis_vt *= chassis_max_t_speed;
 
-        static const float move_ease_ratio = 1.8;
+        static const float move_ease_ratio = 1.0;
         static const float turn_ease_ratio = 0.9;
         static Ease chassis_ease_vx(0, move_ease_ratio);
         static Ease chassis_ease_vy(0, move_ease_ratio);

@@ -131,6 +131,9 @@ void RM_RTOS_Default_Task(const void* arg) {
               imu->INS_angle[2]);
         print("Vision Target: P%.3f Y%.3f Acc[%d]\r\n", minipc->target_angle.target_pitch,
               minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
+        // auto it = time_queue.begin();
+        // if (std::find(time_queue.begin(), time_queue.end(), minipc->target_angle.time_stamp) != time_queue.end())
+        //     print("Latency [%d]", (uint8_t)dbus->timestamp - *it);
         print("\r\n");
 
         // Shoot info
@@ -156,6 +159,6 @@ void RM_RTOS_Default_Task(const void* arg) {
         print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
         print("\r\n");
 
-        osDelay(50);
+        osDelay(100);
     }
 }

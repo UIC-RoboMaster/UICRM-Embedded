@@ -112,6 +112,7 @@ void gimbalTask(void* arg) {
 
         if (!pitch_motor->IsEnable())
             pitch_motor->Enable();
+        // pitch_motor->Disable();
         if (!yaw_motor->IsEnable())
             yaw_motor->Enable();
         pitch_curr = -imu->INS_angle[1];
@@ -154,6 +155,9 @@ void gimbalTask(void* arg) {
         pitch_diff = clip<float>(pitch_target, -PI, PI);
         yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
+        // pitch_diff *= -1;
+        // yaw_diff *= -1;
+
         // if (-0.005 < pitch_diff && pitch_diff < 0.005) {
         //     pitch_diff = 0;
         // }
@@ -175,24 +179,29 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
                 gimbal->TargetRel(-pitch_diff, yaw_diff);
-                gimbal->UpdateIMU(-pitch_curr, yaw_curr);
                 break;
             case REMOTE_MODE_ADVANCED:
                 gimbal->TargetRel(-pitch_diff, yaw_diff);
                 gimbal->Update();
                 break;
             case REMOTE_MODE_AUTOPILOT:
-                if (  // static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 || //accuracy not implemented yet
-                    abs(minipc->target_angle.target_pitch) > 90.0f ||
-                    abs(minipc->target_angle.target_yaw) > 180.0f)
+                // if (!minipc->target_angle.shoot_cmd) {
+                //     gimbal->TargetRel(0, 0.01 * PI / 180);
+                //     break;
+                // }
+                if (// static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 || //accuracy not implemented yet
+                    abs(minipc->target_angle.target_pitch) > (90.0f * PI / 180) ||
+                    abs(minipc->target_angle.target_yaw) > (180.0f * PI / 180))
                     break;
                 gimbal->TargetAbs(-minipc->target_angle.target_pitch,
                                   minipc->target_angle.target_yaw);
-                gimbal->UpdateIMU(-pitch_curr, yaw_curr);
                 break;
             default:
                 kill_gimbal();
         }
+
+        if (yaw_motor->IsOnline() && pitch_motor->IsEnable())
+            gimbal->UpdateIMU(-pitch_curr, yaw_curr);
 
         osDelay(GIMBAL_OS_DELAY);
     }

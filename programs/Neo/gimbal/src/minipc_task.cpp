@@ -34,6 +34,16 @@ communication::HostUSB* minipc = nullptr;
 
 bsp::Thread* minipc_thread = nullptr;
 
+uint8_t start_time_stamp;
+std::deque<uint8_t> time_queue;
+constexpr uint8_t QSIZE = 50;
+
+void limitSizePush(std::deque<uint8_t>& q, uint8_t val, uint8_t size) {
+    if (q.size() > size)
+        q.pop_front();
+    q.push_back(val);
+}
+
 const osThreadAttr_t minipc_thread_attr_ = {.name = "MiniPCTask",
                                             .attr_bits = osThreadDetached,
                                             .cb_mem = nullptr,
@@ -78,6 +88,9 @@ void minipc_task(void* args) {
             minipc->gimbal_current_status.current_imu_roll = imu->INS_angle[2];
             minipc->gimbal_current_status.robot_id = referee->game_robot_status.robot_id;
             minipc->gimbal_current_status.shooter_id = 0;
+            start_time_stamp = dbus->timestamp;
+            limitSizePush(time_queue, start_time_stamp, QSIZE);
+            minipc->gimbal_current_status.time_stamp = start_time_stamp;
             minipc->Transmit(communication::GIMBAL_CURRENT_STATUS);
         }
         if (i % 10 == 0) {
