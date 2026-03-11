@@ -83,7 +83,9 @@ namespace control {
     }
 
     void Gimbal::UpdateIMU(float pitch, float yaw) {
-        float pt_diff = pitch_angle_ - data_.pitch_offset_ - pitch;
+        // pitch_angle_ 在 [0, 2PI] 编码器空间，pitch (IMU) 在 [-PI, PI] 空间
+        // 差值需要归一化到 [-PI, PI]
+        float pt_diff = wrap<float>(pitch_angle_ - data_.pitch_offset_ - pitch, -PI, PI);
         float actual_pitch_angle = pitch_motor_->GetTheta();
         float new_pitch_diff = wrapping_clip<float>(
             pt_diff + actual_pitch_angle, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
@@ -102,7 +104,9 @@ namespace control {
         //        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
         //        float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
 
-        float yt_diff = yaw_angle_ - data_.yaw_offset_ - yaw;
+        // yaw_angle_ 在 [0, 2PI] 编码器空间，yaw (IMU) 在 [-PI, PI] 空间
+        // 差值需要归一化到 [-PI, PI]
+        float yt_diff = wrap<float>(yaw_angle_ - data_.yaw_offset_ - yaw, -PI, PI);
         float actual_yaw_angle = yaw_motor_->GetTheta();
         if (!data_.yaw_circle_) {
             float new_yaw_diff = wrapping_clip<float>(yt_diff + actual_yaw_angle, yaw_lower_limit_,
@@ -151,7 +155,7 @@ namespace control {
             rel_pitch = -rel_pitch;
         if (data_.yaw_inverted)
             rel_yaw = -rel_yaw;
-        pitch_angle_ = wrap<float>(pitch_angle_ + rel_pitch, - PI, PI);
+        pitch_angle_ = wrap<float>(pitch_angle_ + rel_pitch, 0, 2 * PI);
         yaw_angle_ = wrap<float>(yaw_angle_ + rel_yaw, 0, 2 * PI);
     }
 
@@ -174,9 +178,9 @@ namespace control {
         return yaw_angle_;
     }
     float Gimbal::getPitchByMotor() const {
-        return pitch_motor_->GetTheta() - data_.pitch_offset_;
+        return wrap<float>(pitch_motor_->GetTheta() - data_.pitch_offset_, -PI, PI);
     }
     float Gimbal::getYawByMotor() const {
-        return yaw_motor_->GetTheta() - data_.yaw_offset_;
+        return wrap<float>(yaw_motor_->GetTheta() - data_.yaw_offset_, -PI, PI);
     }
 }  // namespace control

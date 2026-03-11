@@ -151,8 +151,8 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         // Gimbal info
         print("Gimbal target Pitch %.3f Yaw %.3f\r\n",
-              gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
-              gimbal->getYawTarget() - gimbal_param->yaw_offset_);
+              wrap<float>(gimbal->getPitchTarget() - gimbal_param->pitch_offset_, -PI, PI),
+              wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI));
         print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
         print("\r\n");
 
