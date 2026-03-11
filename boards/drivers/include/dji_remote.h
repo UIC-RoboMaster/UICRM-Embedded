@@ -55,19 +55,17 @@ namespace remote {
         } __packed bit;
     } __packed keyboard_t;
 
-    typedef struct vt13_remote_t
-    {
+    typedef struct vt13_remote_t {
         uint64_t ch0 : 11;
         uint64_t ch1 : 11;
         uint64_t ch2 : 11;
         uint64_t ch3 : 11;
-        enum vt13_mode_t: uint64_t
-        {
+        enum vt13_mode_t : uint64_t {
             MODE_C = 0,
             MODE_N = 1,
             MODE_S = 2,
         } mode_sw : 2;
-        uint64_t pause: 1;
+        uint64_t pause : 1;
         uint64_t swl : 1;
         uint64_t swr : 1;
         uint64_t ch4 : 11;
@@ -76,19 +74,16 @@ namespace remote {
         constexpr static uint16_t ROCKER_RANGE = 660;
     } __packed vt13_remote_t;
 
-    typedef struct vt13_mouse_t
-    {
+    typedef struct vt13_mouse_t {
         int16_t x;
         int16_t y;
         int16_t roll;
-        struct
-        {
-            uint8_t l: 1;
-            uint8_t r: 1;
-            uint8_t mid: 1;
+        struct {
+            uint8_t l : 1;
+            uint8_t r : 1;
+            uint8_t mid : 1;
         };
-        explicit operator mouse_t() const
-        {
+        explicit operator mouse_t() const {
             mouse_t result;
             result.x = x;
             result.y = y;
@@ -99,12 +94,11 @@ namespace remote {
         }
     } __packed vt13_mouse_t;
 
-    typedef struct vt13_packet_t
-    {
+    typedef struct vt13_packet_t {
         constexpr static uint8_t SOF = 0xA9;
         constexpr static uint8_t CMD = 0x53;
-        uint8_t sof; // 0xA9
-        uint8_t cmd; // 0x53
+        uint8_t sof;  // 0xA9
+        uint8_t cmd;  // 0x53
         vt13_remote_t remote;
         vt13_mouse_t mouse;
         keyboard_t keyboard;

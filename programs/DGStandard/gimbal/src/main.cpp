@@ -127,12 +127,14 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
 
         // Remote info
-        print("VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] [SWR: %d] [Trig: %d]\r\n",
-              refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1, refereerc->vt13_packet.remote.ch2,
-              refereerc->vt13_packet.remote.ch3, refereerc->vt13_packet.remote.ch4,
-              refereerc->vt13_packet.remote.mode_sw,
-              refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
-              refereerc->vt13_packet.remote.trigger);
+        print(
+            "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
+            "[SWR: %d] [Trig: %d]\r\n",
+            refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
+            refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
+            refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
+            refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
+            refereerc->vt13_packet.remote.trigger);
         print("\r\n");
 
         // Chassis info

@@ -35,16 +35,14 @@ namespace communication {
 
     bool Protocol::Receive(package_t package) {
         Heartbeat();
-        for (int i = 0; i < package.length; ++i)
-        {
+        for (int i = 0; i < package.length; ++i) {
             if (rx_state.mode == rx_state.mode::WAITING_FOR_SOF) {
                 // 还未接收到帧头，检测是否为帧头
                 if (package.data[i] == SOF) {
                     rx_state.mode = rx_state.mode::RECEIVING_REFEREE;
                     bufferRx[0] = SOF;
                     rx_state.idx = 1;
-                }
-                else if (package.data[i] == remote::vt13_packet_t::SOF) {
+                } else if (package.data[i] == remote::vt13_packet_t::SOF) {
                     rx_state.mode = rx_state.mode::RECEIVING_VT13;
                     bufferRx[0] = remote::vt13_packet_t::SOF;
                     rx_state.idx = 1;
@@ -53,15 +51,18 @@ namespace communication {
                 // 接收裁判系统的数据
                 bufferRx[rx_state.idx++] = package.data[i];
 
-                if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN)
-                {
+                if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN) {
                     int DATA_LENGTH = bufferRx[2] << BYTE | bufferRx[1];
-                    if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
+                    if (rx_state.idx >=
+                        FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
                         if (VerifyHeader(bufferRx, FRAME_HEADER_LEN) &&
-                            VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN)) {
-                            int cmd_id = bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
-                            ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN, DATA_LENGTH);
-                            }
+                            VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH +
+                                                      FRAME_TAIL_LEN)) {
+                            int cmd_id =
+                                bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
+                            ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN,
+                                          DATA_LENGTH);
+                        }
                         rx_state.mode = rx_state.WAITING_FOR_SOF;
                         rx_state.idx = 0;
                     }
