@@ -27,7 +27,7 @@
 #include "buzzer_task.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "dbus.h"
+#include "dji_dbus.h"
 #include "protocol.h"
 #include "supercap.h"
 

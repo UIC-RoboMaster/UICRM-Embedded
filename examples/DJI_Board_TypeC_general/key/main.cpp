@@ -23,7 +23,7 @@
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "dbus.h"
+#include "dji_dbus.h"
 
 void RM_RTOS_Init() {
     print_use_uart(&huart6);

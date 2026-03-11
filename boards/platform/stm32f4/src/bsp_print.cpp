@@ -20,9 +20,9 @@
 
 #include "bsp_print.h"
 
+#include "SEGGER_RTT.h"
 #include "bsp_uart.h"
 #include "bsp_usb.h"
-#include "SEGGER_RTT.h"
 #include "main.h"
 #include "printf.h"  // third party tiny-printf implemnetations
 
