@@ -79,7 +79,7 @@ void chassisTask(void* arg) {
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
             car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
-        } else if (refereerc->vt13_packet.remote.ch0 || refereerc->vt13_packet.remote.ch1 || refereerc->vt13_packet.remote.ch2 || refereerc->vt13_packet.remote.ch3) {
+        } else if (refereerc->vt13_packet.remote.ch0!=remote::vt13_remote_t::ROCKER_MID || refereerc->vt13_packet.remote.ch1!=remote::vt13_remote_t::ROCKER_MID || refereerc->vt13_packet.remote.ch4!=remote::vt13_remote_t::ROCKER_MID) {
             // 使用VT13遥控器
             const float speed_scale = 0.5;
             car_vx = (float)(refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) / remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
