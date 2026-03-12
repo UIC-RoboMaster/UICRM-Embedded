@@ -110,8 +110,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
-            dbus->timestamp);
+            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr);
         print("\r\n");
 
         // Chassis info
