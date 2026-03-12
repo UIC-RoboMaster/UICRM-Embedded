@@ -33,8 +33,8 @@ static driver::Motor6020* motor1 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hcan2, false);
-    motor1 = new driver::Motor6020(can1, 0x20A, 0x2fe);
+    can1 = new bsp::CAN(&hcan1, true);
+    motor1 = new driver::Motor6020(can1, 0x206, 0x1FF);
     motor1->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 200,
@@ -42,11 +42,11 @@ void RM_RTOS_Init() {
         .kd = 0,
         .max_out = 16384,
         .max_iout = 2000,
-        .deadband = 0,                          // 死区
-        .A = 2 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 1.5 * PI,                          // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 2 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 1.5 * PI,                                          // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分

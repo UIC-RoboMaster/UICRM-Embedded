@@ -716,6 +716,15 @@ namespace bsp {
         }
     }
 
+    /*
+    translate quaternion to euler angle
+    reference: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+
+    formula:
+        yaw:    atan2( 2 * (q_w * q_z + q_x * q_y) , 1 - 2 * (q_y^2 + q_z^2) )
+        pitch:  arcsin( 2 * (q_w * q_y - q_x * q_z) )
+        roll:   atan2( 2 * (q_w * q_x + q_y * q_z) , 1 - 2 * (q_x^2 + q_y^2) )
+    */
     void IMU_typeC::GetAngle(float* q, float* yaw, float* pitch, float* roll) {
         *yaw =
             atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
@@ -743,7 +752,7 @@ namespace bsp {
 
         __HAL_DMA_CLEAR_FLAG(hdma_spi_rx_, DMA_LISR_TCIF2);
 
-        hdma_spi_rx_->Instance->PAR = (uint32_t) & (SPI1->DR);
+        hdma_spi_rx_->Instance->PAR = (uint32_t)&(SPI1->DR);
         // memory buffer 1
         hdma_spi_rx_->Instance->M0AR = (uint32_t)(rx_buf);
         // data length
@@ -760,7 +769,7 @@ namespace bsp {
 
         __HAL_DMA_CLEAR_FLAG(hdma_spi_tx_, DMA_LISR_TCIF3);
 
-        hdma_spi_tx_->Instance->PAR = (uint32_t) & (SPI1->DR);
+        hdma_spi_tx_->Instance->PAR = (uint32_t)&(SPI1->DR);
         // memory buffer 1
         hdma_spi_tx_->Instance->M0AR = (uint32_t)(tx_buf);
         // data length

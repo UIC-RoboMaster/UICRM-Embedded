@@ -223,7 +223,7 @@ void chassisTask(void* arg) {
                 vz_set = manual_mode_pid_output * ratio;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
@@ -238,7 +238,7 @@ void chassisTask(void* arg) {
                 vz_set = spin_speed * ratio;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);
@@ -248,7 +248,7 @@ void chassisTask(void* arg) {
 
                 chassis->SetSpeed(chassis_vx, chassis_vy, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   referee->power_heat_data.chassis_power_buffer);
                 osDelay(1);

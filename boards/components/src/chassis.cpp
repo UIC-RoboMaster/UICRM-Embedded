@@ -23,8 +23,7 @@
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
 
-#define M3508_POWER_MODEL \
-    { 0.000931, 0.000455, 0.000006, 39.151850 }
+#define M3508_POWER_MODEL {0.000931, 0.000455, 0.000006, 39.151850}
 
 namespace control {
 
@@ -364,14 +363,17 @@ namespace control {
             data_.data_two_float.data[1] = y_speed;
             rx_id_.data.reg = chassis_xy_reg_id_;
             can_bridge_->Send(rx_id_, data_);
+            osDelay(1);
             data_.data_two_float.data[0] = 1.0f;
             data_.data_two_float.data[1] = turn_speed;
             rx_id_.data.reg = chassis_turn_on_reg_id_;
             can_bridge_->Send(rx_id_, data_);
+            osDelay(1);
         } else {
             data_.data_two_float.data[0] = 0.0f;
             data_.data_two_float.data[1] = 0.0f;
             can_bridge_->Send(rx_id_, data_);
+            osDelay(1);
         }
         chassis_vx = x_speed;
         chassis_vy = y_speed;
@@ -390,12 +392,14 @@ namespace control {
                 data_.data_two_float.data[1] = power_limit;
                 rx_id_.data.reg = chassis_power_limit_reg_id_;
                 can_bridge_->Send(rx_id_, data_);
+                osDelay(1);
             }
             {
                 data_.data_two_float.data[0] = chassis_power;
                 data_.data_two_float.data[1] = chassis_power_buffer;
                 rx_id_.data.reg = chassis_current_power_reg_id_;
                 can_bridge_->Send(rx_id_, data_);
+                osDelay(1);
             }
         }
     }

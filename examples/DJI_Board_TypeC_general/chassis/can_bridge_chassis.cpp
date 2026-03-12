@@ -54,11 +54,11 @@ void RM_RTOS_Init() {
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -74,29 +74,29 @@ void RM_RTOS_Init() {
     fr_motor->SetTransmissionRatio(14);
 
     bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    bl_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     bl_motor->SetTransmissionRatio(14);
 
     br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    br_motor->SetMode(driver::MotorCANBase::OMEGA);
+    br_motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     br_motor->SetTransmissionRatio(14);
 
-    driver::supercap_init_t supercap_init = {
-        .can = can2,
-        .tx_id = 0x02e,
-        .tx_settings_id = 0x02f,
-        .rx_id = 0x030,
-    };
-    super_cap = new driver::SuperCap(supercap_init);
-    super_cap->Disable();
-    super_cap->TransmitSettings();
-    super_cap->Enable();
-    super_cap->TransmitSettings();
-    super_cap->SetMaxVoltage(23.5f);
-    super_cap->SetPowerTotal(120.0f);
-    super_cap->SetMaxChargePower(150.0f);
-    super_cap->SetMaxDischargePower(250.0f);
-    super_cap->SetPerferBuffer(40.0f);
+    //    driver::supercap_init_t supercap_init = {
+    //        .can = can2,
+    //        .tx_id = 0x02e,
+    //        .tx_settings_id = 0x02f,
+    //        .rx_id = 0x030,
+    //    };
+    //    super_cap = new driver::SuperCap(supercap_init);
+    //    super_cap->Disable();
+    //    super_cap->TransmitSettings();
+    //    super_cap->Enable();
+    //    super_cap->TransmitSettings();
+    //    super_cap->SetMaxVoltage(23.5f);
+    //    super_cap->SetPowerTotal(120.0f);
+    //    super_cap->SetMaxChargePower(150.0f);
+    //    super_cap->SetMaxDischargePower(250.0f);
+    //    super_cap->SetPerferBuffer(40.0f);
 
     can_bridge = new communication::CanBridge(can2, 0x52);
 

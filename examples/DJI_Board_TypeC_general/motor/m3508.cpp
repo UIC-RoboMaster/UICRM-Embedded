@@ -35,19 +35,19 @@ static driver::Motor3508* motor1 = nullptr;
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan1, true);
-    motor1 = new driver::Motor3508(can1, 0x201);
+    motor1 = new driver::Motor3508(can1, 0x206);
     motor1->SetTransmissionRatio(19);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 2500,
+        .kp = 500,
         .ki = 3,
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -76,7 +76,7 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetTarget(15 * PI);
+                motor1->SetTarget(0.5 * PI);
             } else {
                 current = 0;
                 motor1->SetTarget(0);
