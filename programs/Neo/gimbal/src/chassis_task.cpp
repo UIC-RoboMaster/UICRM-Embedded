@@ -80,8 +80,7 @@ void chassisTask(void* arg) {
             car_vy = minipc->robot_move.target_x;
             car_vx = -minipc->robot_move.target_y;
             car_vt = minipc->robot_move.target_turn;
-        }
-        else if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
+        } else if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX;

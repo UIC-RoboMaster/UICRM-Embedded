@@ -90,8 +90,14 @@ namespace bsp {
         return length;
     }
 
+    template <bool FromISR>
     uint32_t VirtualUSB::Write(uint8_t* data, uint32_t length) {
-        taskENTER_CRITICAL();
+        UBaseType_t isrflags;
+        if (FromISR) {
+            isrflags = taskENTER_CRITICAL_FROM_ISR();
+        } else {
+            taskENTER_CRITICAL();
+        }
         if (length > tx_size_)
             length = tx_size_;
         /* try to transmit the data */
@@ -105,9 +111,16 @@ namespace bsp {
             memcpy(tx_write_ + tx_pending_, data, length);
             tx_pending_ += length;
         }
-        taskEXIT_CRITICAL();
+        if (FromISR) {
+            taskEXIT_CRITICAL_FROM_ISR(isrflags);
+        } else {
+            taskEXIT_CRITICAL();
+        }
         return length;
     }
+
+    template uint32_t VirtualUSB::Write<true>(uint8_t* data, uint32_t length);
+    template uint32_t VirtualUSB::Write<false>(uint8_t* data, uint32_t length);
 
     void VirtualUSB::TxCompleteCallback() {
         uint8_t* tmp;

@@ -19,8 +19,9 @@
  ###########################################################*/
 
 #pragma once
-#include "protocol.h"
 #include <queue>
+
+#include "protocol.h"
 // extern communication::Host* minipc;
 extern communication::HostUSB* minipc;
 extern uint8_t start_time_stamp;

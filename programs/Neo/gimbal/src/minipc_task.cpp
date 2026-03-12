@@ -88,7 +88,8 @@ void minipc_task(void* args) {
             minipc->gimbal_current_status.current_imu_roll = imu->INS_angle[2];
             minipc->gimbal_current_status.robot_id = referee->game_robot_status.robot_id;
             minipc->gimbal_current_status.shooter_id = 0;
-            start_time_stamp = 0; //todo use RTC to recover the function since remotes' timestamp no longer available
+            start_time_stamp = 0;  // todo use RTC to recover the function since remotes' timestamp
+                                   // no longer available
             limitSizePush(time_queue, start_time_stamp, QSIZE);
             minipc->gimbal_current_status.time_stamp = start_time_stamp;
             minipc->Transmit(communication::GIMBAL_CURRENT_STATUS);
