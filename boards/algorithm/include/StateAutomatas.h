@@ -37,10 +37,10 @@ namespace control {
 
     /*InputTypeCollection*/
     /*
-     TODO:
-        Should abstract (EdgeDetector)s base class if remotes are all able to handle by basic types
-        Keep std::variant to reach maximum extendability by adding new classes into this std::variant
-        Or directly apply OOP abstraction to reach higher performance (doubt that :D)
+    TODO:
+       Should abstract (EdgeDetector)s base class if remotes are all able to handle by basic types
+       Keep std::variant to reach maximum extendability by adding new classes into this std::variant
+       Or directly apply OOP abstraction to reach higher performance (doubt that :D)
     */
     using InputTypeCollection = std::variant<
         FloatEdgeDetector,
@@ -59,6 +59,16 @@ namespace control {
     /*Transition*/
 
     /*StateAutomata*/
+    /**
+     * An automata that work based on graph.
+     *
+     * Transitions are depend on a condition that in a form of std::function(function pointer) which return value always a boolean.
+     *
+     * This class should be constructed by class [control::StateAutomataBuilder].
+     * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory class.
+     *
+     * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata.
+     */
     template <class EnumStatesCollection>
     class StateAutomata {
     public:
@@ -80,6 +90,16 @@ namespace control {
     /*StateAutomata*/
 
     /*StateAutomataBuilder*/
+    /**
+     * Factory class that guarantee Automata it gonna creates won't change by any form in the future.
+     *
+     * Factory mode aim to emphasise the creation process and illuminate life cycle
+     * which is my best effort to improve easy of maintenance.
+     *
+     * Factory itself should being destroyed after build is complete otherwise memory waste.
+     *
+     * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata going to be built.
+     */
     template <class EnumStatesCollection>
     class StateAutomataBuilder {
     public:
@@ -89,9 +109,28 @@ namespace control {
 
         StateAutomataBuilder();
 
-        StateAutomataBuilder& addState(States s);
-        StateAutomataBuilder& addOutEdge(States from, Transition<States> trans);
+        /**
+         * Add new reflect relationship among the automata.
+         *
+         * For states with multiple transitions, those added first will execute first if there's ambiguous conditions.
+         *
+         * @param from the state that
+         * @param trans Transition
+         * @return Factory itself in order to perform "chain call" grammar.
+         */
+        StateAutomataBuilder& add(States from, Transition<States> trans);
 
+        /**
+         * Build and output current automata
+         *
+         * CAUTIOUS: After build, factory will NOT release memory. Since graph (implemented by
+         * nested vector) cost great amount of memory, unless multiple versions of automata are
+         * needed (which is not very likely), object should be destroyed after calling this function
+         * and get result automata.
+         *
+         * @param init_state The state that the result automata will start with.
+         * @return The product automata
+         */
         StateAutomata<EnumStatesCollection> build(States init_state);
 
     private:
