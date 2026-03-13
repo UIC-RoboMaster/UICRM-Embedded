@@ -37,16 +37,16 @@ namespace remote {
      * @tparam T channel data type
      */
     template <class T>
-    class AutomataInputRemote : communication::AutomataInputBase {
+    class AutomataInputRemote : public communication::AutomataInputBase {
     public:
         AutomataInputRemote();
         virtual ~AutomataInputRemote() = default;
 
         /**
          *
-         * @param val The val need to be update
+         * @param val The val that needs to be updated
          */
-        void update(const T& val);
+        void update(const void* data);
 
         /**
          * @return If current val not equal to last val
@@ -93,6 +93,8 @@ namespace remote {
         T curr_val_;
         T last_val_;
         uint16_t last_update_;
+    private:
+        void updateAid(const T& pack);
     };
 
 }  // namespace remote

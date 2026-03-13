@@ -20,35 +20,32 @@
 // Created by gttgf on 2026/3/13.
 //
 
-#ifndef UICRM_AUTOMATAINPUTBASE_H
-#define UICRM_AUTOMATAINPUTBASE_H
+#ifndef UICRM_AUTOMATAINPUTMANAGEMENT_H
+#define UICRM_AUTOMATAINPUTMANAGEMENT_H
 
-#include <string>
+#include <vector>
+#include <memory>
 
-using std::string;
+#include "AutomataInputBase.h"
+#include "StateAutomatas.h"
 
 namespace communication {
 
-    /**
-     * A general base class for automata input
-     *
-     * Its derive classes should represent a single channel/value/variable affecting automata
-     * transition.
-     *
-     * Class [AutomataInputManagement] should include this class family to perform interaction with
-     * automata.
-     */
-
-    class AutomataInputBase {
+    template<class TupleData>
+    class AutomataInputManagement {
     public:
-        virtual ~AutomataInputBase() = default;
-        virtual void update(const void* data) = 0;
-        virtual string name() final {return name_;}
-        virtual void setName(const string name) final {name_=name;}
-    protected:
-        string name_;
+        AutomataInputManagement();
+        ~AutomataInputManagement();
+
+        void buildItems();
+
+        void updateItems(const TupleData& data);
+
+        AutomataInputBase& get(size_t index);
+    private:
+        std::vector<std::unique_ptr<AutomataInputBase>> inputs_;
     };
 
 }  // namespace communication
 
-#endif  // UICRM_AUTOMATAINPUTBASE_H
+#endif  // UICRM_AUTOMATAINPUTMANAGEMENT_H

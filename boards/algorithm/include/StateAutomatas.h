@@ -28,31 +28,25 @@
 #include <vector>
 #include <variant>
 
-#include "utils.h"
-
 using std::vector;
 using std::variant;
 
+namespace communication
+{
+    template<class TupleData>
+    class AutomataInputManagement;
+}
+using communication::AutomataInputManagement;
+
 namespace control {
 
-    /*InputTypeCollection*/
-    /*
-    TODO:
-       Should abstract (EdgeDetector)s base class if remotes are all able to handle by basic types
-       Keep std::variant to reach maximum extendability by adding new classes into this std::variant
-       Or directly apply OOP abstraction to reach higher performance (doubt that :D)
-    */
-    using InputTypeCollection = std::variant<
-        FloatEdgeDetector,
-        BoolEdgeDetector
-    >;
-    typedef InputTypeCollection Input;
-    /*InputTypeCollection*/
-
     /*Transition*/
-    using Predicate = std::function<bool(const Input&)>;
-    template <class EnumStatesCollection>
+
+    template <class EnumStatesCollection, class TupleData>
     struct Transition {
+
+        using Predicate = std::function<bool(const AutomataInputManagement<TupleData>&)>;
+
         Predicate condition;
         EnumStatesCollection next;
     };
@@ -68,24 +62,29 @@ namespace control {
      * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory class.
      *
      * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata.
+     * @tparam TupleData Tuple form data package.
      */
-    template <class EnumStatesCollection>
+    template <class EnumStatesCollection, class TupleData>
     class StateAutomata {
     public:
 
         typedef EnumStatesCollection States;
-        using FSM = vector<vector<Transition<States>>>;
+        using FSM = vector<vector<Transition<States, TupleData>>>;
 
         StateAutomata(FSM machine, States init_state);
 
-        void step();
+        void update(const TupleData&);
+        States state();
 
         std::string demonstrate() const;
 
     private:
         const FSM state_machine_;
-
         States current_state_;
+
+        AutomataInputManagement<TupleData> input_manager_;
+
+        void evaluateTransitions();
     };
     /*StateAutomata*/
 
@@ -99,13 +98,14 @@ namespace control {
      * Factory itself should being destroyed after build is complete otherwise memory waste.
      *
      * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata going to be built.
+     * @tparam TupleData Tuple form data package.
      */
-    template <class EnumStatesCollection>
+    template <class EnumStatesCollection, class TupleData>
     class StateAutomataBuilder {
     public:
 
         typedef EnumStatesCollection States;
-        using FSM = vector<vector<Transition<States>>>;
+        using FSM = vector<vector<Transition<States, TupleData>>>;
 
         StateAutomataBuilder();
 
@@ -118,7 +118,7 @@ namespace control {
          * @param trans Transition
          * @return Factory itself in order to perform "chain call" grammar.
          */
-        StateAutomataBuilder& add(States from, Transition<States> trans);
+        StateAutomataBuilder& add(States from, Transition<States, TupleData> trans);
 
         /**
          * Build and output current automata
@@ -131,7 +131,7 @@ namespace control {
          * @param init_state The state that the result automata will start with.
          * @return The product automata
          */
-        StateAutomata<EnumStatesCollection> build(States init_state);
+        StateAutomata<EnumStatesCollection, TupleData> build(States init_state);
 
     private:
         FSM state_machine_;
