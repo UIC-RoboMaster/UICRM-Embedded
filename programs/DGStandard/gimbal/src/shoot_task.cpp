@@ -22,6 +22,7 @@
 
 static driver::MotorPWMBase* flywheel_left = nullptr;
 static driver::MotorPWMBase* flywheel_right = nullptr;
+static bool unload_cmd_latched = false;
 
 driver::MotorCANBase* steering_motor = nullptr;
 
@@ -123,6 +124,15 @@ void shootTask(void* arg) {
         flywheel_left->SetOutput(flywheel_speed_ease->GetOutput());
         flywheel_right->SetOutput(flywheel_speed_ease->GetOutput());
 
+        if (shoot_load_mode == SHOOT_MODE_UNLOAD) {
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP && !unload_cmd_latched) {
+                steering_motor->SetTarget(steering_motor->GetTarget() - 2 * PI / 8, true);
+                unload_cmd_latched = true; // 只触发一次
+            }
+        } else {
+            unload_cmd_latched = false; // 退出UNLOAD后解锁，等待下次触发
+        }
+
         // 检测摩擦轮是否就绪
         // 由shoot_task切换到SHOOT_FRIC_MODE_PREPARED
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING && flywheel_speed_ease->IsAtTarget()) {
@@ -130,7 +140,10 @@ void shootTask(void* arg) {
         }
 
         if (shoot_flywheel_mode != SHOOT_FRIC_MODE_PREPARED) {
-            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            // 仅当不是UNLOAD时才锁当前角，避免覆盖退弹命令
+            if (shoot_load_mode != SHOOT_MODE_UNLOAD) {
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            }
             osDelay(SHOOT_OS_DELAY);
             continue;
         }

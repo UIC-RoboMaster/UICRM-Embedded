@@ -103,6 +103,7 @@ enum ShootMode {
     SHOOT_MODE_IDLE = 1,    // 连续供弹直到检测到弹丸
     SHOOT_MODE_SINGLE = 2,  // 单发，用于通知shoot_task，发射后由shoot_task设置回IDLE
     SHOOT_MODE_BURST = 3,   // 连发
+    SHOOT_MODE_UNLOAD = 4,   // 退弹
 };
 inline const char* shoot_load_mode_str(ShootMode mode) {
     switch (mode) {
@@ -120,6 +121,9 @@ inline const char* shoot_load_mode_str(ShootMode mode) {
             break;
         case SHOOT_MODE_BURST:
             return "BURST";
+            break;
+        case SHOOT_MODE_UNLOAD:
+            return "UNLOAD";
             break;
         default:
             return "UNKNOWN";
