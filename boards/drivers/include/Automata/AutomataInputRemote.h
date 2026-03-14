@@ -37,35 +37,29 @@ namespace remote {
      * @tparam T channel data type
      */
     template <class T>
-    class AutomataInputRemote : public communication::AutomataInputBase {
+    class AutomataInputRemote : public communication::AutomataInputBase<T> {
     public:
         AutomataInputRemote();
-        virtual ~AutomataInputRemote() = default;
-
-        /**
-         *
-         * @param val The val that needs to be updated
-         */
-        void update(const void* data);
+        ~AutomataInputRemote() override = default;
 
         /**
          * @return If current val not equal to last val
          */
-        bool edge();
+        virtual bool edge();
 
         /**
-         * boolean specification: equal to edge
+         * boolean specification: equal to edge()
          *
          * @return If current val greater than last val
          */
-        bool upEdge();
+        virtual bool upEdge();
 
         /**
-         * boolean specification: equal to edge
+         * boolean specification: equal to edge()
          *
          * @return If current val smaller than last val
          */
-        bool downEdge();
+        virtual bool downEdge();
 
         /**
          * boolean specification will output current xor last
@@ -73,14 +67,14 @@ namespace remote {
          *
          * @return Difference of current value and last value
          */
-        const T getDiff();
+        virtual const T getDiff();
 
         /**
          * update and call this func otherwise real-time problem
          *
          * @return current value
          */
-        const T get();
+        virtual const T get();
 
         /**
          * This function not involving RTC or similar devices.
@@ -88,13 +82,13 @@ namespace remote {
          *
          * @return The UPDATE TIMES that since last value changed
          */
-        uint16_t lastUpdate();
+        virtual uint16_t lastUpdate();
     protected:
         T curr_val_;
         T last_val_;
         uint16_t last_update_;
-    private:
-        void updateAid(const T& pack);
+
+        void updateImpl(const T* input) override;
     };
 
 }  // namespace remote

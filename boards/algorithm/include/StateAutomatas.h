@@ -56,7 +56,7 @@ namespace control {
     /**
      * An automata that work based on graph.
      *
-     * Transitions are depend on a condition that in a form of std::function(function pointer) which return value always a boolean.
+     * Transitions are depend on a condition that in a form of std::function(function pointer) which its return value always boolean.
      *
      * This class should be constructed by class [control::StateAutomataBuilder].
      * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory class.
@@ -70,10 +70,11 @@ namespace control {
 
         typedef EnumStatesCollection States;
         using FSM = vector<vector<Transition<States, TupleData>>>;
+        using Item = AutomataInputManagement<TupleData>;
 
-        StateAutomata(FSM machine, States init_state);
+        StateAutomata(FSM machine, States init_state, Item inputs);
 
-        void update(const TupleData&);
+        void input(const TupleData&);
         States state();
 
         std::string demonstrate() const;
@@ -82,7 +83,7 @@ namespace control {
         const FSM state_machine_;
         States current_state_;
 
-        AutomataInputManagement<TupleData> input_manager_;
+        Item input_items_;
 
         void evaluateTransitions();
     };
@@ -106,8 +107,7 @@ namespace control {
 
         typedef EnumStatesCollection States;
         using FSM = vector<vector<Transition<States, TupleData>>>;
-
-        StateAutomataBuilder();
+        using Item = AutomataInputManagement<TupleData>;
 
         /**
          * Add new reflect relationship among the automata.
@@ -118,7 +118,10 @@ namespace control {
          * @param trans Transition
          * @return Factory itself in order to perform "chain call" grammar.
          */
-        StateAutomataBuilder& add(States from, Transition<States, TupleData> trans);
+        StateAutomataBuilder& transition(States from, Transition<States, TupleData> trans);
+
+        template <template<class> class Item>
+        StateAutomataBuilder& input(const char* name);
 
         /**
          * Build and output current automata
@@ -135,6 +138,7 @@ namespace control {
 
     private:
         FSM state_machine_;
+        Item input_items_;
     };
     /*StateAutomataBuilder*/
 

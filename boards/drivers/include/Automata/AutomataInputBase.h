@@ -30,23 +30,33 @@ using std::string;
 namespace communication {
 
     /**
-     * A general base class for automata input
+     * A polymorphism interface for automata input item
+     */
+    class AutomataInput {
+    public:
+        virtual ~AutomataInput() = 0;
+        virtual void update() = 0;
+    };
+
+    /**
+     * A general pure virtual base class for automata input
+     * Every automata input component should derive by this class
      *
      * Its derive classes should represent a single channel/value/variable affecting automata
      * transition.
      *
-     * Class [AutomataInputManagement] should include this class family to perform interaction with
-     * automata.
+     * Class [AutomataInputManagement] include this class family to perform interaction with automata.
      */
-
-    class AutomataInputBase {
+    template <typename T>
+    class AutomataInputBase : AutomataInput {
     public:
-        virtual ~AutomataInputBase() = default;
-        virtual void update(const void* data) = 0;
+        virtual void update (const void* input) final {updateImpl(*static_cast<const T*>(input));}
         virtual string name() final {return name_;}
         virtual void setName(const string name) final {name_=name;}
     protected:
         string name_;
+
+        virtual void updateImpl(const T* input) = 0;
     };
 
 }  // namespace communication

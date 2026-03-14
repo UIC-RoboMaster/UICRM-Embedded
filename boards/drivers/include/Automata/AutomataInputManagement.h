@@ -34,16 +34,53 @@ namespace communication {
     template<class TupleData>
     class AutomataInputManagement {
     public:
-        AutomataInputManagement();
-        ~AutomataInputManagement();
+        /**
+         * Add a new component.
+         *
+         * Should (only) call by [StateAutomataBuilder].
+         *
+         * @tparam Index
+         * @tparam Component
+         * @param name
+         */
+        template <size_t Index, template <class> class Component>
+        void buildItem(const char* name = "");
 
-        void buildItems();
-
+        /**
+         * update all components.
+         * @param data A tuple contians all items that components need to update
+         */
         void updateItems(const TupleData& data);
 
-        AutomataInputBase& get(size_t index);
+        /**
+         * A type-safe interface for obtaining polymorphism-template class(components).
+         *
+         * Directly return [AutomataInput] will cause user use dynamic_cast<>()
+         * RTTI, which not often available in embedded system support dynamic_cast<>().
+         * Using template parameter in order to not depend on RTTI.
+         *
+         * @tparam Index Where the component that represent the item locate.
+         * @return Component that represent the named item.
+         */
+        template <size_t Index>
+        auto& get();
+
+        /**
+         * @param name Items' custom name.
+         * @return Index where the component that represent the named item.
+         */
+        size_t getIndexByName(std::string& name);
+
+        /**
+         * @param name Items' custom name.
+         * @return Component that represent the named item.
+         */
+        AutomataInput& getByName(std::string& name);
     private:
-        std::vector<std::unique_ptr<AutomataInputBase>> inputs_;
+        std::vector<std::unique_ptr<AutomataInput>> items_;
+
+        template <size_t... Index>
+        void updateItemsImpl(const TupleData& data, std::index_sequence<Index...>);
     };
 
 }  // namespace communication
