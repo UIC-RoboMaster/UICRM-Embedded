@@ -64,6 +64,7 @@ namespace communication {
          */
         template <size_t Index>
         auto& get();
+        auto& get(size_t index);
 
         /**
          * @param name Items' custom name.
@@ -82,6 +83,9 @@ namespace communication {
         template <size_t... Index>
         void updateItemsImpl(const TupleData& data, std::index_sequence<Index...>);
     };
+
+    template<class TupleData>
+    using Ins = AutomataInputManagement<TupleData>;
 
 }  // namespace communication
 

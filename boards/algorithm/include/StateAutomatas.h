@@ -41,7 +41,6 @@ using communication::AutomataInputManagement;
 namespace control {
 
     /*Transition*/
-
     template <class EnumStatesCollection, class TupleData>
     struct Transition {
 
@@ -51,43 +50,6 @@ namespace control {
         EnumStatesCollection next;
     };
     /*Transition*/
-
-    /*StateAutomata*/
-    /**
-     * An automata that work based on graph.
-     *
-     * Transitions are depend on a condition that in a form of std::function(function pointer) which its return value always boolean.
-     *
-     * This class should be constructed by class [control::StateAutomataBuilder].
-     * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory class.
-     *
-     * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata.
-     * @tparam TupleData Tuple form data package.
-     */
-    template <class EnumStatesCollection, class TupleData>
-    class StateAutomata {
-    public:
-
-        typedef EnumStatesCollection States;
-        using FSM = vector<vector<Transition<States, TupleData>>>;
-        using Item = AutomataInputManagement<TupleData>;
-
-        StateAutomata(FSM machine, States init_state, Item inputs);
-
-        void input(const TupleData&);
-        States state();
-
-        std::string demonstrate() const;
-
-    private:
-        const FSM state_machine_;
-        States current_state_;
-
-        Item input_items_;
-
-        void evaluateTransitions();
-    };
-    /*StateAutomata*/
 
     /*StateAutomataBuilder*/
     /**
@@ -104,10 +66,12 @@ namespace control {
     template <class EnumStatesCollection, class TupleData>
     class StateAutomataBuilder {
     public:
+        class StateAutomata;
 
         typedef EnumStatesCollection States;
         using FSM = vector<vector<Transition<States, TupleData>>>;
         using Item = AutomataInputManagement<TupleData>;
+        using Predicate = std::function<bool(const AutomataInputManagement<TupleData>&)>;
 
         /**
          * Add new reflect relationship among the automata.
@@ -119,8 +83,9 @@ namespace control {
          * @return Factory itself in order to perform "chain call" grammar.
          */
         StateAutomataBuilder& transition(States from, Transition<States, TupleData> trans);
+        StateAutomataBuilder& transition(States from, States to, Predicate condition);
 
-        template <template<class> class Item>
+        template <size_t Index, template <class> class Component>
         StateAutomataBuilder& input(const char* name);
 
         /**
@@ -134,13 +99,57 @@ namespace control {
          * @param init_state The state that the result automata will start with.
          * @return The product automata
          */
-        StateAutomata<EnumStatesCollection, TupleData> build(States init_state);
+        StateAutomata build(States init_state);
 
     private:
         FSM state_machine_;
         Item input_items_;
     };
     /*StateAutomataBuilder*/
+
+    /*StateAutomata*/
+    /**
+     * An automata that work based on graph.
+     *
+     * Transitions are depend on a condition that in a form of std::function(function pointer) which its return value always boolean.
+     *
+     * This class should be constructed by class [control::StateAutomataBuilder].
+     * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory class.
+     *
+     * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata.
+     * @tparam TupleData Tuple form data package.
+     */
+    template <class EnumStatesCollection, class TupleData>
+    class StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata {
+    public:
+
+        typedef EnumStatesCollection States;
+        using FSM = vector<vector<Transition<States, TupleData>>>;
+        using Item = AutomataInputManagement<TupleData>;
+
+        void input(const TupleData&);
+        
+        States state();
+
+        std::string demonstrate() const;
+
+    private:
+        StateAutomata(FSM machine, States init_state, Item inputs);
+
+        const FSM state_machine_;
+        States current_state_;
+
+        const Item input_items_;
+
+        void evaluateTransitions();
+    };
+    /*StateAutomata*/
+
+    template <class EnumStatesCollection, class TupleData>
+    using Automata = typename StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata;
+
+    template <class EnumStatesCollection, class TupleData>
+    using AutomataBuilder = StateAutomataBuilder<EnumStatesCollection, TupleData>;
 
 }  // namespace control
 

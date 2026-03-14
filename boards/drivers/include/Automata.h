@@ -29,4 +29,7 @@
 // Any extend item class may place here to declare reference
 #include "Automata/AutomataInputRemote.h"
 
+// Or adding a general header to maintain all derive classes declaration:
+// #include "Automata/AutomataInputComponents.h"
+
 #endif  // UICRM_AUTOMATA_H

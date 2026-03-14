@@ -22,4 +22,63 @@
 
 #include "StateAutomatas.h"
 
-namespace control {}  // namespace control
+namespace control {
+    template <class EnumStatesCollection, class TupleData>
+    StateAutomataBuilder<EnumStatesCollection, TupleData>&
+    StateAutomataBuilder<EnumStatesCollection, TupleData>::transition(
+        States from, Transition<States, TupleData> trans) {
+        state_machine_[static_cast<size_t>(from)].emplace_back(trans);
+        return *this;
+    }
+
+    template <class EnumStatesCollection, class TupleData>
+    StateAutomataBuilder<EnumStatesCollection, TupleData>&
+    StateAutomataBuilder<EnumStatesCollection, TupleData>::transition(
+        States from, States to, Predicate cond) {
+        return transition(from, Transition<EnumStatesCollection, TupleData>(cond, to));
+    }
+
+    template <class EnumStatesCollection, class TupleData>
+    template <size_t Index, template <class> class Component>
+    StateAutomataBuilder<EnumStatesCollection, TupleData>&
+    StateAutomataBuilder<EnumStatesCollection, TupleData>::input(const char* name) {
+        input_items_.template buildItem<Index, Component>(name);
+        return *this;
+    }
+
+    template <class EnumStatesCollection, class TupleData>
+    typename StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata
+    StateAutomataBuilder<EnumStatesCollection, TupleData>::build(States init_state) {
+        return StateAutomata(state_machine_, init_state, input_items_);
+    }
+
+    template <class EnumStatesCollection, class TupleData>
+    void StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata::input(const TupleData& data) {
+        input_items_.updateItems(data);
+        evaluateTransitions();
+    }
+
+    template <class EnumStatesCollection, class TupleData>
+    typename StateAutomataBuilder<EnumStatesCollection, TupleData>::States
+    StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata::state() {
+        return current_state_;
+    }
+
+    //TODO implement demonstrate()
+    //
+    // template <class EnumStatesCollection, class TupleData>
+    // void StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata::demonstrate() {
+    //
+    // }
+
+    template <class EnumStatesCollection, class TupleData>
+    StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata::StateAutomata(FSM machine, States init_state, Item inputs)
+        : state_machine_(machine), current_state_(init_state), input_items_(inputs) {}
+
+    template <class EnumStatesCollection, class TupleData>
+    void StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata::evaluateTransitions() {
+        for (auto& it : state_machine_[current_state_])
+            if (it.condition(input_items_)) { current_state_ = it.next; return; }
+    }
+
+}  // namespace control

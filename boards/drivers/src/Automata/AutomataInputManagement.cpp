@@ -46,6 +46,10 @@ namespace communication {
     template <size_t Index>
     auto& AutomataInputManagement<TupleData>::get() {return *items_[Index];}
 
+    template <class TupleData>
+    auto& AutomataInputManagement<TupleData>::get(size_t index) {return get<index>();}
+
+
     //TODO name related implementation
     //
     // template <class TupleData>
