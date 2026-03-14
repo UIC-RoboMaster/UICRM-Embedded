@@ -22,4 +22,39 @@
 
 #include "../../include/Automata/AutomataInputManagement.h"
 
-namespace communication {}  // namespace communication
+namespace communication {
+    template <class TupleData>
+    template <size_t Index, template <class> class Component>
+    void AutomataInputManagement<TupleData>::buildItem(const char* name) {
+        using T = std::tuple_element_t<Index, TupleData>;
+        items_.emplace_back(std::make_unique<Component<T>()>);
+        static_cast<Component<T>&>(*items_.back())->setName(name);
+    }
+
+    template <class TupleData>
+    void AutomataInputManagement<TupleData>::updateItems(const TupleData& data) {
+        updateImpl(data, std::make_index_sequence<std::tuple_size_v<TupleData>>{});
+    }
+
+    template <class TupleData>
+    template <size_t... Index>
+    void AutomataInputManagement<TupleData>::updateItemsImpl(const TupleData& data, std::index_sequence<Index...>) {
+        ((items_[Index])->update(&std::get<Index>(data)), ...);
+    }
+
+    template <class TupleData>
+    template <size_t Index>
+    auto& AutomataInputManagement<TupleData>::get() {return *items_[Index];}
+
+    //TODO name related implementation
+    //
+    // template <class TupleData>
+    // AutomataInput& AutomataInputManagement<TupleData>::getByName(std::string& name) {
+    //
+    // }
+    //
+    // template <class TupleData>
+    // size_t AutomataInputManagement<TupleData>::getIndexByName(std::string& name) {
+    //
+    // }
+}  // namespace communication

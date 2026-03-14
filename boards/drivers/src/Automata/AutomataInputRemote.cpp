@@ -22,4 +22,45 @@
 
 #include "../../include/Automata/AutomataInputRemote.h"
 
-namespace remote {}  // namespace remote
+namespace remote {
+    template <class T>
+    AutomataInputRemote<T>::AutomataInputRemote() : curr_val_(T(0)), last_val_(T(0)), last_update_(0) {}
+
+    template <class T>
+    void AutomataInputRemote<T>::updateImpl(const T* input) {
+        T input_val = *input;
+        if (input_val != curr_val_)
+            last_update_ = 0;
+        ++last_update_;
+        T temp = curr_val_;
+        curr_val_ = input_val;
+        last_val_ = temp;
+    }
+
+    template <class T>
+    const T AutomataInputRemote<T>::get() {return curr_val_;}
+
+    template <class T>
+    bool AutomataInputRemote<T>::edge() {return curr_val_ != last_val_;}
+
+    template <class T>
+    bool AutomataInputRemote<T>::upEdge() {
+        if constexpr (std::is_same_v<T, bool>) return edge();
+        else return curr_val_ > last_val_;
+    }
+
+    template <class T>
+    bool AutomataInputRemote<T>::downEdge() {
+        if constexpr (std::is_same_v<T, bool>) return edge();
+        else return curr_val_ < last_val_;
+    }
+
+    template <class T>
+    const T AutomataInputRemote<T>::getDiff() {
+        if constexpr (std::is_same_v<T, bool>) return edge();
+        else return curr_val_ - last_val_;
+    }
+
+    template <class T>
+    uint16_t AutomataInputRemote<T>::lastUpdate() {return last_update_;}
+}  // namespace remote
