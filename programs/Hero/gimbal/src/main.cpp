@@ -36,7 +36,8 @@
 #include "user_define.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
-    print_use_uart(&huart1, true, 921600);
+    print_use_rtt();
+    // print_use_uart(&huart1, true, 921600);
     init_can();
     clear_screen();
     print("CAN init success!");
@@ -110,8 +111,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
-            dbus->timestamp);
+            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr);
         print("Chassis %.3f %.3f %.3f\r\n", chassis->chassis_vy, chassis->chassis_vy,
               chassis->chassis_vt);
         print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
