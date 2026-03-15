@@ -83,7 +83,7 @@ void remoteTask(void* arg) {
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
         is_vt13_offline = (!refereerc->IsOnline()) ||
-                          refereerc->vt13_packet.remote.mode_sw != remote::vt13_remote_t::MODE_C;
+                          refereerc->vt13_packet.remote.mode_sw != remote::vt13_remote_t::MODE_N;
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
@@ -189,6 +189,19 @@ void remoteTask(void* arg) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
         }
 
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+            if (refereerc->vt13_packet.remote.ch4 < 424) {
+                shoot_load_mode = SHOOT_MODE_UNLOAD;
+            } else if (refereerc->vt13_packet.remote.ch4 > 1624) {
+                shoot_load_mode = SHOOT_MODE_IDLE;
+            } else {
+                if (refereerc->vt13_packet.remote.ch4 > 800 &&
+                    refereerc->vt13_packet.remote.ch4 < 1248) {
+                    shoot_load_mode = SHOOT_MODE_IDLE;
+                }
+            }
+        }
+
         // DT7 左摇杆上拨 切换摩擦轮
         static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
         flywheel_switch_edge->input(state_l == remote::UP);
@@ -238,6 +251,9 @@ void remoteTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_STOP;
                 shoot_burst_timestamp = 0;
             }
+
+            // TODO
+
         } else {
             // 自喵模式下只有连发
             if (minipc->IsOnline()) {
