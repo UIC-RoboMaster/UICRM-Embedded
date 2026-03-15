@@ -38,15 +38,21 @@ namespace remote {
      */
     template <class T>
     class AutomataInputRemote : public communication::AutomataInputBase<T> {
-    public:
+      public:
         AutomataInputRemote(const char* name)
-            : communication::AutomataInputBase<T>(name), curr_val_(T(0)), last_val_(T(0)), last_update_(0) {}
+            : communication::AutomataInputBase<T>(name),
+              curr_val_(T(0)),
+              last_val_(T(0)),
+              last_update_(0) {
+        }
         ~AutomataInputRemote() override = default;
 
         /**
          * @return If current val not equal to last val
          */
-        bool edge() {return curr_val_ != last_val_;}
+        bool edge() {
+            return curr_val_ != last_val_;
+        }
 
         /**
          * boolean specification: equal to edge()
@@ -54,8 +60,10 @@ namespace remote {
          * @return If current val greater than last val
          */
         virtual bool upEdge() {
-            if constexpr (std::is_same_v<T, bool>) return edge();
-            else return curr_val_ > last_val_;
+            if constexpr (std::is_same_v<T, bool>)
+                return edge();
+            else
+                return curr_val_ > last_val_;
         }
 
         /**
@@ -64,8 +72,10 @@ namespace remote {
          * @return If current val smaller than last val
          */
         virtual bool downEdge() {
-            if constexpr (std::is_same_v<T, bool>) return edge();
-            else return curr_val_ < last_val_;
+            if constexpr (std::is_same_v<T, bool>)
+                return edge();
+            else
+                return curr_val_ < last_val_;
         }
 
         /**
@@ -75,8 +85,10 @@ namespace remote {
          * @return Difference of current value and last value
          */
         virtual const T getDiff() {
-            if constexpr (std::is_same_v<T, bool>) return edge();
-            else return curr_val_ - last_val_;
+            if constexpr (std::is_same_v<T, bool>)
+                return edge();
+            else
+                return curr_val_ - last_val_;
         }
 
         /**
@@ -84,7 +96,9 @@ namespace remote {
          *
          * @return current value
          */
-        virtual const T get() {return curr_val_;}
+        virtual const T get() {
+            return curr_val_;
+        }
 
         /**
          * This function not involving RTC or similar devices.
@@ -92,9 +106,11 @@ namespace remote {
          *
          * @return The UPDATE TIMES that since last value changed
          */
-        virtual uint16_t lastUpdate() {return last_update_;}
+        virtual uint16_t lastUpdate() {
+            return last_update_;
+        }
 
-    protected:
+      protected:
         T curr_val_;
         T last_val_;
         uint16_t last_update_;

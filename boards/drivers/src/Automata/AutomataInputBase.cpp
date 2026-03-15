@@ -24,4 +24,4 @@
 
 namespace communication {
     AutomataInput::~AutomataInput() = default;
-}  // namespace remote
+}  // namespace communication

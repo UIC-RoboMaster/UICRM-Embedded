@@ -23,15 +23,15 @@
 #ifndef UICRM_AUTOMATAINPUTMANAGEMENT_H
 #define UICRM_AUTOMATAINPUTMANAGEMENT_H
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "AutomataInputBase.h"
 
 namespace communication {
 
     class AutomataInputManagement {
-    public:
+      public:
         /**
          * Add a new component.
          *
@@ -41,7 +41,7 @@ namespace communication {
          * @tparam Type
          * @param name
          */
-        template <template<class> class Component, typename Type>
+        template <template <class> class Component, typename Type>
         void buildItem(const char* name) {
             items_.emplace_back(std::make_unique<Component<Type>>(name));
         }
@@ -73,9 +73,9 @@ namespace communication {
          * @param member
          * @return
          */
-        template <template<class> class Component, typename Struct, typename Member>
-        auto get(size_t index, Member Struct::* member) const
-        -> const Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>& {
+        template <template <class> class Component, typename Struct, typename Member>
+        auto get(size_t index, Member Struct::*member) const
+            -> const Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>& {
             using Type = std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>;
             return static_cast<Component<Type>&>(*items_[index]);
         }
@@ -84,7 +84,7 @@ namespace communication {
          * @param name Items' custom name.
          * @return Index where the component that represent the named item.
          */
-        //TODO name related implementation
+        // TODO name related implementation
         //
         // template <class ReturnType>
         // AutomataInput& AutomataInputManagement::getByName(std::string& name) {
@@ -92,14 +92,14 @@ namespace communication {
         // }
 
         /**
-        * @param name Items' custom name.
-        * @return Component that represent the named item.
-        */
+         * @param name Items' custom name.
+         * @return Component that represent the named item.
+         */
         // size_t AutomataInputManagement::getIndexByName(std::string& name) {
         //
         // }
 
-    private:
+      private:
         std::vector<std::unique_ptr<AutomataInput>> items_;
 
         template <typename... Ts, size_t... Index>

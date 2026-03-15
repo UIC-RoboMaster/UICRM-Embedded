@@ -33,7 +33,7 @@ namespace communication {
      * A polymorphism interface for automata input item
      */
     class AutomataInput {
-    public:
+      public:
         virtual ~AutomataInput() = 0;
         virtual void update(const void*) = 0;
     };
@@ -45,16 +45,23 @@ namespace communication {
      * Its derive classes should represent a single channel/value/variable affecting automata
      * transition.
      *
-     * Class [AutomataInputManagement] include this class family to perform interaction with automata.
+     * Class [AutomataInputManagement] include this class family to perform interaction with
+     * automata.
      */
     template <typename T>
     class AutomataInputBase : public AutomataInput {
-    public:
-        explicit AutomataInputBase(const char* name) : name_(name) {}
+      public:
+        explicit AutomataInputBase(const char* name) : name_(name) {
+        }
         virtual ~AutomataInputBase() override = default;
-        void update (const void* input) final {updateImpl(static_cast<const T*>(input));}
-        virtual string name() final {return name_;}
-    protected:
+        void update(const void* input) final {
+            updateImpl(static_cast<const T*>(input));
+        }
+        virtual string name() final {
+            return name_;
+        }
+
+      protected:
         string name_;
 
         virtual void updateImpl(const T* input) = 0;

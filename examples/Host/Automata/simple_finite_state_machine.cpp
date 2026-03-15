@@ -18,10 +18,11 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include <iostream>
-#include <tuple>
-#include <functional>
 #include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <thread>
+#include <tuple>
 
 #include "Automata.h"
 
@@ -60,11 +61,12 @@ int main() {
     std::function<bool(const Ins&)> pred_off = [](const Ins& ins) -> bool {
         auto comp1 = ins.get<AutomataInputRemote>(0, &raw_data_structA::num1);
         auto comp2 = ins.get<AutomataInputRemote>(1, &raw_data_structB::num2);
-        return comp1.get() > 100000 && comp2.edge();
+        // return comp1.get() > 100000 && comp2.edge();
+        return comp1.downEdge();
     };
 
     std::function<bool(const Ins&)> pred_on = [](const Ins&) -> bool {
-        return rand() % 10 >= 8;
+        return rand() % 1000 >= 990;
     };
 
     (*builder)
@@ -74,14 +76,15 @@ int main() {
         .transition(OFF, ON, pred_on);
 
     control::Automata<states>* aut = builder->build(OFF);
-    delete builder; // builder holds duplicated info, safe to delete
+    delete builder;  // builder holds duplicated info, safe to delete
 
     while (true) {
-        raw_data1.num1 = (++raw_data1.num1) % 100000;
+        raw_data1.num1 = (++raw_data1.num1) % 50;
         raw_data2.num2 = static_cast<int>((++raw_data2.num2)) % 50000;
 
         aut->input(std::make_tuple(raw_data1.num1, raw_data2.num2));
 
+        std::cout << raw_data1.num1 << " " << raw_data2.num2 << " ";
         switch (aut->state()) {
             case ON:
                 std::cout << "ON" << std::endl;
@@ -90,5 +93,7 @@ int main() {
                 std::cout << "OFF" << std::endl;
                 break;
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }

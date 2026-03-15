@@ -38,11 +38,10 @@ namespace control {
     /*Transition*/
     template <class EnumStatesCollection>
     struct Transition {
-
         using Predicate = std::function<bool(const AutomataInputManagement&)>;
 
-        Transition(Predicate c, EnumStatesCollection n)
-            : condition(std::move(c)), next(n) {}
+        Transition(Predicate c, EnumStatesCollection n) : condition(std::move(c)), next(n) {
+        }
 
         Predicate condition;
         EnumStatesCollection next;
@@ -51,19 +50,21 @@ namespace control {
 
     /*StateAutomataBuilder*/
     /**
-     * Factory class that guarantee Automata it gonna creates won't change by any form in the future.
+     * Factory class that guarantee Automata it gonna creates won't change by any form in the
+     * future.
      *
      * Factory mode aim to emphasise the creation process and illuminate life cycle
      * which is my best effort to improve easy of maintenance.
      *
      * Factory itself should being destroyed after build is complete otherwise memory waste.
      *
-     * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata going to be built.
+     * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the
+     * automata going to be built.
      * @tparam TupleData Tuple form data package.
      */
     template <class EnumStatesCollection>
     class StateAutomataBuilder {
-    public:
+      public:
         class StateAutomata;
 
         typedef EnumStatesCollection States;
@@ -74,7 +75,8 @@ namespace control {
         /**
          * Add new reflect relationship among the automata.
          *
-         * For states with multiple transitions, those added first will execute first if there's ambiguous conditions.
+         * For states with multiple transitions, those added first will execute first if there's
+         * ambiguous conditions.
          *
          * @param from the state that
          * @param trans Transition
@@ -82,7 +84,8 @@ namespace control {
          */
         StateAutomataBuilder& transition(States from, Transition<States> trans) {
             size_t idx = static_cast<size_t>(from);
-            if (idx >= state_machine_.size()) state_machine_.resize(idx + 1);
+            if (idx >= state_machine_.size())
+                state_machine_.resize(idx + 1);
             state_machine_[static_cast<size_t>(from)].emplace_back(trans);
             return *this;
         }
@@ -99,8 +102,8 @@ namespace control {
          * @param name
          * @return
          */
-        template <template<class> class Component, typename Item, typename Struct>
-        StateAutomataBuilder& input(Item Struct::* item, const char* name) {
+        template <template <class> class Component, typename Item, typename Struct>
+        StateAutomataBuilder& input(Item Struct::*item, const char* name) {
             using Type = std::remove_reference_t<decltype(std::declval<Struct>().*item)>;
             input_items_.buildItem<Component, Type>(name);
             return *this;
@@ -118,10 +121,11 @@ namespace control {
          * @return The product automata
          */
         StateAutomata* build(States init_state) {
-            return new StateAutomata(std::move(state_machine_), init_state, std::move(input_items_));
+            return new StateAutomata(std::move(state_machine_), init_state,
+                                     std::move(input_items_));
         }
 
-    private:
+      private:
         FSM state_machine_;
         Item input_items_;
     };
@@ -131,17 +135,19 @@ namespace control {
     /**
      * An automata that work based on graph.
      *
-     * Transitions are depend on a condition that in a form of std::function(function pointer) which its return value always boolean.
+     * Transitions are depend on a condition that in a form of std::function(function pointer) which
+     * its return value always boolean.
      *
      * This class should be constructed by class [control::StateAutomataBuilder].
-     * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory class.
+     * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory
+     * class.
      *
-     * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata.
+     * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the
+     * automata.
      */
     template <class EnumStatesCollection>
     class StateAutomataBuilder<EnumStatesCollection>::StateAutomata {
-    public:
-
+      public:
         friend class StateAutomataBuilder;
 
         typedef EnumStatesCollection States;
@@ -153,17 +159,20 @@ namespace control {
             input_items_.updateItems(data);
             evaluateTransitions();
         }
-        
+
         States state() {
             return current_state_;
         }
 
-        //TODO implement demonstrate()
+        // TODO implement demonstrate()
         std::string demonstrate() const;
 
-    private:
+      private:
         StateAutomata(FSM machine, States init_state, Item inputs)
-            : state_machine_(std::move(machine)), current_state_(init_state), input_items_(std::move(inputs)) {}
+            : state_machine_(std::move(machine)),
+              current_state_(init_state),
+              input_items_(std::move(inputs)) {
+        }
 
         const FSM state_machine_;
         States current_state_;
@@ -172,7 +181,10 @@ namespace control {
 
         void evaluateTransitions() {
             for (auto& it : state_machine_[current_state_])
-                if (it.condition(input_items_)) { current_state_ = it.next; return; }
+                if (it.condition(input_items_)) {
+                    current_state_ = it.next;
+                    return;
+                }
         }
     };
     /*StateAutomata*/

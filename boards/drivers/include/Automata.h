@@ -23,8 +23,8 @@
 #ifndef UICRM_AUTOMATA_H
 #define UICRM_AUTOMATA_H
 
-#include "StateAutomatas.h"
 #include "Automata/AutomataInputManagement.h"
+#include "StateAutomatas.h"
 
 // Any extend item class may place here to declare reference
 #include "Automata/AutomataInputRemote.h"
