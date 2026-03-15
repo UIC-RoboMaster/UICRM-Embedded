@@ -41,6 +41,9 @@ namespace control {
 
         using Predicate = std::function<bool(const AutomataInputManagement&)>;
 
+        Transition(Predicate c, EnumStatesCollection n)
+            : condition(std::move(c)), next(n) {}
+
         Predicate condition;
         EnumStatesCollection next;
     };
@@ -77,8 +80,13 @@ namespace control {
          * @param trans Transition
          * @return Factory itself in order to perform "chain call" grammar.
          */
-        StateAutomataBuilder& transition(States from, Transition<States> trans);
-        StateAutomataBuilder& transition(States from, States to, Predicate condition);
+        StateAutomataBuilder& transition(States from, Transition<States> trans) {
+            state_machine_[static_cast<size_t>(from)].emplace_back(trans);
+            return *this;
+        }
+        StateAutomataBuilder& transition(States from, States to, Predicate condition) {
+            return transition(from, Transition<EnumStatesCollection>(condition, to));
+        }
 
         /**
          *
@@ -107,7 +115,9 @@ namespace control {
          * @param init_state The state that the result automata will start with.
          * @return The product automata
          */
-        StateAutomata* build(States init_state);
+        StateAutomata* build(States init_state) {
+            return new StateAutomata(std::move(state_machine_), init_state, std::move(input_items_));
+        }
 
     private:
         FSM state_machine_;
@@ -130,26 +140,38 @@ namespace control {
     class StateAutomataBuilder<EnumStatesCollection>::StateAutomata {
     public:
 
+        friend class StateAutomataBuilder;
+
         typedef EnumStatesCollection States;
         using FSM = vector<vector<Transition<States>>>;
         using Item = AutomataInputManagement;
 
         template <typename... Ts>
-        void input(const std::tuple<Ts...>& data);
+        void input(const std::tuple<Ts...>& data) {
+            input_items_.updateItems(data);
+            evaluateTransitions();
+        }
         
-        States state();
+        States state() {
+            return current_state_;
+        }
 
+        //TODO implement demonstrate()
         std::string demonstrate() const;
 
     private:
-        StateAutomata(FSM machine, States init_state, Item inputs);
+        StateAutomata(FSM machine, States init_state, Item inputs)
+            : state_machine_(std::move(machine)), current_state_(init_state), input_items_(std::move(inputs)) {}
 
         const FSM state_machine_;
         States current_state_;
 
-        const Item input_items_;
+        Item input_items_;
 
-        void evaluateTransitions();
+        void evaluateTransitions() {
+            for (auto& it : state_machine_[current_state_])
+                if (it.condition(input_items_)) { current_state_ = it.next; return; }
+        }
     };
     /*StateAutomata*/
 

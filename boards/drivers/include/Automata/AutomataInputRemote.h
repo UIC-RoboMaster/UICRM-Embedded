@@ -39,27 +39,34 @@ namespace remote {
     template <class T>
     class AutomataInputRemote : public communication::AutomataInputBase<T> {
     public:
-        AutomataInputRemote();
+        AutomataInputRemote(const char* name)
+            : communication::AutomataInputBase<T>(name), curr_val_(T(0)), last_val_(T(0)), last_update_(0) {}
         ~AutomataInputRemote() override = default;
 
         /**
          * @return If current val not equal to last val
          */
-        virtual bool edge();
+        bool edge() {return curr_val_ != last_val_;}
 
         /**
          * boolean specification: equal to edge()
          *
          * @return If current val greater than last val
          */
-        virtual bool upEdge();
+        virtual bool upEdge() {
+            if constexpr (std::is_same_v<T, bool>) return edge();
+            else return curr_val_ > last_val_;
+        }
 
         /**
          * boolean specification: equal to edge()
          *
          * @return If current val smaller than last val
          */
-        virtual bool downEdge();
+        virtual bool downEdge() {
+            if constexpr (std::is_same_v<T, bool>) return edge();
+            else return curr_val_ < last_val_;
+        }
 
         /**
          * boolean specification will output current xor last
@@ -67,14 +74,17 @@ namespace remote {
          *
          * @return Difference of current value and last value
          */
-        virtual const T getDiff();
+        virtual const T getDiff() {
+            if constexpr (std::is_same_v<T, bool>) return edge();
+            else return curr_val_ - last_val_;
+        }
 
         /**
          * update and call this func otherwise real-time problem
          *
          * @return current value
          */
-        virtual const T get();
+        virtual const T get() {return curr_val_;}
 
         /**
          * This function not involving RTC or similar devices.
@@ -82,13 +92,22 @@ namespace remote {
          *
          * @return The UPDATE TIMES that since last value changed
          */
-        virtual uint16_t lastUpdate();
+        virtual uint16_t lastUpdate() {return last_update_;}
+
     protected:
         T curr_val_;
         T last_val_;
         uint16_t last_update_;
 
-        void updateImpl(const T* input) override;
+        void updateImpl(const T* input) {
+            const T& input_val = *input;
+            if (input_val != curr_val_)
+                last_update_ = 0;
+            ++last_update_;
+            T temp = curr_val_;
+            curr_val_ = input_val;
+            last_val_ = temp;
+        }
     };
 
 }  // namespace remote

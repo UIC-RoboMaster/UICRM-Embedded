@@ -48,11 +48,12 @@ namespace communication {
      * Class [AutomataInputManagement] include this class family to perform interaction with automata.
      */
     template <typename T>
-    class AutomataInputBase : AutomataInput {
+    class AutomataInputBase : public AutomataInput {
     public:
+        explicit AutomataInputBase(const char* name) : name_(name) {}
+        virtual ~AutomataInputBase() override = default;
         void update (const void* input) final {updateImpl(static_cast<const T*>(input));}
         virtual string name() final {return name_;}
-        virtual void setName(const string name) final {name_=name;}
     protected:
         string name_;
 

@@ -22,4 +22,6 @@
 
 #include "../../include/Automata/AutomataInputBase.h"
 
-namespace communication {}  // namespace remote
+namespace communication {
+    AutomataInput::~AutomataInput() = default;
+}  // namespace remote

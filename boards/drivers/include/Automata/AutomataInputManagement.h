@@ -42,14 +42,18 @@ namespace communication {
          * @param name
          */
         template <template<class> class Component, typename Type>
-        void buildItem(const std::string& name);
+        void buildItem(const char* name) {
+            items_.emplace_back(std::make_unique<Component<Type>>(name));
+        }
 
         /**
          * update all components.
          * @param data A tuple contians all items that components need to update
          */
         template <typename... Ts>
-        void updateItems(const std::tuple<Ts...>& data);
+        void updateItems(const std::tuple<Ts...>& data) {
+            updateItemsImpl(data, std::make_index_sequence<sizeof...(Ts)>{});
+        }
 
         /**
          * Get component
@@ -69,32 +73,39 @@ namespace communication {
          * @param member
          * @return
          */
-        // template <template<class> class Component, typename Struct, typename Member>
-        // const auto& get(size_t index, Member Struct::* member) const;
         template <template<class> class Component, typename Struct, typename Member>
         auto get(size_t index, Member Struct::* member) const
-            -> const Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>&;
+        -> const Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>& {
+            using Type = std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>;
+            return static_cast<Component<Type>&>(*items_[index]);
+        }
 
         /**
          * @param name Items' custom name.
          * @return Index where the component that represent the named item.
          */
-        size_t getIndexByName(std::string& name);
+        //TODO name related implementation
+        //
+        // template <class ReturnType>
+        // AutomataInput& AutomataInputManagement::getByName(std::string& name) {
+        //
+        // }
 
         /**
-         * @param name Items' custom name.
-         * @return Component that represent the named item.
-         */
-        template <class ReturnType>
-        AutomataInput& getByName(std::string& name);
+        * @param name Items' custom name.
+        * @return Component that represent the named item.
+        */
+        // size_t AutomataInputManagement::getIndexByName(std::string& name) {
+        //
+        // }
+
     private:
         std::vector<std::unique_ptr<AutomataInput>> items_;
 
         template <typename... Ts, size_t... Index>
-        void updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>);
-
-        template <class ReturnType>
-        auto& getImpl(const size_t index) const;
+        void updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>) {
+            (items_[Index]->update(&std::get<Index>(data)), ...);
+        }
     };
 
     using Ins = AutomataInputManagement;
