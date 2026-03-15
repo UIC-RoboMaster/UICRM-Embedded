@@ -20,7 +20,7 @@
 // Created by gttgf on 2026/3/13.
 //
 
-#include "StateAutomatas.h"
+#include "../include/StateAutomatas.h"
 
 namespace control {
     template <class EnumStatesCollection>
@@ -46,9 +46,9 @@ namespace control {
     // }
 
     template <class EnumStatesCollection>
-    typename StateAutomataBuilder<EnumStatesCollection>::StateAutomata
+    typename StateAutomataBuilder<EnumStatesCollection>::StateAutomata*
     StateAutomataBuilder<EnumStatesCollection>::build(States init_state) {
-        return StateAutomata(state_machine_, init_state, input_items_);
+        return new StateAutomata(state_machine_, init_state, input_items_);
     }
 
     template <class EnumStatesCollection>

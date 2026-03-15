@@ -42,7 +42,22 @@ namespace communication {
     // auto& AutomataInputManagement::get() {return *items_[Index];}
 
     template <class ReturnType>
-    auto& AutomataInputManagement::get(const size_t index) {return static_cast<ReturnType>(*items_[index]);}
+    auto& AutomataInputManagement::getImpl(const size_t index) const {
+        return static_cast<ReturnType>(*items_[index]);
+    }
+
+    // template <template<class> class Component, typename Struct, typename Member>
+    // const auto& AutomataInputManagement::get(size_t index, Member Struct::* member) const {
+    //     using Type = std::remove_reference_t<decltype(std::declval<Struct>().*member)>;
+    //     return getImpl<Component<Type>>(index);
+    // }
+
+        template <template<class> class Component, typename Struct, typename Member>
+        auto AutomataInputManagement::get(size_t index, Member Struct::* member) const
+            -> const Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>&{
+            using Type = std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>;
+            return getImpl<Component<Type>>(index);
+        }
 
 
     //TODO name related implementation

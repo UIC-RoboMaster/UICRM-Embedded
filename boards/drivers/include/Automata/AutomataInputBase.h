@@ -35,7 +35,7 @@ namespace communication {
     class AutomataInput {
     public:
         virtual ~AutomataInput() = 0;
-        virtual void update() = 0;
+        virtual void update(const void*) = 0;
     };
 
     /**
@@ -50,7 +50,7 @@ namespace communication {
     template <typename T>
     class AutomataInputBase : AutomataInput {
     public:
-        virtual void update (const void* input) final {updateImpl(*static_cast<const T*>(input));}
+        void update (const void* input) final {updateImpl(static_cast<const T*>(input));}
         virtual string name() final {return name_;}
         virtual void setName(const string name) final {name_=name;}
     protected:

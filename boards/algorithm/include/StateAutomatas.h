@@ -26,12 +26,10 @@
 #include <functional>
 #include <string>
 #include <vector>
-#include <variant>
 
 #include "../../drivers/include/Automata/AutomataInputManagement.h"
 
 using std::vector;
-using std::variant;
 
 using communication::AutomataInputManagement;
 
@@ -85,17 +83,16 @@ namespace control {
         /**
          *
          * @tparam Component
-         * @tparam Member
+         * @tparam Item
          * @tparam Struct
-         * @param member
+         * @param item
          * @param name
          * @return
          */
-        template <template<class> class Component, typename Member, typename Struct>
-        StateAutomataBuilder<EnumStatesCollection>&
-        input(Member Struct::* member, const char* name) {
-            using Type = std::remove_reference_t<decltype(std::declval<Struct>().*member)>;
-            input_items_.template buildItem<Component, Type>(name);
+        template <template<class> class Component, typename Item, typename Struct>
+        StateAutomataBuilder& input(Item Struct::* item, const char* name) {
+            using Type = std::remove_reference_t<decltype(std::declval<Struct>().*item)>;
+            input_items_.buildItem<Component, Type>(name);
             return *this;
         }
 
@@ -110,7 +107,7 @@ namespace control {
          * @param init_state The state that the result automata will start with.
          * @return The product automata
          */
-        StateAutomata build(States init_state);
+        StateAutomata* build(States init_state);
 
     private:
         FSM state_machine_;

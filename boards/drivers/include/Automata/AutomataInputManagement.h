@@ -60,12 +60,20 @@ namespace communication {
          * Due to forbidden of RTTI in embedded system, dynamic_cast<>() is not available.
          * Polymorphism type here is NOT safe.
          *
-         * @tparam ReturnType Actual component type
-         * @param index where
-         * @return A [ReturnType] type component
+         * Implement in-class due to compiler type check
+         *
+         * @tparam Struct
+         * @tparam Member
+         * @tparam Component
+         * @param index
+         * @param member
+         * @return
          */
-        template <class ReturnType>
-        auto& get(size_t index);
+        // template <template<class> class Component, typename Struct, typename Member>
+        // const auto& get(size_t index, Member Struct::* member) const;
+        template <template<class> class Component, typename Struct, typename Member>
+        auto get(size_t index, Member Struct::* member) const
+            -> const Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>&;
 
         /**
          * @param name Items' custom name.
@@ -84,6 +92,9 @@ namespace communication {
 
         template <typename... Ts, size_t... Index>
         void updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>);
+
+        template <class ReturnType>
+        auto& getImpl(const size_t index) const;
     };
 
     using Ins = AutomataInputManagement;

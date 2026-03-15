@@ -28,7 +28,7 @@ namespace remote {
 
     template <class T>
     void AutomataInputRemote<T>::updateImpl(const T* input) {
-        T input_val = *input;
+        T& input_val = *input;
         if (input_val != curr_val_)
             last_update_ = 0;
         ++last_update_;
