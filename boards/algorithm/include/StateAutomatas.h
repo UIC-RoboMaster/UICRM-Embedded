@@ -81,6 +81,8 @@ namespace control {
          * @return Factory itself in order to perform "chain call" grammar.
          */
         StateAutomataBuilder& transition(States from, Transition<States> trans) {
+            size_t idx = static_cast<size_t>(from);
+            if (idx >= state_machine_.size()) state_machine_.resize(idx + 1);
             state_machine_[static_cast<size_t>(from)].emplace_back(trans);
             return *this;
         }
