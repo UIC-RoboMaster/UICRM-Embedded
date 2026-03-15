@@ -195,12 +195,12 @@ void remoteTask(void* arg) {
             } else if (refereerc->vt13_packet.remote.ch4 > 1624) {
                 shoot_load_mode = SHOOT_MODE_IDLE;
             } else {
-                if (refereerc->vt13_packet.remote.ch4 > 800 && refereerc->vt13_packet.remote.ch4 < 1248) {
+                if (refereerc->vt13_packet.remote.ch4 > 800 &&
+                    refereerc->vt13_packet.remote.ch4 < 1248) {
                     shoot_load_mode = SHOOT_MODE_IDLE;
                 }
             }
         }
-
 
         // DT7 左摇杆上拨 切换摩擦轮
         static BoolEdgeDetector* flywheel_switch_edge = new BoolEdgeDetector(false);
@@ -253,8 +253,6 @@ void remoteTask(void* arg) {
             }
 
             // TODO
-
-
 
         } else {
             // 自喵模式下只有连发

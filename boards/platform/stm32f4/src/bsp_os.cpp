@@ -50,8 +50,9 @@ namespace bsp {
         // 立即启动定时器
         // main.c 会先执行 MX_FREERTOS_Init()，此时并没有初始化 FreeRTOS 时基定时器。
         // FreeRTOS 定时器会在 main.c 的 osKernelStart() 中初始化时基定时器。
-        // 但是 MotorCanBase.cpp 会执行断言 RM_ASSERT_TRUE(bsp::GetHighresTickMicroSec() != 0, "Highres timer not initialized")
-        // 所以我们需要提前初始化一次高精度定时器以使 MotorCANBase 的断言能够通过。
+        // 但是 MotorCanBase.cpp 会执行断言 RM_ASSERT_TRUE(bsp::GetHighresTickMicroSec() != 0,
+        // "Highres timer not initialized") 所以我们需要提前初始化一次高精度定时器以使 MotorCANBase
+        // 的断言能够通过。
         __HAL_TIM_SET_AUTORELOAD(htim_os, 0xffffffff);
         __HAL_TIM_SET_COUNTER(htim_os, 0);
         __HAL_TIM_ENABLE(htim_os);

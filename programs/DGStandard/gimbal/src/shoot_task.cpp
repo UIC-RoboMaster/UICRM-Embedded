@@ -127,10 +127,10 @@ void shootTask(void* arg) {
         if (shoot_load_mode == SHOOT_MODE_UNLOAD) {
             if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP && !unload_cmd_latched) {
                 steering_motor->SetTarget(steering_motor->GetTarget() - 2 * PI / 8, true);
-                unload_cmd_latched = true; // 只触发一次
+                unload_cmd_latched = true;  // 只触发一次
             }
         } else {
-            unload_cmd_latched = false; // 退出UNLOAD后解锁，等待下次触发
+            unload_cmd_latched = false;  // 退出UNLOAD后解锁，等待下次触发
         }
 
         // 检测摩擦轮是否就绪
