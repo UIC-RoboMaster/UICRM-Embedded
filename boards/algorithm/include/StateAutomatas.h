@@ -28,23 +28,20 @@
 #include <vector>
 #include <variant>
 
+#include "../../drivers/include/Automata/AutomataInputManagement.h"
+
 using std::vector;
 using std::variant;
 
-namespace communication
-{
-    template<class TupleData>
-    class AutomataInputManagement;
-}
 using communication::AutomataInputManagement;
 
 namespace control {
 
     /*Transition*/
-    template <class EnumStatesCollection, class TupleData>
+    template <class EnumStatesCollection>
     struct Transition {
 
-        using Predicate = std::function<bool(const AutomataInputManagement<TupleData>&)>;
+        using Predicate = std::function<bool(const AutomataInputManagement&)>;
 
         Predicate condition;
         EnumStatesCollection next;
@@ -63,15 +60,15 @@ namespace control {
      * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata going to be built.
      * @tparam TupleData Tuple form data package.
      */
-    template <class EnumStatesCollection, class TupleData>
+    template <class EnumStatesCollection>
     class StateAutomataBuilder {
     public:
         class StateAutomata;
 
         typedef EnumStatesCollection States;
-        using FSM = vector<vector<Transition<States, TupleData>>>;
-        using Item = AutomataInputManagement<TupleData>;
-        using Predicate = std::function<bool(const AutomataInputManagement<TupleData>&)>;
+        using FSM = vector<vector<Transition<States>>>;
+        using Item = AutomataInputManagement;
+        using Predicate = std::function<bool(const AutomataInputManagement&)>;
 
         /**
          * Add new reflect relationship among the automata.
@@ -82,11 +79,25 @@ namespace control {
          * @param trans Transition
          * @return Factory itself in order to perform "chain call" grammar.
          */
-        StateAutomataBuilder& transition(States from, Transition<States, TupleData> trans);
+        StateAutomataBuilder& transition(States from, Transition<States> trans);
         StateAutomataBuilder& transition(States from, States to, Predicate condition);
 
-        template <size_t Index, template <class> class Component>
-        StateAutomataBuilder& input(const char* name);
+        /**
+         *
+         * @tparam Component
+         * @tparam Member
+         * @tparam Struct
+         * @param member
+         * @param name
+         * @return
+         */
+        template <template<class> class Component, typename Member, typename Struct>
+        StateAutomataBuilder<EnumStatesCollection>&
+        input(Member Struct::* member, const char* name) {
+            using Type = std::remove_reference_t<decltype(std::declval<Struct>().*member)>;
+            input_items_.template buildItem<Component, Type>(name);
+            return *this;
+        }
 
         /**
          * Build and output current automata
@@ -117,17 +128,17 @@ namespace control {
      * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory class.
      *
      * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the automata.
-     * @tparam TupleData Tuple form data package.
      */
-    template <class EnumStatesCollection, class TupleData>
-    class StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata {
+    template <class EnumStatesCollection>
+    class StateAutomataBuilder<EnumStatesCollection>::StateAutomata {
     public:
 
         typedef EnumStatesCollection States;
-        using FSM = vector<vector<Transition<States, TupleData>>>;
-        using Item = AutomataInputManagement<TupleData>;
+        using FSM = vector<vector<Transition<States>>>;
+        using Item = AutomataInputManagement;
 
-        void input(const TupleData&);
+        template <typename... Ts>
+        void input(const std::tuple<Ts...>& data);
         
         States state();
 
@@ -145,11 +156,11 @@ namespace control {
     };
     /*StateAutomata*/
 
-    template <class EnumStatesCollection, class TupleData>
-    using Automata = typename StateAutomataBuilder<EnumStatesCollection, TupleData>::StateAutomata;
+    template <class EnumStatesCollection>
+    using Automata = typename StateAutomataBuilder<EnumStatesCollection>::StateAutomata;
 
-    template <class EnumStatesCollection, class TupleData>
-    using AutomataBuilder = StateAutomataBuilder<EnumStatesCollection, TupleData>;
+    template <class EnumStatesCollection>
+    using AutomataBuilder = StateAutomataBuilder<EnumStatesCollection>;
 
 }  // namespace control
 

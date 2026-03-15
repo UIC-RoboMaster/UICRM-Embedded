@@ -23,42 +23,36 @@
 #include "../../include/Automata/AutomataInputManagement.h"
 
 namespace communication {
-    template <class TupleData>
-    template <size_t Index, template <class> class Component>
-    void AutomataInputManagement<TupleData>::buildItem(const char* name) {
-        using T = std::tuple_element_t<Index, TupleData>;
-        items_.emplace_back(std::make_unique<Component<T>()>);
-        static_cast<Component<T>&>(*items_.back())->setName(name);
+    template <template <class> class Component, typename Type>
+    void AutomataInputManagement::buildItem(const std::string& name) {
+        items_.emplace_back(std::make_unique<Component<Type>>(name));
     }
 
-    template <class TupleData>
-    void AutomataInputManagement<TupleData>::updateItems(const TupleData& data) {
-        updateImpl(data, std::make_index_sequence<std::tuple_size_v<TupleData>>{});
+    template <typename... Ts>
+    void AutomataInputManagement::updateItems(const std::tuple<Ts...>& data) {
+        updateItemsImpl(data, std::make_index_sequence<sizeof...(Ts)>{});
     }
 
-    template <class TupleData>
-    template <size_t... Index>
-    void AutomataInputManagement<TupleData>::updateItemsImpl(const TupleData& data, std::index_sequence<Index...>) {
-        ((items_[Index])->update(&std::get<Index>(data)), ...);
+    template <typename... Ts, size_t... Index>
+    void AutomataInputManagement::updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>) {
+        (items_[Index]->update(&std::get<Index>(data)), ...);
     }
 
-    template <class TupleData>
-    template <size_t Index>
-    auto& AutomataInputManagement<TupleData>::get() {return *items_[Index];}
+    // template <size_t Index>
+    // auto& AutomataInputManagement::get() {return *items_[Index];}
 
-    template <class TupleData>
-    auto& AutomataInputManagement<TupleData>::get(size_t index) {return get<index>();}
+    template <class ReturnType>
+    auto& AutomataInputManagement::get(const size_t index) {return static_cast<ReturnType>(*items_[index]);}
 
 
     //TODO name related implementation
     //
-    // template <class TupleData>
-    // AutomataInput& AutomataInputManagement<TupleData>::getByName(std::string& name) {
+    // template <class ReturnType>
+    // AutomataInput& AutomataInputManagement::getByName(std::string& name) {
     //
     // }
     //
-    // template <class TupleData>
-    // size_t AutomataInputManagement<TupleData>::getIndexByName(std::string& name) {
+    // size_t AutomataInputManagement::getIndexByName(std::string& name) {
     //
     // }
 }  // namespace communication

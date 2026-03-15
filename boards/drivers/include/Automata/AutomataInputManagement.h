@@ -27,11 +27,9 @@
 #include <memory>
 
 #include "AutomataInputBase.h"
-#include "StateAutomatas.h"
 
 namespace communication {
 
-    template<class TupleData>
     class AutomataInputManagement {
     public:
         /**
@@ -39,31 +37,34 @@ namespace communication {
          *
          * Should (only) call by [StateAutomataBuilder].
          *
-         * @tparam Index
          * @tparam Component
+         * @tparam Type
          * @param name
          */
-        template <size_t Index, template <class> class Component>
-        void buildItem(const char* name = "");
+        template <template<class> class Component, typename Type>
+        void buildItem(const std::string& name);
 
         /**
          * update all components.
          * @param data A tuple contians all items that components need to update
          */
-        void updateItems(const TupleData& data);
+        template <typename... Ts>
+        void updateItems(const std::tuple<Ts...>& data);
 
         /**
-         * A type-safe interface for obtaining polymorphism-template class(components).
+         * Get component
          *
-         * Directly return [AutomataInput] will cause user use dynamic_cast<>()
-         * RTTI, which not often available in embedded system support dynamic_cast<>().
-         * Using template parameter in order to not depend on RTTI.
+         * CAUTIOUS: PLEASE DO MAKE SURE THAT [ReturnType] IS MATCHING WITH WHAT COMPONENT TRULY IS
+         * UNDEFINED BEHAVIOUR WILL OCCUR IF TYPE UNMATCH.
          *
-         * @tparam Index Where the component that represent the item locate.
-         * @return Component that represent the named item.
+         * Due to forbidden of RTTI in embedded system, dynamic_cast<>() is not available.
+         * Polymorphism type here is NOT safe.
+         *
+         * @tparam ReturnType Actual component type
+         * @param index where
+         * @return A [ReturnType] type component
          */
-        template <size_t Index>
-        auto& get();
+        template <class ReturnType>
         auto& get(size_t index);
 
         /**
@@ -76,16 +77,16 @@ namespace communication {
          * @param name Items' custom name.
          * @return Component that represent the named item.
          */
+        template <class ReturnType>
         AutomataInput& getByName(std::string& name);
     private:
         std::vector<std::unique_ptr<AutomataInput>> items_;
 
-        template <size_t... Index>
-        void updateItemsImpl(const TupleData& data, std::index_sequence<Index...>);
+        template <typename... Ts, size_t... Index>
+        void updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>);
     };
 
-    template<class TupleData>
-    using Ins = AutomataInputManagement<TupleData>;
+    using Ins = AutomataInputManagement;
 
 }  // namespace communication
 
