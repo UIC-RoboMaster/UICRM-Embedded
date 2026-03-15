@@ -101,11 +101,13 @@ void shootTask(void* arg) {
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
     while (true) {
-        bool is_dead = remote_mode == REMOTE_MODE_KILL;
+        bool shoot_en = true;
+        shoot_en &= remote_mode != REMOTE_MODE_KILL;
 #ifdef HAS_REFEREE
-        is_dead |= !referee->game_robot_status.mains_power_shooter_output;
+        shoot_en &= referee->game_robot_status.mains_power_shooter_output;
 #endif
-        if (is_dead) {
+        if (!shoot_en) {
+            // 死了
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;

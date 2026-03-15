@@ -132,6 +132,9 @@ namespace driver {
         target_ = 0;
 
         enable_ = true;
+
+        // Check if the high resolution timer is initialized
+        RM_ASSERT_TRUE(bsp::GetHighresTickMicroSec() != 0, "Highres timer not initialized");
     }
 
     void MotorCANBase::SetFrequency(uint32_t freq) {
@@ -241,6 +244,24 @@ namespace driver {
         }
 
         float target = target_;
+
+        // 最新收到的CAN包的时间戳
+        uint32_t update_time_us = GetLastUptimeMicrosec();
+        // 当前最新的CAN数据包的时间戳，和上次运行这个函数时，最新的CAN数据包的时间戳的差值
+        // diff == 0 说明自从上次运行这个函数后没有收到新的CAN数据包
+        // diff > 1500 说明收到了新的CAN数据包，但是因为丢包，距离上次收到的CAN数据包已经超过1.5ms
+        uint32_t update_time_diff = update_time_us - last_update_time_us_;
+        if (update_time_diff > 65535)
+            update_time_diff += 65536;
+        last_update_time_us_ = update_time_diff;
+        motor_update_time_interval = 1000;
+        uint32_t times =
+            (update_time_diff + motor_update_time_interval / 2) / motor_update_time_interval;
+
+        if (times == 0) {
+            // print("Motor %x packet missing at %d\n", rx_id_, bsp::GetHighresTickMilliSec());
+            return;
+        }
 
         // 处理角度环PID，输入角度差，输出速度值
         if (mode_ & THETA) {

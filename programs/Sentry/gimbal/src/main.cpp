@@ -41,7 +41,7 @@
 bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
-    bsp::SetHighresClockTimer(&htim5);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     // 初始化调试串口，使print()函数能够输出调试信息
     // print_use_uart(&huart8, true, 921600);
     print_use_usb();
@@ -151,7 +151,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             "@ %d "
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
-            dbus->timestamp);
+            dbus->GetLastUptime());
 
         print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
         print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);

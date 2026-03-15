@@ -23,6 +23,7 @@
 #include <cstring>
 
 #include "crc_check.h"
+#include "dji_remote.h"
 
 static const uint8_t SOF = 0xA5;
 static const int FRAME_HEADER_LEN = 5;
@@ -34,22 +35,48 @@ namespace communication {
 
     bool Protocol::Receive(package_t package) {
         Heartbeat();
-        memcpy(bufferRx, package.data, package.length);
-        int start_idx;
-        int end_idx = 0;
-        while (end_idx < package.length) {
-            start_idx = end_idx;
-            while (++end_idx < package.length && bufferRx[end_idx] != SOF)
-                ;
-            if (end_idx - start_idx > FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN) {
-                int DATA_LENGTH = bufferRx[start_idx + 2] << BYTE | bufferRx[start_idx + 1];
-                if (VerifyHeader(bufferRx + start_idx, FRAME_HEADER_LEN) &&
-                    VerifyFrame(bufferRx + start_idx,
-                                FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN)) {
-                    int cmd_id = bufferRx[start_idx + FRAME_HEADER_LEN + 1] << BYTE |
-                                 bufferRx[start_idx + FRAME_HEADER_LEN];
-                    ProcessDataRx(cmd_id, bufferRx + start_idx + FRAME_HEADER_LEN + CMD_ID_LEN,
-                                  DATA_LENGTH);
+        for (int i = 0; i < package.length; ++i) {
+            if (rx_state.mode == rx_state.mode::WAITING_FOR_SOF) {
+                // 还未接收到帧头，检测是否为帧头
+                if (package.data[i] == SOF) {
+                    rx_state.mode = rx_state.mode::RECEIVING_REFEREE;
+                    bufferRx[0] = SOF;
+                    rx_state.idx = 1;
+                } else if (package.data[i] == remote::vt13_packet_t::SOF) {
+                    rx_state.mode = rx_state.mode::RECEIVING_VT13;
+                    bufferRx[0] = remote::vt13_packet_t::SOF;
+                    rx_state.idx = 1;
+                }
+            } else if (rx_state.mode == rx_state.RECEIVING_REFEREE) {
+                // 接收裁判系统的数据
+                bufferRx[rx_state.idx++] = package.data[i];
+
+                if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN) {
+                    int DATA_LENGTH = bufferRx[2] << BYTE | bufferRx[1];
+                    if (rx_state.idx >=
+                        FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
+                        if (VerifyHeader(bufferRx, FRAME_HEADER_LEN) &&
+                            VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH +
+                                                      FRAME_TAIL_LEN)) {
+                            int cmd_id =
+                                bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
+                            ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN,
+                                          DATA_LENGTH);
+                        }
+                        rx_state.mode = rx_state.WAITING_FOR_SOF;
+                        rx_state.idx = 0;
+                    }
+                }
+            } else if (rx_state.mode == rx_state.mode::RECEIVING_VT13) {
+                // VT13遥控器与图传链路从同一个UART输出，包头不同。
+                // Todo: 应该把图传链路和遥控器数据分开处理
+                bufferRx[rx_state.idx++] = package.data[i];
+                if (rx_state.idx >= static_cast<int>(sizeof(remote::vt13_packet_t))) {
+                    if (verify_crc16_check_sum(bufferRx, sizeof(remote::vt13_packet_t))) {
+                        ProcessDataRx(REMOTE_CONTROL_VT13, bufferRx, sizeof(remote::vt13_packet_t));
+                    }
+                    rx_state.mode = rx_state.WAITING_FOR_SOF;
+                    rx_state.idx = 0;
                 }
             }
         }
@@ -176,6 +203,9 @@ namespace communication {
                 break;
             case REMOTE_CONTROL_DATA:
                 memcpy(&remote_control, data, length);
+                break;
+            case REMOTE_CONTROL_VT13:
+                memcpy(&vt13_packet, data, length);
                 break;
             default:
                 return false;

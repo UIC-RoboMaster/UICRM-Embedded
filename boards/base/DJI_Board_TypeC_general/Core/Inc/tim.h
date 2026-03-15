@@ -40,18 +40,33 @@ extern TIM_HandleTypeDef htim4;
 
 extern TIM_HandleTypeDef htim5;
 
+extern TIM_HandleTypeDef htim7;
+
 extern TIM_HandleTypeDef htim8;
 
 extern TIM_HandleTypeDef htim10;
 
 /* USER CODE BEGIN Private defines */
+#define BOARD_TIM_LASER htim3
+#define BOARD_TIM_LASER_CH 3
 
+#define BOARD_TIM_PWM1
+#define BOARD_TIM_PWM2
+
+#define BOARD_TIM_BUZZER htim4
+#define BOARD_TIM_BUZZER_CH 3
+
+#define BOARD_TIM_IMUHEATER htim10
+#define BOARD_TIM_IMUHEATER_CH 1
+
+#define BOARD_TIM_SYS htim7
 /* USER CODE END Private defines */
 
 void MX_TIM1_Init(void);
 void MX_TIM3_Init(void);
 void MX_TIM4_Init(void);
 void MX_TIM5_Init(void);
+void MX_TIM7_Init(void);
 void MX_TIM8_Init(void);
 void MX_TIM10_Init(void);
 

@@ -1,5 +1,5 @@
 boards/base/*
-shared/third_party/*
+boards/third_party/*
 build/*
 cmake-build-debug/*
 venv/*

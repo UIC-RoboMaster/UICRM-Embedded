@@ -23,7 +23,7 @@
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "dbus.h"
+#include "dji_dbus.h"
 
 bsp::CAN* can = nullptr;
 driver::MotorCANBase* fl_motor = nullptr;

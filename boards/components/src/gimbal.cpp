@@ -164,8 +164,8 @@ namespace control {
             new_pitch = -new_pitch;
         if (data_.yaw_inverted)
             new_yaw = -new_yaw;
-        pitch_angle_ = wrap<float>(pitch_motor_->GetTheta() + new_pitch, 0, 2 * PI);
-        yaw_angle_ = wrap<float>(yaw_motor_->GetTheta() + new_yaw, 0, 2 * PI);
+        pitch_angle_ = wrap<float>(pitch_angle_ + new_pitch, 0, 2 * PI);
+        yaw_angle_ = wrap<float>(yaw_angle_ + new_yaw, 0, 2 * PI);
     }
     float Gimbal::getPitchTarget() const {
         return pitch_angle_;

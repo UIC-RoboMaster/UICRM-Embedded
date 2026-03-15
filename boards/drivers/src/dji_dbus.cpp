@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "dbus.h"
+#include "dji_dbus.h"
 
 #include <cmath>
 #include <cstring>
@@ -78,8 +78,6 @@ namespace remote {
 
         memcpy(&this->mouse, &repr->mouse, sizeof(mouse_t));
         memcpy(&this->keyboard, &repr->keyboard, sizeof(keyboard_t));
-
-        this->timestamp = GetLastUptime();
     }
 
 } /* namespace remote */

@@ -35,13 +35,8 @@
 #include "ui_task.h"
 #include "user_define.h"
 void RM_RTOS_Init(void) {
-    bsp::SetHighresClockTimer(&htim5);
-
-    // 在这里设置串口号和输出波特率
-    print_use_uart(&BOARD_UART2, true, 921600);
-    clear_screen();
-    print("UART init success!");
-
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
+    print_use_uart(&huart1, true, 921600);
     init_can();
     clear_screen();
     print("CAN init success!");

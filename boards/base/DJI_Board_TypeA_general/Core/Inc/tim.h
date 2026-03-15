@@ -49,7 +49,18 @@ extern TIM_HandleTypeDef htim8;
 extern TIM_HandleTypeDef htim12;
 
 /* USER CODE BEGIN Private defines */
+#define BOARD_TIM_PWM1 htim1
+#define BOARD_TIM_PWM2 htim2
+#define BOARD_TIM_PWM3 htim8
 
+#define BOARD_TIM_IMUHEATER htim3
+#define BOARD_TIM_IMUHEATER_CH 2
+
+#define BOARD_TIM_SYS htim7
+#define BOARD_TIM_SYS htim7
+
+#define BOARD_TIM_BUZZER htim12
+#define BOARD_TIM_BUZZER_CH 1
 /* USER CODE END Private defines */
 
 void MX_TIM1_Init(void);

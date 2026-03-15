@@ -20,6 +20,7 @@
 
 #include "bsp_print.h"
 
+#include "SEGGER_RTT.h"
 #include "bsp_uart.h"
 #include "bsp_usb.h"
 #include "main.h"
@@ -31,6 +32,7 @@ bsp::UART* print_uart = NULL;
 #ifndef NO_USB
 static bsp::VirtualUSB* print_usb = NULL;
 #endif
+bool print_rtt = false;
 static char print_buffer[MAX_PRINT_LEN];
 
 void print_use_uart(UART_HandleTypeDef* huart, bool dma, uint32_t baudrate) {
@@ -56,6 +58,15 @@ void print_use_usb() {
 }
 #endif
 
+void print_use_rtt() {
+    print_uart = NULL;
+#ifndef NO_USB
+    print_usb = NULL;
+#endif
+    print_rtt = true;
+    SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
+}
+
 uint32_t dump(const void* data, uint8_t length) {
     if (print_uart)
         return print_uart->Write((uint8_t*)data, length);
@@ -63,6 +74,8 @@ uint32_t dump(const void* data, uint8_t length) {
     else if (print_usb)
         return print_usb->Write((uint8_t*)data, length);
 #endif
+    else if (print_rtt)
+        return SEGGER_RTT_Write(0, data, length);
     else
         return 0;
 }

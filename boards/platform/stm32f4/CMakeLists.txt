@@ -14,6 +14,7 @@ uicrm_add_board_specific_library(DJI_Board_TypeC_general_platform
         TARGET DJI_Board_TypeC_general
         SOURCES ${STM32F4_SOURCES}
         INCLUDES ${STN32F4_INCLUDES}
+        DEPENDS rtt
 )
 target_include_directories(DJI_Board_TypeC_general_platform PUBLIC ${STM32F4_INCLUDES})
 
@@ -21,6 +22,7 @@ uicrm_add_board_specific_library(DJI_Board_TypeA_general_platform
         TARGET DJI_Board_TypeA_general
         SOURCES ${STM32F4_SOURCES}
         INCLUDES ${STN32F4_INCLUDES}
+        DEPENDS rtt
 )
 target_include_directories(DJI_Board_TypeA_general_platform PUBLIC ${STM32F4_INCLUDES})
 
@@ -28,5 +30,6 @@ uicrm_add_board_specific_library(DM_MC01_general_platform
         TARGET DM_MC01_general
         SOURCES ${STM32F4_SOURCES}
         INCLUDES ${STN32F4_INCLUDES}
+        DEPENDS rtt
 )
 target_include_directories(DM_MC01_general_platform PUBLIC ${STM32F4_INCLUDES})
