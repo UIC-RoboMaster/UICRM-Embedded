@@ -36,10 +36,9 @@ using communication::AutomataInputManagement;
 namespace control {
 
     /*Transition*/
+    using Predicate = std::function<bool(const AutomataInputManagement&)>;
     template <class EnumStatesCollection>
     struct Transition {
-        using Predicate = std::function<bool(const AutomataInputManagement&)>;
-
         Transition(Predicate c, EnumStatesCollection n) : condition(std::move(c)), next(n) {
         }
 
@@ -60,7 +59,6 @@ namespace control {
      *
      * @tparam EnumStatesCollection Enumeration of all states that expected to perform in the
      * automata going to be built.
-     * @tparam TupleData Tuple form data package.
      */
     template <class EnumStatesCollection>
     class StateAutomataBuilder {
@@ -70,7 +68,6 @@ namespace control {
         typedef EnumStatesCollection States;
         using FSM = vector<vector<Transition<States>>>;
         using Item = AutomataInputManagement;
-        using Predicate = std::function<bool(const AutomataInputManagement&)>;
 
         /**
          * Add new reflect relationship among the automata.
@@ -94,13 +91,19 @@ namespace control {
         }
 
         /**
+         * Creat a component that represent an item input in automata
          *
-         * @tparam Component
-         * @tparam Item
-         * @tparam Struct
-         * @param item
-         * @param name
-         * @return
+         * component's behaviour decide by template parameter [Component]
+         *
+         * Parameter [item] does NOT require a instance, it requires structure segment and derive
+         * type from it.
+         *
+         * @tparam Component The component that will determine behaviours based on items
+         * @tparam Item A forward declaration of item type, derive by compiler
+         * @tparam Struct A forward declaration of struct that contain item type, derive by compiler
+         * @param item TYPE of the item, requires a declaration that represent structure segment
+         * @param name The name u'd like to give to this item/component
+         * @return Factory itself in order to perform "chain call" grammar.
          */
         template <template <class> class Component, typename Item, typename Struct>
         StateAutomataBuilder& input(Item Struct::*item, const char* name) {
@@ -154,12 +157,25 @@ namespace control {
         using FSM = vector<vector<Transition<States>>>;
         using Item = AutomataInputManagement;
 
+        /**
+         * Update items and drive automata to transite once.
+         *
+         * CAUTIONS: DO INPUT IN EXACT SAME ORDER AND TYPE THE FACTORY PREVIOUSLY BUILT.
+         *
+         * @tparam Ts A forward declaration of tuple, derive by compiler.
+         * @param data A tuple form update data package.
+         */
         template <typename... Ts>
         void input(const std::tuple<Ts...>& data) {
             input_items_.updateItems(data);
             evaluateTransitions();
         }
 
+        /**
+         * Automata(FSM) current output.
+         *
+         * @return automata current state.
+         */
         States state() {
             return current_state_;
         }
@@ -194,6 +210,8 @@ namespace control {
 
     template <class EnumStatesCollection>
     using AutomataBuilder = StateAutomataBuilder<EnumStatesCollection>;
+
+    #define TRANLOGIC [](const Ins& ins) -> bool
 
 }  // namespace control
 
