@@ -57,6 +57,7 @@ enum ShootMode {
     SHOOT_MODE_PREPARED = 2,
     SHOOT_MODE_SINGLE = 3,
     SHOOT_MODE_BURST = 4,
+    SHOOT_MODE_UNLOAD = 5,   // 退弹
 };
 extern ShootMode shoot_load_mode;
 extern osThreadId_t remoteTaskHandle;
@@ -137,5 +138,8 @@ inline const char* shoot_load_mode_str(ShootMode mode) {
         default:
             return "UNKNOWN";
         break;
+        case SHOOT_MODE_UNLOAD:
+            return "UNLOAD";
+            break;
     }
 }

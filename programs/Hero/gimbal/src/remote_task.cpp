@@ -235,6 +235,19 @@ void remoteTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_STOP;
             }
         }
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+            if (refereerc->vt13_packet.remote.ch4 < 424) {
+                shoot_load_mode = SHOOT_MODE_UNLOAD;
+            } else if (refereerc->vt13_packet.remote.ch4 > 1624) {
+                shoot_load_mode = SHOOT_MODE_STOP;
+            } else {
+                if (refereerc->vt13_packet.remote.ch4 > 800 && refereerc->vt13_packet.remote.ch4 < 1248) {
+                    shoot_load_mode = SHOOT_MODE_STOP;
+                }
+            }
+        }
+
+
         // 射出单颗子弹
         if (shoot_switch) {
             shoot_switch = false;
