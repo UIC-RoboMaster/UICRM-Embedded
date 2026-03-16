@@ -217,7 +217,7 @@ void uiTask(void* arg) {
             dbus_edge->input(dbus->IsOnline());
             imu_cali_edge->input(imu->CaliDone());
             imu_temp_edge->input(true);
-            shoot_jam_edge->input(jam_notify_flags);
+            // shoot_jam_edge->input(jam_notify_flags);
             if (fl_motor_check_edge->negEdge()) {
                 strcpy(diagStr, "FL MOTOR OFFLINE     ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
@@ -259,7 +259,7 @@ void uiTask(void* arg) {
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
             if (shoot_jam_edge->posEdge()) {
-                jam_notify_flags = false;
+                // jam_notify_flags = false;
                 strcpy(diagStr, "STEER JAM");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
