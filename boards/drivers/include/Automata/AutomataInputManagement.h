@@ -74,9 +74,15 @@ namespace communication {
          * @return
          */
         template <template <class> class Component, typename Struct, typename Member>
-        auto get(size_t index, Member Struct::*member) const
+        auto get(Member Struct::*member, size_t index) const
             -> Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>& {
             using Type = std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>;
+            return static_cast<Component<Type>&>(*items_[index]);
+        }
+        template <template <class> class Component, typename T>
+        auto get(T&&, size_t index) const
+            -> Component<std::remove_cv_t<std::remove_reference_t<T>>>& {
+            using Type = std::remove_cv_t<std::remove_reference_t<T>>;
             return static_cast<Component<Type>&>(*items_[index]);
         }
 

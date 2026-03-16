@@ -44,7 +44,6 @@ struct raw_data_structB {
 };
 
 int main() {
-    // using namespace hostfsm;
     raw_data_structA raw_data1;
     raw_data_structB raw_data2;
 
@@ -82,7 +81,7 @@ int main() {
      *
      * TRANLOGIC is a fixed form to aid logic construction.
      * It is actually a lambda function head.
-     * It is free to use an none-registered variant in lambda function as long as in this domain.
+     * It is free to use a none-registered variant in lambda function as long as in this domain.
      * lambda function should as small as possible to
      * prevent extra performance cost(heap allocation).
      * DO NOT use complex functional programming here!(recursive, partial application, nested etc.)
@@ -93,11 +92,11 @@ int main() {
         .transition(
             ON, OFF,
             TRANLOGIC { //TODO use custom name instead of index
-                auto& comp1 = ins.get<AutomataInputRemote>(0, &raw_data_structA::num1);
+                auto& comp1 = ins.get<AutomataInputRemote>(&raw_data_structA::num1, 0);
                 return comp1.downEdge();
             })
         .transition(
-            OFF, ON, TRANLOGIC { return rand() % 1000 > 990; });
+            OFF, ON, TRANLOGIC { return rand() % 100 > 80; });
 
     /*
      * The step that construct an actual automata
@@ -110,7 +109,7 @@ int main() {
 
     while (true) {
         // simulate value changes
-        raw_data1.num1 = (++raw_data1.num1) % 50;
+        raw_data1.num1 = (++raw_data1.num1) % 20;
         raw_data2.num2 = static_cast<int>((raw_data2.num2 * 6 + 1)) % 100;
 
         /*

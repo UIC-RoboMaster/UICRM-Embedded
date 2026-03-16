@@ -95,7 +95,7 @@ namespace control {
          *
          * component's behaviour decide by template parameter [Component]
          *
-         * Parameter [item] does NOT require a instance, it requires structure segment and derive
+         * Parameter [item] does NOT require an instance, it requires structure segment and derive
          * type from it.
          *
          * @tparam Component The component that will determine behaviours based on items
@@ -108,6 +108,12 @@ namespace control {
         template <template <class> class Component, typename Item, typename Struct>
         StateAutomataBuilder& input(Item Struct::*item, const char* name) {
             using Type = std::remove_reference_t<decltype(std::declval<Struct>().*item)>;
+            input_items_.buildItem<Component, Type>(name);
+            return *this;
+        }
+        template <template <class> class Component, typename T>
+        StateAutomataBuilder& input(T&&, const char* name) {
+            using Type = std::remove_cv_t<std::remove_reference_t<T>>;
             input_items_.buildItem<Component, Type>(name);
             return *this;
         }
@@ -158,7 +164,7 @@ namespace control {
         using Item = AutomataInputManagement;
 
         /**
-         * Update items and drive automata to transite once.
+         * Update items and drive automata to transit once.
          *
          * CAUTIONS: DO INPUT IN EXACT SAME ORDER AND TYPE THE FACTORY PREVIOUSLY BUILT.
          *
@@ -211,7 +217,9 @@ namespace control {
     template <class EnumStatesCollection>
     using AutomataBuilder = StateAutomataBuilder<EnumStatesCollection>;
 
-    #define TRANLOGIC [](const Ins& ins) -> bool
+#define TRANLOGIC [](const communication::Ins& ins) -> bool
+
+#define INTYPE(expr) decltype(expr){}
 
 }  // namespace control
 
