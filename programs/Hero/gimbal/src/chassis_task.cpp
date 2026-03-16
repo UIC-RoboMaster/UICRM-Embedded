@@ -62,23 +62,32 @@ void chassisTask(void* arg) {
         if (dbus->IsOnline()) {
             keyboard = dbus->keyboard;
         } else if (refereerc->IsOnline()) {
-            keyboard = refereerc->remote_control.keyboard;
+            keyboard = refereerc->vt13_packet.keyboard;
         }
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
         float car_vx, car_vy, car_vt;
-        //        if (keyboard.bit.X) {
-        //            // 刹车
-        //            car_vx = 0;
-        //            car_vy = 0;
-        //            car_vt = 0;
-        //        } else
         if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
             const float speed_scale = 0.5;
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
             car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
+        } else if (refereerc->IsOnline() &&
+                   (refereerc->vt13_packet.remote.ch0 != remote::vt13_remote_t::ROCKER_MID ||
+                    refereerc->vt13_packet.remote.ch1 != remote::vt13_remote_t::ROCKER_MID ||
+                    refereerc->vt13_packet.remote.ch4 != remote::vt13_remote_t::ROCKER_MID)) {
+            // 使用VT13遥控器摇杆
+            const float speed_scale = 0.5;
+            car_vx =
+                (float)(refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
+                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vy =
+                (float)(refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) /
+                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vt =
+                (float)(refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) /
+                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
@@ -164,7 +173,6 @@ void chassisTask(void* arg) {
         osDelay(CHASSIS_OS_DELAY);
     }
 }
-
 
 void init_chassis() {
     can_bridge = new communication::CanBridge(can1, 0x51);

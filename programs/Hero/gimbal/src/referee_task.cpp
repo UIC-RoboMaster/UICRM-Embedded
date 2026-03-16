@@ -31,8 +31,10 @@ void init_referee() {
     referee_uart->SetupTx(300);
     referee = new communication::Referee(referee_uart);
 
-    //    refereerc_uart = new bsp::UART(&huart1);
-    //    refereerc_uart->SetupRx(300);
-    //    refereerc_uart->SetupTx(300);
-    //    refereerc = new communication::Referee(refereerc_uart);
+    // 启动裁判系统图传链路（VT13遥控器）
+    refereerc_uart = new bsp::UART(&BOARD_UART2);
+    refereerc_uart->SetBaudrate(921600);
+    refereerc_uart->SetupRx(300);
+    refereerc_uart->SetupTx(300, false);
+    refereerc = new communication::Referee(refereerc_uart);
 }

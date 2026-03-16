@@ -19,7 +19,6 @@
  ###########################################################*/
 #define DEBUG_MODE
 
-
 #include "remote_task.h"
 
 #include <string.h>
@@ -47,9 +46,7 @@ void remoteTask(void* arg) {
     bool mode_switch = false;
     bool shoot_fric_switch = false;
     bool shoot_switch = false;
-    //    bool shoot_burst_switch = false;
     bool shoot_stop_switch = false;
-    //    uint32_t shoot_burst_timestamp = 0;
     remote::switch_t last_state_r = remote::MID;
     remote::switch_t last_state_l = remote::MID;
     remote::keyboard_t last_keyboard;
@@ -63,6 +60,7 @@ void remoteTask(void* arg) {
     memset(&last_keyboard, 0, sizeof(last_keyboard));
     memset(&last_mouse, 0, sizeof(last_mouse));
     bool is_dbus_offline;
+    bool is_vt13_offline;
     bool is_robot_dead;
     bool is_shoot_available;
     BoolEdgeDetector* z_edge = new BoolEdgeDetector(false);
@@ -70,10 +68,17 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* shoot_burst_edge = new BoolEdgeDetector(false);
+    // VT13 边沿检测器
+    BoolEdgeDetector* vt13_pause_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* vt13_left_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* vt13_trigger_edge = new BoolEdgeDetector(false);
+
     while (1) {
-        // Offline Detection && Security Check
+        // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
-        // Kill Detection
+        // 检测VT13是否离线或不在C模式
+        is_vt13_offline = (!refereerc->IsOnline()) ||
+                          refereerc->vt13_packet.remote.mode_sw != remote::vt13_remote_t::MODE_C;
 #ifdef HAS_REFEREE
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
@@ -83,7 +88,8 @@ void remoteTask(void* arg) {
         is_robot_dead = false;
         is_shoot_available = true;
 #endif
-        if (is_dbus_offline || is_robot_dead) {
+        // DBUS和VT13都离线，或者机器人死亡，才进入安全模式
+        if ((is_dbus_offline && is_vt13_offline) || is_robot_dead) {
             if (!is_killed) {
                 last_remote_mode = remote_mode;
                 remote_mode = REMOTE_MODE_KILL;
@@ -94,7 +100,7 @@ void remoteTask(void* arg) {
             if (is_killed) {
                 remote_mode = last_remote_mode;
                 shoot_load_mode = SHOOT_MODE_STOP;
-                shoot_fric_switch = SHOOT_FRIC_MODE_STOP;
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
                 is_killed = false;
             }
         }
@@ -109,7 +115,7 @@ void remoteTask(void* arg) {
         last_state_l = state_l;
         last_keyboard = keyboard;
         last_mouse = mouse;
-        // Update State
+        // Update State：优先使用DBUS，否则使用VT13
         if (dbus->IsOnline()) {
             state_r = dbus->swr;
             state_l = dbus->swl;
@@ -118,11 +124,11 @@ void remoteTask(void* arg) {
         } else if (refereerc->IsOnline()) {
             state_r = remote::MID;
             state_l = remote::MID;
-            keyboard = refereerc->remote_control.keyboard;
-            mouse = refereerc->remote_control.mouse;
+            keyboard = refereerc->vt13_packet.keyboard;
+            mouse = (remote::mouse_t)refereerc->vt13_packet.mouse;
         }
 
-        // Update Timestamp
+        // Update Edge Detectors
         z_edge->input(keyboard.bit.Z);
         shift_edge->input(keyboard.bit.SHIFT);
         mouse_left_edge->input(mouse.l);
@@ -133,7 +139,13 @@ void remoteTask(void* arg) {
             turbo_shoot = !turbo_shoot;
         }
 
-        // remote mode switch
+        // VT13 边沿检测
+        vt13_pause_edge->input(refereerc->vt13_packet.remote.pause);
+        vt13_left_edge->input(refereerc->vt13_packet.remote.swl);
+        vt13_trigger_edge->input(refereerc->vt13_packet.remote.trigger);
+
+        // ========== 模式切换 ==========
+        // DT7 右摇杆上拨
         switch (state_r) {
             case remote::UP:
                 if (last_state_r == remote::MID && dbus->IsOnline()) {
@@ -141,12 +153,17 @@ void remoteTask(void* arg) {
                 }
                 break;
             case remote::MID:
+                // 键盘 SHIFT 切换模式
                 if (shift_edge->posEdge()) {
                     mode_switch = true;
                 }
                 break;
             case remote::DOWN:
                 break;
+        }
+        // VT13 暂停键切换模式
+        if (vt13_pause_edge->posEdge()) {
+            mode_switch = true;
         }
         if (mode_switch) {
             mode_switch = false;
@@ -156,7 +173,9 @@ void remoteTask(void* arg) {
             }
             remote_mode = next_mode;
         }
-        // shoot mode switch
+
+        // ========== 摩擦轮切换 ==========
+        // DT7 左摇杆上拨
         switch (state_l) {
             case remote::UP:
                 if (last_state_l == remote::MID && dbus->IsOnline()) {
@@ -166,14 +185,7 @@ void remoteTask(void* arg) {
             case remote::DOWN:
                 if (last_state_l == remote::MID && dbus->IsOnline()) {
                     shoot_switch = true;
-                    //                        shoot_burst_timestamp = 0;
                 }
-                //                    else if (last_state_l == remote::DOWN && selftest.dbus) {
-                //                        shoot_burst_timestamp++;
-                //                        if (shoot_burst_timestamp > 500 * REMOTE_OS_DELAY) {
-                //                            shoot_burst_switch = true;
-                //                        }
-                //                    }
                 break;
             case remote::MID:
                 switch (last_state_l) {
@@ -183,27 +195,34 @@ void remoteTask(void* arg) {
                     case remote::UP:
                         break;
                     case remote::MID:
+                        // 键盘 Z键 切换摩擦轮
                         if (z_edge->posEdge()) {
                             shoot_fric_switch = true;
                         }
+                        // 鼠标左键 射击
                         if (mouse_left_edge->posEdge()) {
                             shoot_switch = true;
-                            //                                shoot_burst_timestamp = 0;
-                        } else if (mouse_left_edge->get()) {
-                            //                                shoot_burst_timestamp++;
-                            //                                if (shoot_burst_timestamp > 500 *
-                            //                                REMOTE_OS_DELAY) {
-                            //                                    shoot_burst_switch = true;
-                            //                                }
                         } else if (mouse_left_edge->negEdge()) {
                             shoot_stop_switch = true;
-                        } else {
+                        } else if (!mouse_left_edge->get()) {
                             shoot_stop_switch = true;
                         }
                         break;
                 }
                 break;
         }
+        // VT13 左键切换摩擦轮
+        if (vt13_left_edge->posEdge()) {
+            shoot_fric_switch = true;
+        }
+        // VT13 扳机键射击
+        if (vt13_trigger_edge->posEdge()) {
+            shoot_switch = true;
+        }
+        if (vt13_trigger_edge->negEdge()) {
+            shoot_stop_switch = true;
+        }
+
         // 切换摩擦轮模式
         if (shoot_fric_switch) {
             shoot_fric_switch = false;
@@ -226,19 +245,6 @@ void remoteTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_SINGLE;
             }
         }
-        // 射出连发子弹
-        //            if (shoot_burst_switch) {
-        //                if (shoot_fric_mode == SHOOT_FRIC_MODE_PREPARED) {
-        //                    // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
-        //                    if (shoot_mode == SHOOT_MODE_PREPARED || shoot_mode ==
-        //                    SHOOT_MODE_SINGLE) {
-        //                        shoot_mode = SHOOT_MODE_BURST;
-        //                        shoot_burst_switch = false;
-        //                    }
-        //                } else {
-        //                    shoot_burst_switch = false;
-        //                }
-        //            }
         // 停止射击
         if (shoot_stop_switch) {
             shoot_stop_switch = false;
