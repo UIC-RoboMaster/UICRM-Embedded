@@ -36,8 +36,8 @@
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
 
-    print_use_uart(&huart1, true, 921600);
-
+    //print_use_uart(&huart1, true, 921600);
+    print_use_rtt();
     init_can();
     // init_batt();
     init_imu();
