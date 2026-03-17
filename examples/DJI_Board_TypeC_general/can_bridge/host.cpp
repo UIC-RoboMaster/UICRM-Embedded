@@ -24,7 +24,7 @@
 #include "bsp_uart.h"
 #include "can_bridge.h"
 #include "cmsis_os.h"
-#include "dbus.h"
+#include "dji_dbus.h"
 #include "main.h"
 
 static bsp::CAN* can1 = nullptr;

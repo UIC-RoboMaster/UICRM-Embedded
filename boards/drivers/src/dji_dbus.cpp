@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "dbus.h"
+#include "dji_dbus.h"
 
 #include <cmath>
 #include <cstring>

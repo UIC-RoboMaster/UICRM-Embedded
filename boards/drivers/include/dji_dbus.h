@@ -22,7 +22,7 @@
 
 #include "bsp_uart.h"
 #include "connection_driver.h"
-#include "dbus_package.h"
+#include "dji_remote.h"
 
 namespace remote {
 
