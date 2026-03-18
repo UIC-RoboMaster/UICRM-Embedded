@@ -76,6 +76,8 @@ void RM_RTOS_Default_Task(const void* args) {
 
     int i = 0;
     while (true) {
+        set_cursor(0, 0);
+        clear_screen();
         print_enabled("PRESSED", key_aut->state() ? PRESS : RELEASE);
 
         key_aut->input(std::make_tuple(key.Read()));

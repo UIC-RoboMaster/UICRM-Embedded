@@ -202,7 +202,7 @@ namespace control {
         Item input_items_;
 
         void evaluateTransitions() {
-            for (auto& it : state_machine_[current_state_])
+            for (auto& it : state_machine_[static_cast<size_t>(current_state_)])
                 if (it.condition(input_items_)) {
                     current_state_ = it.next;
                     return;
