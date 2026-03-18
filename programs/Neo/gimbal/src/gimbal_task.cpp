@@ -20,7 +20,6 @@
 
 #include "gimbal_task.h"
 
-#include "MotorPWMBase.h"
 #include "chassis_task.h"
 #include "minipc_task.h"
 
@@ -101,10 +100,10 @@ void gimbalTask(void* arg) {
             bulletCap->Enable();
         switch (cap_mode) {
             case CAP_MODE_CLOSE:
-                bulletCap->SetOutput(200);
+                bulletCap->SetOutput(0);
                 break;
             case CAP_MODE_OPEN:
-                bulletCap->SetOutput(0);
+                bulletCap->SetOutput(1250);
                 break;
             default:
                 break;
@@ -294,7 +293,7 @@ void init_gimbal() {
     gimbal_param = gimbal->GetData();
 
     // init cap
-    bulletCap = new driver::MotorPWMBase(&htim1, 1, 1000000, 50, 1440);  // 1435
+    bulletCap = new driver::MotorPWMBase(&htim1, 1, 1000000, 50, 725);
 }
 void kill_gimbal() {
     yaw_motor->Disable();

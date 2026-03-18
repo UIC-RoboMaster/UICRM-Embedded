@@ -20,6 +20,7 @@
 
 #pragma once
 #include "MotorCanBase.h"
+#include "MotorPWMBase.h"
 #include "bsp_can.h"
 #include "buzzer_notes.h"
 #include "buzzer_task.h"
@@ -48,6 +49,7 @@ extern control::Gimbal* gimbal;
 extern driver::Motor6020* pitch_motor;
 extern driver::Motor6020* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
+extern driver::MotorPWMBase* bulletCap;
 extern float pitch_diff, yaw_diff;
 void init_gimbal();
 void kill_gimbal();

@@ -265,6 +265,7 @@ void remoteTask(void* arg) {
                 cap_mode = CAP_MODE_OPEN;
             else
                 cap_mode = CAP_MODE_CLOSE;
+            cap_switch = false;
         }
 
         osDelay(REMOTE_OS_DELAY);
