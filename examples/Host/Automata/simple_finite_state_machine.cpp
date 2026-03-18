@@ -96,7 +96,7 @@ int main() {
                 return comp1.downEdge();
             })
         .transition(
-            OFF, ON, TRANLOGIC { return rand() % 100 > 80; });
+            OFF, ON, TRANLOGIC { return rand() % 100 > 80; }); // 20% transit
 
     /*
      * The step that construct an actual automata

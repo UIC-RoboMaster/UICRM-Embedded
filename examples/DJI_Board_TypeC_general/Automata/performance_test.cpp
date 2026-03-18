@@ -91,7 +91,7 @@ void build_fsms() {
         });
 
     fsm2 = b2->build(S2::X);
-    delete b2;
+    // delete b2;
 
     // ===== FSM3 =====
     auto* b3 = new AutomataBuilder<S3>();
@@ -107,7 +107,7 @@ void build_fsms() {
         });
 
     fsm3 = b3->build(S3::IDLE);
-    delete b3;
+    // delete b3;
 
     // big fsm
     auto* b4 = new AutomataBuilder<S_BIG>();
@@ -132,7 +132,7 @@ void build_fsms() {
     });
 
     fsm_big = b4->build(S_BIG::S0);
-    delete b4;
+    // delete b4;
 
     auto* b5 = new AutomataBuilder<S_HEAVY>();
     b5->input<remote::AutomataInputRemote>(uint16_t{}, "heavy");
@@ -157,7 +157,7 @@ void build_fsms() {
     });
 
     fsm_heavy = b5->build(S_HEAVY::A);
-    delete b5;
+    // delete b5;
 }
 
 uint32_t cycleToNanoSec(uint32_t cyc) {return (uint64_t)cyc * 1000000000ULL / cpu_hz;}

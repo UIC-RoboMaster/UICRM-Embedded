@@ -36,14 +36,12 @@ using communication::AutomataInputManagement;
 namespace control {
 
     /*Transition*/
-    using Predicate = std::function<bool(const AutomataInputManagement&)>;
     template <class EnumStatesCollection>
     struct Transition {
-        Transition(Predicate c, EnumStatesCollection n) : condition(std::move(c)), next(n) {
-        }
-
-        Predicate condition;
         EnumStatesCollection next;
+        bool (*condition)(const communication::Ins&);
+        Transition(EnumStatesCollection next, bool (*condition)(const communication::Ins&))
+            : next(next), condition(condition) {}
     };
     /*Transition*/
 
@@ -86,8 +84,11 @@ namespace control {
             state_machine_[static_cast<size_t>(from)].emplace_back(trans);
             return *this;
         }
-        StateAutomataBuilder& transition(States from, States to, Predicate condition) {
-            return transition(from, Transition<EnumStatesCollection>(condition, to));
+        template <typename Fn>
+        StateAutomataBuilder& transition(States from, States to, Fn&& fn) {
+            static_assert(std::is_empty_v<std::decay_t<Fn>>, "No Lambda capture");
+            auto fptr = static_cast<bool(*)(const communication::Ins&)>(fn);
+            return transition(from, Transition<States>(to, fptr));
         }
 
         /**
@@ -144,7 +145,7 @@ namespace control {
     /**
      * An automata that work based on graph.
      *
-     * Transitions are depend on a condition that in a form of std::function(function pointer) which
+     * Transitions are depend on a condition that in a form of function pointer which
      * its return value always boolean.
      *
      * This class should be constructed by class [control::StateAutomataBuilder].
