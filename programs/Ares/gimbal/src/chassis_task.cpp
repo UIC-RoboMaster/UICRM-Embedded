@@ -103,8 +103,8 @@ void chassisTask(void* arg) {
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
         float cos_yaw = arm_cos_f32(chassis_target_diff);
-        chassis_vx = cos_yaw * car_vx - sin_yaw * car_vy;
-        chassis_vy = sin_yaw * car_vx + cos_yaw * car_vy;
+        chassis_vx = cos_yaw * car_vx + sin_yaw * car_vy;
+        chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
         if (remote_mode == REMOTE_MODE_ADVANCED) {
