@@ -10,20 +10,20 @@ set(AUTOMATA_HOST_INCLUDES
         ${CMAKE_SOURCE_DIR}/boards/algorithm/include
 )
 
-add_executable(simple_fsm
+add_executable(automata_simple_fsm
         ${AUTOMATA_HOST_SOURCES}
         ${CMAKE_SOURCE_DIR}/examples/Host/Automata/simple_finite_state_machine.cpp
 )
 
-target_include_directories(simple_fsm PRIVATE
+target_include_directories(automata_simple_fsm PRIVATE
         ${AUTOMATA_HOST_INCLUDES}
 )
 
-add_executable(no_input_fsm
+add_executable(automata_unit_test
         ${AUTOMATA_HOST_SOURCES}
-        ${CMAKE_SOURCE_DIR}/examples/Host/Automata/no_input.cpp
+        ${CMAKE_SOURCE_DIR}/examples/Host/Automata/unit_test.cpp
 )
 
-target_include_directories(no_input_fsm PRIVATE
+target_include_directories(automata_unit_test PRIVATE
         ${AUTOMATA_HOST_INCLUDES}
 )

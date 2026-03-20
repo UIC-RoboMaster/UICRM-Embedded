@@ -68,7 +68,7 @@ namespace control {
 
         template<auto St, typename Ins>
         States evalState(const Ins& ins) {
-            using EvalGroup = typename Filter<St, Trs...>::type;
+            using EvalGroup = Filter<St, Trs...>::type;
             return evalTuple<EvalGroup>(ins, std::make_index_sequence<std::tuple_size_v<EvalGroup>>{});
         }
 
@@ -89,9 +89,7 @@ namespace control {
     struct Transition {
         static constexpr auto from = From;
         static constexpr auto to   = To;
-        // Fn fn;
-        // constexpr Transition(Fn f) : fn(f) {}
-        static bool eval(const communication::Ins& ins) {
+        static bool eval(auto& ins) {
             return Fn{}(ins);
         }
     };
@@ -132,7 +130,7 @@ namespace control {
 
         typedef EnumStatesCollection States;
         // using FSM = FSM<EnumStatesCollection>;
-        using Item = AutomataInputManagement;
+        // template<typename... Ts> using Item = AutomataInputManagement<Ts...>;
 
         /**
          * Add new transition relationship among the automata.
@@ -167,18 +165,18 @@ namespace control {
          * @param name The name u'd like to give to this item/component
          * @return Factory itself in order to perform "chain call" grammar.
          */
-        template <template <class> class Component, typename Item, typename Struct>
-        StateAutomataBuilder& input(Item Struct::*item, const char* name) {
-            using Type = std::remove_reference_t<decltype(std::declval<Struct>().*item)>;
-            input_items_.buildItem<Component, Type>(name);
-            return *this;
-        }
-        template <template <class> class Component, typename T>
-        StateAutomataBuilder& input(T&&, const char* name) {
-            using Type = std::remove_cv_t<std::remove_reference_t<T>>;
-            input_items_.buildItem<Component, Type>(name);
-            return *this;
-        }
+        // template <template <class> class Component, typename Item, typename Struct>
+        // StateAutomataBuilder& input(Item Struct::*item, const char* name) {
+        //     using Type = std::remove_reference_t<decltype(std::declval<Struct>().*item)>;
+        //     input_items_.buildItem<Component, Type>(name);
+        //     return *this;
+        // }
+        // template <template <class> class Component, typename T>
+        // StateAutomataBuilder& input(T&&, const char* name) {
+        //     using Type = std::remove_cv_t<std::remove_reference_t<T>>;
+        //     input_items_.buildItem<Component, Type>(name);
+        //     return *this;
+        // }
 
         /**
          * Build and output current automata
@@ -198,7 +196,7 @@ namespace control {
       private:
         // FSM state_machine_;
         // CollectTransitions<EnumStatesCollection> transitions_;
-        Item input_items_;
+        // Item input_items_;
     };
     /*StateAutomataBuilder*/
 
@@ -223,7 +221,7 @@ namespace control {
 
         typedef EnumStatesCollection States;
         using FSM = FiniteStateMachine<EnumStatesCollection>;
-        using Item = AutomataInputManagement;
+        // template<typename... Ts> using Item = AutomataInputManagement<Ts...>;
 
         /**
          * Update items and drive automata to transit once.
@@ -233,11 +231,11 @@ namespace control {
          * @tparam Ts A forward declaration of tuple, derive by compiler.
          * @param data A tuple form update data package.
          */
-        template <typename... Ts>
-        void input(const std::tuple<Ts...>& data) {
-            input_items_.updateItems(data);
-            state_machine_.step(input_items_);
-        }
+        // template <typename... Ts>
+        // void input(const std::tuple<Ts...>& data) {
+        //     input_items_.updateItems(data);
+        //     state_machine_.step(input_items_);
+        // }
 
         /**
          * Automata(FSM) current output.
@@ -252,14 +250,14 @@ namespace control {
         std::string demonstrate() const;
 
       private:
-        StateAutomata(FSM machine, Item inputs)
-            : state_machine_(std::move(machine)),
-              input_items_(std::move(inputs)) {
-        }
+        // StateAutomata(FSM machine, Item inputs)
+        //     : state_machine_(std::move(machine)),
+        //       input_items_(std::move(inputs)) {
+        // }
 
         FSM state_machine_;
 
-        Item input_items_;
+        // Item input_items_;
     };
     /*StateAutomata*/
 
@@ -269,7 +267,7 @@ namespace control {
     template <class EnumStatesCollection>
     using AutomataBuilder = StateAutomataBuilder<EnumStatesCollection>;
 
-#define TRANLOGIC [](const communication::Ins& ins) -> bool
+// #define TRANLOGIC [](const communication::Ins& ins) -> bool
 
 #define INTYPE(expr) decltype(expr){}
 

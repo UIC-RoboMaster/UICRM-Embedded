@@ -29,9 +29,10 @@
 #include "AutomataInputBase.h"
 
 namespace communication {
-
+    template <typename... Components>
     class AutomataInputManagement {
       public:
+        // AutomataInputManagement() = default;
         /**
          * Add a new component.
          *
@@ -41,10 +42,10 @@ namespace communication {
          * @tparam Type
          * @param name
          */
-        template <template <class> class Component, typename Type>
-        void buildItem(const char* name) {
-            items_.emplace_back(std::make_unique<Component<Type>>(name));
-        }
+        // template <template <class> class Component, typename Type>
+        // void buildItem(const char* name) {
+        //     items_.emplace_back(std::make_unique<Component<Type>>(name));
+        // }
 
         /**
          * update all components.
@@ -52,7 +53,8 @@ namespace communication {
          */
         template <typename... Ts>
         void updateItems(const std::tuple<Ts...>& data) {
-            updateItemsImpl(data, std::make_index_sequence<sizeof...(Ts)>{});
+            static_assert(sizeof...(Ts) == std::tuple_size_v<decltype(items_)>, "Automata: input size mismatch");
+            updateItemsImpl(data, std::index_sequence_for<Ts...>{});
         }
 
         /**
@@ -73,17 +75,15 @@ namespace communication {
          * @param member
          * @return
          */
-        template <template <class> class Component, typename Struct, typename Member>
-        auto get(Member Struct::*member, size_t index) const
-            -> Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>& {
-            using Type = std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>;
-            return static_cast<Component<Type>&>(*items_[index]);
-        }
-        template <template <class> class Component, typename T>
-        auto get(T&&, size_t index) const
-            -> Component<std::remove_cv_t<std::remove_reference_t<T>>>& {
-            using Type = std::remove_cv_t<std::remove_reference_t<T>>;
-            return static_cast<Component<Type>&>(*items_[index]);
+        // template <template <class> class Component, typename Struct, typename Member>
+        // auto get(Member Struct::*member, size_t index) const
+        //     -> Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>& {
+        //     using Type = std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>;
+        //     return static_cast<Component<Type>&>(*items_[index]);
+        // }
+        template <size_t I>
+        const auto& get() const {
+            return std::get<I>(items_);
         }
 
         /**
@@ -106,15 +106,37 @@ namespace communication {
         // }
 
       private:
-        std::vector<std::unique_ptr<AutomataInput>> items_;
+        std::tuple<Components...> items_;
 
         template <typename... Ts, size_t... Index>
         void updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>) {
-            (items_[Index]->update(&std::get<Index>(data)), ...);
+            (std::get<Index>(items_).update(&std::get<Index>(data)), ...);
         }
     };
 
-    using Ins = AutomataInputManagement;
+    /*CollectItems*/
+    template<typename... Items>
+    struct CollectItems {
+        template<template<class> class Component, typename T>
+        auto addItem(T&&, const char* name) {
+            using NewComponent = Component<T>;
+            return CollectItems<Items..., NewComponent>{};
+        }
+        template<template<class> class Component, typename Struct, typename Member>
+        auto addItem(Member Struct::*member, const char* name) {
+            using Type = std::remove_cv_t<std::remove_reference_t<Member>>;
+            using NewComponent = Component<Type>;
+            return CollectItems<Items..., NewComponent>{};
+        }
+
+        auto output() {
+            return AutomataInputManagement<Items...>{};
+        }
+    };
+    /*CollectItems*/
+
+    template<typename... Items>
+    using Ins = AutomataInputManagement<Items...>;
 
 }  // namespace communication
 

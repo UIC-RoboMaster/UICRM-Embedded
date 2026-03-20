@@ -39,12 +39,13 @@ namespace remote {
     template <class T>
     class AutomataInputRemote : public communication::AutomataInputBase<T> {
       public:
-        AutomataInputRemote(const char* name)
-            : communication::AutomataInputBase<T>(name),
-              curr_val_(T(0)),
-              last_val_(T(0)),
-              last_update_(0) {
-        }
+        AutomataInputRemote() = default;
+        // explicit AutomataInputRemote(/*const char* name*/) :
+        //     // : communication::AutomataInputBase<T>(name),
+        //       curr_val_(T(0)),
+        //       last_val_(T(0)),
+        //       last_update_(0) {
+        // }
         ~AutomataInputRemote() override = default;
 
         /**
@@ -96,7 +97,7 @@ namespace remote {
          *
          * @return current value
          */
-        virtual const T get() {
+        virtual T get() const {
             return curr_val_;
         }
 

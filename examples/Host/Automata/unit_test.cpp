@@ -30,21 +30,23 @@
 enum States {s1, s2};
 
 int main() {
-    auto collect_tran = new control::CollectTransitions<States>();
 
-    constexpr auto cond = TRANLOGIC {
-        return true;
-    };
+    auto inputs = communication::CollectItems()
+        .addItem<remote::AutomataInputRemote>(int{}, "0")
+        .output();
 
-    auto fsm = ((*collect_tran)
-        .addTrans<s1, s2, decltype(cond)>()
-        .addTrans<s2, s1, decltype(cond)>())
+    auto fsm = control::CollectTransitions<States>()
+        .addTrans<s1, s2, decltype([](auto& ins) -> bool { return ins.template get<0>().get()==2; })>()
+        .addTrans<s2, s1, decltype([](auto& ins) -> bool { return true; })>()
         .output(s1);
 
-    AutomataInputManagement in;
-
+    int num = 0;
     while (true) {
-        fsm.step(in);
+
+        num = (num + 1) % 3;
+        inputs.updateItems(std::make_tuple(num));
+
+        fsm.step(inputs);
         switch (fsm.state()) {
             case s1:
                 std::cout << "s1" << std::endl;

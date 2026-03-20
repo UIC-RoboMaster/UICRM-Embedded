@@ -51,18 +51,19 @@ namespace communication {
     template <typename T>
     class AutomataInputBase : public AutomataInput {
       public:
-        explicit AutomataInputBase(const char* name) : name_(name) {
-        }
+        AutomataInputBase() = default;
+        // explicit AutomataInputBase(const char* name) : name_(name) {
+        // }
         virtual ~AutomataInputBase() override = default;
         void update(const void* input) final {
             updateImpl(static_cast<const T*>(input));
         }
-        virtual string name() final {
-            return name_;
-        }
+        // virtual string name() final {
+        //     return name_;
+        // }
 
       protected:
-        string name_;
+        // string name_;
 
         virtual void updateImpl(const T* input) = 0;
     };
