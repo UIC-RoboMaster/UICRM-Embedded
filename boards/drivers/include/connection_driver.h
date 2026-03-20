@@ -53,7 +53,7 @@ namespace driver {
         volatile uint32_t last_uptime_ = 0;
         volatile uint32_t last_uptime_microsec_ = 0;
         /* 判断节点离线的时间 */
-        uint32_t online_threshold_ = 500;
+        uint32_t online_threshold_ = 100 + 150;
         /**
          * @brief 更新心跳包
          */

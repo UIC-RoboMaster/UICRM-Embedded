@@ -31,8 +31,9 @@ void init_referee() {
     referee_uart->SetupTx(300);
     referee = new communication::Referee(referee_uart);
 
-    // refereerc_uart = new bsp::UART(&huart1);
-    // refereerc_uart->SetupRx(300);
-    // refereerc_uart->SetupTx(300);
-    // refereerc = new communication::Referee(refereerc_uart);
+    refereerc_uart = new bsp::UART(&huart1);
+    refereerc_uart->SetBaudrate(921600);
+    refereerc_uart->SetupRx(300);
+    refereerc_uart->SetupTx(300, false);
+    refereerc = new communication::Referee(refereerc_uart);
 }

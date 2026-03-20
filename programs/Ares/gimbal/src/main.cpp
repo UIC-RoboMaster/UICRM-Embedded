@@ -28,7 +28,7 @@
 #include "gimbal_task.h"
 #include "imu_task.h"
 #include "public_port.h"
-// #include "referee_task.h"
+#include "referee_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"
 // #include "ui_task.h"
@@ -42,7 +42,7 @@ void RM_RTOS_Init(void) {
     // init_batt();
     init_imu();
     init_buzzer();
-    // init_referee();
+    init_referee();
     init_remote();
     init_shoot();
     init_gimbal();
@@ -115,26 +115,26 @@ void RM_RTOS_Default_Task(const void* arg) {
         //         break;
         // }
         // print("Shoot Fric Mode:%s\r\n", s);
-        switch (shoot_load_mode) {
-            case SHOOT_MODE_PREPARING:
-                strcpy(s, "PREPARE");
-                break;
-            case SHOOT_MODE_STOP:
-                strcpy(s, "STOP");
-                break;
-            case SHOOT_MODE_PREPARED:
-                strcpy(s, "PREPARED");
-                break;
-            case SHOOT_MODE_DISABLE:
-                strcpy(s, "DISABLE");
-                break;
-            case SHOOT_MODE_SINGLE:
-                strcpy(s, "SINGLE");
-                break;
-            case SHOOT_MODE_BURST:
-                strcpy(s, "BURST");
-                break;
-        }
+        // switch (shoot_load_mode) {
+        //     case SHOOT_MODE_PREPARING:
+        //         strcpy(s, "PREPARE");
+        //         break;
+        //     case SHOOT_MODE_STOP:
+        //         strcpy(s, "STOP");
+        //         break;
+        //     case SHOOT_MODE_PREPARED:
+        //         strcpy(s, "PREPARED");
+        //         break;
+        //     case SHOOT_MODE_DISABLE:
+        //         strcpy(s, "DISABLE");
+        //         break;
+        //     case SHOOT_MODE_SINGLE:
+        //         strcpy(s, "SINGLE");
+        //         break;
+        //     case SHOOT_MODE_BURST:
+        //         strcpy(s, "BURST");
+        //         break;
+        // }
 
 
         print("Shoot Mode:%s\r\n", s);
@@ -148,6 +148,23 @@ void RM_RTOS_Default_Task(const void* arg) {
               imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
         print("Is Calibrated: %s\r\n",
               imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+
+        // Remote info
+        print(
+            "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
+            "[SWR: %d] [Trig: %d]\r\n",
+            refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
+            refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
+            refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
+            refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
+            refereerc->vt13_packet.remote.trigger);
+        print("\r\n");
+        print("[Referee %s] ",
+             referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("\r\n");
+        print("[Referee RC %s] ",
+              refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("\r\n");
 
         // Gimbal info
         print("Gimbal target Pitch %.3f Yaw %.3f\r\n",

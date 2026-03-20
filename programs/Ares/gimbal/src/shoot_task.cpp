@@ -30,18 +30,20 @@ driver::Motor3508* steering_motor = nullptr;
 
 // 卡弹
 bool jam_notify_flags = false;
+static bool unload_cmd_latched = false;
 
-void jam_callback(void* args) {
-    driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
-    jam_notify_flags = true;
-    float target = motor->GetTarget();
-    if (target > motor->GetOutputShaftTheta()) {
-        float prev_target = motor->GetTarget() - 2 * PI / 5;
-        motor->SetTarget(prev_target);
-    } else {
-        float prev_target = motor->GetTarget() + 2 * PI / 5;
-        motor->SetTarget(prev_target);
-    }
+void jam_callback(void* args) { // 取消卡弹检测——
+    UNUSED(args);
+    // driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
+    // jam_notify_flags = true;
+    // float target = motor->GetTarget();
+    // if (target > motor->GetOutputShaftTheta()) {
+    //     float prev_target = motor->GetTarget() - 2 * PI / 5;
+    //     motor->SetTarget(prev_target);
+    // } else {
+    //     float prev_target = motor->GetTarget() + 2 * PI / 5;
+    //     motor->SetTarget(prev_target);
+    // }
 }
 
 osThreadId_t shootTaskHandle;
@@ -110,6 +112,16 @@ void shootTask(void* arg) {
                 // shoot_flywheel_offset = -1000;
                 // laser->SetOutput(0);
                 break;
+        }
+        // 退弹模式
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+            if (shoot_load_mode == SHOOT_MODE_UNLOAD)
+            {
+                if (!unload_cmd_latched) {
+                    steering_motor->SetTarget(steering_motor->GetTarget() - 2 * PI / 8, true);
+                    unload_cmd_latched = true; // 只触发一次
+                } else unload_cmd_latched = false; // 退出UNLOAD后解锁，等待下次触发
+            } else steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
         }
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             switch (shoot_load_mode) {

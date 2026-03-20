@@ -97,6 +97,10 @@ void gimbalTask(void* arg) {
         // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
         const float mouse_ratio = 0.5;
         const float remote_ratio = 0.005;
+
+        const bool vt13_c_mode = (refereerc != nullptr) && refereerc->IsOnline() &&
+                                 (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C);
+
         if (dbus->IsOnline()) {
             if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
                 pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
@@ -105,9 +109,20 @@ void gimbalTask(void* arg) {
                 pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
                 yaw_ratio = (float)dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
             }
-        } else if (refereerc->IsOnline()) {
-            pitch_ratio = -refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
-            yaw_ratio = -refereerc->remote_control.mouse.x / mouse_xy_max * mouse_ratio;
+        } else if (vt13_c_mode) {
+            // DBUS离线时使用VT13：优先摇杆，否则鼠标
+            if (refereerc->vt13_packet.remote.ch3 != remote::vt13_remote_t::ROCKER_MID ||
+                refereerc->vt13_packet.remote.ch2 != remote::vt13_remote_t::ROCKER_MID) {
+                pitch_ratio =
+                    (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) /
+                    remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
+                yaw_ratio =
+                    (float)(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
+                    remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
+            } else {
+                pitch_ratio = refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
+                yaw_ratio = refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
+            }
         } else {
             pitch_ratio = 0;
             yaw_ratio = 0;

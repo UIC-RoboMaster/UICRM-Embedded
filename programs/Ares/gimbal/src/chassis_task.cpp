@@ -23,6 +23,8 @@ osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
 const float chassis_max_t_speed = 2 * PI * 5;
+static const int16_t dbus_rocker_deadband = 10;
+static const int16_t vt13_rocker_deadband = 20;
 
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -58,27 +60,51 @@ void chassisTask(void* arg) {
             continue;
         }
 
-        remote::keyboard_t keyboard;
+        const bool vt13_c_mode = (refereerc != nullptr) && refereerc->IsOnline() &&
+                                 (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C);
+
+        remote::keyboard_t keyboard{};
         if (dbus->IsOnline()) {
             keyboard = dbus->keyboard;
-        } else if (refereerc->IsOnline()) {
-            keyboard = refereerc->remote_control.keyboard;
+        } else if (vt13_c_mode) {
+            keyboard = refereerc->vt13_packet.keyboard;
         }
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
-        float car_vx, car_vy, car_vt;
+        float car_vx = 0;
+        float car_vy = 0;
+        float car_vt = 0;
         // if (keyboard.bit.X) {
         //     // 刹车
         //     car_vx = 0;
         //     car_vy = 0;
         //     car_vt = 0;
         // } else
-        if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
+        if (dbus->IsOnline() &&
+            (abs(dbus->ch0) > dbus_rocker_deadband || abs(dbus->ch1) > dbus_rocker_deadband ||
+             abs(dbus->ch4) > dbus_rocker_deadband)) {
             // 优先使用遥控器
             const float speed_scale = 0.5;
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
             car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
+        } else if (vt13_c_mode &&
+                   (abs((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) >
+                        vt13_rocker_deadband ||
+                    abs((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) >
+                        vt13_rocker_deadband ||
+                    abs((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) >
+                        vt13_rocker_deadband)) {
+            const float speed_scale = 0.5;
+            car_vx =
+                (float)((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
+                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vy =
+                (float)((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) /
+                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vt =
+                (float)((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) /
+                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
