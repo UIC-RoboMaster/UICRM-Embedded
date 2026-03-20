@@ -27,7 +27,10 @@
 #include <string>
 #include <vector>
 
+#include "MetaUtil.h"
 #include "../../drivers/include/Automata/AutomataInputManagement.h"
+
+using namespace TemplateMetaUtil;
 
 using std::vector;
 
@@ -35,15 +38,79 @@ using communication::AutomataInputManagement;
 
 namespace control {
 
+    /*FiniteStateMachine*/
+    template <typename States, typename... Trs>
+    class FiniteStateMachine {
+    public:
+        friend class StateAutomata;
+
+        using StateList = typename CollectStates<Trs...>::type;
+
+        /*interface*/           // with [StateAutomata]
+        FiniteStateMachine(States init) : current_state_(init) {}
+
+        template<typename Ins>
+        void step(const Ins& ins) {
+            stepImpl(ins, StateList{});
+        }
+
+        States state() {return current_state_;}
+        /*interface*/
+    private:
+        States current_state_;
+
+        template<typename Ins, auto... St>
+        void stepImpl(const Ins& ins, ValueList<St...>) {
+            States res = current_state_;
+            ((current_state_ == St ? (res = evalState<St>(ins), void()) : void()), ...);
+            current_state_ = res;
+        }
+
+        template<auto St, typename Ins>
+        States evalState(const Ins& ins) {
+            using EvalGroup = typename Filter<St, Trs...>::type;
+            return evalTuple<EvalGroup>(ins, std::make_index_sequence<std::tuple_size_v<EvalGroup>>{});
+        }
+
+        template<typename EvalGroup, typename Ins, size_t... Index>
+        States evalTuple(const Ins& ins, std::index_sequence<Index...>) {
+            bool made_transit = false;
+            States res = current_state_;
+            ((!made_transit && std::get<Index>(EvalGroup{}).Transition::eval(ins) ?
+                (res = std::get<Index>(EvalGroup{}).to, made_transit = true) : made_transit),
+                ...);
+            return res;
+        }
+    };
+    /*FiniteStateMachine*/
+
     /*Transition*/
-    template <class EnumStatesCollection>
+    template<auto From, auto To, typename Fn>
     struct Transition {
-        EnumStatesCollection next;
-        bool (*condition)(const communication::Ins&);
-        Transition(EnumStatesCollection next, bool (*condition)(const communication::Ins&))
-            : next(next), condition(condition) {}
+        static constexpr auto from = From;
+        static constexpr auto to   = To;
+        // Fn fn;
+        // constexpr Transition(Fn f) : fn(f) {}
+        static bool eval(const communication::Ins& ins) {
+            return Fn{}(ins);
+        }
     };
     /*Transition*/
+
+    /*CollectTransitions*/
+    template<typename EnumStatesCollection, typename... Trs>
+    struct CollectTransitions {
+        template<auto From, auto To, typename Fn>
+        auto addTrans() {
+            using NewTr = Transition<From, To, Fn>;
+            return CollectTransitions<EnumStatesCollection, Trs..., NewTr>{};
+        }
+
+        auto output(EnumStatesCollection init_state) {
+            return FiniteStateMachine<EnumStatesCollection, Trs...>(init_state);
+        }
+    };
+    /*CollectTransitions*/
 
     /*StateAutomataBuilder*/
     /**
@@ -64,32 +131,26 @@ namespace control {
         class StateAutomata;
 
         typedef EnumStatesCollection States;
-        using FSM = vector<vector<Transition<States>>>;
+        // using FSM = FSM<EnumStatesCollection>;
         using Item = AutomataInputManagement;
 
         /**
-         * Add new reflect relationship among the automata.
+         * Add new transition relationship among the automata.
          *
          * For states with multiple transitions, those added first will execute first if there's
          * ambiguous conditions.
          *
-         * @param from the state that
-         * @param trans Transition
+         * @tparam From Start state
+         * @tparam To Goto state
+         * @tparam Fn Transition logic
          * @return Factory itself in order to perform "chain call" grammar.
          */
-        StateAutomataBuilder& transition(States from, Transition<States> trans) {
-            size_t idx = static_cast<size_t>(from);
-            if (idx >= state_machine_.size())
-                state_machine_.resize(idx + 1);
-            state_machine_[static_cast<size_t>(from)].emplace_back(trans);
-            return *this;
-        }
-        template <typename Fn>
-        StateAutomataBuilder& transition(States from, States to, Fn&& fn) {
-            static_assert(std::is_empty_v<std::decay_t<Fn>>, "No Lambda capture");
-            auto fptr = static_cast<bool(*)(const communication::Ins&)>(fn);
-            return transition(from, Transition<States>(to, fptr));
-        }
+        // template <auto From, auto To, typename Fn>
+        // StateAutomataBuilder& transition(Fn&& fn) {
+        //     static_assert(std::is_empty_v<std::decay_t<Fn>>, "No Lambda with capture");
+        //     transitions_ = transitions_.template addTrans<From, To, Fn>();
+        //     return this;
+        // }
 
         /**
          * Creat a component that represent an item input in automata
@@ -130,13 +191,13 @@ namespace control {
          * @param init_state The state that the result automata will start with.
          * @return The product automata
          */
-        StateAutomata* build(States init_state) {
-            return new StateAutomata(std::move(state_machine_), init_state,
-                                     std::move(input_items_));
-        }
+        // StateAutomata* build(States init_state) {
+        //     return new StateAutomata(transitions_.output(), input_items_);
+        // }
 
       private:
-        FSM state_machine_;
+        // FSM state_machine_;
+        // CollectTransitions<EnumStatesCollection> transitions_;
         Item input_items_;
     };
     /*StateAutomataBuilder*/
@@ -161,7 +222,7 @@ namespace control {
         friend class StateAutomataBuilder;
 
         typedef EnumStatesCollection States;
-        using FSM = vector<vector<Transition<States>>>;
+        using FSM = FiniteStateMachine<EnumStatesCollection>;
         using Item = AutomataInputManagement;
 
         /**
@@ -175,7 +236,7 @@ namespace control {
         template <typename... Ts>
         void input(const std::tuple<Ts...>& data) {
             input_items_.updateItems(data);
-            evaluateTransitions();
+            state_machine_.step(input_items_);
         }
 
         /**
@@ -184,31 +245,21 @@ namespace control {
          * @return automata current state.
          */
         States state() {
-            return current_state_;
+            return state_machine_.state();
         }
 
         // TODO implement demonstrate()
         std::string demonstrate() const;
 
       private:
-        StateAutomata(FSM machine, States init_state, Item inputs)
+        StateAutomata(FSM machine, Item inputs)
             : state_machine_(std::move(machine)),
-              current_state_(init_state),
               input_items_(std::move(inputs)) {
         }
 
-        const FSM state_machine_;
-        States current_state_;
+        FSM state_machine_;
 
         Item input_items_;
-
-        void evaluateTransitions() {
-            for (auto& it : state_machine_[static_cast<size_t>(current_state_)])
-                if (it.condition(input_items_)) {
-                    current_state_ = it.next;
-                    return;
-                }
-        }
     };
     /*StateAutomata*/
 
