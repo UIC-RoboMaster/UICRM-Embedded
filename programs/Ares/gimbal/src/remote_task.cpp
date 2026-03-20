@@ -37,7 +37,7 @@ ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 
 //
 bool is_killed = false;
-// bool turbo_shoot = false;
+bool turbo_shoot = false;
 
 // dbus
 void init_dbus() {
