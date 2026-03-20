@@ -141,8 +141,10 @@ void shootTask(void* arg) {
                         if (steering_motor->IsHolding()) {
                             steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 6 ,
                                                       false);
-                            steering_up->SetTarget(steering_up->GetTarget() + 2 * PI ,
-                                                      false);
+                            if (steering_up->IsHolding()) {
+                                steering_up->SetTarget(steering_up->GetTarget() + 2 * PI / 4,
+                                                       true);
+                            }
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
                     }

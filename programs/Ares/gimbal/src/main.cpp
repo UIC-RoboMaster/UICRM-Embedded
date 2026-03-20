@@ -100,6 +100,12 @@ void RM_RTOS_Default_Task(const void* arg) {
         }
         print("\n");
         print("Mode:%s\r\n", s);
+        if (steering_motor != nullptr) {
+            print("steering_motor: theta %.2f, omega %.2f\r\n", steering_motor->GetTheta(), steering_motor->GetOmega());
+        }
+        if (steering_up != nullptr) {
+            print("steering_up: theta %.2f, omega %.2f\r\n", steering_up->GetTheta(), steering_up->GetOmega());
+        }
         // switch (shoot_fric_mode) {
         //     case SHOOT_FRIC_MODE_PREPARING:
         //         strcpy(s, "PREPARE");
@@ -137,58 +143,58 @@ void RM_RTOS_Default_Task(const void* arg) {
         // }
 
 
-        print("Shoot Mode:%s\r\n", s);
-
-        print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
-              imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
-        print("Temp: %.2f\r\n", imu->Temp);
-        print("Heater: %.2f\r\n", imu->TempPWM);
-        print("Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0], imu->INS_angle[1] , imu->INS_angle[2]);
-        print("Euler Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0] / PI * 180,
-              imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
-        print("Is Calibrated: %s\r\n",
-              imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
-
-        // Remote info
-        print(
-            "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
-            "[SWR: %d] [Trig: %d]\r\n",
-            refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
-            refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
-            refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
-            refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
-            refereerc->vt13_packet.remote.trigger);
-        print("\r\n");
-        print("[Referee %s] ",
-             referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
-        print("\r\n");
-        print("[Referee RC %s] ",
-              refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
-        print("\r\n");
-
-        // Gimbal info
-        print("Gimbal target Pitch %.3f Yaw %.3f\r\n",
-              wrap<float>(gimbal->getPitchTarget() - gimbal_param->pitch_offset_, -PI, PI),
-              wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI));
-        print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
-        print("\r\n");
-
-        // // 添加在 print("Yaw Motor: ...") 附近
-        // print("=== Chassis Debug ===\r\n");
-        // print("A (yaw_motor - offset): %.4f\r\n", yaw_motor->GetTheta() - gimbal_param->yaw_offset_);
-        // print("B (IMU yaw): %.4f\r\n", imu->INS_angle[0]);
-        // print("C (gimbal target): %.4f\r\n", gimbal->getYawTarget());
-        // print("chassis_target_diff: %.4f\r\n", gimbal->getYawTarget() - imu->INS_angle[0] + (yaw_motor->GetTheta() - gimbal_param->yaw_offset_));
-        // print("yaw_offset_: %.4f\r\n", gimbal_param->yaw_offset_);
-
-        print_enabled("yaw", yaw_motor->IsOnline());
-        print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
-        print("yaw current i: %.2f\r\n", yaw_motor->GetCurr());
-
-        print_enabled("pitch", pitch_motor->IsOnline());
-        print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(), pitch_motor->GetOmega());
-        print("pitch current i: %.2f\r\n", pitch_motor->GetCurr());
-
+        // print("Shoot Mode:%s\r\n", s);
+        //
+        // print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
+        //       imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
+        // print("Temp: %.2f\r\n", imu->Temp);
+        // print("Heater: %.2f\r\n", imu->TempPWM);
+        // print("Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0], imu->INS_angle[1] , imu->INS_angle[2]);
+        // print("Euler Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0] / PI * 180,
+        //       imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
+        // print("Is Calibrated: %s\r\n",
+        //       imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+        //
+        // // Remote info
+        // print(
+        //     "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
+        //     "[SWR: %d] [Trig: %d]\r\n",
+        //     refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
+        //     refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
+        //     refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
+        //     refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
+        //     refereerc->vt13_packet.remote.trigger);
+        // print("\r\n");
+        // print("[Referee %s] ",
+        //      referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        // print("\r\n");
+        // print("[Referee RC %s] ",
+        //       refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        // print("\r\n");
+        //
+        // // Gimbal info
+        // print("Gimbal target Pitch %.3f Yaw %.3f\r\n",
+        //       wrap<float>(gimbal->getPitchTarget() - gimbal_param->pitch_offset_, -PI, PI),
+        //       wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI));
+        // print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
+        // print("\r\n");
+        //
+        // // // 添加在 print("Yaw Motor: ...") 附近
+        // // print("=== Chassis Debug ===\r\n");
+        // // print("A (yaw_motor - offset): %.4f\r\n", yaw_motor->GetTheta() - gimbal_param->yaw_offset_);
+        // // print("B (IMU yaw): %.4f\r\n", imu->INS_angle[0]);
+        // // print("C (gimbal target): %.4f\r\n", gimbal->getYawTarget());
+        // // print("chassis_target_diff: %.4f\r\n", gimbal->getYawTarget() - imu->INS_angle[0] + (yaw_motor->GetTheta() - gimbal_param->yaw_offset_));
+        // // print("yaw_offset_: %.4f\r\n", gimbal_param->yaw_offset_);
+        //
+        // print_enabled("yaw", yaw_motor->IsOnline());
+        // print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
+        // print("yaw current i: %.2f\r\n", yaw_motor->GetCurr());
+        //
+        // print_enabled("pitch", pitch_motor->IsOnline());
+        // print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(), pitch_motor->GetOmega());
+        // print("pitch current i: %.2f\r\n", pitch_motor->GetCurr());
+        //
         // // === Pitch Debug ===
         // print("=== Pitch Debug ===\r\n");
         // print("pitch_curr  (IMU): %.4f rad / %.2f deg\r\n", pitch_curr, pitch_curr / PI * 180);
@@ -200,30 +206,30 @@ void RM_RTOS_Default_Task(const void* arg) {
         // print("pitch_offset     : %.4f\r\n", gimbal_param->pitch_offset_);
         // print("pitch_max        : %.4f\r\n", gimbal_param->pitch_max_);
         // print("\r\n");
-
-        // 发射供弹
-        print("flywheel_left Motor: %.2f, %.2f\r\n", flywheel_left->GetTheta(), flywheel_left->GetOmega());
-        print_enabled("flywheel_left", flywheel_left->IsOnline());
-
-        print("flywheel_right Motor: %.2f, %.2f\r\n", flywheel_right->GetTheta(), flywheel_right->GetOmega());
-        print_enabled("flywheel_right", flywheel_right->IsOnline());
-
-        print("steering Motor: %.2f, %.2f\r\n", steering_motor->GetTheta(), steering_motor->GetOmega());
-        print_enabled("steering_motor", steering_motor->IsOnline());
-
-        print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
-        print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
-        print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
-        print("\r\n");
-        print("Shooter Cooling Heat: %hu\r\n",
-              referee->power_heat_data.shooter_id1_42mm_cooling_heat);
-        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
-        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        print("\r\n");
-        print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
-              referee->game_robot_status.max_HP);
-        print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
-        print("\n");
+        //
+        // // 发射供弹
+        // print("flywheel_left Motor: %.2f, %.2f\r\n", flywheel_left->GetTheta(), flywheel_left->GetOmega());
+        // print_enabled("flywheel_left", flywheel_left->IsOnline());
+        //
+        // print("flywheel_right Motor: %.2f, %.2f\r\n", flywheel_right->GetTheta(), flywheel_right->GetOmega());
+        // print_enabled("flywheel_right", flywheel_right->IsOnline());
+        //
+        // print("steering Motor: %.2f, %.2f\r\n", steering_motor->GetTheta(), steering_motor->GetOmega());
+        // print_enabled("steering_motor", steering_motor->IsOnline());
+        //
+        // print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
+        // print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
+        // print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
+        // print("\r\n");
+        // print("Shooter Cooling Heat: %hu\r\n",
+        //       referee->power_heat_data.shooter_id1_42mm_cooling_heat);
+        // print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
+        // print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        // print("\r\n");
+        // print("Current HP %d/%d\n", referee->game_robot_status.remain_HP,
+        //       referee->game_robot_status.max_HP);
+        // print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
+        // print("\n");
 
 
         osDelay(100);
