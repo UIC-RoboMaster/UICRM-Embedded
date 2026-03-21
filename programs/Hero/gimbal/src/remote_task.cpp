@@ -235,18 +235,17 @@ void remoteTask(void* arg) {
                 shoot_load_mode = SHOOT_MODE_STOP;
             }
         }
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
-            if (refereerc->vt13_packet.remote.ch4 < 424) {
-                shoot_load_mode = SHOOT_MODE_UNLOAD;
-            } else if (refereerc->vt13_packet.remote.ch4 > 1624) {
-                shoot_load_mode = SHOOT_MODE_STOP;
+        // 退弹 - 不受摩擦轮状态限制
+        if (refereerc->vt13_packet.remote.ch4 < 424 || refereerc->vt13_packet.mouse.mid) {
+            shoot_load_mode = SHOOT_MODE_UNLOAD;
+        } else if (shoot_load_mode == SHOOT_MODE_UNLOAD) {
+            // 退弹条件消失，根据摩擦轮状态恢复
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+                shoot_load_mode = SHOOT_MODE_PREPARED;
             } else {
-                if (refereerc->vt13_packet.remote.ch4 > 800 && refereerc->vt13_packet.remote.ch4 < 1248) {
-                    shoot_load_mode = SHOOT_MODE_STOP;
-                }
+                shoot_load_mode = SHOOT_MODE_STOP;
             }
         }
-
 
         // 射出单颗子弹
         if (shoot_switch) {

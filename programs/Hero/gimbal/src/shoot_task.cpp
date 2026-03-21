@@ -107,14 +107,23 @@ void shootTask(void* arg) {
                 // laser->SetOutput(0);
                 break;
         }
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
-            if (shoot_load_mode == SHOOT_MODE_UNLOAD)
-            {
-                if (!unload_cmd_latched) {
-                    steering_motor->SetTarget(steering_motor->GetTarget() - 2 * PI / 8, true);
-                    unload_cmd_latched = true; // 只触发一次
-                } else unload_cmd_latched = false; // 退出UNLOAD后解锁，等待下次触发
-            } else steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+        // 退弹处理 - 不受摩擦轮状态限制
+        if (shoot_load_mode == SHOOT_MODE_UNLOAD) {
+            if (!unload_cmd_latched) {
+                steering_motor->SetTarget(steering_motor->GetTarget() - 2 * PI / 8, true);
+                unload_cmd_latched = true;  // 只触发一次
+            }
+            // 保持UNLOAD期间不覆写电机目标，让电机完成旋转
+        } else {
+            if (unload_cmd_latched) {
+                // 刚退出UNLOAD，取消未完成的退弹旋转，锁定到当前位置
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            }
+            unload_cmd_latched = false;  // 退出UNLOAD后解锁，等待下次触发
+
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            }
         }
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             switch (shoot_load_mode) {
