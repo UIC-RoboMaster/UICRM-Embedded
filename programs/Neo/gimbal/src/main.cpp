@@ -90,13 +90,6 @@ void RM_RTOS_Default_Task(const void* arg) {
     //    }
 
     while (true) {
-        //        if (referee->game_robot_status.mains_power_gimbal_output) {
-        //            gimbal_power->High();
-        //        } else {
-        //            gimbal_power->Low();
-        //        }
-        //        print("%.4f %.4f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
-        //        osDelay(2);
         set_cursor(0, 0);
         clear_screen();
 
@@ -142,7 +135,7 @@ void RM_RTOS_Default_Task(const void* arg) {
               referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        print_enabled("Cap state", bulletCap->isEnable());
+        // print_enabled("Cap state", bulletCap->isEnable());
         print_enabled("MiniPC Shoot CMD", minipc->target_angle.shoot_cmd);
         print("\r\n");
 
@@ -155,10 +148,15 @@ void RM_RTOS_Default_Task(const void* arg) {
         print_enabled("Yaw", yaw_motor->IsOnline());
         print_enabled("Pitch", pitch_motor->IsOnline());
         print("\r\n");
+
         print("Ref Pwr En: ");
         print_enabled("Chassis", referee->game_robot_status.mains_power_chassis_output);
         print_enabled("Gimbal", referee->game_robot_status.mains_power_gimbal_output);
         print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
+        print("\r\n");
+        print("Game Time %d ", referee->game_status.stage_remain_time);
+        print("HP %d/%d", referee->game_robot_status.remain_HP, referee->game_robot_status.max_HP);
+
         print("\r\n");
 
         osDelay(100);

@@ -823,6 +823,7 @@ namespace communication {
       public:
         HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize, uint32_t rxBufferSize);
         pack_t pack{};
+        game_status_t game_status{};
         target_angle_t target_angle{};
         no_target_flag_t no_target_flag{};
         shoot_cmd_t shoot_cmd{};
@@ -832,6 +833,7 @@ namespace communication {
         chassis_current_status_t chassis_current_status{};
         autoaim_enable_t autoaim_enable{};
         robot_status_upload_t robot_status_upload{};
+        game_robot_status_t game_robot_status{};
 
       private:
         /**

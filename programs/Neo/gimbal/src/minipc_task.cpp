@@ -101,6 +101,26 @@ void minipc_task(void* args) {
             minipc->chassis_current_status.speed_turn = chassis_vt;
             minipc->Transmit(communication::CHASSIS_CURRENT_STATUS);
         }
+        if (i % 500 == 0) {
+            minipc->game_status.game_progress = referee->game_status.game_progress;
+            minipc->game_status.game_type = referee->game_status.game_type;
+            minipc->game_status.stage_remain_time = referee->game_status.stage_remain_time;
+            minipc->game_status.SyncTimeStamp = referee->game_status.SyncTimeStamp;
+            minipc->Transmit(communication::GAME_STATUS);
+        }
+        if (i % 500 == 0) {
+            minipc->game_robot_status.max_HP = referee->game_robot_status.max_HP;
+            minipc->game_robot_status.remain_HP = referee->game_robot_status.remain_HP;
+            minipc->game_robot_status.chassis_power_limit = referee->game_robot_status.chassis_power_limit;
+            minipc->game_robot_status.mains_power_chassis_output = referee->game_robot_status.mains_power_chassis_output;
+            minipc->game_robot_status.mains_power_gimbal_output =  referee->game_robot_status.mains_power_gimbal_output;
+            minipc->game_robot_status.mains_power_shooter_output = referee->game_robot_status.mains_power_shooter_output;
+            minipc->game_robot_status.robot_id = referee->game_robot_status.robot_id;
+            minipc->game_robot_status.robot_level = referee->game_robot_status.robot_level;
+            minipc->game_robot_status.shooter_cooling_rate = referee->game_robot_status.shooter_cooling_rate;
+            minipc->game_robot_status.shooter_heat_limit = referee->game_robot_status.shooter_heat_limit;
+            minipc->Transmit(communication::GAME_ROBOT_STATUS);
+        }
 
         if (i == 1000) {
             // Secend event

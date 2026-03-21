@@ -183,7 +183,7 @@ namespace communication {
 
     Referee::Referee(bsp::UART* uart) : UARTProtocol(uart) {
         // 设置100ms离线阈值
-        SetThreshold(100);
+        SetThreshold(online_threshold_);
     }
 
     bool Referee::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
@@ -478,6 +478,14 @@ namespace communication {
             case ROBOT_STATUS_UPLOAD:
                 data_len = sizeof(robot_status_upload_t);
                 memcpy(data, &robot_status_upload, data_len);
+                break;
+            case GAME_ROBOT_STATUS:
+                data_len = sizeof(game_robot_status_t);
+                memcpy(data, &game_robot_status, data_len);
+                break;
+            case GAME_STATUS:
+                data_len = sizeof(game_status_t);
+                memcpy(data, &game_status, data_len);
                 break;
             default:
                 data_len = -1;
