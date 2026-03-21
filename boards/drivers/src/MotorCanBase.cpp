@@ -123,7 +123,7 @@ namespace driver {
 
         power_on_angle_ = -1;  // Wait for Update to initialize
         relative_angle_ = 0;
-        cumulated_turns_ = 0;
+        cumulated_rad_ = 0;
         output_relative_angle_ = 0;
         output_cumulated_turns_ = 0;
         inner_wrap_detector_ = new FloatEdgeDetector(0, PI);
@@ -328,14 +328,14 @@ namespace driver {
 
             // 记录编码器累计转过几圈
             if (inner_wrap_detector_->negEdge())
-                cumulated_turns_ += 2 * PI / transmission_ratio_;
+                cumulated_rad_ += 2 * PI / transmission_ratio_;
             else if (inner_wrap_detector_->posEdge())
-                cumulated_turns_ -= 2 * PI / transmission_ratio_;
-            cumulated_turns_ =
-                wrap<float>(cumulated_turns_, -transmission_ratio_, transmission_ratio_);
+                cumulated_rad_ -= 2 * PI / transmission_ratio_;
+            cumulated_rad_ =
+                wrap<float>(cumulated_rad_, 0, transmission_ratio_ * 2 * PI);
 
             output_relative_angle_ =
-                wrap<float>(cumulated_turns_ + relative_angle_ / transmission_ratio_, 0, 2 * PI);
+                wrap<float>(cumulated_rad_ + relative_angle_ / transmission_ratio_, 0, 2 * PI);
         }
 
         // 输出轴角度给到边界检测器
