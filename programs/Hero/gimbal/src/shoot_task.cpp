@@ -126,6 +126,18 @@ void shootTask(void* arg) {
             }
         }
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+#if SHOOT_REFEREE
+            // 42mm 枪管过热检测：当前热量接近热量上限时禁止发射
+            int heat_limit = referee->game_robot_status.shooter_heat_limit;
+            int heat_current = referee->power_heat_data.shooter_id1_42mm_cooling_heat;
+            const int heat_threshold = 100;  // 42mm 单发热量约 100，预留一发余量
+            if (heat_current > heat_limit - heat_threshold) {
+                // 过热保护：锁定拨弹电机，跳过本轮发射
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+                osDelay(SHOOT_OS_DELAY);
+                continue;
+            }
+#endif
             switch (shoot_load_mode) {
                 case SHOOT_MODE_PREPARING:
                 case SHOOT_MODE_PREPARED:
