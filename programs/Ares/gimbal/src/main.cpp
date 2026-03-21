@@ -31,7 +31,7 @@
 #include "referee_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"
-// #include "ui_task.h"
+#include "ui_task.h"
 #include "user_define.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
@@ -47,7 +47,7 @@ void RM_RTOS_Init(void) {
     init_shoot();
     init_gimbal();
     init_chassis();
-    // init_ui();
+    init_ui();
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -59,8 +59,8 @@ void RM_RTOS_Threads_Init(void) {
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
-    // if (ENABLE_UI)
-    //     uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
+    if (ENABLE_UI)
+        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
@@ -142,6 +142,13 @@ void RM_RTOS_Default_Task(const void* arg) {
         //         break;
         // }
 
+        print("[UI] ");
+        if (refereerc->vt13_packet.keyboard.bit.V)
+        {
+            print("UI refresh success");
+        }
+        print("\n");
+
 
         // print("Shoot Mode:%s\r\n", s);
         //
@@ -156,29 +163,29 @@ void RM_RTOS_Default_Task(const void* arg) {
         //       imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
         //
         // // Remote info
-        // print(
-        //     "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
-        //     "[SWR: %d] [Trig: %d]\r\n",
-        //     refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
-        //     refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
-        //     refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
-        //     refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
-        //     refereerc->vt13_packet.remote.trigger);
-        // print("\r\n");
-        // print("[Referee %s] ",
-        //      referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
-        // print("\r\n");
-        // print("[Referee RC %s] ",
-        //       refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
-        // print("\r\n");
-        //
-        // // Gimbal info
-        // print("Gimbal target Pitch %.3f Yaw %.3f\r\n",
-        //       wrap<float>(gimbal->getPitchTarget() - gimbal_param->pitch_offset_, -PI, PI),
-        //       wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI));
-        // print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
-        // print("\r\n");
-        //
+        print(
+            "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
+            "[SWR: %d] [Trig: %d]\r\n",
+            refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
+            refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
+            refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
+            refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
+            refereerc->vt13_packet.remote.trigger);
+        print("\r\n");
+        print("[Referee %s] ",
+             referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("\r\n");
+        print("[Referee RC %s] ",
+              refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("\r\n");
+
+        // Gimbal info
+        print("Gimbal target Pitch %.3f Yaw %.3f\r\n",
+              wrap<float>(gimbal->getPitchTarget() - gimbal_param->pitch_offset_, -PI, PI),
+              wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI));
+        print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
+        print("\r\n");
+
         // // // 添加在 print("Yaw Motor: ...") 附近
         // // print("=== Chassis Debug ===\r\n");
         // // print("A (yaw_motor - offset): %.4f\r\n", yaw_motor->GetTheta() - gimbal_param->yaw_offset_);

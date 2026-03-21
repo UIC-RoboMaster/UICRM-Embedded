@@ -144,8 +144,8 @@ namespace communication {
     }
 
     Referee::Referee(bsp::UART* uart) : UARTProtocol(uart) {
-        // 设置100ms离线阈值
-        SetThreshold(100);
+        //
+        SetThreshold(online_threshold_ + 50);
     }
 
     bool Referee::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
