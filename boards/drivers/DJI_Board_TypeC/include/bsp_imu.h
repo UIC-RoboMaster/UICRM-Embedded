@@ -511,9 +511,8 @@ namespace bsp {
         void Update();
         bool DataReady();
 
-        float INS_quat[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-        // 0是yaw，1是，2是pitch
-        float INS_angle[3] = {0.0f, 0.0f, 0.0f};
+        float INS_quat[4] = {0.0f, 0.0f, 0.0f, 0.0f};  // qw, qx, qy, qz
+        float INS_angle[3] = {0.0f, 0.0f, 0.0f};       // yaw, pitch, roll
         float Temp = 0;
         float TempPWM = 0;
 
@@ -526,7 +525,7 @@ namespace bsp {
         bool calibrate_ = false;
         bool calidone_ = false;
 
-        unsigned zeroDriftTry = 1000;
+        unsigned zeroDriftTry = 3000;
         float zeroDrift[3] = {0, 0, 0};
         float zeroDriftTemp[3] = {0, 0, 0};
 
