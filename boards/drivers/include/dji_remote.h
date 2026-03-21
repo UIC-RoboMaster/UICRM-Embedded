@@ -36,22 +36,22 @@ namespace remote {
     typedef union {
         uint16_t code;
         struct {
-            uint16_t W : 1;
-            uint16_t S : 1;
-            uint16_t A : 1;
-            uint16_t D : 1;
-            uint16_t SHIFT : 1;
-            uint16_t CTRL : 1;
-            uint16_t Q : 1;
-            uint16_t E : 1;
-            uint16_t R : 1;
-            uint16_t F : 1;
-            uint16_t G : 1;
-            uint16_t Z : 1;
-            uint16_t X : 1;
-            uint16_t C : 1;
-            uint16_t V : 1;
-            uint16_t B : 1;
+            uint16_t W : 1;     // 前
+            uint16_t S : 1;     // 后
+            uint16_t A : 1;     // 左
+            uint16_t D : 1;     // 右
+            uint16_t SHIFT : 1; // boost
+            uint16_t CTRL : 1;  // 切换 小陀螺/自瞄/坦克/标准 模式
+            uint16_t Q : 1;     // 小陀螺加速/减速
+            uint16_t E : 1;     // 小陀螺加速/减速
+            uint16_t R : 1;     //
+            uint16_t F : 1;     //
+            uint16_t G : 1;     //
+            uint16_t Z : 1;     // 摩擦轮
+            uint16_t X : 1;     //
+            uint16_t C : 1;     // 清除自定义UI
+            uint16_t V : 1;     // 强制刷新自定义UI
+            uint16_t B : 1;     //
         } __packed bit;
     } __packed keyboard_t;
 
@@ -88,8 +88,8 @@ namespace remote {
             result.x = x;
             result.y = y;
             result.z = roll;
-            result.l = l;
-            result.r = r;
+            result.l = l;     // shoot
+            result.r = r;     // unload
             return result;
         }
     } __packed vt13_mouse_t;
