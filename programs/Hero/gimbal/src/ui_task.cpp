@@ -60,7 +60,7 @@ void uiTask(void* arg) {
     chassisGUI->Init2();
     osDelay(110);
     // Initialize crosshair GUI
-    crossairGui = new communication::CrossairGUI(UI, 988, 540, -70, -540, -540, -540, -540, -84);
+    crossairGui = new communication::CrossairGUI(UI, 968, 510, -70, -540, -540, -540, -540, -84);
     osDelay(110);
 
     // Initialize supercapacitor GUI
