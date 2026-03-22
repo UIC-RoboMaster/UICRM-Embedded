@@ -108,7 +108,7 @@ void minipc_task(void* args) {
             minipc->game_status.SyncTimeStamp = referee->game_status.SyncTimeStamp;
             minipc->Transmit(communication::GAME_STATUS);
         }
-        if (i % 500 == 0) {
+        if (i % 999 == 0) {
             minipc->game_robot_status.max_HP = referee->game_robot_status.max_HP;
             minipc->game_robot_status.remain_HP = referee->game_robot_status.remain_HP;
             minipc->game_robot_status.chassis_power_limit = referee->game_robot_status.chassis_power_limit;

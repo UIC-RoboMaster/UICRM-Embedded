@@ -35,54 +35,90 @@ static const int BYTE = 8;
 namespace communication {
 
     bool Protocol::Receive(package_t package) {
-        Heartbeat();
-        for (int i = 0; i < package.length; ++i) {
-            if (rx_state.mode == rx_state.mode::WAITING_FOR_SOF) {
-                // 还未接收到帧头，检测是否为帧头
-                if (package.data[i] == SOF) {
-                    rx_state.mode = rx_state.mode::RECEIVING_REFEREE;
-                    bufferRx[0] = SOF;
-                    rx_state.idx = 1;
-                } else if (package.data[i] == remote::vt13_packet_t::SOF) {
-                    rx_state.mode = rx_state.mode::RECEIVING_VT13;
-                    bufferRx[0] = remote::vt13_packet_t::SOF;
-                    rx_state.idx = 1;
-                }
-            } else if (rx_state.mode == rx_state.RECEIVING_REFEREE) {
-                // 接收裁判系统的数据
-                bufferRx[rx_state.idx++] = package.data[i];
+    Heartbeat();
 
-                if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN) {
-                    int DATA_LENGTH = bufferRx[2] << BYTE | bufferRx[1];
-                    if (rx_state.idx >=
-                        FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
-                        if (VerifyHeader(bufferRx, FRAME_HEADER_LEN) &&
-                            VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH +
-                                                      FRAME_TAIL_LEN)) {
-                            int cmd_id =
-                                bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
-                            ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN,
-                                          DATA_LENGTH);
-                        }
-                        rx_state.mode = rx_state.WAITING_FOR_SOF;
-                        rx_state.idx = 0;
-                    }
-                }
-            } else if (rx_state.mode == rx_state.mode::RECEIVING_VT13) {
-                // VT13遥控器与图传链路从同一个UART输出，包头不同。
-                // Todo: 应该把图传链路和遥控器数据分开处理
-                bufferRx[rx_state.idx++] = package.data[i];
-                if (rx_state.idx >= static_cast<int>(sizeof(remote::vt13_packet_t))) {
-                    if (verify_crc16_check_sum(bufferRx, sizeof(remote::vt13_packet_t))) {
-                        ProcessDataRx(REMOTE_CONTROL_VT13, bufferRx, sizeof(remote::vt13_packet_t));
-                    }
-                    rx_state.mode = rx_state.WAITING_FOR_SOF;
-                    rx_state.idx = 0;
-                }
+    for (int i = 0; i < package.length; ++i) {
+        uint8_t byte = package.data[i];
+
+        switch (rx_state.mode) {
+
+        case WAITING_FOR_SOF:
+            if (byte == SOF) {
+                rx_state.mode = RECEIVING_HEADER;
+                rx_state.idx = 0;
+                bufferRx[rx_state.idx++] = byte;
             }
+            break;
+
+        case RECEIVING_HEADER:
+            if (rx_state.idx >= BUFFER_SIZE) {
+                rx_state.mode = WAITING_FOR_SOF;
+                rx_state.idx = 0;
+                break;
+            }
+
+            bufferRx[rx_state.idx++] = byte;
+
+            if (rx_state.idx == FRAME_HEADER_LEN) {
+
+                if (!VerifyHeader(bufferRx, FRAME_HEADER_LEN)) {
+                    rx_state.mode = WAITING_FOR_SOF;
+                    rx_state.idx = 0;
+                    break;
+                }
+
+                rx_state.data_len =
+                    static_cast<uint16_t>(bufferRx[1]) |
+                    (static_cast<uint16_t>(bufferRx[2]) << 8);
+
+                if (rx_state.data_len > MAX_DATA_LEN) {
+                    rx_state.mode = WAITING_FOR_SOF;
+                    rx_state.idx = 0;
+                    break;
+                }
+
+                rx_state.mode = RECEIVING_BODY;
+            }
+            break;
+
+        case RECEIVING_BODY:
+            if (rx_state.idx >= BUFFER_SIZE) {
+                rx_state.mode = WAITING_FOR_SOF;
+                rx_state.idx = 0;
+                break;
+            }
+
+            bufferRx[rx_state.idx++] = byte;
+
+            if (rx_state.idx ==
+                FRAME_HEADER_LEN + CMD_ID_LEN +
+                rx_state.data_len + FRAME_TAIL_LEN) {
+
+                int total_len = rx_state.idx;
+
+                if (VerifyFrame(bufferRx, total_len)) {
+
+                    int cmd_id =
+                        bufferRx[FRAME_HEADER_LEN] |
+                        (bufferRx[FRAME_HEADER_LEN + 1] << 8);
+
+                    uint8_t* data_ptr =
+                        bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN;
+
+                    ProcessDataRx(cmd_id, data_ptr, rx_state.data_len);
+
+                }
+
+                rx_state.mode = WAITING_FOR_SOF;
+                rx_state.idx = 0;
+                rx_state.data_len = 0;
+            }
+            break;
         }
-        return true;
     }
+
+    return true;
+}
 
     package_t Protocol::Transmit(int cmd_id) {
         bufferTx[0] = SOF;
@@ -182,7 +218,6 @@ namespace communication {
 #endif
 
     Referee::Referee(bsp::UART* uart) : UARTProtocol(uart) {
-        // 设置100ms离线阈值
         SetThreshold(online_threshold_);
     }
 

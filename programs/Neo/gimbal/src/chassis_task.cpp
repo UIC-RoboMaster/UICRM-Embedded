@@ -180,11 +180,11 @@ void chassisTask(void* arg) {
 
 #ifdef HAS_REFEREE
         uint8_t buffer_percent = referee->power_heat_data.chassis_power_buffer * 100 / 60;
-        uint8_t max_watt = referee->game_robot_status.chassis_power_limit;
+        // uint8_t max_watt = referee->game_robot_status.chassis_power_limit;
 #else
         uint8_t buffer_percent = 50;
-        uint8_t max_watt = 100;
 #endif
+        uint8_t max_watt = 70;
         // 如果传输的电压为0，底盘不会保存这个值，随后底盘的chassis_task会采样自己的电压值并更新。
         chassis->UpdatePower(true, max_watt, 0, buffer_percent);
         osDelay(CHASSIS_OS_DELAY);

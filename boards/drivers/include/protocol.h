@@ -31,10 +31,29 @@ namespace communication {
 
     constexpr int MAX_FRAME_LEN = 300;
 
+    constexpr uint8_t SOF = 0xA5;
+    constexpr int FRAME_HEADER_LEN = 5;
+    constexpr int CMD_ID_LEN = 2;
+    constexpr int FRAME_TAIL_LEN = 2;
+    constexpr int MAX_DATA_LEN = 128;
+    constexpr int BUFFER_SIZE = 300;
+
     typedef struct {
         uint8_t* data;
         int length;
     } package_t;
+
+    enum RxMode {
+        WAITING_FOR_SOF = 0,
+        RECEIVING_HEADER,
+        RECEIVING_BODY
+    };
+
+    struct RxState {
+        RxMode mode = WAITING_FOR_SOF;
+        int idx = 0;
+        uint16_t  data_len = 0;
+    };
 
     class Protocol : public driver::ConnectionDriver {
       public:
@@ -61,17 +80,9 @@ namespace communication {
       protected:
         int seq = 0;
 
-        uint8_t bufferRx[MAX_FRAME_LEN] = {0};
+        RxState rx_state;
+        uint8_t bufferRx[BUFFER_SIZE] = {0};
         uint8_t bufferTx[MAX_FRAME_LEN] = {0};
-
-        struct {
-            int idx = 0;
-            enum mode {
-                WAITING_FOR_SOF,
-                RECEIVING_REFEREE,
-                RECEIVING_VT13,
-            } mode = WAITING_FOR_SOF;
-        } rx_state;
 
         /**
          * @brief verify the header of frame with crc8
@@ -327,7 +338,7 @@ namespace communication {
         float chassis_power;
         uint16_t chassis_power_buffer;
         uint16_t shooter_id1_17mm_cooling_heat;
-        uint16_t shooter_id2_17mm_cooling_heat;
+        // uint16_t shooter_id2_17mm_cooling_heat;
         uint16_t shooter_id1_42mm_cooling_heat;
     } __packed power_heat_data_t;
 

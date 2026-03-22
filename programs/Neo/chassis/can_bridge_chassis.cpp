@@ -138,7 +138,7 @@ void RM_RTOS_Default_Task(const void* args) {
     osDelay(500);
 
     while (true) {
-        chassis->UpdatePower(true, 60, battery_vol->GetBatteryVol(), 50);
+        chassis->UpdatePower(true, 100, battery_vol->GetBatteryVol(), 50);
         chassis->Update();
         osDelay(10);
     }

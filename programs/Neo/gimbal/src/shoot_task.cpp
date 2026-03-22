@@ -94,8 +94,8 @@ void shootTask(void* arg) {
 
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
-                flywheel_left->SetTarget(120.0f * 2 * PI);
-                flywheel_right->SetTarget(120.0f * 2 * PI);
+                flywheel_left->SetTarget(110.0f * 2 * PI);
+                flywheel_right->SetTarget(110.0f * 2 * PI);
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
                 shoot_load_mode = SHOOT_MODE_PREPARED;
                 break;
@@ -112,8 +112,16 @@ void shootTask(void* arg) {
                 break;
         }
 
+        bool shoot_in_autopilot = minipc->target_angle.shoot_cmd;
+#ifdef HAS_REFEREE
+        int heat_limit = referee->game_robot_status.shooter_heat_limit;
+        int heat_buffer = referee->power_heat_data.shooter_id1_17mm_cooling_heat;
+        const int shooter_heat_threashold = 25;
+        shoot_in_autopilot &= heat_buffer > heat_limit - shooter_heat_threashold;
+#endif
+
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
-            if (!minipc->target_angle.shoot_cmd) {
+            if (!shoot_in_autopilot) {
                 steering_motor->Hold(true);
                 shoot_load_mode =
                     shoot_load_mode == SHOOT_MODE_STOP ? shoot_load_mode : SHOOT_MODE_PREPARED;
