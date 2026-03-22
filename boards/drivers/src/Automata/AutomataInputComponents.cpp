@@ -20,8 +20,6 @@
 // Created by gttgf on 2026/3/13.
 //
 
-#include "../../include/Automata/AutomataInputBase.h"
+#include "../../include/Automata/AutomataInputComponents.h"
 
-namespace communication {
-    AutomataInput::~AutomataInput() = default;
-}  // namespace communication
+namespace communication {}  // namespace communication

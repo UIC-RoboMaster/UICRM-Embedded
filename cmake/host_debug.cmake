@@ -1,8 +1,7 @@
 set(AUTOMATA_HOST_SOURCES
-        ${CMAKE_SOURCE_DIR}/boards/algorithm/src/StateAutomatas.cpp
+        ${CMAKE_SOURCE_DIR}/boards/algorithm/src/AutomataSystem.cpp
         ${CMAKE_SOURCE_DIR}/boards/drivers/src/Automata/AutomataInputManagement.cpp
-        ${CMAKE_SOURCE_DIR}/boards/drivers/src/Automata/AutomataInputBase.cpp
-        ${CMAKE_SOURCE_DIR}/boards/drivers/src/Automata/AutomataInputRemote.cpp
+        ${CMAKE_SOURCE_DIR}/boards/drivers/src/Automata/AutomataInputComponents.cpp
 )
 
 set(AUTOMATA_HOST_INCLUDES

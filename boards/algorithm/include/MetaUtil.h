@@ -85,14 +85,12 @@ namespace TemplateMetaUtil {
     template<auto State, typename T, typename... Rest>
     struct Filter<State, T, Rest...> {
     private:
-        using rest = typename Filter<State, Rest...>::type;
+        using rest_type = typename Filter<State, Rest...>::type;
 
     public:
         using type = std::conditional_t<
             T::from == State,
-            decltype(std::tuple_cat(std::tuple<T>{}, rest{})),
-            rest
-        >;
+            decltype(std::tuple_cat(std::tuple<T>{}, rest_type{})), rest_type>;
     };
     /*Filter*/
 }

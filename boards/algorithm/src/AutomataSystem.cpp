@@ -20,6 +20,6 @@
 // Created by gttgf on 2026/3/13.
 //
 
-#include "../include/StateAutomatas.h"
+#include "../include/AutomataSystem.h"
 
 namespace control {}  // namespace control

@@ -23,13 +23,10 @@
 #ifndef UICRM_AUTOMATA_H
 #define UICRM_AUTOMATA_H
 
+#include "Automata/AutomataInputComponents.h"
 #include "Automata/AutomataInputManagement.h"
-#include "StateAutomatas.h"
+#include "AutomataSystem.h"
 
-// Any extend item class may place here to declare reference
-#include "Automata/AutomataInputRemote.h"
-
-// Or adding a general header to maintain all derive classes declaration:
-// #include "Automata/AutomataInputComponents.h"
+// Adding any headers that contain custom input component:
 
 #endif  // UICRM_AUTOMATA_H

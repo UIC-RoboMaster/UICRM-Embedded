@@ -20,14 +20,44 @@
 // Created by gttgf on 2026/3/13.
 //
 
-#ifndef UICRM_AUTOMATAINPUTREMOTE_H
-#define UICRM_AUTOMATAINPUTREMOTE_H
+#ifndef UICRM_AUTOMATAINPUTCOMPONENTBASE_H
+#define UICRM_AUTOMATAINPUTCOMPONENTBASE_H
 
+#include <string>
 #include <cstdint>
 
-#include "AutomataInputBase.h"
+using std::string;
 
-namespace remote {
+namespace control {
+    /**
+     * A general pure virtual base class for automata input
+     * Every automata input component should derive by this class
+     *
+     * Its derive classes should represent a single channel/value/variable affecting automata
+     * transition.
+     *
+     * Class [AutomataInputManagement] include this class family to perform interaction with
+     * automata.
+     */
+    template <typename T>
+    class AutomataInputComponentsBase {
+      public:
+        AutomataInputComponentsBase() = default;
+        virtual ~AutomataInputComponentsBase() = default;
+        virtual void update(const T& input) = 0;
+    };
+
+    template <class T>
+    class AutomataInputRaw : public AutomataInputComponentsBase<T> {
+    public:
+        ~AutomataInputRaw() override = default;
+        virtual void update(const T& input) {
+            val_ = input;
+        }
+        virtual T get() const {return val_;}
+    protected:
+        T val_;
+    };
 
     /**
      * CAUTIOUS: Should only specify to int(uint16_t etc) float or bool. Common type in remote
@@ -37,21 +67,28 @@ namespace remote {
      * @tparam T channel data type
      */
     template <class T>
-    class AutomataInputRemote : public communication::AutomataInputBase<T> {
+    class AutomataInputRemote : public AutomataInputComponentsBase<T> {
       public:
-        AutomataInputRemote() = default;
-        // explicit AutomataInputRemote(/*const char* name*/) :
-        //     // : communication::AutomataInputBase<T>(name),
-        //       curr_val_(T(0)),
-        //       last_val_(T(0)),
-        //       last_update_(0) {
-        // }
         ~AutomataInputRemote() override = default;
+
+        /**
+         * record previous value and last update time.
+         *
+         * @param input
+         */
+        void update(const T& input) {
+            if (input != curr_val_)
+                last_update_ = 0;
+            ++last_update_;
+            T temp = curr_val_;
+            curr_val_ = input;
+            last_val_ = temp;
+        }
 
         /**
          * @return If current val not equal to last val
          */
-        bool edge() {
+        bool edge() const {
             return curr_val_ != last_val_;
         }
 
@@ -60,7 +97,7 @@ namespace remote {
          *
          * @return If current val greater than last val
          */
-        virtual bool upEdge() {
+        virtual bool upEdge() const {
             if constexpr (std::is_same_v<T, bool>)
                 return edge();
             else
@@ -72,7 +109,7 @@ namespace remote {
          *
          * @return If current val smaller than last val
          */
-        virtual bool downEdge() {
+        virtual bool downEdge() const {
             if constexpr (std::is_same_v<T, bool>)
                 return edge();
             else
@@ -85,7 +122,7 @@ namespace remote {
          *
          * @return Difference of current value and last value
          */
-        virtual const T getDiff() {
+        virtual const T getDiff() const {
             if constexpr (std::is_same_v<T, bool>)
                 return edge();
             else
@@ -107,7 +144,7 @@ namespace remote {
          *
          * @return The UPDATE TIMES that since last value changed
          */
-        virtual uint16_t lastUpdate() {
+        virtual uint16_t lastUpdate() const {
             return last_update_;
         }
 
@@ -115,18 +152,8 @@ namespace remote {
         T curr_val_;
         T last_val_;
         uint16_t last_update_;
-
-        void updateImpl(const T* input) {
-            const T& input_val = *input;
-            if (input_val != curr_val_)
-                last_update_ = 0;
-            ++last_update_;
-            T temp = curr_val_;
-            curr_val_ = input_val;
-            last_val_ = temp;
-        }
     };
 
-}  // namespace remote
+}  // namespace communication
 
-#endif  // UICRM_AUTOMATAINPUTREMOTE_H
+#endif  // UICRM_AUTOMATAINPUTCOMPONENTBASE_H

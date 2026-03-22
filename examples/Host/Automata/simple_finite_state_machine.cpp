@@ -26,91 +26,60 @@
 
 #include "Automata.h"
 
-// =====================
-// Global definitions for Host build, simulating input environment
-// =====================
+/*Global definitions for Host build, simulating input environment*/
 
 // All states for the automata
 enum states { ON, OFF };
 
 // Raw data structures
-struct raw_data_structA {
+struct raw_data_struct {
     int num1 = 0;
     bool dummy = false;
 };
-struct raw_data_structB {
-    float num2 = 0.0;
-    bool dummy = true;
-};
+
+enum other_automata_output{s1, s2};
 
 int main() {
-    raw_data_structA raw_data1;
-    raw_data_structB raw_data2;
+    raw_data_struct raw_data1;
+    float num2 = 1.1;
+    other_automata_output num3 = s1;
 
     /*
-     * To build an automata, factory class's aid is necessary.
-     * Class [AutomataBuilder] in charge of:
+     * To build an automata, factory function's aid is necessary.
+     * Static function [make_automata] in charge of:
      * 1. construct correct type for input,
      * 2. construct correct behaviour interface(component) for every input items, and
      * 3. construct transition logic based on user definition.
      *
-     * The reason here using dynamic allocation to create object is
+     * It is important that the index of input items is arranged automatically start from 0.
+     *
+     * Transitions that define earlier have higher priority than later ones.
+     *
+     * It is recommended to use member function [build] to "make automata".
+     * Though there's actually another option [build_unique]
+     * in order to perform heap allocation.
+     *
+     * The reason here giving an option of [build_unique] to create object is
      * user might want to control life cycle of factory class manually.
-     * builder will temporarily restore construction info in it.
-     * If NO other forward automata needs to be constructed, builder is RECOMMENDED to be deleted.
-     * (Or use smart pointers [unique_ptr] to do so. Strict domain design required.)
      */
-    auto* builder = new control::AutomataBuilder<states>();
-    //using can improve code readability, though be careful.
-    using communication::Ins;
-    using remote::AutomataInputRemote;
+    auto aut = control::AutomataBuilder<states>()
+        .item<control::AutomataInputRemote>(&raw_data_struct::num1)
+        .item<control::AutomataInputRemote>(num2)
+        .item<control::AutomataInputRaw>(num3)
+        .transition<ON, OFF>(TRANLOGIC { return ins.template get<0>().get()==2; })
+        .transition<OFF, ON>(TRANLOGIC { return rand() % 10 > 8; })
+        .build<ON>();
 
     /*
-     * This's where to define all transition logic and dependent data item in automata
-     * There are only 2 types of definition:
-     *
-     * input: define what to input including data type(by passing struct segment)
-     * and behaviour(by appoint [AutomataInput] class type)
-     *
-     * transiton: define transition logic including the origin state and target state,
-     * and transition logic in a form of lambda function
-     *
-     * The design of builder aim to not let user concern of type of input item(variable).
-     * You may feel free to register different types items in automata.
-     * As long as use tuple as input type later when you are using automata.
-     *
-     * TRANLOGIC is a fixed form to aid logic construction.
-     * It is actually a lambda function head.
-     * It is free to use a none-registered variant in lambda function as long as in this domain.
-     * lambda function should as small as possible to
-     * prevent extra performance cost(heap allocation).
-     * DO NOT use complex functional programming here!(recursive, partial application, nested etc.)
+     * You can also:
+     * auto aut_ptr = make_automata_unique(...);
      */
-    (*builder)
-        .input<AutomataInputRemote>(&raw_data_structA::num1, "1st") // index 1
-        .input<AutomataInputRemote>(&raw_data_structB::num2, "2nd") // index 2
-        .transition(
-            ON, OFF,
-            TRANLOGIC { //TODO use custom name instead of index
-                auto& comp1 = ins.get<AutomataInputRemote>(&raw_data_structA::num1, 0);
-                return comp1.downEdge();
-            })
-        .transition(
-            OFF, ON, TRANLOGIC { return rand() % 100 > 80; }); // 20% transit
-
-    /*
-     * The step that construct an actual automata
-     * Automata shall not change under any case after being built.
-     * (I hope my code fully prevent it :D)
-     * (This is also the principle why all these type matic may happen.)
-     */
-    control::Automata<states>* aut = builder->build(OFF);
-    delete builder;  // builder holds duplicated info, recommend to delete
 
     while (true) {
         // simulate value changes
-        raw_data1.num1 = (++raw_data1.num1) % 20;
-        raw_data2.num2 = static_cast<int>((raw_data2.num2 * 6 + 1)) % 100;
+        raw_data1.num1 = (++raw_data1.num1) % 10;
+        num2 = (17.0 * num2 + 1.6) > 100.0 ?  (17.0 * num2 + 1.6) : 1;
+        num3 = num3 == s1 ? s2 : s1;
 
         /*
          * Using a built automata is easy.
@@ -119,12 +88,15 @@ int main() {
          */
 
          /* input() gain update and drive automata to move a step based on these inputs.*/
-        aut->input(std::make_tuple(raw_data1.num1, raw_data2.num2));
+        aut.input(std::make_tuple(raw_data1.num1, num2, num3));
 
-        std::cout << "num1:" << raw_data1.num1 << " num2:" << raw_data2.num2 << " " << std::endl;
+        std::cout << "num1:" << raw_data1.num1 <<
+            " num2:" << num2 <<
+            " num3:" << (num3 == s1 ? "s1" : "s2") << std::endl;
+
         std::cout << "state:";
         /* And here's how to get current automata output*/
-        switch (aut->state()) {
+        switch (aut.state()) {
             case ON:
                 std::cout << "ON" << std::endl;
                 break;
@@ -133,6 +105,6 @@ int main() {
                 break;
         }
         std::cout << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }

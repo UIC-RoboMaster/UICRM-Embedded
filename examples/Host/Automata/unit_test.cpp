@@ -31,13 +31,13 @@ enum States {s1, s2};
 
 int main() {
 
-    auto inputs = communication::CollectItems()
-        .addItem<remote::AutomataInputRemote>(int{}, "0")
+    auto inputs = control::CollectItems()
+        .addItem<control::AutomataInputRemote>(int{})
         .output();
 
     auto fsm = control::CollectTransitions<States>()
-        .addTrans<s1, s2, decltype([](auto& ins) -> bool { return ins.template get<0>().get()==2; })>()
-        .addTrans<s2, s1, decltype([](auto& ins) -> bool { return true; })>()
+        .addTrans<s1, s2>([](const auto& ins) -> bool { return ins.template get<0>().get()==2; })
+        .addTrans<s2, s1>([](const auto& ins) -> bool { return true; })
         .output(s1);
 
     int num = 0;

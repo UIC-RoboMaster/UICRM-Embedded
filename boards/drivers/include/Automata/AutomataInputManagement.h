@@ -26,9 +26,9 @@
 #include <memory>
 #include <vector>
 
-#include "AutomataInputBase.h"
+#include "AutomataInputComponents.h"
 
-namespace communication {
+namespace control {
     template <typename... Components>
     class AutomataInputManagement {
       public:
@@ -36,7 +36,7 @@ namespace communication {
         /**
          * Add a new component.
          *
-         * Should (only) call by [StateAutomataBuilder].
+         * Should (only) call by [AutomataBuilder].
          *
          * @tparam Component
          * @tparam Type
@@ -52,7 +52,7 @@ namespace communication {
          * @param data A tuple contians all items that components need to update
          */
         template <typename... Ts>
-        void updateItems(const std::tuple<Ts...>& data) {
+        constexpr void updateItems(const std::tuple<Ts...>& data) {
             static_assert(sizeof...(Ts) == std::tuple_size_v<decltype(items_)>, "Automata: input size mismatch");
             updateItemsImpl(data, std::index_sequence_for<Ts...>{});
         }
@@ -82,7 +82,7 @@ namespace communication {
         //     return static_cast<Component<Type>&>(*items_[index]);
         // }
         template <size_t I>
-        const auto& get() const {
+        constexpr const auto& get() const {
             return std::get<I>(items_);
         }
 
@@ -109,8 +109,8 @@ namespace communication {
         std::tuple<Components...> items_;
 
         template <typename... Ts, size_t... Index>
-        void updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>) {
-            (std::get<Index>(items_).update(&std::get<Index>(data)), ...);
+        constexpr void updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>) {
+            (std::get<Index>(items_).update(std::get<Index>(data)), ...);
         }
     };
 
@@ -118,20 +118,24 @@ namespace communication {
     template<typename... Items>
     struct CollectItems {
         template<template<class> class Component, typename T>
-        auto addItem(T&&, const char* name) {
-            using NewComponent = Component<T>;
+        constexpr auto addItem(T&& v) const {
+            using Type = std::remove_cv_t<std::remove_reference_t<decltype(v)>>;
+            using NewComponent = Component<Type>;
             return CollectItems<Items..., NewComponent>{};
         }
         template<template<class> class Component, typename Struct, typename Member>
-        auto addItem(Member Struct::*member, const char* name) {
+        constexpr auto addItem(Member Struct::*member) const {
             using Type = std::remove_cv_t<std::remove_reference_t<Member>>;
             using NewComponent = Component<Type>;
             return CollectItems<Items..., NewComponent>{};
         }
 
+        //DEBUG ONLY
         auto output() {
             return AutomataInputManagement<Items...>{};
         }
+
+        using rebind_to_management = AutomataInputManagement<Items...>;
     };
     /*CollectItems*/
 
