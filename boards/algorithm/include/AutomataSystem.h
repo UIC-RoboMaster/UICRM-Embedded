@@ -126,7 +126,7 @@ namespace control {
      * class.
      *
      * @tparam FSM
-     * @tparam Inputs
+     * @tparam Components
      */
     template <typename FSM, typename Components>
     class Automata {
@@ -201,6 +201,14 @@ namespace control {
             using StateSystem = typename Trans::rebind_to_fsm;
             using InputSystem = typename Items::rebind_to_management;
             return Automata<StateSystem, InputSystem>(init_state);
+        }
+
+        // not recommended, extra performance cost
+        template <auto init_state>
+        constexpr auto* build_heap_allocation() const {
+            using StateSystem = typename Trans::rebind_to_fsm;
+            using InputSystem = typename Items::rebind_to_management;
+            return new Automata<StateSystem, InputSystem>(init_state);
         }
     };
     /*AutomataBuilder*/
