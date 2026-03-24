@@ -82,6 +82,13 @@ void remoteTask(void* arg) {
                               referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
                              // referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
                              imu->CaliDone();
+
+        // In case of remote loss connection among games
+        uint8_t game_progress = (referee->game_status.game_progress >> 4) & 0x0F;
+        if (is_dbus_offline && dbus->swr == remote::MID && game_progress == 4) {
+            is_dbus_offline = false;
+        }
+
 #else
         is_robot_dead = false;
         is_shoot_available = true;
@@ -103,6 +110,7 @@ void remoteTask(void* arg) {
                 is_killed = false;
             }
         }
+
         // when in kill
         if (is_killed) {
             osDelay(REMOTE_OS_DELAY);

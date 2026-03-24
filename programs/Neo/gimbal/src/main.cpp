@@ -154,8 +154,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         print_enabled("Gimbal", referee->game_robot_status.mains_power_gimbal_output);
         print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
         print("\r\n");
-        print("Game Time %d ", referee->game_status.stage_remain_time);
-        print("HP %d/%d", referee->game_robot_status.remain_HP, referee->game_robot_status.max_HP);
+        print("Game progress [%d] ", (referee->game_status.game_type >> 4) & 0x0F);
+        print("HP [%d/%d]", referee->game_robot_status.remain_HP, referee->game_robot_status.max_HP);
 
         print("\r\n");
 
