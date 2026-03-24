@@ -24,12 +24,14 @@
 #include <thread>
 #include <tuple>
 
+// include this and enjoy automata
 #include "Automata.h"
 
 /*Global definitions for Host build, simulating input environment*/
 
 // All states for the automata
-enum states { ON, OFF };
+enum class states { ON, OFF };
+using states::ON, states::OFF;
 
 // Raw data structures
 struct raw_data_struct {
@@ -39,6 +41,8 @@ struct raw_data_struct {
 
 enum other_automata_output{s1, s2};
 
+const int global_eight = 8;
+
 int main() {
     raw_data_struct raw_data1;
     float num2 = 1.1;
@@ -46,34 +50,51 @@ int main() {
 
     /*
      * To build an automata, factory function's aid is necessary.
-     * Static function [make_automata] in charge of:
-     * 1. construct correct type for input,
-     * 2. construct correct behaviour interface(component) for every input items, and
-     * 3. construct transition logic based on user definition.
+     * Class [AutomataBuilder] in charge of:
+     * 1. Register correct type for input.
+     * 2. Construct selected behaviour interface(component) for every input items.
+     * 3. Define transition logic based on user definition.
      *
-     * It is important that the index of input items is arranged automatically start from 0.
+     * The index of input items is arranged automatically start from 0 based on register order.
+     *
+     * Following types is supported to registered as an input in such grammar:
+     * <type>                   <grammar>
+     * ·Struct members          .item<...>(&Struct_name::member_name)
+     * ·Common Variables        .item<...>(variable_name)
+     * ·Enumerations            .item<...>(variable_name) or .item<...>(Enumeration_name::any_enum)
+     *
+     * Beside, you are always allow to do this:
+     * .item<...>(Type{})
+     *
+     * Tip: Decompose a complex system by using small automatas' output as input.
      *
      * Transitions that define earlier have higher priority than later ones.
+     * .transition<state_begin_with, state_goes_to>(TRANLOGIC { return a_bool; })
      *
-     * It is recommended to use member function [build] to "make automata".
-     * Though there's actually another option [build_unique]
-     * in order to perform heap allocation.
+     * Using a registered Component by COMPONENT(registered_order) in transition logic definition.
+     * Example: If there's .item<ComponentType>(Type{}) registered in 2nd place (index 1).
+     *          COMPONENT(1) shall return [Component<Type> the_component]
      *
-     * The reason here giving an option of [build_unique] to create object is
-     * user might want to control life cycle of factory class manually.
+     * It is not recommended to use function [build_heap_allocation] to build automata.
+     * Extra time-space cost will occur using heap allocation.
+     * Though it's an option to control life cycle manually.
      */
     auto aut = control::AutomataBuilder<states>()
         .item<control::AutomataInputRemote>(&raw_data_struct::num1)
         .item<control::AutomataInputRemote>(num2)
         .item<control::AutomataInputRaw>(num3)
-        .transition<ON, OFF>(TRANLOGIC { return ins.template get<0>().get()==2; })
-        .transition<OFF, ON>(TRANLOGIC { return rand() % 10 > 8; })
+        .item<control::AutomataInputRaw>(int32_t{})
+        .transition<ON, OFF>(TRANLOGIC {
+            auto& comp = COMPONENT(0);
+            return comp.downEdge();
+        })
+        .transition<OFF, ON>(TRANLOGIC { return rand() % 10 > global_eight; })
         .build<ON>();
 
-    /*
-     * You can also:
-     * auto aut_ptr = make_automata_unique(...);
-     */
+    // You can also do this to assign to a global pointer:
+    auto ptr = control::AutomataBuilder<states>()
+        // ...
+        .build_heap_allocation<ON>();
 
     while (true) {
         // simulate value changes
@@ -83,12 +104,12 @@ int main() {
 
         /*
          * Using a built automata is easy.
-         * User only needs to care input and output
+         * User only needs to take care input and output
          * multi-thread is also good (for now ;D)
          */
 
          /* input() gain update and drive automata to move a step based on these inputs.*/
-        aut.input(std::make_tuple(raw_data1.num1, num2, num3));
+        aut.input(std::make_tuple(raw_data1.num1, num2, num3, 3));
 
         std::cout << "num1:" << raw_data1.num1 <<
             " num2:" << num2 <<

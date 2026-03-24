@@ -39,9 +39,15 @@ using control::AutomataInputManagement;
 namespace control {
 
     /*FiniteStateMachine*/
+    /**
+     * Core component of state machine system
+     *
+     * @tparam States Collection of states in a form of enumeration
+     * @tparam Trs Transitions that store in template
+     */
     template <typename States, typename... Trs>
     class FiniteStateMachine {
-    public:
+      public:
         using StateList = typename CollectStates<Trs...>::type;
 
         /*interface*/           // with [Automata]
@@ -54,7 +60,7 @@ namespace control {
 
         States state() const {return current_state_;}
         /*interface*/
-    private:
+      private:
         States current_state_;
 
         template<typename Ins, auto... St>
@@ -87,11 +93,9 @@ namespace control {
     struct Transition {
         static constexpr auto from = From;
         static constexpr auto to   = To;
-        // Fn fn;   //C++17 can't construct lambda by default, need to store an instance.
         template<typename Ins>
         static bool eval(const Ins& ins) {
             return Fn{}(ins);    //Performance optimization if C++20(or +) in future
-            // return fn(ins);
         }
     };
     /*Transition*/
@@ -118,10 +122,10 @@ namespace control {
     /**
      * An automata that work based on graph.
      *
-     * Transitions are depend on a condition that in a form of function pointer which
-     * its return value always boolean.
+     * Transitions are depend on a condition that in a form of custom (static) functions which
+     * their return value always boolean.
      *
-     * This class should be constructed by factory function [make_automata].
+     * This class should be constructed by factory tool [AutomataBuilder].
      * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory
      * class.
      *
@@ -138,7 +142,11 @@ namespace control {
         /**
          * Update items and drive automata to transit once.
          *
-         * CAUTIONS: DO INPUT IN EXACT SAME ORDER AND TYPE THE FACTORY PREVIOUSLY BUILT.
+         * Data shall update in tuple package should fit exactly same order to
+         * the order they registered.
+         *
+         * CAUTIOUS: There's input size and type check, but wrong input fit above features
+         * can't detect by compiler.
          *
          * @tparam Ts A forward declaration of tuple, derive by compiler.
          * @param data A tuple form update data package.
@@ -168,7 +176,14 @@ namespace control {
     /*Automata*/
 
     /*AutomataBuilder*/
-    template<
+    /**
+     * Factory tool that aid to construct class [Automata].
+     *
+     * @tparam EnumStatesCollection Collection of states in a form of enumeration
+     * @tparam Items Registered Inputs store here
+     * @tparam Trans Defined transitions store here
+     */
+    template <
     typename EnumStatesCollection,
     typename Items = CollectItems<>,
     typename Trans = CollectTransitions<EnumStatesCollection>>
@@ -176,6 +191,21 @@ namespace control {
         Items items_;
         Trans trans_;
 
+        /**
+         * Register input type and interface that store and interact with data.
+         *
+         * Can be access later by index.
+         * The order of registration is the index of item (start from 0).
+         *
+         * Component must be a template class with function [update()] and tParam [T].
+         * It's recommend to use classes derived from base class [AutomataInputComponentsBase].
+         * There's no extra cost on virtual-related features so no worry.
+         *
+         * @tparam Component User select component that decides how data store and interact.
+         * @tparam T A forward declaration of register variable/enumeration type
+         * @param v Forward declaration
+         * @return The new builder that has updated type.
+         */
         template <template<class> class Component, typename T>
         constexpr auto item(T&& v) const {
             auto new_items = items_.template addItem<Component>(std::forward<T>(v));
@@ -183,6 +213,18 @@ namespace control {
             return AutomataBuilder<EnumStatesCollection, NewItems, Trans>{new_items, trans_};
         }
 
+        /**
+         * Register input type and interface that store and interact with data.
+         *
+         * Can be access later by index.
+         * The order of registration is the index of item (start from 0).
+         *
+         * @tparam Component User select component that decides how data store and interact.
+         * @tparam Struct A forward declaration of register struct type
+         * @tparam Member A forward declaration of register struct member type
+         * @param member Forward declaration
+         * @return The new builder that has updated type.
+         */
         template <template<class> class Component, typename Struct, typename Member>
         constexpr auto item(Member Struct::*member) const {
             auto new_items = items_.template addItem<Component>(member);
@@ -190,12 +232,29 @@ namespace control {
             return AutomataBuilder<EnumStatesCollection, NewItems, Trans>{new_items, trans_};
         }
 
-        template <auto From, auto To, typename Lambda>
-        constexpr auto transition(Lambda lambda) const {
-            using NewTrans = decltype(trans_.template addTrans<From, To>(lambda));
+        /**
+         * Define a conditional transition(edge) in the Automata(FSM).
+         *
+         * @tparam From Which state this transition begins with.
+         * @tparam To Which state this transition goes to.
+         * @tparam Logic Transition encapsulation type.
+         * @param logic Transition logic
+         * @return The new builder that has updated type.
+         */
+        template <auto From, auto To, typename Logic>
+        constexpr auto transition(Logic logic) const {
+            using NewTrans = decltype(trans_.template addTrans<From, To>(logic));
             return AutomataBuilder<EnumStatesCollection, Items, NewTrans>{items_, NewTrans{}};
         }
 
+        /**
+         * Output produced automata
+         *
+         * Also stop "chain call" grammar due to return type changing
+         *
+         * @tparam init_state State that Automata will begin with.
+         * @return A built Automata
+         */
         template <auto init_state>
         constexpr auto build() const {
             using StateSystem = typename Trans::rebind_to_fsm;
@@ -203,7 +262,17 @@ namespace control {
             return Automata<StateSystem, InputSystem>(init_state);
         }
 
-        // not recommended, extra performance cost
+        /**
+         * Output produced automata in a form of pointer point to dynamic allocated [Automata] obj.
+         *
+         * Also stop "chain call" grammar due to return type changing.
+         *
+         * It is recommended to use [build()] instead of this.
+         * Heap allocation will lead to extra time-space cost.
+         *
+         * @tparam init_state State that Automata will begin with.
+         * @return A built Automata
+         */
         template <auto init_state>
         constexpr auto* build_heap_allocation() const {
             using StateSystem = typename Trans::rebind_to_fsm;
@@ -214,6 +283,8 @@ namespace control {
     /*AutomataBuilder*/
 
 #define TRANLOGIC [](const auto& ins) -> bool
+
+#define COMPONENT(index) (ins.template get<index>())
 
 }  // namespace control
 

@@ -32,23 +32,9 @@ namespace control {
     template <typename... Components>
     class AutomataInputManagement {
       public:
-        // AutomataInputManagement() = default;
         /**
-         * Add a new component.
+         * Update all components.
          *
-         * Should (only) call by [AutomataBuilder].
-         *
-         * @tparam Component
-         * @tparam Type
-         * @param name
-         */
-        // template <template <class> class Component, typename Type>
-        // void buildItem(const char* name) {
-        //     items_.emplace_back(std::make_unique<Component<Type>>(name));
-        // }
-
-        /**
-         * update all components.
          * @param data A tuple contians all items that components need to update
          */
         template <typename... Ts>
@@ -58,52 +44,15 @@ namespace control {
         }
 
         /**
-         * Get component
+         * Get component.
          *
-         * CAUTIOUS: PLEASE DO MAKE SURE THAT [ReturnType] IS MATCHING WITH WHAT COMPONENT TRULY IS
-         * UNDEFINED BEHAVIOUR WILL OCCUR IF TYPE UNMATCH.
-         *
-         * Due to forbidden of RTTI in embedded system, dynamic_cast<>() is not available.
-         * Polymorphism type here is NOT safe.
-         *
-         * Implement in-class due to compiler type check
-         *
-         * @tparam Struct
-         * @tparam Member
-         * @tparam Component
-         * @param index
-         * @param member
-         * @return
+         * @tparam Index That fixed in building process.
+         * @return Component.
          */
-        // template <template <class> class Component, typename Struct, typename Member>
-        // auto get(Member Struct::*member, size_t index) const
-        //     -> Component<std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>>& {
-        //     using Type = std::remove_reference_t<decltype(((Struct*)nullptr)->*member)>;
-        //     return static_cast<Component<Type>&>(*items_[index]);
-        // }
-        template <size_t I>
+        template <size_t Index>
         constexpr const auto& get() const {
-            return std::get<I>(items_);
+            return std::get<Index>(items_);
         }
-
-        /**
-         * @param name Items' custom name.
-         * @return Index where the component that represent the named item.
-         */
-        // TODO name related implementation
-        //
-        // template <class ReturnType>
-        // AutomataInput& AutomataInputManagement::getByName(std::string& name) {
-        //
-        // }
-
-        /**
-         * @param name Items' custom name.
-         * @return Component that represent the named item.
-         */
-        // size_t AutomataInputManagement::getIndexByName(std::string& name) {
-        //
-        // }
 
       private:
         std::tuple<Components...> items_;

@@ -31,7 +31,7 @@ using std::string;
 namespace control {
     /**
      * A general pure virtual base class for automata input
-     * Every automata input component should derive by this class
+     * Components are recommend to be derived by this class
      *
      * Its derive classes should represent a single channel/value/variable affecting automata
      * transition.
@@ -47,6 +47,13 @@ namespace control {
         virtual void update(const T& input) = 0;
     };
 
+    // TODO All components using C++20 feature [concept] to limit specification types.
+
+    /**
+     * Simply store raw value
+     *
+     * @tparam T type
+     */
     template <class T>
     class AutomataInputRaw : public AutomataInputComponentsBase<T> {
     public:
@@ -60,11 +67,9 @@ namespace control {
     };
 
     /**
-     * CAUTIOUS: Should only specify to int(uint16_t etc) float or bool. Common type in remote
-     * system OTHER TYPES MAY THROW EXCEPTIONS
-     * TODO using C++20 feature [concept] to limit specification types.
+     * Component that can specify edge and detect latency based on updated times.
      *
-     * @tparam T channel data type
+     * @tparam T type
      */
     template <class T>
     class AutomataInputRemote : public AutomataInputComponentsBase<T> {
