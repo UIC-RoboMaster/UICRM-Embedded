@@ -96,10 +96,26 @@ void shootTask(void* arg) {
             steering_up->Enable();
         }
 
+#ifdef HAS_REFEREE
+        int heat_limit = referee->game_robot_status.shooter_heat_limit;
+        int heat_buffer = referee->power_heat_data.shooter_id1_42mm_cooling_heat;
+        const int shooter_heat_threashold = 100;
+        if (heat_buffer > heat_limit - shooter_heat_threashold) {
+            // 临时解决方案
+            steering_motor->Hold(false);
+            steering_up->Hold(false);
+            print("overheat!\n");
+            osDelay(SHOOT_OS_DELAY);
+            continue;
+        }
+        UNUSED(heat_limit);
+        UNUSED(heat_buffer);
+#endif
+
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
-                flywheel_left->SetTarget(77 * 2 * PI);
-                flywheel_right->SetTarget(77 * 2 * PI);
+                flywheel_left->SetTarget(76 * 2 * PI);
+                flywheel_right->SetTarget(76 * 2 * PI);
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
                 shoot_load_mode = SHOOT_MODE_PREPARED;
                 break;
