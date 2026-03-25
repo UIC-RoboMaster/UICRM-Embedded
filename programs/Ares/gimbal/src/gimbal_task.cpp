@@ -120,7 +120,7 @@ void gimbalTask(void* arg) {
                     (float)(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
                     remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
             } else {
-                pitch_ratio = refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
+                pitch_ratio = - refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
                 yaw_ratio = refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
             }
         } else {
