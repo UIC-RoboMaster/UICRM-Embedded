@@ -184,7 +184,7 @@ void chassisTask(void* arg) {
 #else
         uint8_t buffer_percent = 50;
 #endif
-        uint8_t max_watt = 70;
+        uint8_t max_watt = 65;
         // 如果传输的电压为0，底盘不会保存这个值，随后底盘的chassis_task会采样自己的电压值并更新。
         chassis->UpdatePower(true, max_watt, 0, buffer_percent);
         osDelay(CHASSIS_OS_DELAY);

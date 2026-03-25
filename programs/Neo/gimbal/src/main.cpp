@@ -89,6 +89,7 @@ void RM_RTOS_Default_Task(const void* arg) {
     //        osDelay(4);
     //    }
 
+    float max_power = 0.0;
     while (true) {
         set_cursor(0, 0);
         clear_screen();
@@ -108,10 +109,12 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
 
         // Chassis info
+        max_power = max(max_power, referee->power_heat_data.chassis_power);
         print("Chassis speed %.3f %.3f %.3f\r\n", chassis_vx, chassis_vy, chassis_vt);
-        print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
+        print("Power %.3fV %.3fA %.3fW Max%.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
               referee->power_heat_data.chassis_current / 1000.0,
-              referee->power_heat_data.chassis_power);
+              referee->power_heat_data.chassis_power,
+              max_power);
         print("Navigation Target X%.3f Y%.3f Spin%.3f\r\n", minipc->robot_move.target_x,
               minipc->robot_move.target_y, minipc->robot_move.target_turn);
         print("\r\n");
@@ -131,11 +134,11 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
 
         // Shoot info
-        print("Shooter Cooling Heat: %hu\r\n",
-              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        print("Shooter Heat: %hu/%hu\r\n",
+              referee->power_heat_data.shooter_id1_17mm_cooling_heat,
+              referee->game_robot_status.shooter_heat_limit);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        // print_enabled("Cap state", bulletCap->isEnable());
         print_enabled("MiniPC Shoot CMD", minipc->target_angle.shoot_cmd);
         print("\r\n");
 
@@ -154,11 +157,11 @@ void RM_RTOS_Default_Task(const void* arg) {
         print_enabled("Gimbal", referee->game_robot_status.mains_power_gimbal_output);
         print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
         print("\r\n");
-        print("Game progress [%d] ", (referee->game_status.game_type >> 4) & 0x0F);
+        print("Game progress [%d] ", referee->game_status.game_progress);
         print("HP [%d/%d]", referee->game_robot_status.remain_HP, referee->game_robot_status.max_HP);
 
         print("\r\n");
 
-        osDelay(100);
+        osDelay(200);
     }
 }

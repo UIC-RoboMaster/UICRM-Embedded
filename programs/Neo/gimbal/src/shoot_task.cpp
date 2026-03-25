@@ -112,16 +112,8 @@ void shootTask(void* arg) {
                 break;
         }
 
-        bool shoot_in_autopilot = minipc->target_angle.shoot_cmd;
-#ifdef HAS_REFEREE
-        int heat_limit = referee->game_robot_status.shooter_heat_limit;
-        int heat_buffer = referee->power_heat_data.shooter_id1_17mm_cooling_heat;
-        const int shooter_heat_threashold = 25;
-        shoot_in_autopilot &= heat_buffer > heat_limit - shooter_heat_threashold;
-#endif
-
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
-            if (!shoot_in_autopilot) {
+            if (!minipc->target_angle.shoot_cmd) {
                 steering_motor->Hold(true);
                 shoot_load_mode =
                     shoot_load_mode == SHOOT_MODE_STOP ? shoot_load_mode : SHOOT_MODE_PREPARED;

@@ -78,13 +78,14 @@ void remoteTask(void* arg) {
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
+        const int shooter_heat_threashold = 25;
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
-                              referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
+                              referee->power_heat_data.shooter_id1_17mm_cooling_heat) > shooter_heat_threashold &&
                              // referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
                              imu->CaliDone();
 
         // In case of remote loss connection among games
-        uint8_t game_progress = (referee->game_status.game_progress >> 4) & 0x0F;
+        uint8_t game_progress = referee->game_status.game_progress;
         if (is_dbus_offline && dbus->swr == remote::MID && game_progress == 4) {
             is_dbus_offline = false;
         }
@@ -254,7 +255,7 @@ void remoteTask(void* arg) {
         // 射出连发子弹
         if (shoot_burst_switch) {
             shoot_burst_switch = false;
-            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED &&
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED && is_shoot_available &&
                 (shoot_load_mode == SHOOT_MODE_PREPARED || shoot_load_mode == SHOOT_MODE_SINGLE)) {
                 // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
                 shoot_load_mode = SHOOT_MODE_BURST;
@@ -262,7 +263,7 @@ void remoteTask(void* arg) {
         }
 
         // 停止射击
-        if (shoot_stop_switch) {
+        if (shoot_stop_switch || !is_shoot_available) {
             shoot_stop_switch = false;
             shoot_load_mode = SHOOT_MODE_PREPARED;
         }
