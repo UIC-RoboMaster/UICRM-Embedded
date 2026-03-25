@@ -31,7 +31,6 @@ communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* turboGUI = nullptr;
-communication::StringGUI* boostGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
 
 void UI_Delay(uint32_t delay) {
@@ -88,11 +87,6 @@ void uiTask(void* arg) {
     char wheelOffStr[15] = "FLYWHEEL OFF";
     wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500, 430, UI_Color_Pink);
 
-    // Initialize boost status GUI
-    char boostModeStr[15] = "BOOST!";
-    char boostOffStr[15] = " ";
-    boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
-
     // Initialize turbo shoot status GUI
     char turboOnStr[15] = "TURBO   ";
     char turboOffStr[15] = "        ";
@@ -102,16 +96,14 @@ void uiTask(void* arg) {
     osDelay(110);
     wheelGUI->Init();
     osDelay(110);
-    boostGUI->Init();
-    osDelay(110);
+
     turboGUI->Init();
     osDelay(110);
     modeGUI->InitString();
     osDelay(110);
     wheelGUI->InitString();
     osDelay(110);
-    boostGUI->InitString();
-    osDelay(110);
+
     turboGUI->InitString();
     osDelay(110);
 
@@ -120,7 +112,7 @@ void uiTask(void* arg) {
     float power_percent = 1;
     int8_t last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
-    BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
+
     BoolEdgeDetector* turboEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
@@ -193,14 +185,6 @@ void uiTask(void* arg) {
             uint32_t wheelColor =
                 shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
             wheelGUI->Update(wheelStr, wheelColor);
-            osDelay(UI_OS_DELAY);
-        }
-
-        // Update boost status GUI
-        boostEdgeDetector->input(chassis_boost_flag);
-        if (boostEdgeDetector->edge()) {
-            char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
-            boostGUI->Update(boostStr, UI_Color_Pink);
             osDelay(UI_OS_DELAY);
         }
 
@@ -301,8 +285,7 @@ void uiTask(void* arg) {
             osDelay(110);
             wheelGUI->Delete();
             osDelay(110);
-            boostGUI->Delete();
-            osDelay(110);
+
             turboGUI->Delete();
             osDelay(110);
             diagGUI->Clear(UI_Delay);
@@ -325,16 +308,14 @@ void uiTask(void* arg) {
             osDelay(110);
             wheelGUI->Init();
             osDelay(110);
-            boostGUI->Init();
-            osDelay(110);
+
             turboGUI->Init();
             osDelay(110);
             modeGUI->InitString();
             osDelay(110);
             wheelGUI->InitString();
             osDelay(110);
-            boostGUI->InitString();
-            osDelay(110);
+
             turboGUI->InitString();
             osDelay(110);
             continue;
