@@ -602,8 +602,8 @@ namespace communication {
                       centerY_ + x2, centerX_ + 30, centerY_ + x2);
         UI_->LineDraw(&crosshair3_, "ch3", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
                       centerY_ + x3, centerX_ + 30, centerY_ + x3);
-        UI_->LineDraw(&crosshair4_, "ch4", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 50,
-                      centerY_ + x4, centerX_ + 50, centerY_ + x4);
+        UI_->LineDraw(&crosshair4_, "ch4", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
+                      centerY_ + x4, centerX_ + 30, centerY_ + x4);
         UI_->LineDraw(&crosshair5_, "ch5", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,
                       centerY_ + x5, centerX_ + 30, centerY_ + x5);
         UI_->LineDraw(&crosshair6_, "ch6", UI_Graph_Add, 0, UI_Color_Cyan, 2, centerX_ - 30,

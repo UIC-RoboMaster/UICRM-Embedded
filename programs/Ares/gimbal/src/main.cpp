@@ -162,7 +162,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         // print("Is Calibrated: %s\r\n",
         //       imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
         //
-        // // Remote info
+        // Remote info
         print(
             "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
             "[SWR: %d] [Trig: %d]\r\n",
@@ -213,7 +213,15 @@ void RM_RTOS_Default_Task(const void* arg) {
         // print("pitch_offset     : %.4f\r\n", gimbal_param->pitch_offset_);
         // print("pitch_max        : %.4f\r\n", gimbal_param->pitch_max_);
         // print("\r\n");
-        //
+
+        // Shoot info
+        print("Shooter Heat: %hu/%hu\r\n",
+              referee->power_heat_data.shooter_id1_42mm_cooling_heat,
+              referee->game_robot_status.shooter_heat_limit);
+        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
+        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        print("\r\n");
+
         // // 发射供弹
         // print("flywheel_left Motor: %.2f, %.2f\r\n", flywheel_left->GetTheta(), flywheel_left->GetOmega());
         // print_enabled("flywheel_left", flywheel_left->IsOnline());
