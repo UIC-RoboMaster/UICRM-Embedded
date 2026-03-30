@@ -103,7 +103,7 @@ void gimbalTask(void* arg) {
                 bulletCap->SetOutput(0);
                 break;
             case CAP_MODE_OPEN:
-                bulletCap->SetOutput(1250);
+                bulletCap->SetOutput(1000);
                 break;
             default:
                 break;
@@ -293,7 +293,7 @@ void init_gimbal() {
     gimbal_param = gimbal->GetData();
 
     // init cap
-    bulletCap = new driver::MotorPWMBase(&htim1, 1, 1000000, 50, 725);
+    bulletCap = new driver::MotorPWMBase(&htim1, 1, 1000000, 50, 1500);
 }
 void kill_gimbal() {
     yaw_motor->Disable();
