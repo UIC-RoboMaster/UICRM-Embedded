@@ -24,6 +24,7 @@
 
 #include "imu_task.h"
 #include "minipc_task.h"
+#include "../../../../boards/platform/stm32f1/include/bsp_dwt.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_AUTOPILOT;
@@ -37,6 +38,8 @@ ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 CapMode cap_mode = CAP_MODE_CLOSE;
 bool is_killed = false;
 bool turbo_shoot = false;
+FakeNavigationState fake_nav_mode = FAKE_NAV_MODE_EXAMINING;
+float fake_nav_stage_start_time = 0;
 
 void init_dbus() {
     dbus = new remote::DBUS(&huart3);
@@ -276,6 +279,23 @@ void remoteTask(void* arg) {
                 cap_mode = CAP_MODE_CLOSE;
             cap_switch = false;
         }
+
+        // for navigation doesn't work properly.
+#ifdef HAS_REFEREE
+        if (minipc->robot_move.target_x != 0 ||
+            minipc->robot_move.target_y != 0 ||
+            minipc->robot_move.target_turn != 0) {
+            fake_nav_mode = FAKE_NAV_MODE_DISABLE;
+        }
+        const uint16_t stage_time = 300; //3v3 main game stage time: 5min=300s
+        if (remote_mode == REMOTE_MODE_AUTOPILOT &&
+            referee->game_status.game_progress == 4 &&
+            stage_time - referee->game_status.stage_remain_time >= 10 &&
+            fake_nav_mode == FAKE_NAV_MODE_EXAMINING) {
+            fake_nav_mode = FAKE_NAV_MODE_PROCESSING;
+            fake_nav_stage_start_time = DWT_GetTimeline_ms();
+        }
+#endif
 
         osDelay(REMOTE_OS_DELAY);
     }

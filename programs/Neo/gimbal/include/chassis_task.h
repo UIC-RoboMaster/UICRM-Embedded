@@ -45,6 +45,13 @@ void chassisTask(void* arg);
 void init_chassis();
 void kill_chassis();
 
+enum OpenLoopStage {
+    OPEN_LOOP_STAGE_1,
+    OPEN_LOOP_STAGE_2,
+    OPEN_LOOP_STAGE_3,
+    OPEN_LOOP_STAGE_4
+};
+
 extern float chassis_vx;
 extern float chassis_vy;
 extern float chassis_vt;

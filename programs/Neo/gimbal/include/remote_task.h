@@ -153,6 +153,15 @@ inline const char* cap_mode_str(CapMode mode) {
 }
 extern CapMode cap_mode;
 
+enum FakeNavigationState {
+    FAKE_NAV_MODE_DISABLE = -1,
+    FAKE_NAV_MODE_EXAMINING = 0,
+    FAKE_NAV_MODE_PROCESSING = 1,
+    FAKE_NAV_MODE_COMPLETE = 2,
+};
+extern FakeNavigationState fake_nav_mode;
+extern float fake_nav_stage_start_time;
+
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
                                             .attr_bits = osThreadDetached,

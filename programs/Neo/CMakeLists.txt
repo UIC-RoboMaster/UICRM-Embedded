@@ -17,7 +17,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         gimbal/src/buzzer_task.cpp
         gimbal/src/minipc_task.cpp
         INCLUDES gimbal/include
-#        DEFINES HAS_REFEREE
+        DEFINES HAS_REFEREE
 )
 
 uicrm_add_arm_executable(${PROJECT_NAME}_chassis_typeC

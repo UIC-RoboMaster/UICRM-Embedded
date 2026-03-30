@@ -22,6 +22,7 @@
 
 #include "imu_task.h"
 #include "minipc_task.h"
+#include "../../../../boards/platform/stm32f1/include/bsp_dwt.h"
 osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
@@ -34,6 +35,8 @@ bool chassis_boost_flag = true;
 
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
+
+OpenLoopStage open_loop_stage = OPEN_LOOP_STAGE_1;
 
 void chassisTask(void* arg) {
     UNUSED(arg);
@@ -90,6 +93,50 @@ void chassisTask(void* arg) {
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
 
+        if (fake_nav_mode == FAKE_NAV_MODE_PROCESSING) {
+            const uint8_t stage_1_time = 100;
+            const uint8_t stage_2_time = 100;
+            const uint8_t stage_3_time = 100;
+            float now = DWT_GetTimeline_ms();
+            switch (open_loop_stage) {
+                case OPEN_LOOP_STAGE_1:
+                    car_vx = 0;
+                    car_vy = 1;
+                    car_vt = 0;
+                    if (now - fake_nav_stage_start_time >= stage_1_time) {
+                        open_loop_stage = OPEN_LOOP_STAGE_2;
+                        fake_nav_stage_start_time = now;
+                    }
+                    break;
+                case OPEN_LOOP_STAGE_2:
+                    car_vx = 1;
+                    car_vy = 0;
+                    car_vt = 0;
+                    if (now - fake_nav_stage_start_time >= stage_2_time) {
+                        open_loop_stage = OPEN_LOOP_STAGE_3;
+                        fake_nav_stage_start_time = now;
+                    }
+                    break;
+                case OPEN_LOOP_STAGE_3:
+                    car_vx = -1;
+                    car_vy = 0;
+                    car_vt = 0;
+                    if (now - fake_nav_stage_start_time >= stage_3_time) {
+                        open_loop_stage = OPEN_LOOP_STAGE_4;
+                        fake_nav_stage_start_time = now;
+                    }
+                    break;
+                case OPEN_LOOP_STAGE_4:
+                    car_vx = 0;
+                    car_vy = 0;
+                    car_vt = 1;
+                    fake_nav_mode = FAKE_NAV_MODE_COMPLETE;
+                    break;
+                default:
+                    break;
+            }
+        }
+
         // // 云台相对底盘的角度，通过云台和底盘连接的电机获取
         // float A = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
         // // 云台当前相对云台零点的角度，通过IMU获取
@@ -118,14 +165,16 @@ void chassisTask(void* arg) {
             minipc->robot_move.target_turn = 0;
         }
 
-        if (remote_mode == REMOTE_MODE_ADVANCED) {
-            // 手动模式下，遥控器直接控制底盘速度
-            chassis_vx = car_vx;
-            chassis_vy = car_vy;
+        if (remote_mode == REMOTE_MODE_AUTOPILOT) {
+            // chassis_vx = minipc->robot_move.target_x;
+            // chassis_vy = minipc->robot_move.target_y;
+            // todo unaligned directions
+            // chassis_vy = minipc->robot_move.target_x;
+            // chassis_vx = -minipc->robot_move.target_y;
             chassis_vt = car_vt;
         }
 
-        if (remote_mode == REMOTE_MODE_FOLLOW) {
+        else if (remote_mode == REMOTE_MODE_FOLLOW) {
             // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向
             const float angle_threshold = 0.02f;
             float chassis_vt_pid_error = chassis_target_diff;
@@ -140,7 +189,7 @@ void chassisTask(void* arg) {
                 chassis_vt = vt;
         }
 
-        if (remote_mode == REMOTE_MODE_SPIN) {
+        else if (remote_mode == REMOTE_MODE_SPIN) {
             // 小陀螺模式，拨盘用来控制底盘加速度
             static float spin_speed = 1;
             spin_speed = spin_speed + car_vt * 0.01;
@@ -148,12 +197,10 @@ void chassisTask(void* arg) {
             chassis_vt = spin_speed;
         }
 
-        if (remote_mode == REMOTE_MODE_AUTOPILOT) {
-            // chassis_vx = minipc->robot_move.target_x;
-            // chassis_vy = minipc->robot_move.target_y;
-            // todo unaligned directions
-            // chassis_vy = minipc->robot_move.target_x;
-            // chassis_vx = -minipc->robot_move.target_y;
+        else if (remote_mode == REMOTE_MODE_ADVANCED) {
+            // 手动模式下，遥控器直接控制底盘速度
+            chassis_vx = car_vx;
+            chassis_vy = car_vy;
             chassis_vt = car_vt;
         }
 
@@ -199,12 +246,4 @@ void init_chassis() {
 void kill_chassis() {
     chassis->Disable();
 }
-//
-// void goForward() {
-//     float x = 10;
-//     osDelay(1000);
-//     chassis->SetSpeed(x, 0, 0);
-// }
-//
-// void goBackward() {
-// }
+
