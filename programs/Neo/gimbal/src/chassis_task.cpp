@@ -45,14 +45,10 @@ void chassisTask(void* arg) {
         osDelay(CHASSIS_OS_DELAY);
     }
 
-    //   while (!ahrs->IsCailbrated()) {
-    //       osDelay(1);
-    //   }
-
     chassis->Enable();
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+        if (remote_mode == REMOTE_MODE_KILL || !imu->CaliDone()) {
             kill_chassis();
             while (remote_mode == REMOTE_MODE_KILL) {
                 osDelay(CHASSIS_OS_DELAY + 2);
