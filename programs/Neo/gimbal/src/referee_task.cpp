@@ -20,6 +20,8 @@
 
 #include "referee_task.h"
 
+#include "user_define.h"
+
 bsp::UART* referee_uart = nullptr;
 bsp::UART* refereerc_uart = nullptr;
 communication::Referee* referee = nullptr;
@@ -36,4 +38,7 @@ void init_referee() {
     //    refereerc_uart->SetupRx(300);
     //    refereerc_uart->SetupTx(300);
     //    refereerc = new communication::Referee(refereerc_uart);
+
+    if (DEBUG_GAME)
+        referee->game_status.game_progress = 4;
 }
