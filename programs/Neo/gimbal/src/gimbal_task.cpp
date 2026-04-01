@@ -188,6 +188,10 @@ void gimbalTask(void* arg) {
                 //     gimbal->TargetRel(0, 0.01 * PI / 180);
                 //     break;
                 // }
+                if (fake_nav_mode == FAKE_NAV_MODE_PROCESSING) {
+                    gimbal->TargetAbs(0,0);
+                    break;
+                }
                 if (  // static_cast<uint8_t>(minipc->target_angle.accuracy) < 60 || //accuracy not
                       // implemented yet
                     abs(minipc->target_angle.target_pitch) > (90.0f * PI / 180) ||

@@ -291,9 +291,14 @@ void remoteTask(void* arg) {
         if (remote_mode == REMOTE_MODE_AUTOPILOT &&
             referee->game_status.game_progress == 4 &&
             stage_time - referee->game_status.stage_remain_time >= 10 &&
-            fake_nav_mode == FAKE_NAV_MODE_EXAMINING) {
+            fake_nav_mode == FAKE_NAV_MODE_EXAMINING &&
+            imu->DataReady() &&
+            imu->CaliDone()) {
             fake_nav_mode = FAKE_NAV_MODE_PROCESSING;
-            fake_nav_stage_start_time = DWT_GetTimeline_ms();
+            fake_nav_stage_start_time = DWT_GetTimeline_s();
+        }
+        if (fake_nav_mode == FAKE_NAV_MODE_PROCESSING && referee->game_status.game_progress != 4) {
+            fake_nav_mode = FAKE_NAV_MODE_DISABLE;
         }
 #endif
 
@@ -302,4 +307,5 @@ void remoteTask(void* arg) {
 }
 void init_remote() {
     init_dbus();
+    if constexpr (!EN_FAKE_NAV) fake_nav_mode = FAKE_NAV_MODE_DISABLE;
 }

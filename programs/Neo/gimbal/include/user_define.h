@@ -28,4 +28,5 @@
 #define UI_OS_DELAY 40
 #define SHOOT_REFEREE 1
 #define ENABLE_UI 0
-#define DEBUG_GAME 1
+#define DEBUG_GAME 0
+#define EN_FAKE_NAV 1

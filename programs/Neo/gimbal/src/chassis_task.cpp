@@ -36,7 +36,7 @@ bool chassis_boost_flag = true;
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
 
-OpenLoopStage open_loop_stage = OPEN_LOOP_STAGE_1;
+OpenLoopStage open_loop_stage = OPEN_LOOP_STAGE_0;
 
 void chassisTask(void* arg) {
     UNUSED(arg);
@@ -48,10 +48,19 @@ void chassisTask(void* arg) {
         osDelay(CHASSIS_OS_DELAY);
     }
 
+    while (!imu->DataReady() || !imu->CaliDone()) {
+        chassis->SetSpeed(0, 0, 0);
+        osDelay(CHASSIS_OS_DELAY);
+        while (remote_mode == REMOTE_MODE_KILL) {
+            kill_chassis();
+            osDelay(CHASSIS_OS_DELAY);
+        }
+    }
+
     chassis->Enable();
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL || !imu->CaliDone()) {
+        if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
             while (remote_mode == REMOTE_MODE_KILL) {
                 osDelay(CHASSIS_OS_DELAY + 2);
@@ -93,15 +102,28 @@ void chassisTask(void* arg) {
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
 
-        if (fake_nav_mode == FAKE_NAV_MODE_PROCESSING) {
-            const uint8_t stage_1_time = 100;
-            const uint8_t stage_2_time = 100;
-            const uint8_t stage_3_time = 100;
-            float now = DWT_GetTimeline_ms();
+        if (fake_nav_mode == FAKE_NAV_MODE_PROCESSING &&
+            remote_mode == REMOTE_MODE_AUTOPILOT &&
+            imu->DataReady() &&
+            imu->CaliDone()) {
+            const float stage_0_time = 1;
+            const float stage_1_time = 6;
+            const float stage_2_time = 5.5;
+            const float stage_3_time = 2.5;
+            float now = DWT_GetTimeline_s();
             switch (open_loop_stage) {
-                case OPEN_LOOP_STAGE_1:
+                case OPEN_LOOP_STAGE_0:
                     car_vx = 0;
-                    car_vy = 1;
+                    car_vy = 0;
+                    car_vt = 0;
+                    if (now - fake_nav_stage_start_time >= stage_0_time) {
+                        open_loop_stage = OPEN_LOOP_STAGE_1;
+                        fake_nav_stage_start_time = now;
+                    }
+                    break;
+                case OPEN_LOOP_STAGE_1:
+                    car_vx = 0.5;
+                    car_vy = 0;
                     car_vt = 0;
                     if (now - fake_nav_stage_start_time >= stage_1_time) {
                         open_loop_stage = OPEN_LOOP_STAGE_2;
@@ -109,8 +131,8 @@ void chassisTask(void* arg) {
                     }
                     break;
                 case OPEN_LOOP_STAGE_2:
-                    car_vx = 1;
-                    car_vy = 0;
+                    car_vx = 0;
+                    car_vy = 0.5;
                     car_vt = 0;
                     if (now - fake_nav_stage_start_time >= stage_2_time) {
                         open_loop_stage = OPEN_LOOP_STAGE_3;
@@ -118,7 +140,7 @@ void chassisTask(void* arg) {
                     }
                     break;
                 case OPEN_LOOP_STAGE_3:
-                    car_vx = -1;
+                    car_vx = -0.5;
                     car_vy = 0;
                     car_vt = 0;
                     if (now - fake_nav_stage_start_time >= stage_3_time) {
@@ -129,7 +151,8 @@ void chassisTask(void* arg) {
                 case OPEN_LOOP_STAGE_4:
                     car_vx = 0;
                     car_vy = 0;
-                    car_vt = 1;
+                    car_vt = 0.5;
+                    minipc->robot_move.target_turn = 1;
                     fake_nav_mode = FAKE_NAV_MODE_COMPLETE;
                     break;
                 default:

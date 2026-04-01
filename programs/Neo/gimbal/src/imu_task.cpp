@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "imu_task.h"
+#include "bsp_dwt.h"
 
 osThreadId_t imuTaskHandle;
 
@@ -66,4 +67,5 @@ void init_imu() {
     imu_init.Accel_INT_pin_ = INT1_ACCEL_Pin;
     imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
     imu = new IMU(imu_init, false);
+    DWT_Init(168);
 }

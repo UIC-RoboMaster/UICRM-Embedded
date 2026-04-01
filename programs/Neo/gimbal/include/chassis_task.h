@@ -46,6 +46,7 @@ void init_chassis();
 void kill_chassis();
 
 enum OpenLoopStage {
+    OPEN_LOOP_STAGE_0,
     OPEN_LOOP_STAGE_1,
     OPEN_LOOP_STAGE_2,
     OPEN_LOOP_STAGE_3,
