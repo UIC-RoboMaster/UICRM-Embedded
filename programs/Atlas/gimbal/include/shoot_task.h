@@ -38,12 +38,12 @@ const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .stack_size = 512 * 4,
                                            .priority = (osPriority_t)osPriorityNormal,
                                            .tz_module = 0,
-                                           .reserved = 0};
+                                           .reserved = 0
+};
 
 extern driver::Motor3508* flywheel_left;
 extern driver::Motor3508* flywheel_right;
 extern driver::Motor3508* steering_motor;
-extern driver::Motor2006* steering_up;
 extern bool jam_notify_flags;
 void shootTask(void* arg);
 void init_shoot();

@@ -23,11 +23,9 @@
 // 摩擦轮
 driver::Motor3508* flywheel_left = nullptr;
 driver::Motor3508* flywheel_right = nullptr;
-// driver::Motor2006* flywheel_up = nullptr;
 
 // 供弹
 driver::Motor3508* steering_motor = nullptr;
-driver::Motor2006* steering_up = nullptr;
 
 // 卡弹
 bool jam_notify_flags = false;
@@ -92,9 +90,6 @@ void shootTask(void* arg) {
         if (!flywheel_right->IsEnable()) {
             flywheel_right->Enable();
         }
-        if (!steering_up->IsEnable()) {
-            steering_up->Enable();
-        }
 
 #ifdef HAS_REFEREE
         int heat_limit = referee->game_robot_status.shooter_heat_limit;
@@ -103,7 +98,6 @@ void shootTask(void* arg) {
         if (heat_buffer > heat_limit - shooter_heat_threashold) {
             // 临时解决方案
             steering_motor->Hold(false);
-            steering_up->Hold(false);
             print("overheat!\n");
             osDelay(SHOOT_OS_DELAY);
             continue;
@@ -157,10 +151,6 @@ void shootTask(void* arg) {
                         if (steering_motor->IsHolding()) {
                             steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 6 ,
                                                       false);
-                            if (steering_up->IsHolding()) {
-                                steering_up->SetTarget(steering_up->GetTarget() + 2 * PI / 4,
-                                                       true);
-                            }
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
@@ -206,41 +196,6 @@ void init_shoot() {
     flywheel_left->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     flywheel_right->SetMode(driver::MotorCANBase::OMEGA);
 
-    steering_up = new driver::Motor2006(can2, 0x203);
-    steering_up->SetTransmissionRatio(36);
-    control::ConstrainedPID::PID_Init_t enhance_omega_pid_init = {
-        .kp = 1000,
-        .ki = 1,
-        .kd = 0,
-        .max_out = 10000,
-        .max_iout = 4000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
-    };
-    control::ConstrainedPID::PID_Init_t enhance_theta_pid_init = {
-        .kp = 20,
-        .ki = 0,
-        .kd = 0,
-        .max_out = 2 * PI,
-        .max_iout = 0,
-        .deadband = 0,                                 // 死区
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
-
-    };
-    steering_up->ReInitPID(enhance_theta_pid_init, driver::MotorCANBase::THETA);
-    steering_up->ReInitPID(enhance_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_up->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
 
 
     steering_motor = new driver::Motor3508(can1, 0x201);
@@ -288,6 +243,5 @@ void init_shoot() {
 void kill_shoot() {
     steering_motor->Disable();
     flywheel_left->Disable();
-    steering_up->Disable();
     flywheel_right->Disable();
 }
