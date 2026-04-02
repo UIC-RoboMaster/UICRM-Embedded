@@ -180,8 +180,8 @@ void init_gimbal() {
     /**
      * pitch motor
      */
-    pitch_motor = new driver::Motor3508(can2, 0x208);
-    pitch_motor->SetTransmissionRatio(1);
+    pitch_motor = new driver::Motor3508(can2, 0x204);
+    pitch_motor->SetTransmissionRatio(6);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {
         .kp = 15,
         .ki = 0,

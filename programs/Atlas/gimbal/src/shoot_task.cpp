@@ -169,8 +169,8 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::Motor3508(can2, 0x201);
-    flywheel_right = new driver::Motor3508(can2, 0x202);
+    flywheel_left = new driver::Motor3508(can2, 0x202);
+    flywheel_right = new driver::Motor3508(can2, 0x203);
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
 
@@ -195,7 +195,6 @@ void init_shoot() {
 
     flywheel_left->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
     flywheel_right->SetMode(driver::MotorCANBase::OMEGA);
-
 
 
     steering_motor = new driver::Motor3508(can1, 0x201);

@@ -110,7 +110,7 @@ void RM_RTOS_Init() {
     // super_cap->SetMaxDischargePower(250.0f);
     // super_cap->SetPerferBuffer(50.0f);
 
-    can_bridge = new communication::CanBridge(can1, 0x52);
+    can_bridge = new communication::CanBridge(can2, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
