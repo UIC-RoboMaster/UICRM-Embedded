@@ -23,7 +23,7 @@
 
 osThreadId_t gimbalTaskHandle;
 
-driver::Motor6020* pitch_motor = nullptr;
+driver::Motor3508* pitch_motor = nullptr;
 driver::Motor6020* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
@@ -177,12 +177,10 @@ void gimbalTask(void* arg) {
 }
 
 void init_gimbal() {
-    // 云台需要使用两个6020电机，并且进行角度环和速度环双环控制。此时我们需要初始化两个电机对象和四个PID对象，并且将四个PID对象分别绑定到两个电机对象上。
-
     /**
      * pitch motor
      */
-    pitch_motor = new driver::Motor6020(can2, 0x208, 0x1FE);
+    pitch_motor = new driver::Motor3508(can2, 0x208);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_theta_pid_init = {
         .kp = 15,
