@@ -29,6 +29,8 @@
 #include "cmsis_os.h"
 #include "supercap.h"
 #include "bsp_batteryvol.h"
+#include "bsp_os.h"
+
 
 
 // bridge_can 是与顶部大疆c板进行通信的can通道
@@ -50,8 +52,12 @@ bsp::BatteryVol* battery_vol = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
-    print_use_uart(&huart4,false,921600);
+    // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
+    print_use_rtt();
+    // print_use_uart(&huart4,false,921600);
     print("helloworld!");
+
     chassis_can = new bsp::CAN(&hcan1, true);
     bridge_can = new bsp::CAN(&hcan2, false);
     fl_motor = new driver::Motor3508(chassis_can, 0x202);
