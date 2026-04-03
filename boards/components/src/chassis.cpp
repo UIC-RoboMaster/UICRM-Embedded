@@ -293,7 +293,8 @@ namespace control {
         float max_current = power_limit_.max_watt / power_limit_.voltage;
 
         // 根据缓冲区剩余能量，使用线性插值，计算最大电流。
-        max_current = max_current * linear_interpolation<int>(20, 80, 80, 150, power_limit_.buffer_percent) / 100;
+        // 当裁判系统 buffer 剩余较多时，允许电机适当超功率，当裁判系统 buffer 剩余较少时，大幅度限制电机功率来避免估算误差
+        max_current = max_current * linear_interpolation<int>(40, 100, 80, 130, power_limit_.buffer_percent) / 100;
 
         // 获取数据
         int16_t turn_current[FourWheel::motor_num];
