@@ -165,8 +165,8 @@ void chassisTask(void* arg) {
         if (remote_mode == REMOTE_MODE_SPIN) {
             // 小陀螺模式，拨盘用来控制底盘加速度
             static float spin_speed = 1;
-            spin_speed = spin_speed + car_vt * 0.01;
-            spin_speed = clip<float>(spin_speed, -1, 1);
+            spin_speed = spin_speed + car_vt * 0.1;
+            spin_speed = clip<float>(spin_speed, -8, 8);
             chassis_vt = spin_speed;
         }
 

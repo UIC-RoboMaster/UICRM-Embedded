@@ -189,33 +189,33 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
         print("\r\n");
 
-        // // // 添加在 print("Yaw Motor: ...") 附近
-        // // print("=== Chassis Debug ===\r\n");
-        // // print("A (yaw_motor - offset): %.4f\r\n", yaw_motor->GetTheta() - gimbal_param->yaw_offset_);
-        // // print("B (IMU yaw): %.4f\r\n", imu->INS_angle[0]);
-        // // print("C (gimbal target): %.4f\r\n", gimbal->getYawTarget());
-        // // print("chassis_target_diff: %.4f\r\n", gimbal->getYawTarget() - imu->INS_angle[0] + (yaw_motor->GetTheta() - gimbal_param->yaw_offset_));
-        // // print("yaw_offset_: %.4f\r\n", gimbal_param->yaw_offset_);
-        //
-        // print_enabled("yaw", yaw_motor->IsOnline());
-        // print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
-        // print("yaw current i: %.2f\r\n", yaw_motor->GetCurr());
-        //
-        // print_enabled("pitch", pitch_motor->IsOnline());
-        // print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(), pitch_motor->GetOmega());
-        // print("pitch current i: %.2f\r\n", pitch_motor->GetCurr());
-        //
-        // // === Pitch Debug ===
-        // print("=== Pitch Debug ===\r\n");
-        // print("pitch_curr  (IMU): %.4f rad / %.2f deg\r\n", pitch_curr, pitch_curr / PI * 180);
-        // print("pitch_target     : %.4f rad / %.2f deg\r\n", pitch_target, pitch_target / PI * 180);
-        // print("pitch_diff       : %.4f rad / %.2f deg\r\n", pitch_diff, pitch_diff / PI * 180);
-        // print("pitch motor theta: %.4f rad / %.2f deg\r\n", pitch_motor->GetTheta(), pitch_motor->GetTheta() / PI * 180);
-        // print("pitch motor omega: %.4f\r\n", pitch_motor->GetOmega());
-        // print("pitch motor curr : %.2f\r\n", pitch_motor->GetCurr());
-        // print("pitch_offset     : %.4f\r\n", gimbal_param->pitch_offset_);
-        // print("pitch_max        : %.4f\r\n", gimbal_param->pitch_max_);
-        // print("\r\n");
+        // 添加在 print("Yaw Motor: ...") 附近
+        print("=== Chassis Debug ===\r\n");
+        print("A (yaw_motor - offset): %.4f\r\n", yaw_motor->GetTheta() - gimbal_param->yaw_offset_);
+        print("B (IMU yaw): %.4f\r\n", imu->INS_angle[0]);
+        print("C (gimbal target): %.4f\r\n", gimbal->getYawTarget());
+        print("chassis_target_diff: %.4f\r\n", gimbal->getYawTarget() - imu->INS_angle[0] + (yaw_motor->GetTheta() - gimbal_param->yaw_offset_));
+        print("yaw_offset_: %.4f\r\n", gimbal_param->yaw_offset_);
+
+        print_enabled("yaw", yaw_motor->IsOnline());
+        print("Yaw Motor: %.2f, %.2f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
+        print("yaw current i: %.2f\r\n", yaw_motor->GetCurr());
+
+        print_enabled("pitch", pitch_motor->IsOnline());
+        print("Pitch Motor: %.2f, %.2f\r\n", pitch_motor->GetTheta(), pitch_motor->GetOmega());
+        print("pitch current i: %.2f\r\n", pitch_motor->GetCurr());
+
+        // === Pitch Debug ===
+        print("=== Pitch Debug ===\r\n");
+        print("pitch_curr  (IMU): %.4f rad / %.2f deg\r\n", pitch_curr, pitch_curr / PI * 180);
+        print("pitch_target     : %.4f rad / %.2f deg\r\n", pitch_target, pitch_target / PI * 180);
+        print("pitch_diff       : %.4f rad / %.2f deg\r\n", pitch_diff, pitch_diff / PI * 180);
+        print("pitch motor theta: %.4f rad / %.2f deg\r\n", pitch_motor->GetTheta(), pitch_motor->GetTheta() / PI * 180);
+        print("pitch motor omega: %.4f\r\n", pitch_motor->GetOmega());
+        print("pitch motor curr : %.2f\r\n", pitch_motor->GetCurr());
+        print("pitch_offset     : %.4f\r\n", gimbal_param->pitch_offset_);
+        print("pitch_max        : %.4f\r\n", gimbal_param->pitch_max_);
+        print("\r\n");
 
         // Shoot info
         print("Shooter Heat: %hu/%hu\r\n",
