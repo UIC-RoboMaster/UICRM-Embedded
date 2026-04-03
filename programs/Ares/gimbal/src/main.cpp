@@ -25,6 +25,7 @@
 #include "buzzer_notes.h"
 #include "buzzer_task.h"
 #include "chassis_task.h"
+#include "supercap_task.h"
 #include "gimbal_task.h"
 #include "imu_task.h"
 #include "public_port.h"
@@ -47,6 +48,7 @@ void RM_RTOS_Init(void) {
     init_shoot();
     init_gimbal();
     init_chassis();
+    init_capacity();
     init_ui();
 }
 
@@ -58,6 +60,7 @@ void RM_RTOS_Threads_Init(void) {
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
+    capacityTaskHandle = osThreadNew(capacityTask, nullptr, &capacityTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
     if (ENABLE_UI)
         uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
@@ -221,7 +224,16 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
         print("\r\n");
-
+        // SuperCap info
+        print("SuperCap Enable? : %d\r\n", adernal_supercap->getEnableSupercap());
+        print("SuperCap Mode? : %d\r\n", adernal_supercap->getCurrentMode());
+        print("Set Max Referee Power: %dW, Set Max Chassis Power %dW\r\n", adernal_supercap->getMaxRefereePower(), adernal_supercap->getMaxChassisPower());
+        print("Voltage: %.2fV Power: %.2fW Work1:%d%% Work2:%d%%\r\n", supercap_feedback.Voltage_NoESR,
+        supercap_feedback.Power_Battery, supercap_feedback.Work_Sentry1, supercap_feedback.Work_Sentry2);
+        print("Remaining Power: %.2f\r\n", supercap_remaining);
+        print("Safety Levels: %d %d %d %d %d %d %d %d\r\n",
+        supercap_safety_levels[0], supercap_safety_levels[1], supercap_safety_levels[2], supercap_safety_levels[3],
+        supercap_safety_levels[4], supercap_safety_levels[5], supercap_safety_levels[6], supercap_safety_levels[7]);
         // // 发射供弹
         // print("flywheel_left Motor: %.2f, %.2f\r\n", flywheel_left->GetTheta(), flywheel_left->GetOmega());
         // print_enabled("flywheel_left", flywheel_left->IsOnline());
@@ -245,8 +257,6 @@ void RM_RTOS_Default_Task(const void* arg) {
         //       referee->game_robot_status.max_HP);
         // print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
         // print("\n");
-
-
         osDelay(100);
     }
 }

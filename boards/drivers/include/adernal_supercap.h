@@ -186,7 +186,10 @@ This parameter must be a number between:1~8     */
 
         // 初始化方法
         bool initialize(Adernal_Init_Typedef cap_type = Adernal_Init_24V);
-
+        // 添加实例健康状态检查
+        bool isValid() const {
+            return is_valid_;
+        }
         // 设置控制参数
         bool setControl(uint8_t expect_power,
                         Adernal_CtrlMode_Typedef mode = Adernal_CtrlMode_Silent,
@@ -234,6 +237,14 @@ This parameter must be a number between:1~8     */
         void handleFeedbackFrame(const uint8_t data[]);
         void handleSafetyFrame(const uint8_t data[]);
 
+        // 添加超级电容功率配置
+        void setMaxRefereePower(uint8_t power);
+        void setMaxChassisPower(uint8_t power);
+        void EnableSupercap(bool enable);
+        bool getEnableSupercap() const;
+        uint8_t getMaxRefereePower() const;
+        uint8_t getMaxChassisPower() const;
+
       private:
         bsp::CAN* can_;                                 // CAN实例
         bool ready_ = false;                            // 就绪状态
@@ -244,7 +255,8 @@ This parameter must be a number between:1~8     */
         bool new_ready_ = false;
         bool new_feedback_ = false;
         bool new_safety_ = false;
-
+        // 添加对象有效性标记（解决析构后访问问题）
+        bool is_valid_ = true;
         // 当前控制配置
         Adernal_Ctrl_Typedef current_ctrl_;
 
@@ -261,6 +273,11 @@ This parameter must be a number between:1~8     */
 
         // 静态实例指针，用于回调函数中
         static Adernal_SuperCap* instance_;
+
+        uint8_t max_watt_referee_power;
+        uint8_t max_watt_chassis_power;
+        bool enable_supercap;
+
     };
 }  // namespace driver
 #endif

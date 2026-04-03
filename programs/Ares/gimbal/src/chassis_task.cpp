@@ -19,6 +19,8 @@
  ###########################################################*/
 
 #include "chassis_task.h"
+#include "supercap_task.h"
+
 osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
@@ -38,9 +40,11 @@ void chassisTask(void* arg) {
     UNUSED(arg);
     kill_chassis();
     osDelay(1000);
+    adernal_supercap->initialize(driver::Adernal_Init_30V);
 
     while (remote_mode == REMOTE_MODE_KILL) {
         kill_chassis();
+        silentMode();
         osDelay(CHASSIS_OS_DELAY);
     }
 
@@ -49,14 +53,17 @@ void chassisTask(void* arg) {
     }
 
     chassis->Enable();
+    adernal_supercap->EnableSupercap(true);
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
+            silentMode();
             while (remote_mode == REMOTE_MODE_KILL) {
                 osDelay(CHASSIS_OS_DELAY + 2);
             }
             chassis->Enable();
+            adernal_supercap->EnableSupercap(true);
             continue;
         }
 
@@ -182,13 +189,45 @@ void chassisTask(void* arg) {
 
 #ifdef HAS_REFEREE
         uint8_t buffer_percent = referee->power_heat_data.chassis_power_buffer * 100 / 60;
-        uint8_t max_watt = referee->game_robot_status.chassis_power_limit;
+        adernal_supercap->setMaxRefereePower(referee->game_robot_status.chassis_power_limit);
 #else
         uint8_t buffer_percent = 50;
         uint8_t max_watt = 100;
 #endif
-        // 如果传输的电压为0，底盘不会保存这个值，随后底盘的chassis_task会采样自己的电压值并更新。
-        chassis->UpdatePower(true, max_watt, 0, buffer_percent);
+        adernal_supercap->setMaxChassisPower(150);
+        if(supercap_feedback.Voltage_NoESR <= 10 && adernal_supercap->isValid()) {
+            chargeMode();
+            if(supercap_feedback.Voltage_NoESR <= 5 || adernal_supercap->getCurrentMode() != driver::Adernal_CtrlMode_Charge) {
+                silentMode();
+                print("ERROR: Can't switch to charge mode, stop supercap!");
+            }
+        }else if(supercap_feedback.Voltage_NoESR >= 20 && adernal_supercap->isValid()) {
+            workMode();
+            if(adernal_supercap->getCurrentMode() != driver::Adernal_CtrlMode_Work) {
+                print("ERROR: Can't switch to work mode! Try again!");
+                workMode();
+            }
+        }
+        // 如果传输的电压为 0，底盘不会保存这个值，随后底盘的 chassis_task 会采样自己的电压值并更新。
+        if(adernal_supercap->getCurrentMode() == driver::Adernal_CtrlMode_Work && adernal_supercap->isValid()) {
+            chassis->UpdatePower
+                (true,
+                adernal_supercap->getMaxChassisPower(),
+                0,
+                buffer_percent);
+        }else if(adernal_supercap->getCurrentMode() == driver::Adernal_CtrlMode_Charge && adernal_supercap->isValid()) {
+            chassis->UpdatePower
+                (true,
+                adernal_supercap->getMaxRefereePower() - 20,
+                0,
+                buffer_percent);
+        }else {
+            chassis->UpdatePower(true,
+            adernal_supercap->getMaxRefereePower(),
+            0,
+            buffer_percent);
+        }
+        // chassis->UpdatePower(false, 150, 0, 50);
         osDelay(CHASSIS_OS_DELAY);
     }
 }
@@ -202,6 +241,7 @@ void init_chassis() {
     chassis->SetChassisRegId(0x70, 0x71, 0x72, 0x73);
     chassis->Disable();
 }
+
 void kill_chassis() {
     chassis->Disable();
 }

@@ -229,26 +229,33 @@ namespace driver {
     // 静态回调函数实现
     void Adernal_SuperCap::ReadyFrameCallback(const uint8_t data[], void* args) {
         UNUSED(args);
-        if (instance_) {
+        // 添加有效性检查，防止访问已销毁对象
+        if (instance_ && instance_->is_valid_) {
             instance_->handleReadyFrame(data);
         }
     }
 
     void Adernal_SuperCap::FeedbackFrameCallback(const uint8_t data[], void* args) {
         UNUSED(args);
-        if (instance_) {
+        if (instance_ && instance_->is_valid_) {
             instance_->handleFeedbackFrame(data);
         }
     }
 
     void Adernal_SuperCap::SafetyFrameCallback(const uint8_t data[], void* args) {
         UNUSED(args);
-        if (instance_) {
+        if (instance_ && instance_->is_valid_) {
             instance_->handleSafetyFrame(data);
         }
     }
 
     Adernal_SuperCap::Adernal_SuperCap(bsp::CAN* can_instance) : can_(can_instance) {
+        // if (instance_ != nullptr) {
+        //     print("[WARNING] Adernal_SuperCap: Multiple instances detected! "
+        //            "Only one instance is supported due to static callback design.\r\n");
+        //     print("[WARNING] Previous instance at: %p, New instance at: %p\r\n",
+        //            instance_, this);
+        // }
         // 保存实例指针用于静态回调
         instance_ = this;
 
@@ -261,13 +268,19 @@ namespace driver {
         current_ctrl_.ExpectPwr = 50;  // 默认50W
         current_ctrl_.Mode = Adernal_CtrlMode_Silent; // 默认关闭
         current_ctrl_.Exceed = Adernal_CtrlExceed_Off; // 默认关闭
+        max_watt_referee_power = 60;   // 默认裁判系统功率限制
+        max_watt_chassis_power = 150;  // 默认底盘功率限制
+        enable_supercap = false;       // 默认关闭超电
+        is_valid_ = true;
     }
 
     Adernal_SuperCap::~Adernal_SuperCap() {
+        is_valid_ = false;
         // 清除实例指针
         if (instance_ == this) {
             instance_ = nullptr;
         }
+        // print("[INFO] Adernal_SuperCap destroyed at: %p\r\n", this);
     }
 
     bool Adernal_SuperCap::initialize(Adernal_Init_Typedef cap_type) {
@@ -281,6 +294,28 @@ namespace driver {
         current_ctrl_.Exceed = exceed;
 
         return Adernal_Ctrl(&current_ctrl_) == Adernal_Tx_OK;
+    }
+    void Adernal_SuperCap::setMaxRefereePower(uint8_t power) {
+        max_watt_referee_power = power;;
+    }
+
+    uint8_t Adernal_SuperCap::getMaxRefereePower() const{
+        return max_watt_referee_power;
+    }
+
+    void Adernal_SuperCap::setMaxChassisPower(uint8_t power) {
+        max_watt_chassis_power = power;
+    }
+
+    uint8_t Adernal_SuperCap::getMaxChassisPower() const{
+        return max_watt_chassis_power;
+    }
+
+    void Adernal_SuperCap::EnableSupercap(bool enable) {
+        enable_supercap = enable;
+    }
+    bool Adernal_SuperCap::getEnableSupercap() const{
+        return enable_supercap;
     }
 
     void Adernal_SuperCap::handleReadyFrame(const uint8_t data[]) {

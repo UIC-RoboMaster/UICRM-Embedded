@@ -25,7 +25,7 @@
 #include "connection_driver.h"
 #include "pid.h"
 #include "power_limit_new.h"
-#include "supercap.h"
+#include "adernal_supercap.h"
 
 #define MAX_WHEEL_NUM 8
 
@@ -45,7 +45,7 @@ namespace control {
         float offset = 0;
         bool power_limit_on = false;
         bool has_super_capacitor = false;
-        driver::SuperCap* super_capacitor = nullptr;
+        driver::Adernal_SuperCap* super_capacitor = nullptr;
     };
 
     /**
@@ -189,8 +189,8 @@ namespace control {
         bool chassis_enable_ = true;
 
         bool has_super_capacitor_ = false;
-        bool super_capacitor_enable_ = false;
-        driver::SuperCap* super_capacitor_ = nullptr;
+        // bool super_capacitor_enable_ = false;
+        driver::Adernal_SuperCap* super_capacitor_ = nullptr;
 
         float max_motor_speed_ = 2 * PI * 10;
 

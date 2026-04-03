@@ -31,6 +31,7 @@
 #include "referee_task.h"
 #include "remote_task.h"
 #include "utils.h"
+
 extern osThreadId_t chassisTaskHandle;
 const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
                                              .attr_bits = osThreadDetached,

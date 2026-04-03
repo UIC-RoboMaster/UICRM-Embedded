@@ -67,9 +67,12 @@ namespace control {
         driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
 
         // 底盘是否有超级电容
-        if (chassis.has_super_capacitor) {
+        if (chassis.has_super_capacitor && chassis.super_capacitor != nullptr) {
             has_super_capacitor_ = true;
             super_capacitor_ = chassis.super_capacitor;
+        } else {
+            has_super_capacitor_ = false;
+            super_capacitor_ = nullptr;
         }
     }
 
@@ -92,6 +95,10 @@ namespace control {
 
             default:
                 RM_ASSERT_TRUE(false, "Not Supported Chassis Mode\r\n");
+        }
+        if (has_super_capacitor_) {
+            super_capacitor_ = nullptr;
+            has_super_capacitor_ = false;
         }
     }
 
@@ -311,13 +318,15 @@ namespace control {
     void Chassis::Enable() {
         chassis_enable_ = true;
         if (has_super_capacitor_) {
-            super_capacitor_->Enable();
+            super_capacitor_->setControl(super_capacitor_->getMaxRefereePower(),driver::Adernal_CtrlMode_Work,driver::Adernal_CtrlExceed_Off);
+            super_capacitor_->EnableSupercap(true);
         }
     }
     void Chassis::Disable() {
         chassis_enable_ = false;
         if (has_super_capacitor_) {
-            super_capacitor_->Disable();
+            super_capacitor_->setControl(super_capacitor_->getMaxRefereePower(),driver::Adernal_CtrlMode_Silent,driver::Adernal_CtrlExceed_Off);
+            super_capacitor_->EnableSupercap(false);
         }
     }
 

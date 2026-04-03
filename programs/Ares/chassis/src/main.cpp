@@ -28,7 +28,7 @@
 #include "buzzer_task.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "supercap.h"
+#include "bsp_os.h"
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -37,8 +37,6 @@ driver::MotorCANBase* fl_motor = nullptr;
 driver::MotorCANBase* fr_motor = nullptr;
 driver::MotorCANBase* bl_motor = nullptr;
 driver::MotorCANBase* br_motor = nullptr;
-
-driver::SuperCap* super_cap = nullptr;
 
 control::Chassis* chassis = nullptr;
 
@@ -50,6 +48,8 @@ void RM_RTOS_Init() {
     HAL_Delay(100);
 
     //print_use_uart(&huart1);
+    // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
 
     can1 = new bsp::CAN(&hcan1, true);
     can2 = new bsp::CAN(&hcan2, true);
@@ -92,24 +92,6 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::MotorCANBase::OMEGA);
     br_motor->SetTransmissionRatio(14);
 
-    // driver::supercap_init_t supercap_init = {
-    //     .can = can1,
-    //     .tx_id = 0x02e,
-    //     .tx_settings_id = 0x02f,
-    //     .rx_id = 0x030,
-    // };
-    //
-    // super_cap = new driver::SuperCap(supercap_init);
-    // super_cap->Disable();
-    // super_cap->TransmitSettings();
-    // super_cap->Enable();
-    // super_cap->TransmitSettings();
-    // super_cap->SetMaxVoltage(24.0f);
-    // super_cap->SetPowerTotal(100.0f);
-    // super_cap->SetMaxChargePower(150.0f);
-    // super_cap->SetMaxDischargePower(250.0f);
-    // super_cap->SetPerferBuffer(50.0f);
-
     can_bridge = new communication::CanBridge(can1, 0x52);
 
     driver::MotorCANBase* motors[control::FourWheel::motor_num];
@@ -121,9 +103,7 @@ void RM_RTOS_Init() {
     control::chassis_t chassis_data;
     chassis_data.motors = motors;
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
-
-    // chassis_data.has_super_capacitor = false;
-    // chassis_data.super_capacitor = super_cap;
+    chassis_data.power_limit_on = true;
 
     chassis = new control::Chassis(chassis_data);
 
