@@ -25,12 +25,13 @@ communication::UserInterface* UI = nullptr;
 communication::ChassisGUI* chassisGUI = nullptr;
 communication::CrossairGUI* crossairGui = nullptr;
 communication::GimbalGUI* gimbalGUI = nullptr;
-communication::CapGUI* batteryGUI = nullptr;
+// communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
 communication::StringGUI* shootUnlockGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
+communication::GUI* wheelGUI = nullptr;
 
 void UI_Delay(uint32_t delay) {
     osDelay(delay);
@@ -64,11 +65,11 @@ void uiTask(void* arg) {
     osDelay(110);
 
     // Initialize supercapacitor GUI
-    char batteryStr[15] = "BATTERY";
-    batteryGUI = new communication::CapGUI(UI, batteryStr);
-    osDelay(110);
-    batteryGUI->InitName();
-    osDelay(110);
+    // char batteryStr[15] = "BATTERY";
+    // batteryGUI = new communication::CapGUI(UI, batteryStr);
+    // osDelay(110);
+    // batteryGUI->InitName();
+    // osDelay(110);
 
     // Initialize Gimbal GUI
     // gimbalGUI = new communication::GimbalGUI(UI);
@@ -88,10 +89,10 @@ void uiTask(void* arg) {
     // Initialize flywheel status GUI
     char wheelOnStr[15] = "FLYWHEEL ON";
     char wheelOffStr[15] = "FLYWHEEL OFF";
-    wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500, 430, UI_Color_Pink);
-    char boostModeStr[15] = "BOOST!";
-    char boostOffStr[15] = " ";
-    boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
+    wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500, 450, UI_Color_Pink,30);
+    // char boostModeStr[15] = "BOOST!";
+    // char boostOffStr[15] = " ";
+    // boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
     // osDelay(110);
     char shootUnlockStr[15] = "UNLOCK";
     char shootLockStr[15] = "       ";
@@ -114,10 +115,10 @@ void uiTask(void* arg) {
     shootUnlockGUI->InitString();
     float relative_angle = 0;
     // float pitch_angle = 0;
-    float power_percent = 1;
+    // float power_percent = 1;
     RemoteMode last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
-    BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* turboShootDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
@@ -141,10 +142,10 @@ void uiTask(void* arg) {
                            relative_angle);
         osDelay(UI_OS_DELAY);
 
-        power_percent = battery_vol->GetBatteryPercentage();
+        // power_percent = battery_vol->GetBatteryPercentage();
 
-        batteryGUI->Update(power_percent);
-        osDelay(UI_OS_DELAY);
+        // batteryGUI->Update(power_percent);
+        // osDelay(UI_OS_DELAY);
 
         // Update Gimbal GUI
         // gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle,
@@ -194,12 +195,12 @@ void uiTask(void* arg) {
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }
-        boostEdgeDetector->input(chassis_boost_flag);
-        if (boostEdgeDetector->edge()) {
-            char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
-            boostGUI->Update(boostStr, UI_Color_Pink);
-            osDelay(UI_OS_DELAY);
-        }
+        // boostEdgeDetector->input(chassis_boost_flag);
+        // if (boostEdgeDetector->edge()) {
+        //     char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
+        //     boostGUI->Update(boostStr, UI_Color_Pink);
+        //     osDelay(UI_OS_DELAY);
+        // }
         turboShootDetector->input(turbo_shoot);
         if (turboShootDetector->edge()) {
             char* turboshootstr = turbo_shoot ? shootUnlockStr : shootLockStr;
@@ -288,10 +289,10 @@ void uiTask(void* arg) {
             // osDelay(110);
             crossairGui->Delete();
             osDelay(110);
-            batteryGUI->DeleteName();
-            osDelay(110);
-            batteryGUI->Delete();
-            osDelay(110);
+            // batteryGUI->DeleteName();
+            // osDelay(110);
+            // batteryGUI->Delete();
+            // osDelay(110);
             modeGUI->Init();
             osDelay(110);
             wheelGUI->Init();
@@ -304,8 +305,8 @@ void uiTask(void* arg) {
             osDelay(110);
             wheelGUI->InitString();
             osDelay(110);
-            boostGUI->InitString();
-            osDelay(110);
+            // boostGUI->InitString();
+            // osDelay(110);
             shootUnlockGUI->Init();
             osDelay(110);
             diagGUI->Clear(UI_Delay);
@@ -328,20 +329,20 @@ void uiTask(void* arg) {
             // osDelay(110);
             wheelGUI->Init();
             osDelay(110);
-            boostGUI->Init();
-            osDelay(110);
+            // boostGUI->Init();
+            // osDelay(110);
             modeGUI->InitString();
             osDelay(110);
             wheelGUI->InitString();
             osDelay(110);
-            boostGUI->InitString();
-            osDelay(110);
+            // boostGUI->InitString();
+            // osDelay(110);
             modeGUI->InitString();
             osDelay(110);
             wheelGUI->InitString();
             osDelay(110);
-            boostGUI->InitString();
-            osDelay(110);
+            // boostGUI->InitString();
+            // osDelay(110);
             continue;
         }
         if (dbus->IsOnline()) {
