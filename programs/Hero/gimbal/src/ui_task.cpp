@@ -31,7 +31,32 @@ communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
 communication::StringGUI* shootUnlockGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
-communication::GUI* wheelGUI = nullptr;
+
+// ============ Guideline Configuration (reverse-camera style) ============
+// Offsets relative to screen center (GUIDELINE_CENTER_X, GUIDELINE_CENTER_Y)
+// Adjust these values to match robot physical outline
+//
+//        \       /    ← start points (upper, near crosshair)
+//         \     /
+//          \   /
+//           \ /       ← end points (lower, near screen bottom)
+//
+// Left guideline
+const int16_t GUIDELINE_LEFT_START_X_OFFSET = -50-240-140;   // Start X (upper, close to center)
+const int16_t GUIDELINE_LEFT_START_Y_OFFSET = -100;  // Start Y (negative = below center)
+const int16_t GUIDELINE_LEFT_END_X_OFFSET = -200-240-140;    // End X (lower, spread outward)
+const int16_t GUIDELINE_LEFT_END_Y_OFFSET = -440;    // End Y (near screen bottom)
+// Right guideline
+const int16_t GUIDELINE_RIGHT_START_X_OFFSET = 50+230+180;    // Start X (upper, close to center)
+const int16_t GUIDELINE_RIGHT_START_Y_OFFSET = -100;  // Start Y (negative = below center)
+const int16_t GUIDELINE_RIGHT_END_X_OFFSET = 200+230+180;     // End X (lower, spread outward)
+const int16_t GUIDELINE_RIGHT_END_Y_OFFSET = -440;    // End Y (near screen bottom)
+
+const int16_t GUIDELINE_CENTER_X = 960;
+const int16_t GUIDELINE_CENTER_Y = 540;
+
+communication::graphic_data_t guidelineLeft;
+communication::graphic_data_t guidelineRight;
 
 void UI_Delay(uint32_t delay) {
     osDelay(delay);
@@ -64,6 +89,20 @@ void uiTask(void* arg) {
     crossairGui = new communication::CrossairGUI(UI, 968, 510, -70, -540, -540, -540, -540, -84);
     osDelay(110);
 
+    // Initialize guideline GUI (reverse-camera style diagonal lines)
+    UI->LineDraw(&guidelineLeft, "gl", UI_Graph_Add, 1, UI_Color_Yellow, 2,
+                 GUIDELINE_CENTER_X + GUIDELINE_LEFT_START_X_OFFSET,
+                 GUIDELINE_CENTER_Y + GUIDELINE_LEFT_START_Y_OFFSET,
+                 GUIDELINE_CENTER_X + GUIDELINE_LEFT_END_X_OFFSET,
+                 GUIDELINE_CENTER_Y + GUIDELINE_LEFT_END_Y_OFFSET);
+    UI->LineDraw(&guidelineRight, "gr", UI_Graph_Add, 1, UI_Color_Yellow, 2,
+                 GUIDELINE_CENTER_X + GUIDELINE_RIGHT_START_X_OFFSET,
+                 GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_START_Y_OFFSET,
+                 GUIDELINE_CENTER_X + GUIDELINE_RIGHT_END_X_OFFSET,
+                 GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_END_Y_OFFSET);
+    UI->GraphRefresh(2, guidelineLeft, guidelineRight);
+    osDelay(110);
+
     // Initialize supercapacitor GUI
     // char batteryStr[15] = "BATTERY";
     // batteryGUI = new communication::CapGUI(UI, batteryStr);
@@ -89,7 +128,7 @@ void uiTask(void* arg) {
     // Initialize flywheel status GUI
     char wheelOnStr[15] = "FLYWHEEL ON";
     char wheelOffStr[15] = "FLYWHEEL OFF";
-    wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500, 450, UI_Color_Pink,30);
+    wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500, 450, UI_Color_Pink, 30);
     // char boostModeStr[15] = "BOOST!";
     // char boostOffStr[15] = " ";
     // boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
@@ -289,6 +328,11 @@ void uiTask(void* arg) {
             // osDelay(110);
             crossairGui->Delete();
             osDelay(110);
+            // Delete guidelines
+            UI->LineDraw(&guidelineLeft, "gl", UI_Graph_Del, 1, UI_Color_Yellow, 2, 0, 0, 0, 0);
+            UI->LineDraw(&guidelineRight, "gr", UI_Graph_Del, 1, UI_Color_Yellow, 2, 0, 0, 0, 0);
+            UI->GraphRefresh(2, guidelineLeft, guidelineRight);
+            osDelay(110);
             // batteryGUI->DeleteName();
             // osDelay(110);
             // batteryGUI->Delete();
@@ -320,6 +364,19 @@ void uiTask(void* arg) {
             // gimbalGUI->Init2();
             // osDelay(110);
             crossairGui->Init(-70, -540, -540, -540, -540, -84);
+            osDelay(110);
+            // Re-init guidelines
+            UI->LineDraw(&guidelineLeft, "gl", UI_Graph_Add, 1, UI_Color_Yellow, 2,
+                         GUIDELINE_CENTER_X + GUIDELINE_LEFT_START_X_OFFSET,
+                         GUIDELINE_CENTER_Y + GUIDELINE_LEFT_START_Y_OFFSET,
+                         GUIDELINE_CENTER_X + GUIDELINE_LEFT_END_X_OFFSET,
+                         GUIDELINE_CENTER_Y + GUIDELINE_LEFT_END_Y_OFFSET);
+            UI->LineDraw(&guidelineRight, "gr", UI_Graph_Add, 1, UI_Color_Yellow, 2,
+                         GUIDELINE_CENTER_X + GUIDELINE_RIGHT_START_X_OFFSET,
+                         GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_START_Y_OFFSET,
+                         GUIDELINE_CENTER_X + GUIDELINE_RIGHT_END_X_OFFSET,
+                         GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_END_Y_OFFSET);
+            UI->GraphRefresh(2, guidelineLeft, guidelineRight);
             osDelay(110);
             // batteryGUI->Init();
             // osDelay(110);
