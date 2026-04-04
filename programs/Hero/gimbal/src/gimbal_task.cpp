@@ -211,7 +211,7 @@ void init_gimbal() {
 
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
-        .kp = 13,
+        .kp = 8,
         .ki = 0,
         .kd = 4.5,
         .max_out = 6 * PI,

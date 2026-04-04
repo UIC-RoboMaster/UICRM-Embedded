@@ -36,8 +36,8 @@
 #include "user_define.h"
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
-    print_use_rtt();
-    // print_use_uart(&huart1, true, 921600);
+    // print_use_rtt();
+    // print_use_uart(&huart2, true, 921600);
     init_can();
     clear_screen();
     print("CAN init success!");
