@@ -107,8 +107,8 @@ void chassisTask(void* arg) {
             imu->DataReady() &&
             imu->CaliDone()) {
             const float stage_0_time = 1;
-            const float stage_1_time = 6;
-            const float stage_2_time = 5.5;
+            const float stage_1_time = 5; // 6
+            const float stage_2_time = 4.625; //5.5
             const float stage_3_time = 2.5;
             float now = DWT_GetTimeline_s();
             switch (open_loop_stage) {
