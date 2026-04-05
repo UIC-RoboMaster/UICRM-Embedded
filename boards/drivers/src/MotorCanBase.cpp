@@ -62,7 +62,8 @@ namespace driver {
           output_shaft_omega_(0),
           can_(can),
           rx_id_(rx_id),
-          speed_offset_(0) {
+          speed_offset_(0),
+          current_offset_(0) {
         // 大疆的电机，自动识别TX_ID
         if (tx_id == 0x00) {
             constexpr uint16_t GROUP_SIZE = 4;
@@ -283,6 +284,8 @@ namespace driver {
             target = omega_pid_.ComputeOutput(target, GetOutputShaftOmega());
         }
 
+        target += current_offset_;
+
         // 输出
         if (mode_ != NONE) {
             SetOutput((int16_t)target);
@@ -414,6 +417,11 @@ namespace driver {
 
     void MotorCANBase::SetSpeedOffset(float offset) {
         speed_offset_ = offset;
+    }
+
+    void MotorCANBase::SetCurrentOffset(float offset)
+    {
+        current_offset_ = offset;
     }
 
     void MotorCANBase::RegisterPreOutputCallback(MotorCANBase::callback_t callback,

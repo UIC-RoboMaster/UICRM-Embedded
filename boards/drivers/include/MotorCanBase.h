@@ -218,6 +218,13 @@ namespace driver {
          */
         void SetSpeedOffset(float offset);
 
+        /**
+         *
+         * @brief 在电机目标电流（速度环PID的输出）上加上一个偏移量
+         * @note 用于实现前馈
+         */
+        void SetCurrentOffset(float offset);
+
       protected:
         volatile float theta_;  // 编码器提供的角度值，单位为[rad]
         volatile float omega_;  // 编码器提供的速度值，单位为[rad/s]
@@ -264,6 +271,8 @@ namespace driver {
 
         // 前馈中使用，在角度环输出的速度上加上一个偏移量
         float speed_offset_;
+        // 前馈中使用，在速度环输出的电流上加上一个偏移量
+        float current_offset_;
 
         callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
         void* error_callback_instance_ = nullptr;
