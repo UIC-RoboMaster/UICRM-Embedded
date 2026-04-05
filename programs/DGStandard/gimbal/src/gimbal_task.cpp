@@ -37,6 +37,9 @@ control::gimbal_t gimbal_data;
 
 void check_kill();
 
+float pitch_feedforward;
+
+
 void gimbalTask(void* arg) {
     UNUSED(arg);
     // 任务启动时先关掉两个电机，然后等待遥控器连接
@@ -97,7 +100,7 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
-        const float mouse_ratio = 0.5;
+        const float mouse_ratio = 1;
         const float remote_ratio = 0.005;
         if (dbus->IsOnline()) {
             if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
@@ -150,11 +153,20 @@ void gimbalTask(void* arg) {
                        speed_offset * (1 - offset_filter_ratio);
 
         yaw_motor->SetSpeedOffset(speed_offset);
+
+        // 前后移动pitch前馈
+        // const float car_vy_ratio = 100000;
+        // pitch_feedforward = car_vy_diff.get() * car_vy_ratio;
+        // pitch_motor->SetCurrentOffset(pitch_feedforward);
+
+
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
                 // 如果是跟随模式或者旋转模式，将IMU作为参考系
-                if (minipc->target_angle.shoot_cmd && is_autoaim) {
+                if (minipc->IsOnline()  && is_autoaim && (abs(minipc->target_angle.target_pitch) > 0.01 && abs(minipc->target_angle.target_pitch) < 100 &&
+                    abs(minipc->target_angle.target_yaw) > 0.01 && abs(minipc->target_angle.target_yaw) < 100))
+                {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch,
                                       -minipc->target_angle.target_yaw);
                 } else {
@@ -199,28 +211,28 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 12,
         .ki = 0,
-        .kd = 10,
+        .kd = 50,
         .max_out = 6 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 1,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
         .kp = 8192,
-        .ki = 0,
-        .kd = 0,
+        .ki = 5,
+        .kd = 5000,
         .max_out = 16384,  // 最大电流输出，参考说明书
-        .max_iout = 4000,
+        .max_iout = 2000,
         .deadband = 0,                          // 死区
         .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
         .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .output_filtering_coefficient = 0.5,    // 输出滤波系数
+        .derivative_filtering_coefficient = 0.5,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
@@ -232,6 +244,7 @@ void init_gimbal() {
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
     pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
                          driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetSpeedFilter(0.1);
 
     /**
      * yaw motor
@@ -240,12 +253,12 @@ void init_gimbal() {
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
         .kp = 12,
-        .ki = 0,
+        .ki = 0.001,
         .kd = 200,  // 再大会在前面顿一下
         .max_out =
             3 *
             PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
-        .max_iout = PI / 4,
+        .max_iout = PI / 8,
         .deadband = PI / 180,
         .A = 0,                                    // 变速积分所能达到的最大值为A+B
         .B = 0,                                    // 启动变速积分的死区
@@ -256,7 +269,7 @@ void init_gimbal() {
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
         .kp = 5000,
-        .ki = 0,
+        .ki = 5,
         .kd = 10000000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,

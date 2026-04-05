@@ -51,6 +51,31 @@ extern float chassis_vx;
 extern float chassis_vy;
 extern float chassis_vt;
 extern bool chassis_boost_flag;
+extern float car_vx, car_vy, car_vt;
 
 extern const float chassis_max_xy_speed;
 extern const float chassis_max_t_speed;
+
+template <typename T>
+class diff
+{
+    constexpr static int N = 6;
+    T prev[N];
+    T result;
+    float filter_ratio = 0.1;
+public:
+    T calc(T current) {
+        float tmp = (current + prev[N - 1]) / 2 - (prev[0] + prev[1]) / 2;
+        result = tmp * filter_ratio + result * (1 - filter_ratio);
+        for (int i = 0; i < N - 1; i++) {
+            prev[i] = prev[i + 1];
+        }
+        prev[N - 1] = current;
+        return result;
+    }
+    T get() const {
+        return result;
+    }
+};
+
+extern diff<float> car_vx_diff, car_vy_diff, car_vt_diff;

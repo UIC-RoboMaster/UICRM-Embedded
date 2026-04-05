@@ -158,14 +158,25 @@ void remoteTask(void* arg) {
         }
 
         // 鼠标 右键切换自瞄
-        if (mouse_right_edge->posEdge()) {
-            is_autoaim = !is_autoaim;
-            if (is_autoaim == false) {
-                // gimbal->TargetAbs(INS_Angle.pitch, INS_Angle.yaw);
-                shoot_load_mode = SHOOT_MODE_STOP;
-            }
-        }
+        // if (mouse_right_edge->posEdge()) {
+        //     is_autoaim = !is_autoaim;
+        //     if (is_autoaim == false) {
+        //         // gimbal->TargetAbs(INS_Angle.pitch, INS_Angle.yaw);
+        //         shoot_load_mode = SHOOT_MODE_STOP;
+        //     }
+        // }
 
+        static BoolEdgeDetector remote_swr;
+        remote_swr.input(refereerc->vt13_packet.remote.swr || mouse.r);
+        if (remote_swr.posEdge())
+        {
+            is_autoaim = true;
+        }
+        if (remote_swr.negEdge())
+        {
+            is_autoaim = false;
+            shoot_load_mode = SHOOT_MODE_STOP;
+        }
         /* 测试PID，摩擦轮关闭时，左摇杆下拨测试云台转动
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
             static BoolEdgeDetector* test_edge = new BoolEdgeDetector(false);
@@ -209,45 +220,33 @@ void remoteTask(void* arg) {
             }
         }
 
-        if (!is_autoaim || !minipc->IsOnline()) {
-            // DT7 左摇杆下拨
-            static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
-            shoot_switch_edge->input(state_l == remote::DOWN);
-            // VT13 扳机键
-            vt13_trigger_edge->input(refereerc->vt13_packet.remote.trigger);
+        // DT7 左摇杆下拨
+        static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
+        shoot_switch_edge->input(state_l == remote::DOWN);
+        // VT13 扳机键
+        vt13_trigger_edge->input(refereerc->vt13_packet.remote.trigger);
 
-            if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge() ||
-                vt13_trigger_edge->posEdge()) {
-                shoot_load_mode = SHOOT_MODE_SINGLE;
-                shoot_burst_timestamp = 0;
-            }
+        if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge() ||
+            vt13_trigger_edge->posEdge()) {
+            shoot_load_mode = SHOOT_MODE_SINGLE;
+            shoot_burst_timestamp = 0;
+        }
 
-            // 连发
-            if (state_l == remote::DOWN || mouse.l || refereerc->vt13_packet.remote.trigger) {
-                shoot_burst_timestamp++;
-            }
-            static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);
-            shoot_burst_switch_edge->input(shoot_burst_timestamp > 200 * REMOTE_OS_DELAY);
-            if (shoot_burst_switch_edge->posEdge()) {
-                shoot_load_mode = SHOOT_MODE_BURST;
-            }
+        // 连发
+        if (state_l == remote::DOWN || mouse.l || refereerc->vt13_packet.remote.trigger) {
+            shoot_burst_timestamp++;
+        }
+        static BoolEdgeDetector* shoot_burst_switch_edge = new BoolEdgeDetector(false);
+        shoot_burst_switch_edge->input(shoot_burst_timestamp > 200 * REMOTE_OS_DELAY);
+        if (shoot_burst_switch_edge->posEdge()) {
+            shoot_load_mode = SHOOT_MODE_BURST;
+        }
 
-            // 不发射
-            if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() ||
-                vt13_trigger_edge->negEdge()) {
-                shoot_load_mode = SHOOT_MODE_STOP;
-                shoot_burst_timestamp = 0;
-            }
-        } else {
-            // 自喵模式下只有连发
-            if (minipc->IsOnline()) {
-                if (minipc->target_angle.shoot_cmd != 0 && mouse.l) {
-                    shoot_load_mode = SHOOT_MODE_BURST;
-                } else {
-                    shoot_load_mode = SHOOT_MODE_STOP;
-                    shoot_burst_timestamp = 0;
-                }
-            }
+        // 不发射
+        if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() ||
+            vt13_trigger_edge->negEdge()) {
+            shoot_load_mode = SHOOT_MODE_STOP;
+            shoot_burst_timestamp = 0;
         }
 
         // 按下G切换射速

@@ -82,8 +82,10 @@ void minipc_task(void* args) {
         }
 
         if (i == 1000) {
-            // Secend event
+            // 我们在2026赛季遇到了步兵和烧饼自瞄都瞄准自家人的情况
+            // 为了防止裁判系统传递错误的编号，我们在比赛开局前将编号写死
             minipc->robot_status_upload.robot_id = referee->game_robot_status.robot_id;
+            // minipc->robot_status_upload.robot_id = 103;
             minipc->robot_status_upload.vision_reset = 0;
             minipc->robot_status_upload.location_data[0] = 0;
             minipc->robot_status_upload.location_data[1] = 0;

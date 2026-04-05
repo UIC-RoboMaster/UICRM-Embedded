@@ -43,7 +43,7 @@ void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     // 初始化调试串口，使print()函数能够输出调试信息
-    print_use_rtt();
+    print_use_uart(&huart8, true, 921600);
     // 初始化can总线，can在各个进程中都需要被使用所以在这里独立初始化
     init_can();
     // 初始化IMU
@@ -90,6 +90,10 @@ void RM_RTOS_Default_Task(const void* arg) {
     //     control::ConstrainedPID::PID_State_t state;
     //     state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
     //     state.dout = -state.dout;
+    //     // state.error = car_vy;
+    //     // state.pout = car_vy_diff.get();
+    //     // extern float pitch_feedforward;
+    //     // state.iout = pitch_feedforward;
     //     memcpy(buffer + 2, &state, sizeof(state));
     //
     //     state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
@@ -115,6 +119,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Mode:%s\r\n", remote_mode_str(remote_mode));
         print("Shoot Fric Mode:%s\r\n", shoot_fric_mode_str(shoot_flywheel_mode));
         print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_load_mode));
+        print("AutoAim:%d\r\n", is_autoaim);
         print("\r\n");
 
         // DBUS info
@@ -128,14 +133,18 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         // Remote info
         print(
-            "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
-            "[SWR: %d] [Trig: %d]\r\n",
+            "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d]"
+            " [Mode: %d] [SWL: %d] [SWR: %d] [Trig: %d]\r\n",
             refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
             refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
             refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
-            refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
-            refereerc->vt13_packet.remote.trigger);
+            (int)refereerc->vt13_packet.remote.swl, (int)refereerc->vt13_packet.remote.swr?1:0,
+            (int)refereerc->vt13_packet.remote.trigger?1:0);
         print("\r\n");
+        auto &mouse = refereerc->vt13_packet.mouse;
+        print("Mouse: [X: %d] [Y: %d] [ROLL: %d] [L %d] [R %d] [MID %d]", mouse.x, mouse.y, mouse.roll, mouse.l, mouse.r, mouse.mid);
+        print("\r\n");
+
 
         // Chassis info
         print("Chassis speed %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy,
@@ -150,8 +159,8 @@ void RM_RTOS_Default_Task(const void* arg) {
               gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
               gimbal->getYawTarget() - gimbal_param->yaw_offset_);
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
-        print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
-              minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
+        print("Vision Target: P%.3f Y%.3f acc[%d] shoot{%d} time(%d)\r\n", minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw, minipc->target_angle.accuracy, minipc->shoot_cmd.shoot_cmd, minipc->GetLastUptime());
         print("\r\n");
 
         // Shoot info
@@ -170,6 +179,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Motor Stat: ");
         print_enabled("Yaw", yaw_motor->IsOnline());
         print_enabled("Pitch", pitch_motor->IsOnline());
+        print_enabled("Steering", steering_motor->IsOnline());
         print("\r\n");
         print("Ref Pwr En: ");
         print_enabled("Chassis", referee->game_robot_status.mains_power_chassis_output);

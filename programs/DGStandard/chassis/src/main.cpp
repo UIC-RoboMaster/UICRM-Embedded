@@ -29,6 +29,8 @@
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "supercap.h"
+#include "bsp_os.h"
+
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
@@ -46,7 +48,8 @@ bsp::BatteryVol* battery_vol = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(100);
-    print_use_uart(&huart1);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
+    print_use_uart(&BOARD_UART2);
     can2 = new bsp::CAN(&hcan2, false);
     can1 = new bsp::CAN(&hcan1, true);
     fl_motor = new driver::Motor3508(can2, 0x202);

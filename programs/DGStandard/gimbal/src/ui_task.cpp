@@ -26,13 +26,14 @@ osThreadId_t uiTaskHandle;
 communication::UserInterface* UI = nullptr;
 communication::ChassisGUI* chassisGUI = nullptr;
 communication::CrossairGUI* crossairGui = nullptr;
-communication::GimbalGUI* gimbalGUI = nullptr;
-communication::CapGUI* batteryGUI = nullptr;
+// communication::GimbalGUI* gimbalGUI = nullptr;
+// communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* shootFrequencyGUI = nullptr;
-communication::StringGUI* boostGUI = nullptr;
-communication::StringGUI* autoAimGUI = nullptr;
+// communication::StringGUI* boostGUI = nullptr;
+// communication::StringGUI* autoAimGUI = nullptr;
+communication::StringGUI* noBulletGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
 
 void UI_Delay(uint32_t delay) {
@@ -60,21 +61,22 @@ void uiTask(void* arg) {
     chassisGUI->Init2();
     osDelay(110);
     // Initialize crosshair GUI
-    crossairGui = new communication::CrossairGUI(UI);
+    crossairGui = new communication::CrossairGUI(UI, 940, 485,
+        0, 0, 0, 0, 0, 0);
     osDelay(110);
 
     // Initialize supercapacitor GUI
-    char batteryStr[15] = "SUPERCAP";
-    batteryGUI = new communication::CapGUI(UI, batteryStr);
-    osDelay(110);
-    batteryGUI->InitName();
-    osDelay(110);
+    // char batteryStr[15] = "SUPERCAP";
+    // batteryGUI = new communication::CapGUI(UI, batteryStr);
+    // osDelay(110);
+    // batteryGUI->InitName();
+    // osDelay(110);
 
     // Initialize Gimbal GUI
-    gimbalGUI = new communication::GimbalGUI(UI);
-    osDelay(110);
-    gimbalGUI->Init2();
-    osDelay(110);
+    // gimbalGUI = new communication::GimbalGUI(UI);
+    // osDelay(110);
+    // gimbalGUI->Init2();
+    // osDelay(110);
 
     // Initialize self-diagnosis GUI
     char diagStr[29] = "";
@@ -85,16 +87,22 @@ void uiTask(void* arg) {
     int8_t modeColor = UI_Color_Orange;
     modeGUI = new communication::StringGUI(UI, followModeStr, 810, 120, modeColor, 30);
     // Initialize flywheel status GUI
-    char wheelOnStr[15] = "FLYWHEEL ON";
-    char wheelOffStr[15] = "FLYWHEEL OFF";
+    char wheelStartingStr[] = "FLYWHEEL STARTING";
+    char wheelOnStr[] = "FLYWHEEL ON";
+    char wheelOffStr[] = "FLYWHEEL OFF";
+    char wheelUnknownStr[] = "FLYWHEEL UNKNOWN";
     wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500, 430, UI_Color_Pink);
-    char boostModeStr[15] = "BOOST!";
-    char boostOffStr[15] = " ";
-    boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
+    // char boostModeStr[15] = "BOOST!";
+    // char boostOffStr[15] = " ";
+    // boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
 
-    char autoAimStr[15] = "AUTOAIM ";
-    char autoAimOffStr[15] = "        ";
-    autoAimGUI = new communication::StringGUI(UI, autoAimOffStr, 840, 730, UI_Color_Orange, 30);
+    char noBulletStr[] = "NO BULLET. PRESS O KEY";
+    char noBulletOffStr[] = "                     ";
+    noBulletGUI = new communication::StringGUI(UI, noBulletStr, 750, 500, UI_Color_Purplish_red, 20);
+
+    // char autoAimStr[15] = "AUTOAIM ";
+    // char autoAimOffStr[15] = "        ";
+    // autoAimGUI = new communication::StringGUI(UI, autoAimOffStr, 840, 730, UI_Color_Orange, 30);
 
     // Initialize current mode GUI
     char ShootFrequencyStr[15] = "NORMAL";
@@ -106,37 +114,37 @@ void uiTask(void* arg) {
     osDelay(110);
     wheelGUI->Init();
     osDelay(110);
-    boostGUI->Init();
-    osDelay(110);
-    autoAimGUI->Init();
-    osDelay(110);
+    // boostGUI->Init();
+    // osDelay(110);
+    // autoAimGUI->Init();
+    // osDelay(110);
     shootFrequencyGUI->Init();
     osDelay(110);
     modeGUI->InitString();
     osDelay(110);
     wheelGUI->InitString();
     osDelay(110);
-    boostGUI->InitString();
-    osDelay(110);
-    autoAimGUI->InitString();
-    osDelay(110);
+    // boostGUI->InitString();
+    // osDelay(110);
+    // autoAimGUI->InitString();
+    // osDelay(110);
     shootFrequencyGUI->InitString();
     osDelay(110);
-    float relative_angle = 0;
-    float pitch_angle = 0;
-    float power_percent = 1;
+    noBulletGUI->InitString();
+    osDelay(110);
+
     int8_t last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
     ShootSpeed last_shoot_frequency = SHOOT_FREQUENCY_NORMAL;
-    BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
-    BoolEdgeDetector* autoAimEdgeDetector = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* autoAimEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
 
-    BoolEdgeDetector* fl_motor_check_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* fr_motor_check_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* bl_motor_check_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* br_motor_check_edge = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* fl_motor_check_edge = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* fr_motor_check_edge = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* bl_motor_check_edge = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* br_motor_check_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* yaw_motor_check_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* pitch_motor_check_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* steer_motor_check_edge = new BoolEdgeDetector(false);
@@ -144,30 +152,44 @@ void uiTask(void* arg) {
     BoolEdgeDetector* imu_cali_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* imu_temp_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* shoot_jam_edge = new BoolEdgeDetector(false);
+    BoolEdgeDetector* bullet_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
         // 通过两个云台电机的角度
-        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-        pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
+        float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        // float pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
         // 更新底盘转速码表
         chassisGUI->Update(chassis_vx / chassis_max_xy_speed, chassis_vy / chassis_max_xy_speed,
                            relative_angle);
         osDelay(UI_OS_DELAY);
 
         // 更新电源百分比（后期是超级电容剩余点亮
-        power_percent = 1.0f;
-
-        batteryGUI->Update(power_percent);
-        osDelay(UI_OS_DELAY);
+        // static int cycle_cnt_power = 0;
+        // cycle_cnt_power++;
+        //
+        // if (cycle_cnt_power == 5)
+        // {
+        //     cycle_cnt_power = 0;
+        //     float power_percent = 1.0f;
+        //     batteryGUI->Update(power_percent);
+        //     osDelay(UI_OS_DELAY);
+        // }
 
         // 更新云台小坦克
-        gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle, true);
-        osDelay(UI_OS_DELAY);
+        // gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle, true);
+        // osDelay(UI_OS_DELAY);
 
-        // 更新运行模式
-        if (remote_mode != last_mode) {
-            char modeStr[30];
-            switch (remote_mode) {
+
+
+        {
+            // 运行模式
+            if (remote_mode != last_mode) {
+                char modeStr[30];
+                switch (remote_mode) {
+                case REMOTE_MODE_KILL:
+                    strcpy(modeStr, "KILL MODE ");
+                    modeColor = UI_Color_Green;
+                    break;
                 case REMOTE_MODE_STOP:
                     strcpy(modeStr, "STOP MODE     ");
                     modeColor = UI_Color_Purplish_red;
@@ -188,67 +210,98 @@ void uiTask(void* arg) {
                     strcpy(modeStr, "UNKNOWN MODE   ");
                     modeColor = UI_Color_Purplish_red;
                     break;
+                }
+
+                modeGUI->Update(modeStr, modeColor);
+                osDelay(UI_OS_DELAY);
             }
-
-            modeGUI->Update(modeStr, modeColor);
-            osDelay(UI_OS_DELAY);
-        }
-
-        // Update wheel status GUI
-        if (last_fric_mode != shoot_flywheel_mode) {
-            char* wheelStr =
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
-            uint32_t wheelColor =
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
-            wheelGUI->Update(wheelStr, wheelColor);
-            osDelay(UI_OS_DELAY);
-        }
-        if (shoot_speed != last_shoot_frequency) {
-            char shoot_frequency_str[30];
-            switch (shoot_speed) {
-                case SHOOT_FREQUENCY_NORMAL:
-                    strcpy(shoot_frequency_str, "NORMAL        ");
-                    ShootFrequencyColor = UI_Color_Green;
+            // 摩擦轮状态
+            if (last_fric_mode != shoot_flywheel_mode) {
+                char* wheelStr;
+                uint32_t wheelColor;
+                switch (shoot_flywheel_mode)
+                {
+                case SHOOT_FRIC_MODE_STOP:
+                    wheelStr = wheelOffStr;
+                    wheelColor = UI_Color_Purplish_red;
                     break;
-                case SHOOT_FREQUENCY_FAST:
-                    strcpy(shoot_frequency_str, "FAST   ");
-                    ShootFrequencyColor = UI_Color_Orange;
+                case SHOOT_FRIC_MODE_PREPARING:
+                    wheelStr = wheelStartingStr;
+                    wheelColor = UI_Color_Orange;
                     break;
-                case SHOOT_FREQUENCY_BURST:
-                    strcpy(shoot_frequency_str, "BURST     ");
-                    ShootFrequencyColor = UI_Color_Purplish_red;
+                case SHOOT_FRIC_MODE_PREPARED:
+                    wheelStr = wheelOnStr;
+                    wheelColor = UI_Color_Green;
                     break;
                 default:
-                    strcpy(shoot_frequency_str, "UNKNOWN   ");
-                    ShootFrequencyColor = UI_Color_Purplish_red;
+                    wheelStr = wheelUnknownStr;
+                    wheelColor = UI_Color_Black;
                     break;
+                }
+                wheelGUI->Update(wheelStr, wheelColor);
+                osDelay(UI_OS_DELAY);
+            }
+            // 射击性能模式
+            if (shoot_speed != last_shoot_frequency) {
+                char shoot_frequency_str[30];
+                switch (shoot_speed) {
+                    case SHOOT_FREQUENCY_NORMAL:
+                        strcpy(shoot_frequency_str, "NORMAL        ");
+                        ShootFrequencyColor = UI_Color_Green;
+                        break;
+                    case SHOOT_FREQUENCY_FAST:
+                        strcpy(shoot_frequency_str, "FAST   ");
+                        ShootFrequencyColor = UI_Color_Orange;
+                        break;
+                    case SHOOT_FREQUENCY_BURST:
+                        strcpy(shoot_frequency_str, "BURST     ");
+                        ShootFrequencyColor = UI_Color_Purplish_red;
+                        break;
+                    default:
+                        strcpy(shoot_frequency_str, "UNKNOWN   ");
+                        ShootFrequencyColor = UI_Color_Purplish_red;
+                        break;
+                }
+
+                shootFrequencyGUI->Update(shoot_frequency_str, ShootFrequencyColor);
+                osDelay(UI_OS_DELAY);
+            }
+            // // 底盘性能模式
+            // boostEdgeDetector->input(chassis_boost_flag);
+            // if (boostEdgeDetector->edge()) {
+            //     char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
+            //     boostGUI->Update(boostStr, UI_Color_Pink);
+            //     osDelay(UI_OS_DELAY);
+            // }
+            // 自瞄开关
+            // autoAimEdgeDetector->input(is_autoaim);
+            // if (autoAimEdgeDetector->edge()) {
+            //     char* autoaimStr = is_autoaim ? autoAimStr : autoAimOffStr;
+            //     autoAimGUI->Update(autoaimStr, UI_Color_Pink);
+            //     osDelay(UI_OS_DELAY);
+            // }
+            bullet_edge->input(referee->bullet_remaining.bullet_remaining_num_17mm <= 0);
+            if (bullet_edge->posEdge())
+            {
+                noBulletGUI->Update(noBulletStr, UI_Color_Purplish_red, sizeof(noBulletStr));
+                osDelay(UI_OS_DELAY);
+            } else if (bullet_edge->negEdge()) {
+                noBulletGUI->Update(noBulletOffStr, UI_Color_Purplish_red, sizeof(noBulletOffStr));
+                osDelay(UI_OS_DELAY);
             }
 
-            shootFrequencyGUI->Update(shoot_frequency_str, ShootFrequencyColor);
-            osDelay(UI_OS_DELAY);
+            last_mode = remote_mode;
+            last_fric_mode = shoot_flywheel_mode;
+            last_shoot_frequency = shoot_speed;
         }
-        boostEdgeDetector->input(chassis_boost_flag);
-        if (boostEdgeDetector->edge()) {
-            char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
-            boostGUI->Update(boostStr, UI_Color_Pink);
-            osDelay(UI_OS_DELAY);
-        }
-        autoAimEdgeDetector->input(is_autoaim);
-        if (autoAimEdgeDetector->edge()) {
-            char* autoaimStr = is_autoaim ? autoAimStr : autoAimOffStr;
-            autoAimGUI->Update(autoaimStr, UI_Color_Pink);
-            osDelay(UI_OS_DELAY);
-        }
-        last_mode = remote_mode;
-        last_fric_mode = shoot_flywheel_mode;
-        last_shoot_frequency = shoot_speed;
+
 
         // 离线信息
         {
-            fl_motor_check_edge->input(true);
-            fr_motor_check_edge->input(true);
-            bl_motor_check_edge->input(true);
-            br_motor_check_edge->input(true);
+            // fl_motor_check_edge->input(true);
+            // fr_motor_check_edge->input(true);
+            // bl_motor_check_edge->input(true);
+            // br_motor_check_edge->input(true);
             yaw_motor_check_edge->input(yaw_motor->IsOnline());
             pitch_motor_check_edge->input(pitch_motor->IsOnline());
             steer_motor_check_edge->input(steering_motor->IsOnline());
@@ -257,22 +310,22 @@ void uiTask(void* arg) {
             imu_temp_edge->input(true);
             shoot_jam_edge->input(jam_notify_flags);
 
-            if (fl_motor_check_edge->negEdge()) {
-                strcpy(diagStr, "FL MOTOR OFFLINE     ");
-                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-            }
-            if (fr_motor_check_edge->negEdge()) {
-                strcpy(diagStr, "FR MOTOR OFFLINE     ");
-                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-            }
-            if (bl_motor_check_edge->negEdge()) {
-                strcpy(diagStr, "BL MOTOR OFFLINE     ");
-                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-            }
-            if (br_motor_check_edge->negEdge()) {
-                strcpy(diagStr, "BR MOTOR OFFLINE     ");
-                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-            }
+            // if (fl_motor_check_edge->negEdge()) {
+            //     strcpy(diagStr, "FL MOTOR OFFLINE     ");
+            //     diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            // }
+            // if (fr_motor_check_edge->negEdge()) {
+            //     strcpy(diagStr, "FR MOTOR OFFLINE     ");
+            //     diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            // }
+            // if (bl_motor_check_edge->negEdge()) {
+            //     strcpy(diagStr, "BL MOTOR OFFLINE     ");
+            //     diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            // }
+            // if (br_motor_check_edge->negEdge()) {
+            //     strcpy(diagStr, "BR MOTOR OFFLINE     ");
+            //     diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            // }
             if (yaw_motor_check_edge->negEdge()) {
                 strcpy(diagStr, "YAW MOTOR OFFLINE    ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
@@ -305,11 +358,10 @@ void uiTask(void* arg) {
         }
 
         // v键清理UI
-        if (dbus->IsOnline()) {
+        if (dbus->IsOnline())
             v_edge->input(dbus->keyboard.bit.V);
-        } else {
-            v_edge->input(refereerc->remote_control.keyboard.bit.V);
-        }
+        else
+            v_edge->input(refereerc->vt13_packet.keyboard.bit.V);
 
         if (v_edge->posEdge()) {
             osDelay(110);
@@ -317,48 +369,49 @@ void uiTask(void* arg) {
             osDelay(110);
             chassisGUI->Delete();
             osDelay(110);
-            gimbalGUI->Delete2();
-            osDelay(110);
-            gimbalGUI->Delete();
-            osDelay(110);
+            // gimbalGUI->Delete2();
+            // osDelay(110);
+            // gimbalGUI->Delete();
+            // osDelay(110);
             crossairGui->Delete();
             osDelay(110);
-            batteryGUI->DeleteName();
-            osDelay(110);
-            batteryGUI->Delete();
-            osDelay(110);
+            // batteryGUI->DeleteName();
+            // osDelay(110);
+            // batteryGUI->Delete();
+            // osDelay(110);
             modeGUI->Delete();
             osDelay(110);
             wheelGUI->Delete();
             osDelay(110);
-            boostGUI->Delete();
-            osDelay(110);
-            autoAimGUI->Delete();
-            osDelay(110);
+            // boostGUI->Delete();
+            // osDelay(110);
+            // autoAimGUI->Delete();
+            // osDelay(110);
             shootFrequencyGUI->Delete();
             osDelay(110);
             diagGUI->Clear(UI_Delay);
             osDelay(110);
+            // --------------------
             chassisGUI->Init();
             osDelay(110);
             chassisGUI->Init2();
             osDelay(110);
-            gimbalGUI->Init();
-            osDelay(110);
-            gimbalGUI->Init2();
-            osDelay(110);
+            // gimbalGUI->Init();
+            // osDelay(110);
+            // gimbalGUI->Init2();
+            // osDelay(110);
             crossairGui->Init();
             osDelay(110);
-            batteryGUI->Init();
-            osDelay(110);
-            batteryGUI->InitName();
-            osDelay(110);
+            // batteryGUI->Init();
+            // osDelay(110);
+            // batteryGUI->InitName();
+            // osDelay(110);
             modeGUI->Init();
             osDelay(110);
             wheelGUI->Init();
             osDelay(110);
-            boostGUI->Init();
-            osDelay(110);
+            // boostGUI->Init();
+            // osDelay(110);
             shootFrequencyGUI->Init();
             osDelay(110);
             shootFrequencyGUI->InitString();
@@ -367,20 +420,26 @@ void uiTask(void* arg) {
             osDelay(110);
             wheelGUI->InitString();
             osDelay(110);
-            boostGUI->InitString();
+            // boostGUI->InitString();
+            // osDelay(110);
+            // autoAimGUI->Init();
+            // osDelay(110);
+            // autoAimGUI->InitString();
+            // osDelay(110);
+            if (referee->bullet_remaining.bullet_remaining_num_17mm <= 0)
+                noBulletGUI->Update(noBulletStr, UI_Color_Purplish_red, sizeof(noBulletStr));
+            else
+                noBulletGUI->Update(noBulletOffStr, UI_Color_Purplish_red, sizeof(noBulletOffStr));
             osDelay(110);
-            autoAimGUI->Init();
-            osDelay(110);
-            autoAimGUI->InitString();
-            osDelay(110);
+
             continue;
         }
+
         // c键清理消息
-        if (dbus->IsOnline()) {
+        if (dbus->IsOnline())
             c_edge->input(dbus->keyboard.bit.C);
-        } else {
-            c_edge->input(refereerc->remote_control.keyboard.bit.C);
-        }
+        else
+            c_edge->input(refereerc->vt13_packet.keyboard.bit.C);
         if (c_edge->posEdge()) {
             diagGUI->Clear(UI_Delay);
         }

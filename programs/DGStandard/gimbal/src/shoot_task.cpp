@@ -98,7 +98,7 @@ void shootTask(void* arg) {
 
     steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
 
-    Ease* flywheel_speed_ease = new Ease(0, 0.3);
+    Ease* flywheel_speed_ease = new Ease(0, 1);
 
     while (true) {
         bool shoot_en = true;
@@ -199,21 +199,21 @@ void init_shoot() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 0.2,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
-        .kp = 1000,
-        .ki = 1,
+        .kp = 5000,
+        .ki = 2,
         .kd = 0,
         .max_out = 10000,
         .max_iout = 4000,
         .deadband = 0,                          // 死区
         .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
         .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .output_filtering_coefficient = 0.2,    // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
                 control::ConstrainedPID::OutputFilter |          // 输出滤波

@@ -28,6 +28,10 @@ float chassis_vx = 0;
 float chassis_vy = 0;
 float chassis_vt = 0;
 bool chassis_boost_flag = true;
+float car_vx, car_vy, car_vt;
+
+diff<float> car_vx_diff, car_vy_diff, car_vt_diff;
+
 
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
@@ -66,7 +70,6 @@ void chassisTask(void* arg) {
         }
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
-        float car_vx, car_vy, car_vt;
         //        if (keyboard.bit.X) {
         //            // 刹车
         //            car_vx = 0;
@@ -101,6 +104,19 @@ void chassisTask(void* arg) {
             car_vy = (keyboard.bit.W - keyboard.bit.S) * keyboard_speed;
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
+
+        static const float car_move_ease_ratio = 0.6;
+        static const float car_turn_ease_ratio = 0.9;
+        static Ease car_ease_vx(0, car_move_ease_ratio);
+        static Ease car_ease_vy(0, car_move_ease_ratio);
+        static Ease car_ease_vt(0, car_turn_ease_ratio);
+        car_vx = car_ease_vx.Calc(car_vx);
+        car_vy = car_ease_vy.Calc(car_vy);
+        car_vt = car_ease_vt.Calc(car_vt);
+
+        car_vx_diff.calc(car_vx);
+        car_vy_diff.calc(car_vy);
+        car_vt_diff.calc(car_vt);
 
         // 云台相对底盘的角度，通过云台和底盘连接的电机获取
         float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
@@ -143,7 +159,7 @@ void chassisTask(void* arg) {
 
         if (remote_mode == REMOTE_MODE_SPIN) {
             // 小陀螺模式，拨盘用来控制底盘加速度
-            static float spin_speed = 1;
+            static float spin_speed = 0.6f;
             spin_speed = spin_speed + car_vt * 0.01;
             spin_speed = clip<float>(spin_speed, -1, 1);
             chassis_vt = spin_speed;
