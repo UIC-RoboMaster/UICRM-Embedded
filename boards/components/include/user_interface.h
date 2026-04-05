@@ -239,11 +239,11 @@ namespace communication {
         CrossairGUI(UserInterface* UI, int16_t centerX = 960, int16_t centerY = 540,
                     int16_t x1 = -90, int16_t x2 = -100, int16_t x3 = -110, int16_t x4 = -120,
                     int16_t x5 = -130, int16_t x6 = -140);
-        void Init(int16_t x1 = -90, int16_t x2 = -100, int16_t x3 = -110, int16_t x4 = -120,
-                  int16_t x5 = -130, int16_t x6 = -140);
+        void Init();
         void Delete();
 
       private:
+        int16_t x_[7];
         UserInterface* UI_;
         graphic_data_t crosshair1_;
         graphic_data_t crosshair2_;
