@@ -503,20 +503,23 @@ namespace communication {
         UI_->LineDraw(&arrow_, "a", UI_Graph_Add, 1, UI_Color_Yellow, 20, chassis_X_ - 7,
                       chassis_Y_ + chassisLen_ / 2 - 7, chassis_X_ + 7,
                       chassis_Y_ + chassisLen_ / 2 + 7);
-        UI_->LineDraw(&gimbal_, "g", UI_Graph_Add, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
-                      chassis_X_, chassis_Y_ + gimbalLen_);
-        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Add, 1, UI_Color_Yellow, 2, speed_center_X_,
-                        speed_center_Y_, speed_circle_R_);
-        UI_->CircleDraw(&speed_center_, "sd", UI_Graph_Add, 2, UI_Color_Green, 10, speed_center_X_,
-                        speed_center_Y_, 5);
-        UI_->LineDraw(&speed_x_axis_, "sx", UI_Graph_Add, 3, UI_Color_Pink, 2,
-                      speed_center_X_ - speed_circle_R_, speed_center_Y_,
-                      speed_center_X_ + speed_circle_R_, speed_center_Y_);
-        UI_->LineDraw(&speed_y_axis_, "sy", UI_Graph_Add, 3, UI_Color_Pink, 2, speed_center_X_,
-                      speed_center_Y_ - speed_circle_R_, speed_center_X_,
-                      speed_center_Y_ + speed_circle_R_);
-        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_,
+        UI_->GraphRefresh(2, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_,
                           speed_y_axis_);
+        // 底盘速度圆形UI，在26赛季删除
+        // UI_->LineDraw(&gimbal_, "g", UI_Graph_Add, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
+        //               chassis_X_, chassis_Y_ + gimbalLen_);
+        // UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Add, 1, UI_Color_Yellow, 2, speed_center_X_,
+        //                 speed_center_Y_, speed_circle_R_);
+        // UI_->CircleDraw(&speed_center_, "sd", UI_Graph_Add, 2, UI_Color_Green, 10, speed_center_X_,
+        //                 speed_center_Y_, 5);
+        // UI_->LineDraw(&speed_x_axis_, "sx", UI_Graph_Add, 3, UI_Color_Pink, 2,
+        //               speed_center_X_ - speed_circle_R_, speed_center_Y_,
+        //               speed_center_X_ + speed_circle_R_, speed_center_Y_);
+        // UI_->LineDraw(&speed_y_axis_, "sy", UI_Graph_Add, 3, UI_Color_Pink, 2, speed_center_X_,
+        //               speed_center_Y_ - speed_circle_R_, speed_center_X_,
+        //               speed_center_Y_ + speed_circle_R_);
+        // UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_,
+        //                   speed_y_axis_);
     }
 
     void ChassisGUI::Delete() {
@@ -525,35 +528,40 @@ namespace communication {
         UI_->LineDraw(&arrow_, "a", UI_Graph_Del, 1, UI_Color_Yellow, 20, chassis_X_ - 7,
                       chassis_Y_ + chassisLen_ / 2 - 7, chassis_X_ + 7,
                       chassis_Y_ + chassisLen_ / 2 + 7);
-        UI_->LineDraw(&gimbal_, "g", UI_Graph_Del, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
-                      chassis_X_, chassis_Y_ + gimbalLen_);
-        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Del, 1, UI_Color_Yellow, 2, speed_center_X_,
-                        speed_center_Y_, speed_circle_R_);
-        UI_->CircleDraw(&speed_center_, "sd", UI_Graph_Del, 2, UI_Color_Green, 10, speed_center_X_,
-                        speed_center_Y_, 5);
-        UI_->LineDraw(&speed_x_axis_, "sx", UI_Graph_Del, 3, UI_Color_Pink, 2,
-                      speed_center_X_ - speed_circle_R_, speed_center_Y_,
-                      speed_center_X_ + speed_circle_R_, speed_center_Y_);
-        UI_->LineDraw(&speed_y_axis_, "sy", UI_Graph_Del, 3, UI_Color_Pink, 2, speed_center_X_,
-                      speed_center_Y_ - speed_circle_R_, speed_center_X_,
-                      speed_center_Y_ + speed_circle_R_);
-        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_,
+        UI_->GraphRefresh(2, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_,
                           speed_y_axis_);
+        // 底盘速度圆形UI，在26赛季删除
+        // UI_->LineDraw(&gimbal_, "g", UI_Graph_Del, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
+        //               chassis_X_, chassis_Y_ + gimbalLen_);
+        // UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Del, 1, UI_Color_Yellow, 2, speed_center_X_,
+        //                 speed_center_Y_, speed_circle_R_);
+        // UI_->CircleDraw(&speed_center_, "sd", UI_Graph_Del, 2, UI_Color_Green, 10, speed_center_X_,
+        //                 speed_center_Y_, 5);
+        // UI_->LineDraw(&speed_x_axis_, "sx", UI_Graph_Del, 3, UI_Color_Pink, 2,
+        //               speed_center_X_ - speed_circle_R_, speed_center_Y_,
+        //               speed_center_X_ + speed_circle_R_, speed_center_Y_);
+        // UI_->LineDraw(&speed_y_axis_, "sy", UI_Graph_Del, 3, UI_Color_Pink, 2, speed_center_X_,
+        //               speed_center_Y_ - speed_circle_R_, speed_center_X_,
+        //               speed_center_Y_ + speed_circle_R_);
+        // UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_,
+        //                   speed_y_axis_);
     }
 
     void ChassisGUI::Init2() {
-        UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Add, 2, UI_Color_Green, 10, 2,
-                     speed_center_X_ + speed_circle_R_ + 8, speed_center_Y_ - 2, 0);
-        UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Add, 2, UI_Color_Green, 10, 2,
-                     speed_center_X_ - 5, speed_center_Y_ - speed_circle_R_ - 10, 0);
-        UI_->GraphRefresh(2, speed_x_val_, speed_y_val_);
+        // 底盘速度圆形UI，在26赛季删除
+        // UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Add, 2, UI_Color_Green, 10, 2,
+        //              speed_center_X_ + speed_circle_R_ + 8, speed_center_Y_ - 2, 0);
+        // UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Add, 2, UI_Color_Green, 10, 2,
+        //              speed_center_X_ - 5, speed_center_Y_ - speed_circle_R_ - 10, 0);
+        // UI_->GraphRefresh(2, speed_x_val_, speed_y_val_);
     }
     void ChassisGUI::Delete2() {
-        UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Del, 2, UI_Color_Green, 10, 2,
-                     speed_center_X_ + speed_circle_R_ + 8, speed_center_Y_ - 2, 0);
-        UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Del, 2, UI_Color_Green, 10, 2,
-                     speed_center_X_ - 5, speed_center_Y_ - speed_circle_R_ - 10, 0);
-        UI_->GraphRefresh(2, speed_x_val_, speed_y_val_);
+        // 底盘速度圆形UI，在26赛季删除
+        // UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Del, 2, UI_Color_Green, 10, 2,
+        //              speed_center_X_ + speed_circle_R_ + 8, speed_center_Y_ - 2, 0);
+        // UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Del, 2, UI_Color_Green, 10, 2,
+        //              speed_center_X_ - 5, speed_center_Y_ - speed_circle_R_ - 10, 0);
+        // UI_->GraphRefresh(2, speed_x_val_, speed_y_val_);
     }
 
     void ChassisGUI::Update(float speed_x, float speed_y, float relative) {
@@ -568,23 +576,28 @@ namespace communication {
                       (uint32_t)(y_end - 10 * arm_cos_f32(relative + M_PI / 4)),
                       (uint32_t)(x_end - 10 * arm_sin_f32(relative + M_PI / 4)),
                       (uint32_t)(y_end + 10 * arm_cos_f32(relative + M_PI / 4)));
-        UI_->CircleDraw(&speed_center_, "sd", UI_Graph_Change, 2, UI_Color_Green, 10,
-                        speed_center_X_ + (int16_t)(speed_x * speed_circle_R_),
-                        speed_center_Y_ + (int16_t)(speed_y * speed_circle_R_), 5);
-        UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Change, 2, UI_Color_Green, 10, 2,
-                     speed_center_X_ + speed_circle_R_ + 8, speed_center_Y_ - 2,
-                     (int32_t)(speed_x * 100.0f));
-        UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Change, 2, UI_Color_Green, 10, 2,
-                     speed_center_X_ - 5, speed_center_Y_ - speed_circle_R_ - 10,
-                     (int32_t)(speed_y * 100.0f));
-        UI_->LineDraw(&gimbal_, "g", UI_Graph_Change, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
-                      chassis_X_, chassis_Y_ + gimbalLen_);
-        // Static element that can be remove
-        UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Change, 1, UI_Color_Yellow, 2,
-                        speed_center_X_, speed_center_Y_, speed_circle_R_);
 
-        UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_val_,
-                          speed_y_val_);
+        UI_->GraphRefresh(2, chassis_, arrow_);
+
+        UNUSED(speed_x);
+        UNUSED(speed_y);
+        // 底盘速度圆形UI，在26赛季删除
+        // UI_->CircleDraw(&speed_center_, "sd", UI_Graph_Change, 2, UI_Color_Green, 10,
+        //                 speed_center_X_ + (int16_t)(speed_x * speed_circle_R_),
+        //                 speed_center_Y_ + (int16_t)(speed_y * speed_circle_R_), 5);
+        // UI_->IntDraw(&speed_x_val_, "vx", UI_Graph_Change, 2, UI_Color_Green, 10, 2,
+        //              speed_center_X_ + speed_circle_R_ + 8, speed_center_Y_ - 2,
+        //              (int32_t)(speed_x * 100.0f));
+        // UI_->IntDraw(&speed_y_val_, "vy", UI_Graph_Change, 2, UI_Color_Green, 10, 2,
+        //              speed_center_X_ - 5, speed_center_Y_ - speed_circle_R_ - 10,
+        //              (int32_t)(speed_y * 100.0f));
+        // UI_->LineDraw(&gimbal_, "g", UI_Graph_Change, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
+        //               chassis_X_, chassis_Y_ + gimbalLen_);
+        // // Static element that can be remove
+        // UI_->CircleDraw(&speed_circle_, "sc", UI_Graph_Change, 1, UI_Color_Yellow, 2,
+        //                 speed_center_X_, speed_center_Y_, speed_circle_R_);
+        // UI_->GraphRefresh(7, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_val_,
+        //               speed_y_val_);
     }
 
     CrossairGUI::CrossairGUI(UserInterface* UI, int16_t centerX, int16_t centerY, int16_t x1,
