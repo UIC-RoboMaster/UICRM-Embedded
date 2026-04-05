@@ -368,8 +368,8 @@ namespace communication {
 
     /* ===== BULLET_REMAINING 0x0208 10Hz ===== */
     typedef struct {
-        uint16_t bullet_remaining_num_17mm;
-        uint16_t bullet_remaining_num_42mm;
+        int16_t bullet_remaining_num_17mm;
+        int16_t bullet_remaining_num_42mm;
         uint16_t coin_remaining_num;
     } __packed bullet_remaining_t;
 
