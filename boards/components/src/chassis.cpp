@@ -152,16 +152,16 @@ namespace control {
 
     void Chassis::Update() {
         // 如果有电机掉线，则关闭整个底盘
-        bool need_shutdown = !IsOnline();
-        for (int i = 0; i < wheel_num_; i++) {
-            if (!motors_[i]->IsOnline()) {
-                need_shutdown = true;
-                break;
-            }
-        }
-        if (need_shutdown) {
-            Disable();
-        }
+        // bool need_shutdown = !IsOnline();
+        // for (int i = 0; i < wheel_num_; i++) {
+        //     if (!motors_[i]->IsOnline()) {
+        //         need_shutdown = true;
+        //         break;
+        //     }
+        // }
+        // if (need_shutdown) {
+        //     Disable();
+        // }
 
         // 根据底盘的开关，控制四个电机开关
         if (!chassis_enable_) {
