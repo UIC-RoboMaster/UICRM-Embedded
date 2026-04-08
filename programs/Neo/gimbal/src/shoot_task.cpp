@@ -50,7 +50,7 @@ void shootTask(void* arg) {
     UNUSED(arg);
     // 启动等待
     osDelay(1000);
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         osDelay(SHOOT_OS_DELAY);
     }
     // 等待IMU初始化
@@ -70,8 +70,7 @@ void shootTask(void* arg) {
     ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
     while (true) {
-        bool shoot_en = true;
-        shoot_en &= remote_mode != REMOTE_MODE_KILL;
+        bool shoot_en = is_activate;
 #ifdef HAS_REFEREE
         shoot_en &= referee->game_robot_status.mains_power_shooter_output;
 #endif

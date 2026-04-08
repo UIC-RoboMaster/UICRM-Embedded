@@ -42,10 +42,10 @@ void remoteTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
 
-    // bool is_dbus_offline = true;
     bool is_robot_dead = true;
     bool is_referee_shoot_available = false;
 
+    // 使/失能（上/下电）
     auto activate_aut = control::AutomataBuilder<ActivateStates>()
         .item<control::AutomataInputRaw>(is_robot_dead)
         .transition<KILLED, ACTIVE>(TRANLOGIC {
@@ -58,6 +58,7 @@ void remoteTask(void* arg) {
         })
         .build<KILLED>();
 
+    // 控制模式
     auto tranlogic_next_remote_mode = TRANLOGIC {
         const auto& swr = COMPONENT(0);
         return swr.upEdge() && swr.get() == remote::UP;
@@ -73,6 +74,7 @@ void remoteTask(void* arg) {
     todo: should construct more stable logic.
           Example: SHOOT_FRIC_MODE_PREPARING should apply to prevent low-speed shoot.
     */
+    // 摩擦轮
     auto tranlogic_fric_wheel_trigger = TRANLOGIC {
         const auto& swl = COMPONENT(0);
         return swl.upEdge() && swl.get() == remote::UP;
@@ -84,6 +86,7 @@ void remoteTask(void* arg) {
         .build<SHOOT_FRIC_MODE_STOP>();
 
     // todo add single shoot
+    // 射击（供弹轮）
     auto shoot_aut = control::AutomataBuilder<ShootMode>()
         .item<control::AutomataInputRemote>(static_cast<remote::switch_t>(dbus->swl))
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
@@ -106,6 +109,7 @@ void remoteTask(void* arg) {
         })
         .build<SHOOT_MODE_STOP>();
 
+    // 子弹盖
     auto tranlogic_bullet_cap_trigger = TRANLOGIC {
         const auto& swl = COMPONENT(0);
         const auto& fric_state = COMPONENT(1);
@@ -134,10 +138,11 @@ void remoteTask(void* arg) {
 #endif
 
         activate_aut.input(std::make_tuple(is_robot_dead));
-        is_activate = activate_aut.state() == KILLED ? false : true;
+        is_activate = activate_aut.state() == ACTIVE;
         if (!is_activate) continue;
 
         remote_mode_aut.input(std::make_tuple(dbus->swr));
+        last_remote_mode = remote_mode;
         remote_mode = remote_mode_aut.state();
 
         fric_wheel_aut.input(std::make_tuple(dbus->swl));

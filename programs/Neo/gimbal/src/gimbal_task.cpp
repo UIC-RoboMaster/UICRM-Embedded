@@ -39,13 +39,13 @@ void gimbalTask(void* arg) {
     yaw_motor->Disable();
 
     osDelay(1500);
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         kill_gimbal();
         osDelay(GIMBAL_OS_DELAY);
     }
     int i = 0;
     while (i < 5000 || !imu->DataReady()) {
-        while (remote_mode == REMOTE_MODE_KILL) {
+        while (!is_activate) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);
         }
@@ -85,8 +85,7 @@ void gimbalTask(void* arg) {
 
     //    float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
-        bool gimbal_en = true;
-        gimbal_en &= remote_mode != REMOTE_MODE_KILL;
+        bool gimbal_en = is_activate;
 #ifdef HAS_REFEREE
         gimbal_en &= referee->game_robot_status.mains_power_gimbal_output;
 #endif

@@ -50,7 +50,7 @@ extern bool is_activate;
 
 enum RemoteMode {
     REMOTE_MODE_PREPARE = -2,
-    REMOTE_MODE_KILL = -1,
+    // REMOTE_MODE_KILL = -1,
     REMOTE_MODE_STOP = 0,
     REMOTE_MODE_FOLLOW = 1,
     REMOTE_MODE_SPIN = 2,
@@ -64,9 +64,9 @@ inline const char* remote_mode_str(RemoteMode mode) {
         case REMOTE_MODE_PREPARE:
             return "PREPARE";
             break;
-        case REMOTE_MODE_KILL:
-            return "KILL";
-            break;
+        // case REMOTE_MODE_KILL:
+        //     return "KILL";
+        //     break;
         case REMOTE_MODE_STOP:
             return "STOP";
             break;

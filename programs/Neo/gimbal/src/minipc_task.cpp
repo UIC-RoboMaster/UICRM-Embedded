@@ -109,7 +109,7 @@ void minipc_task(void* args) {
             minipc->robot_status_upload.location_data[0] = 0;
             minipc->robot_status_upload.location_data[1] = 0;
             minipc->robot_status_upload.is_killed = (referee->game_robot_status.remain_HP == 0);
-            minipc->robot_status_upload.is_killed |= (remote_mode == REMOTE_MODE_KILL);
+            minipc->robot_status_upload.is_killed |= (!is_activate);
             switch (remote_mode) {
                 case REMOTE_MODE_FOLLOW:
                     minipc->robot_status_upload.robot_mode = 1;

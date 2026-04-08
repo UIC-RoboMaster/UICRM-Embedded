@@ -40,7 +40,7 @@ void uiTask(void* arg) {
     UNUSED(arg);
 
     osDelay(1500);
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         osDelay(UI_OS_DELAY);
     }
     while (!referee->IsOnline()) {
@@ -115,7 +115,7 @@ void uiTask(void* arg) {
     float relative_angle = 0;
     float pitch_angle = 0;
     float power_percent = 1;
-    RemoteMode last_mode = REMOTE_MODE_KILL;
+    RemoteMode last_mode = REMOTE_MODE_SPIN;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
     BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* turboShootDetector = new BoolEdgeDetector(false);
