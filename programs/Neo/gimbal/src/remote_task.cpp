@@ -85,13 +85,21 @@ void remoteTask(void* arg) {
         .transition<SHOOT_FRIC_MODE_PREPARED, SHOOT_FRIC_MODE_STOP>(tranlogic_fric_wheel_trigger)
         .build<SHOOT_FRIC_MODE_STOP>();
 
-    // todo add single shoot
     // 射击（供弹轮）
+    auto tranlogic_stop_shooting = TRANLOGIC {
+        const auto& swl = COMPONENT(0);
+        const auto& fric_state = COMPONENT(1);
+        const auto& referee_permit = COMPONENT(2);
+        return !(swl.get() == remote::DOWN &&
+            fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
+            referee_permit.get());
+    };
+    // auto reverse_tranlogic_stop_shooting = TRANLOGIC { return !tranlogic_stop_shooting(ins); };
     auto shoot_aut = control::AutomataBuilder<ShootMode>()
         .item<control::AutomataInputRemote>(static_cast<remote::switch_t>(dbus->swl))
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .item<control::AutomataInputRaw>(is_referee_shoot_available)
-        .transition<SHOOT_MODE_STOP, SHOOT_MODE_BURST>(TRANLOGIC {
+        .transition<SHOOT_MODE_STOP, SHOOT_MODE_SINGLE>(TRANLOGIC {
             const auto& swl = COMPONENT(0);
             const auto& fric_state = COMPONENT(1);
             const auto& referee_permit = COMPONENT(2);
@@ -99,14 +107,18 @@ void remoteTask(void* arg) {
                 fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
                 referee_permit.get();
         })
-        .transition<SHOOT_MODE_BURST, SHOOT_MODE_STOP>(TRANLOGIC {
+        .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_BURST>(TRANLOGIC {
             const auto& swl = COMPONENT(0);
             const auto& fric_state = COMPONENT(1);
             const auto& referee_permit = COMPONENT(2);
-            return !(swl.get() == remote::DOWN &&
+            constexpr uint16_t burst_threshold_cycle = 250;
+            return swl.get() == remote::DOWN &&
                 fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
-                referee_permit.get());
+                referee_permit.get() &&
+                swl.lastUpdate() > burst_threshold_cycle;
         })
+        .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_STOP>(tranlogic_stop_shooting)
+        .transition<SHOOT_MODE_BURST, SHOOT_MODE_STOP>(tranlogic_stop_shooting)
         .build<SHOOT_MODE_STOP>();
 
     // 子弹盖
