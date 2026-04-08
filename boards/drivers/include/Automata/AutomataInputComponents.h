@@ -130,8 +130,10 @@ namespace control {
         virtual const T getDiff() const {
             if constexpr (std::is_same_v<T, bool>)
                 return edge();
-            else
+            else if constexpr (std::is_integral_v<T>)
                 return curr_val_ - last_val_;
+            else
+                return curr_val_;
         }
 
         /**

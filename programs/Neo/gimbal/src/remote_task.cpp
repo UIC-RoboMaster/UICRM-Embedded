@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+# Copyright (c) 2026-2027. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,258 +18,139 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "Automata.h"
 #include "remote_task.h"
-
-#include <string.h>
-
 #include "imu_task.h"
 #include "minipc_task.h"
 
 remote::DBUS* dbus = nullptr;
-RemoteMode remote_mode = REMOTE_MODE_AUTOPILOT;
-RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_AUTOPILOT, REMOTE_MODE_SPIN, REMOTE_MODE_FOLLOW};
-int8_t current_index = 0;
-const int8_t remote_mode_max = 3;
-const int8_t remote_mode_min = 1;
-ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-ShootMode shoot_load_mode = SHOOT_MODE_STOP;
-CapMode cap_mode = CAP_MODE_CLOSE;
-bool is_killed = false;
-bool turbo_shoot = false;
 
-void init_dbus() {
+bool is_activate = true;
+RemoteMode remote_mode = REMOTE_MODE_AUTOPILOT;
+ShootFricMode shoot_fric_wheel_mode = SHOOT_FRIC_MODE_STOP;
+ShootMode shoot_mode = SHOOT_MODE_STOP;
+BulletCapMode bullet_cap_mode = BULLET_CAP_MODE_CLOSE;
+
+RemoteMode last_remote_mode = REMOTE_MODE_SPIN;
+
+void init_remote() {
     dbus = new remote::DBUS(&huart3);
 }
+
 osThreadId_t remoteTaskHandle;
 void remoteTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
-    bool mode_switch = false;
-    bool shoot_fric_switch = false;
-    bool shoot_switch = false;
-    bool shoot_burst_switch = false;
-    bool shoot_stop_switch = false;
-    bool cap_switch = false;
-    uint32_t shoot_burst_timestamp = 0;
-    remote::switch_t last_state_r = remote::MID;
-    remote::switch_t last_state_l = remote::MID;
-    remote::keyboard_t last_keyboard;
-    remote::mouse_t last_mouse;
-    remote::switch_t state_r = remote::MID;
-    remote::switch_t state_l = remote::MID;
-    remote::keyboard_t keyboard;
-    remote::mouse_t mouse;
-    memset(&keyboard, 0, sizeof(keyboard));
-    memset(&mouse, 0, sizeof(mouse));
-    memset(&last_keyboard, 0, sizeof(last_keyboard));
-    memset(&last_mouse, 0, sizeof(last_mouse));
-    bool is_dbus_offline;
-    bool is_robot_dead;
-    bool is_shoot_available;
-    BoolEdgeDetector* z_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* shift_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* mouse_left_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* mouse_right_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* shoot_burst_edge = new BoolEdgeDetector(false);
+
+    // bool is_dbus_offline = true;
+    bool is_robot_dead = true;
+    bool is_referee_shoot_available = false;
+
+    auto activate_aut = control::AutomataBuilder<ActivateStates>()
+        .item<control::AutomataInputRaw>(is_robot_dead)
+        .transition<KILLED, ACTIVE>(TRANLOGIC {
+            const auto& is_dead = COMPONENT(0);
+            return dbus->IsOnline() && dbus->swr != remote::DOWN && !is_dead.get();
+        })
+        .transition<ACTIVE, KILLED>(TRANLOGIC {
+            const auto& is_dead = COMPONENT(0);
+            return !(dbus->IsOnline() && dbus->swr != remote::DOWN && !is_dead.get());
+        })
+        .build<KILLED>();
+
+    auto tranlogic_next_remote_mode = TRANLOGIC {
+        const auto& swr = COMPONENT(0);
+        return swr.upEdge() && swr.get() == remote::UP;
+    };
+    auto remote_mode_aut = control::AutomataBuilder<RemoteMode>()
+        .item<control::AutomataInputRemote>(static_cast<remote::switch_t>(dbus->swr))
+        .transition<REMOTE_MODE_AUTOPILOT, REMOTE_MODE_FOLLOW>(tranlogic_next_remote_mode)
+        .transition<REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN>(tranlogic_next_remote_mode)
+        .transition<REMOTE_MODE_SPIN, REMOTE_MODE_AUTOPILOT>(tranlogic_next_remote_mode)
+        .build<REMOTE_MODE_AUTOPILOT>();
+
+    /*
+    todo: should construct more stable logic.
+          Example: SHOOT_FRIC_MODE_PREPARING should apply to prevent low-speed shoot.
+    */
+    auto tranlogic_fric_wheel_trigger = TRANLOGIC {
+        const auto& swl = COMPONENT(0);
+        return swl.upEdge() && swl.get() == remote::UP;
+    };
+    auto fric_wheel_aut = control::AutomataBuilder<ShootFricMode>()
+        .item<control::AutomataInputRemote>(static_cast<remote::switch_t>(dbus->swl))
+        .transition<SHOOT_FRIC_MODE_STOP, SHOOT_FRIC_MODE_PREPARED>(tranlogic_fric_wheel_trigger)
+        .transition<SHOOT_FRIC_MODE_PREPARED, SHOOT_FRIC_MODE_STOP>(tranlogic_fric_wheel_trigger)
+        .build<SHOOT_FRIC_MODE_STOP>();
+
+    // todo add single shoot
+    auto shoot_aut = control::AutomataBuilder<ShootMode>()
+        .item<control::AutomataInputRemote>(static_cast<remote::switch_t>(dbus->swl))
+        .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
+        .item<control::AutomataInputRaw>(is_referee_shoot_available)
+        .transition<SHOOT_MODE_STOP, SHOOT_MODE_BURST>(TRANLOGIC {
+            const auto& swl = COMPONENT(0);
+            const auto& fric_state = COMPONENT(1);
+            const auto& referee_permit = COMPONENT(2);
+            return swl.get() == remote::DOWN &&
+                fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
+                referee_permit.get();
+        })
+        .transition<SHOOT_MODE_BURST, SHOOT_MODE_STOP>(TRANLOGIC {
+            const auto& swl = COMPONENT(0);
+            const auto& fric_state = COMPONENT(1);
+            const auto& referee_permit = COMPONENT(2);
+            return !(swl.get() == remote::DOWN &&
+                fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
+                referee_permit.get());
+        })
+        .build<SHOOT_MODE_STOP>();
+
+    auto tranlogic_bullet_cap_trigger = TRANLOGIC {
+        const auto& swl = COMPONENT(0);
+        const auto& fric_state = COMPONENT(1);
+        return swl.downEdge() && swl.get() == remote::DOWN && fric_state.get() == SHOOT_FRIC_MODE_STOP;
+    };
+    auto bullet_cap_aut = control::AutomataBuilder<BulletCapMode>()
+        .item<control::AutomataInputRemote>(static_cast<remote::switch_t>(dbus->swl))
+        .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
+        .transition<BULLET_CAP_MODE_CLOSE, BULLET_CAP_MODE_OPEN>(tranlogic_bullet_cap_trigger)
+        .transition<BULLET_CAP_MODE_OPEN, BULLET_CAP_MODE_CLOSE>(tranlogic_bullet_cap_trigger)
+        .build<BULLET_CAP_MODE_CLOSE>();
+
     while (true) {
-        // 检测遥控器是否离线，或者遥控器是否在安全模式下
-        is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
+        osDelay(REMOTE_OS_DELAY);
+
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
+        is_referee_shoot_available = (referee->game_robot_status.shooter_heat_limit -
                               referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
                              // referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
                              imu->CaliDone();
 #else
         is_robot_dead = false;
-        is_shoot_available = true;
+        is_referee_shoot_available = true;
 #endif
-        if (is_dbus_offline || is_robot_dead) {
-            if (!is_killed) {
-                // 如果遥控器离线或者机器人死亡，则进入安全模式
-                last_remote_mode = remote_mode;
-                remote_mode = REMOTE_MODE_KILL;
-                shoot_load_mode = SHOOT_MODE_DISABLE;
-                is_killed = true;
-            }
-        } else {
-            if (is_killed) {
-                // 如果遥控器重新连接或者机器人复活，则恢复上一次的遥控模式
-                remote_mode = last_remote_mode;
-                shoot_load_mode = SHOOT_MODE_STOP;
-                shoot_fric_switch = SHOOT_FRIC_MODE_STOP;
-                is_killed = false;
-            }
-        }
-        // when in kill
-        if (is_killed) {
-            osDelay(REMOTE_OS_DELAY);
-            continue;
-        }
 
-        // Update Last State
-        last_state_r = state_r;
-        last_state_l = state_l;
-        last_keyboard = keyboard;
-        last_mouse = mouse;
-        // Update State
-        if (dbus->IsOnline()) {
-            state_r = dbus->swr;
-            state_l = dbus->swl;
-            keyboard = dbus->keyboard;
-            mouse = dbus->mouse;
-        } else if (refereerc->IsOnline()) {
-            state_r = remote::MID;
-            state_l = remote::MID;
-            keyboard = refereerc->remote_control.keyboard;
-            mouse = refereerc->remote_control.mouse;
-        }
+        activate_aut.input(std::make_tuple(is_robot_dead));
+        is_activate = activate_aut.state() == KILLED ? false : true;
+        if (!is_activate) continue;
 
-        // Update Timestamp
-        z_edge->input(keyboard.bit.Z);
-        shift_edge->input(keyboard.bit.SHIFT);
-        mouse_left_edge->input(mouse.l);
-        mouse_right_edge->input(mouse.r);
+        remote_mode_aut.input(std::make_tuple(dbus->swr));
+        remote_mode = remote_mode_aut.state();
 
-        shoot_burst_edge->input(keyboard.bit.F);
-        if (shoot_burst_edge->posEdge()) {
-            turbo_shoot = !turbo_shoot;
-        }
+        fric_wheel_aut.input(std::make_tuple(dbus->swl));
+        shoot_fric_wheel_mode = fric_wheel_aut.state();
 
-        // remote mode switch
-        switch (state_r) {
-            case remote::UP:
-                if (last_state_r == remote::MID && dbus->IsOnline()) {
-                    mode_switch = true;
-                }
-                break;
-            case remote::MID:
-                if (shift_edge->posEdge()) {
-                    mode_switch = true;
-                }
-                break;
-            case remote::DOWN:
-                break;
-        }
-        if (mode_switch) {
-            mode_switch = false;
-            current_index = (current_index + 1) % remote_mode_max;
-            RemoteMode next_mode = available_remote_mode[current_index];
-            //            if (next_mode == RemoteMode::REMOTE_MODE_AUTOPILOT && !minipc->IsOnline())
-            //                next_mode = (RemoteMode)(next_mode + 1);
-            // if ((int8_t)next_mode > (int8_t)remote_mode_max) {
-            //     next_mode = (RemoteMode)remote_mode_min;
-            // }
-            last_remote_mode = remote_mode;
-            remote_mode = next_mode;
-        }
-        // shoot mode switch
-        switch (state_l) {
-            case remote::UP:
-                if (last_state_l == remote::MID && dbus->IsOnline()) {
-                    shoot_fric_switch = true;
-                }
-                break;
-            case remote::DOWN:
-                if (last_state_l == remote::MID && dbus->IsOnline() &&
-                    shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
-                    cap_switch = true;
-                } else if (last_state_l == remote::MID && dbus->IsOnline()) {
-                    shoot_switch = true;
-                    shoot_burst_timestamp = 0;
-                } else if (last_state_l == remote::DOWN && dbus->IsOnline()) {
-                    shoot_burst_timestamp++;
-                    if (shoot_burst_timestamp > 300 * REMOTE_OS_DELAY) {
-                        shoot_burst_switch = true;
-                    }
-                }
-                break;
-            case remote::MID:
-                switch (last_state_l) {
-                    case remote::DOWN:
-                        shoot_stop_switch = true;
+        shoot_aut.input(std::make_tuple(
+            dbus->swl,
+            shoot_fric_wheel_mode,
+            is_referee_shoot_available));
+        shoot_mode = shoot_aut.state();
 
-                        // reset burst states
-                        shoot_burst_timestamp = 0;
-                        shoot_burst_switch = false;
-                        break;
-                    case remote::UP:
-                        break;
-                    case remote::MID:
-                        if (z_edge->posEdge()) {
-                            shoot_fric_switch = true;
-                        }
-                        if (mouse_left_edge->posEdge()) {
-                            shoot_switch = true;
-                            //                                shoot_burst_timestamp = 0;
-                        } else if (mouse_left_edge->get()) {
-                            //                                shoot_burst_timestamp++;
-                            //                                if (shoot_burst_timestamp > 500 *
-                            //                                REMOTE_OS_DELAY) {
-                            //                                    shoot_burst_switch = true;
-                            //                                }
-                        } else if (mouse_left_edge->negEdge()) {
-                            shoot_stop_switch = true;
-                        } else {
-                            shoot_stop_switch = true;
-                        }
-                        break;
-                }
-                break;
-        }
-        // 切换摩擦轮模式
-        if (shoot_fric_switch) {
-            shoot_fric_switch = false;
-            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-                shoot_load_mode = SHOOT_MODE_PREPARING;
-            } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ||
-                       shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING) {  // 原来转则停止
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-                shoot_load_mode = SHOOT_MODE_STOP;
-            }
-        }
+        bullet_cap_aut.input(std::make_tuple(dbus->swl, shoot_fric_wheel_mode));
+        bullet_cap_mode = bullet_cap_aut.state();
 
-        // 射出单颗子弹
-        if (shoot_switch) {
-            shoot_switch = false;
-            if (shoot_load_mode == SHOOT_MODE_PREPARED &&
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED &&
-                (is_shoot_available || SHOOT_REFEREE == 0 || turbo_shoot)) {
-                // 摩擦轮与拔弹系统准备就绪则发射子弹
-                shoot_load_mode = SHOOT_MODE_SINGLE;
-            }
-        }
-
-        // 射出连发子弹
-        if (shoot_burst_switch) {
-            shoot_burst_switch = false;
-            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED &&
-                (shoot_load_mode == SHOOT_MODE_PREPARED || shoot_load_mode == SHOOT_MODE_SINGLE)) {
-                // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
-                shoot_load_mode = SHOOT_MODE_BURST;
-            }
-        }
-
-        // 停止射击
-        if (shoot_stop_switch) {
-            shoot_stop_switch = false;
-            shoot_load_mode = SHOOT_MODE_PREPARED;
-        }
-
-        // 子弹盖状态
-        if (cap_switch) {
-            if (cap_mode == CAP_MODE_CLOSE)
-                cap_mode = CAP_MODE_OPEN;
-            else
-                cap_mode = CAP_MODE_CLOSE;
-        }
-
-        osDelay(REMOTE_OS_DELAY);
     }
-}
-void init_remote() {
-    init_dbus();
 }

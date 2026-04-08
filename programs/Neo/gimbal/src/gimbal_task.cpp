@@ -99,11 +99,11 @@ void gimbalTask(void* arg) {
         // 子弹盖
         if (!bulletCap->isEnable())
             bulletCap->Enable();
-        switch (cap_mode) {
-            case CAP_MODE_CLOSE:
+        switch (bullet_cap_mode) {
+            case BULLET_CAP_MODE_CLOSE:
                 bulletCap->SetOutput(200);
                 break;
-            case CAP_MODE_OPEN:
+            case BULLET_CAP_MODE_OPEN:
                 bulletCap->SetOutput(0);
                 break;
             default:
