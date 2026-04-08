@@ -104,7 +104,7 @@ namespace control {
          */
         virtual bool upEdge() const {
             if constexpr (std::is_same_v<T, bool>)
-                return edge();
+                return !last_val_ && curr_val_;
             else
                 return curr_val_ > last_val_;
         }
@@ -116,7 +116,7 @@ namespace control {
          */
         virtual bool downEdge() const {
             if constexpr (std::is_same_v<T, bool>)
-                return edge();
+                return last_val_ && !curr_val_;
             else
                 return curr_val_ < last_val_;
         }
