@@ -42,8 +42,8 @@ void RM_RTOS_Default_Task(const void* args){
     uint32_t build_start=DWT->CYCCNT;
     // FSM1
     auto fsm1 = control::AutomataBuilder<S1>()
-        .item<control::AutomataInputRemote>(input)
-        .item<control::AutomataInputRemote>(1.1f)
+        .item<control::AutomataInputEdge>(input)
+        .item<control::AutomataInputEdge>(1.1f)
         .transition<S1::A, S1::B>(TRANLOGIC { return ins.template get<0>().get() > 100; })
         .transition<S1::B, S1::C>(TRANLOGIC { return ins.template get<0>().get() > 200; })
         .transition<S1::C, S1::A>(TRANLOGIC { return ins.template get<0>().get() < 50; })
@@ -65,7 +65,7 @@ void RM_RTOS_Default_Task(const void* args){
 
     // Big FSM
     auto fsm_big=control::AutomataBuilder<S_BIG>()
-        .item<control::AutomataInputRemote>(uint16_t{})
+        .item<control::AutomataInputEdge>(uint16_t{})
 
         .transition<S_BIG::S0,S_BIG::S1>
         (TRANLOGIC{return ins.template get<0>().get()>50;})
@@ -107,7 +107,7 @@ void RM_RTOS_Default_Task(const void* args){
 
     // Heavy FSM
     auto fsm_heavy = control::AutomataBuilder<S_HEAVY>()
-        .item<control::AutomataInputRemote>(big_input)
+        .item<control::AutomataInputEdge>(big_input)
         .transition<S_HEAVY::A, S_HEAVY::B>(TRANLOGIC {
             auto x = ins.template get<0>().get();
             return (x%3==0) && (x%5!=0) && (x*x>1000) && ((x^0x55)&0x0F) && (x>123 && x<300);

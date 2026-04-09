@@ -72,7 +72,7 @@ void shootTask(void* arg) {
     while (true) {
         bool shoot_en = is_activate;
 #ifdef HAS_REFEREE
-        shoot_en &= referee->game_robot_status.mains_power_shooter_output;
+        shoot_en = shoot_en && referee->game_robot_status.mains_power_shooter_output;
 #endif
         if (!shoot_en) {
             // 死了

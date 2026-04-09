@@ -72,9 +72,9 @@ namespace control {
      * @tparam T type
      */
     template <class T>
-    class AutomataInputRemote : public AutomataInputComponentsBase<T> {
+    class AutomataInputEdge : public AutomataInputComponentsBase<T> {
       public:
-        ~AutomataInputRemote() override = default;
+        ~AutomataInputEdge() override = default;
 
         /**
          * record previous value and last update time.

@@ -73,7 +73,7 @@ namespace control {
             return CollectItems<Items..., NewComponent>{};
         }
         template<template<class> class Component, typename Struct, typename Member>
-        constexpr auto addItem(Member Struct::*member) const {
+        constexpr auto addItem(Member Struct::*) const {
             using Type = std::remove_cv_t<std::remove_reference_t<Member>>;
             using NewComponent = Component<Type>;
             return CollectItems<Items..., NewComponent>{};

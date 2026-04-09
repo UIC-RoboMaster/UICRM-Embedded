@@ -42,16 +42,16 @@ void remoteTask(void* arg) {
     UNUSED(arg);
     osDelay(1000);
 
-    bool is_robot_dead = true;
+    bool is_referee_robot_dead = true;
     bool is_referee_shoot_available = false;
 
     // 使/失能（上/下电）
     auto tranlogic_active_condition = TRANLOGIC {
-        const auto& is_dead = COMPONENT(0);
-        return dbus->IsOnline() && dbus->swr != remote::DOWN && !is_dead.get();
+        const auto& referee_cmd_dead = COMPONENT(0);
+        return dbus->IsOnline() && dbus->swr != remote::DOWN && !referee_cmd_dead.get();
     };
     auto activate_aut = control::AutomataBuilder<ActivateStates>()
-        .item<control::AutomataInputRaw>(is_robot_dead)
+        .item<control::AutomataInputRaw>(is_referee_robot_dead)
         .transition<KILLED, ACTIVE>(tranlogic_active_condition)
         .transition<ACTIVE, KILLED>(tranlogic_active_condition, control::ReverseTag{})
         .build<KILLED>();
@@ -63,8 +63,8 @@ void remoteTask(void* arg) {
         return (swr.upEdge() && swr.get() == remote::UP) || mode_change_key.upEdge();
     };
     auto remote_mode_aut = control::AutomataBuilder<RemoteMode>()
-        .item<control::AutomataInputRemote>(dbus->swr)
-        .item<control::AutomataInputRemote>(bool{}) // mode_change_key
+        .item<control::AutomataInputEdge>(dbus->swr)
+        .item<control::AutomataInputEdge>(bool{}) // mode_change_key
         .transition<REMOTE_MODE_AUTOPILOT, REMOTE_MODE_FOLLOW>(tranlogic_next_remote_mode_trigger)
         .transition<REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN>(tranlogic_next_remote_mode_trigger)
         .transition<REMOTE_MODE_SPIN, REMOTE_MODE_AUTOPILOT>(tranlogic_next_remote_mode_trigger)
@@ -81,8 +81,8 @@ void remoteTask(void* arg) {
         return (swl.upEdge() && swl.get() == remote::UP) || fric_key.upEdge();
     };
     auto fric_wheel_aut = control::AutomataBuilder<ShootFricMode>()
-        .item<control::AutomataInputRemote>(dbus->swl)
-        .item<control::AutomataInputRemote>(bool{}) // friction_key
+        .item<control::AutomataInputEdge>(dbus->swl)
+        .item<control::AutomataInputEdge>(bool{}) // friction_key
         .transition<SHOOT_FRIC_MODE_STOP, SHOOT_FRIC_MODE_PREPARED>(tranlogic_fric_wheel_trigger)
         .transition<SHOOT_FRIC_MODE_PREPARED, SHOOT_FRIC_MODE_STOP>(tranlogic_fric_wheel_trigger)
         .build<SHOOT_FRIC_MODE_STOP>();
@@ -98,10 +98,10 @@ void remoteTask(void* arg) {
             referee_permit.get();
     };
     auto shoot_aut = control::AutomataBuilder<ShootMode>()
-        .item<control::AutomataInputRemote>(dbus->swl)
+        .item<control::AutomataInputEdge>(dbus->swl)
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .item<control::AutomataInputRaw>(is_referee_shoot_available)
-        .item<control::AutomataInputRemote>(bool{}) // shoot_key
+        .item<control::AutomataInputEdge>(bool{}) // shoot_key
         .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_STOP>(tranlogic_shooting_condition, control::ReverseTag{})
         .transition<SHOOT_MODE_BURST, SHOOT_MODE_STOP>(tranlogic_shooting_condition, control::ReverseTag{})
         .transition<SHOOT_MODE_STOP, SHOOT_MODE_SINGLE>(tranlogic_shooting_condition)
@@ -121,7 +121,7 @@ void remoteTask(void* arg) {
         return swl.downEdge() && swl.get() == remote::DOWN && fric_state.get() == SHOOT_FRIC_MODE_STOP;
     };
     auto bullet_cap_aut = control::AutomataBuilder<BulletCapMode>()
-        .item<control::AutomataInputRemote>(dbus->swl)
+        .item<control::AutomataInputEdge>(dbus->swl)
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .transition<BULLET_CAP_MODE_CLOSE, BULLET_CAP_MODE_OPEN>(tranlogic_bullet_cap_trigger)
         .transition<BULLET_CAP_MODE_OPEN, BULLET_CAP_MODE_CLOSE>(tranlogic_bullet_cap_trigger)
@@ -132,19 +132,19 @@ void remoteTask(void* arg) {
 
 #ifdef HAS_REFEREE
         // Kill Detection
-        is_robot_dead = referee->game_robot_status.remain_HP == 0;
+        is_referee_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_referee_shoot_available = (referee->game_robot_status.shooter_heat_limit -
                               referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
                              // referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
                              imu->CaliDone();
 #else
-        is_robot_dead = false;
+        is_referee_robot_dead = false;
         is_referee_shoot_available = true;
 #endif
 
-        activate_aut.input(std::make_tuple(is_robot_dead));
+        activate_aut.input(std::make_tuple(is_referee_robot_dead));
         is_activate = activate_aut.state() == ACTIVE;
-        if (!is_activate) continue;
+        if (!is_activate || !imu->DataReady() || !imu->CaliDone()) continue;
 
         remote_mode_aut.input(std::make_tuple(
             dbus->swr,

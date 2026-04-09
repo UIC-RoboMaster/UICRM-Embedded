@@ -87,7 +87,7 @@ void gimbalTask(void* arg) {
     while (true) {
         bool gimbal_en = is_activate;
 #ifdef HAS_REFEREE
-        gimbal_en &= referee->game_robot_status.mains_power_gimbal_output;
+        gimbal_en = gimbal_en && referee->game_robot_status.mains_power_gimbal_output;
 #endif
         if (!gimbal_en) {
             kill_gimbal();

@@ -55,6 +55,7 @@ int main() {
      * 2. Construct selected behaviour interface(component) for every input items.
      * 3. Define transition logic based on user definition.
      *
+     * ---------------------------------[item]----------------------------------
      * The index of input items is arranged automatically start from 0 based on register order.
      *
      * Following types is supported to registered as an input in such grammar:
@@ -68,6 +69,9 @@ int main() {
      *
      * Tip: Decompose a complex system by using small automatas' output as input.
      *
+     * ---------------------------------[transition]----------------------------------
+     * Symbols declare in global space can directly reference by transition logic.
+     *
      * Transitions that define earlier have higher priority than later ones.
      * .transition<state_begin_with, state_goes_to>(TRANLOGIC { return a_bool; })
      *
@@ -79,13 +83,14 @@ int main() {
      * Example: If there's .item<ComponentType>(Type{}) registered in 2nd place (index 1).
      *          COMPONENT(1) shall return [Component<Type> the_component]
      *
+     * ---------------------------------[build]----------------------------------
      * It is not recommended to use function [build_heap_allocation] to build automata.
      * Extra time-space cost will occur using heap allocation.
      * Though it's an option to control life cycle manually.
      */
     auto aut = control::AutomataBuilder<states>()
-        .item<control::AutomataInputRemote>(&raw_data_struct::num1)
-        .item<control::AutomataInputRemote>(num2)
+        .item<control::AutomataInputEdge>(&raw_data_struct::num1)
+        .item<control::AutomataInputEdge>(num2)
         .item<control::AutomataInputRaw>(num3)
         .item<control::AutomataInputRaw>(int32_t{})
         .transition<ON, OFF>(TRANLOGIC {
@@ -101,6 +106,18 @@ int main() {
     auto ptr = control::AutomataBuilder<states>()
         // ...
         .build_heap_allocation<ON>();
+    ptr->input(std::make_tuple());
+
+    // You may also define automatas base on same builder or in separate segmentations.
+    // Though this will be verbose due to background implementation details ...
+    auto builder_base =
+        control::AutomataBuilder<states>().item<control::AutomataInputEdge>(num2);
+    auto aut1_derive = builder_base
+        .transition<ON, OFF>(TRANLOGIC { return true; })
+        .build<ON>();
+    auto aut2_derive = builder_base
+        .transition<OFF, ON>(TRANLOGIC { return false; }, control::ReverseTag{})
+        .build<OFF>();
 
     while (true) {
         // simulate value changes

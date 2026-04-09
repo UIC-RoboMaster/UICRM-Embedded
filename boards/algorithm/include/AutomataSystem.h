@@ -38,8 +38,10 @@ using control::AutomataInputManagement;
 
 namespace control {
 
+    /*Tags*/
     struct ForwardTag {};
     struct ReverseTag {};
+    /*Tags*/
 
     /*FiniteStateMachine*/
     /**
@@ -132,10 +134,10 @@ namespace control {
      * It's NOT recommended that user construct Finite State Machine(FSM) without the aid of factory
      * class.
      *
-     * @tparam FSM
-     * @tparam Components
+     * @tparam FSM Finite State Machine
+     * @tparam DMS Data Management System
      */
-    template <typename FSM, typename Components>
+    template <typename FSM, typename DMS>
     class Automata {
       public:
         template<typename StateType>
@@ -174,7 +176,7 @@ namespace control {
 
       private:
         FSM state_machine_;
-        Components comps_;
+        DMS comps_;
     };
     /*Automata*/
 
