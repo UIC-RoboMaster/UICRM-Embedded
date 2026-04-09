@@ -71,6 +71,10 @@ int main() {
      * Transitions that define earlier have higher priority than later ones.
      * .transition<state_begin_with, state_goes_to>(TRANLOGIC { return a_bool; })
      *
+     * Optional, it's allow to reverse logic aim for a neat grammar.
+     * You can also explicitly clarify [ForwardTag] for better readability.
+     * .transition<...>(TRANLOGIC {...}, [control::ForwardTag{}/control::ReverseTag{}])
+     *
      * Using a registered Component by COMPONENT(registered_order) in transition logic definition.
      * Example: If there's .item<ComponentType>(Type{}) registered in 2nd place (index 1).
      *          COMPONENT(1) shall return [Component<Type> the_component]
@@ -88,7 +92,9 @@ int main() {
             auto& comp = COMPONENT(0);
             return comp.downEdge();
         })
-        .transition<OFF, ON>(TRANLOGIC { return rand() % 10 > global_eight; })
+        // u may insert comments freely like this
+        // the transition below happens in a probability of 10%.
+        .transition<OFF, ON>(TRANLOGIC { return rand() % 10 <= global_eight; }, control::ReverseTag{})
         .build<ON>();
 
     // You can also do this to assign to a global pointer:

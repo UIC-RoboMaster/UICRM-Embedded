@@ -38,6 +38,9 @@ using control::AutomataInputManagement;
 
 namespace control {
 
+    struct ForwardTag {};
+    struct ReverseTag {};
+
     /*FiniteStateMachine*/
     /**
      * Core component of state machine system
@@ -89,13 +92,13 @@ namespace control {
     /*FiniteStateMachine*/
 
     /*Transition*/
-    template<auto From, auto To, typename Fn>
+    template<auto From, auto To, typename Fn, typename ReTag>
     struct Transition {
         static constexpr auto from = From;
         static constexpr auto to   = To;
         template<typename Ins>
         static bool eval(const Ins& ins) {
-            return Fn{}(ins);    //Performance optimization if C++20(or +) in future
+            return std::is_same_v<ReTag, ReverseTag> ? !Fn{}(ins) : Fn{}(ins);
         }
     };
     /*Transition*/
@@ -103,9 +106,9 @@ namespace control {
     /*CollectTransitions*/
     template<typename EnumStatesCollection, typename... Trs>
     struct CollectTransitions {
-        template<auto From, auto To, typename Fn>
+        template<auto From, auto To, typename ReTag, typename Fn>
         constexpr auto addTrans(Fn) const {
-            using NewTr = Transition<From, To, Fn>;
+            using NewTr = Transition<From, To, Fn, ReTag>;
             return CollectTransitions<EnumStatesCollection, Trs..., NewTr>{};
         }
 
@@ -239,11 +242,12 @@ namespace control {
          * @tparam To Which state this transition goes to.
          * @tparam Logic Transition encapsulation type.
          * @param logic Transition logic
+         * @param ReTag[anonymous] if reverse logic output
          * @return The new builder that has updated type.
          */
-        template <auto From, auto To, typename Logic>
-        constexpr auto transition(Logic logic) const {
-            using NewTrans = decltype(trans_.template addTrans<From, To>(logic));
+        template <auto From, auto To, typename Logic, typename ReTag = ForwardTag>
+        constexpr auto transition(Logic logic, ReTag = {}) const {
+            using NewTrans = decltype(trans_.template addTrans<From, To, ReTag>(logic));
             return AutomataBuilder<EnumStatesCollection, Items, NewTrans>{items_, NewTrans{}};
         }
 

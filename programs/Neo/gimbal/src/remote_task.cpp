@@ -46,30 +46,28 @@ void remoteTask(void* arg) {
     bool is_referee_shoot_available = false;
 
     // 使/失能（上/下电）
+    auto tranlogic_active_condition = TRANLOGIC {
+        const auto& is_dead = COMPONENT(0);
+        return dbus->IsOnline() && dbus->swr != remote::DOWN && !is_dead.get();
+    };
     auto activate_aut = control::AutomataBuilder<ActivateStates>()
         .item<control::AutomataInputRaw>(is_robot_dead)
-        .transition<KILLED, ACTIVE>(TRANLOGIC {
-            const auto& is_dead = COMPONENT(0);
-            return dbus->IsOnline() && dbus->swr != remote::DOWN && !is_dead.get();
-        })
-        .transition<ACTIVE, KILLED>(TRANLOGIC {
-            const auto& is_dead = COMPONENT(0);
-            return !(dbus->IsOnline() && dbus->swr != remote::DOWN && !is_dead.get());
-        })
+        .transition<KILLED, ACTIVE>(tranlogic_active_condition)
+        .transition<ACTIVE, KILLED>(tranlogic_active_condition, control::ReverseTag{})
         .build<KILLED>();
 
     // 控制模式
-    auto tranlogic_next_remote_mode = TRANLOGIC {
+    auto tranlogic_next_remote_mode_trigger = TRANLOGIC {
         const auto& swr = COMPONENT(0);
         const auto& mode_change_key = COMPONENT(1);
         return (swr.upEdge() && swr.get() == remote::UP) || mode_change_key.upEdge();
     };
     auto remote_mode_aut = control::AutomataBuilder<RemoteMode>()
         .item<control::AutomataInputRemote>(dbus->swr)
-        .item<control::AutomataInputRemote>(bool{})
-        .transition<REMOTE_MODE_AUTOPILOT, REMOTE_MODE_FOLLOW>(tranlogic_next_remote_mode)
-        .transition<REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN>(tranlogic_next_remote_mode)
-        .transition<REMOTE_MODE_SPIN, REMOTE_MODE_AUTOPILOT>(tranlogic_next_remote_mode)
+        .item<control::AutomataInputRemote>(bool{}) // mode_change_key
+        .transition<REMOTE_MODE_AUTOPILOT, REMOTE_MODE_FOLLOW>(tranlogic_next_remote_mode_trigger)
+        .transition<REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN>(tranlogic_next_remote_mode_trigger)
+        .transition<REMOTE_MODE_SPIN, REMOTE_MODE_AUTOPILOT>(tranlogic_next_remote_mode_trigger)
         .build<REMOTE_MODE_AUTOPILOT>();
 
     /*
@@ -84,37 +82,29 @@ void remoteTask(void* arg) {
     };
     auto fric_wheel_aut = control::AutomataBuilder<ShootFricMode>()
         .item<control::AutomataInputRemote>(dbus->swl)
-        .item<control::AutomataInputRemote>(bool{})
+        .item<control::AutomataInputRemote>(bool{}) // friction_key
         .transition<SHOOT_FRIC_MODE_STOP, SHOOT_FRIC_MODE_PREPARED>(tranlogic_fric_wheel_trigger)
         .transition<SHOOT_FRIC_MODE_PREPARED, SHOOT_FRIC_MODE_STOP>(tranlogic_fric_wheel_trigger)
         .build<SHOOT_FRIC_MODE_STOP>();
 
     // 射击（供弹轮）
-    auto tranlogic_stop_shooting = TRANLOGIC {
+    auto tranlogic_shooting_condition = TRANLOGIC {
         const auto& swl = COMPONENT(0);
         const auto& fric_state = COMPONENT(1);
         const auto& referee_permit = COMPONENT(2);
         const auto& shoot_key = COMPONENT(3);
-        return !((swl.get() == remote::DOWN || shoot_key.get()) &&
+        return (swl.get() == remote::DOWN || shoot_key.get()) &&
             fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
-            referee_permit.get());
+            referee_permit.get();
     };
     auto shoot_aut = control::AutomataBuilder<ShootMode>()
         .item<control::AutomataInputRemote>(dbus->swl)
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .item<control::AutomataInputRaw>(is_referee_shoot_available)
-        .item<control::AutomataInputRemote>(bool{})
-        .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_STOP>(tranlogic_stop_shooting)
-        .transition<SHOOT_MODE_BURST, SHOOT_MODE_STOP>(tranlogic_stop_shooting)
-        .transition<SHOOT_MODE_STOP, SHOOT_MODE_SINGLE>(TRANLOGIC {
-            const auto& swl = COMPONENT(0);
-            const auto& fric_state = COMPONENT(1);
-            const auto& referee_permit = COMPONENT(2);
-            const auto& shoot_key = COMPONENT(3);
-            return (swl.get() == remote::DOWN || shoot_key.get()) &&
-                fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
-                referee_permit.get();
-        })
+        .item<control::AutomataInputRemote>(bool{}) // shoot_key
+        .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_STOP>(tranlogic_shooting_condition, control::ReverseTag{})
+        .transition<SHOOT_MODE_BURST, SHOOT_MODE_STOP>(tranlogic_shooting_condition, control::ReverseTag{})
+        .transition<SHOOT_MODE_STOP, SHOOT_MODE_SINGLE>(tranlogic_shooting_condition)
         .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_BURST>(TRANLOGIC {
             const auto& swl = COMPONENT(0);
             const auto& shoot_key = COMPONENT(3);
