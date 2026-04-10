@@ -525,7 +525,7 @@ namespace bsp {
         bool calibrate_ = false;
         bool calidone_ = false;
 
-        unsigned zeroDriftTry = 1000;
+        unsigned zeroDriftTry = 3000;
         float zeroDrift[3] = {0, 0, 0};
         float zeroDriftTemp[3] = {0, 0, 0};
 

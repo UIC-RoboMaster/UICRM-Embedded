@@ -74,6 +74,7 @@ namespace control {
     template <class T>
     class AutomataInputEdge : public AutomataInputComponentsBase<T> {
       public:
+        AutomataInputEdge() : last_update_(0) {}
         ~AutomataInputEdge() override = default;
 
         /**
@@ -98,7 +99,7 @@ namespace control {
         }
 
         /**
-         * boolean specification: equal to edge()
+         * boolean specification: true > false
          *
          * @return If current val greater than last val
          */
@@ -110,7 +111,7 @@ namespace control {
         }
 
         /**
-         * boolean specification: equal to edge()
+         * boolean specification: true > false
          *
          * @return If current val smaller than last val
          */
@@ -137,12 +138,25 @@ namespace control {
         }
 
         /**
+         * Get current value
+         *
          * update and call this func otherwise real-time problem
          *
          * @return current value
          */
         virtual T get() const {
             return curr_val_;
+        }
+
+        /**
+         * Get last value
+         *
+         * update and call this func otherwise real-time problem
+         *
+         * @return current value
+         */
+        virtual T getLast() const {
+            return last_val_;
         }
 
         /**

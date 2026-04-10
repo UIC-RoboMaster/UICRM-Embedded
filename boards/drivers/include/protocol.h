@@ -322,12 +322,11 @@ namespace communication {
 
     /* ===== POWER_HEAT_DATA 0x0202 50Hz ===== */
     typedef struct {
-        uint16_t chassis_volt;
-        uint16_t chassis_current;
-        float chassis_power;
+        uint16_t chassis_volt;     // reserved
+        uint16_t chassis_current;  // reserved
+        float chassis_power;       // reserved
         uint16_t chassis_power_buffer;
         uint16_t shooter_id1_17mm_cooling_heat;
-        uint16_t shooter_id2_17mm_cooling_heat;
         uint16_t shooter_id1_42mm_cooling_heat;
     } __packed power_heat_data_t;
 
