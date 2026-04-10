@@ -31,7 +31,7 @@ jobs:
     - name: cmake
       run: |
         mkdir build && cd build
-        cmake -DCMAKE_BUILD_TYPE=Debug ..
+        cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20 ..
     # format check temporarily commented
     - name: format check
       run: make check-format
