@@ -60,7 +60,7 @@ void remoteTask(void* arg) {
     auto tranlogic_next_remote_mode_trigger = TRANLOGIC {
         const auto& swr = COMPONENT(0);
         const auto& mode_change_key = COMPONENT(1);
-        return (swr.upEdge() && swr.get() == remote::UP) || mode_change_key.upEdge();
+        return (swr.downEdge() && swr.get() == remote::UP) || mode_change_key.upEdge();
     };
     auto remote_mode_aut = control::AutomataBuilder<RemoteMode>()
         .item<control::AutomataInputEdge>(dbus->swr)
@@ -78,13 +78,18 @@ void remoteTask(void* arg) {
     auto tranlogic_fric_wheel_trigger = TRANLOGIC {
         const auto& swl = COMPONENT(0);
         const auto& fric_key = COMPONENT(1);
-        return (swl.upEdge() && swl.get() == remote::UP) || fric_key.upEdge();
+        return (swl.downEdge() && swl.get() == remote::UP) || fric_key.upEdge();
     };
     auto fric_wheel_aut = control::AutomataBuilder<ShootFricMode>()
         .item<control::AutomataInputEdge>(dbus->swl)
         .item<control::AutomataInputEdge>(bool{}) // friction_key
-        .transition<SHOOT_FRIC_MODE_STOP, SHOOT_FRIC_MODE_PREPARED>(tranlogic_fric_wheel_trigger)
+        .transition<SHOOT_FRIC_MODE_PREPARING, SHOOT_FRIC_MODE_STOP>(tranlogic_fric_wheel_trigger)
         .transition<SHOOT_FRIC_MODE_PREPARED, SHOOT_FRIC_MODE_STOP>(tranlogic_fric_wheel_trigger)
+        .transition<SHOOT_FRIC_MODE_STOP, SHOOT_FRIC_MODE_PREPARING>(tranlogic_fric_wheel_trigger)
+        .transition<SHOOT_FRIC_MODE_PREPARING, SHOOT_FRIC_MODE_PREPARED>(TRANLOGIC {
+            UNUSED(ins);
+            return true;
+        })
         .build<SHOOT_FRIC_MODE_STOP>();
 
     // 射击（供弹轮）

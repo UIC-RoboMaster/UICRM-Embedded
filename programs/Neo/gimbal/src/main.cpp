@@ -39,7 +39,7 @@
 
 // bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
-    bsp::SetHighresClockTimer(&htim5);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     print_use_uart(&BOARD_UART1, true, 921600);
     init_can();
     init_batt();
