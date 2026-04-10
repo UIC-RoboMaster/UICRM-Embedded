@@ -9,21 +9,21 @@
 使用枚举定义状态：
 
 ```cpp
-enum states { ON, OFF };
+enum States { ON, OFF };
 ```
 
 也可以：
 
 ```cpp
-enum class states { ON, OFF };
-using states::ON, states::OFF;
+enum class States { ON, OFF };
+using States::ON, States::OFF;
 ```
 
 ---
 
 ### 输入（Input）输入量（Item）
 
-支持以下类型：
+支持以下注册方式：
 
 - 结构体成员：`.item<...>(&Struct::member)`
 - 普通变量：`.item<...>(variable)`
@@ -43,11 +43,10 @@ using states::ON, states::OFF;
 
 每个组件代表一个通道/输入量/变量。
 
-目前支持的组件：
+默认组件：
 
-- `control::AutomataInputEdge`
-
-- `control::AutomataInputRaw`
+`control::AutomataInputEdge`
+`control::AutomataInputRaw`
 
 注册时定义：
 
@@ -76,9 +75,16 @@ comp.downEdge(); // 自定义交互方式，当输入量下降时返回true
 定义方式：
 
 ```cpp
-.transition<state_begin_with, state_goes_to>(TRANLOGIC {
+.transition<STATE_BEGINS_WITH, STATE_GOES_TO>(TRANLOGIC {
     return a_bool_condition;
 })
+```
+
+逻辑也可以单独定义，以便复用：
+
+```cpp
+auto transitionLogic = TRANLOGIC {...};
+.transition<STATE_BEGINS_WITH, STATE_GOES_TO>(transitionLogic)
 ```
 
 特点：
@@ -97,56 +103,46 @@ comp.downEdge(); // 自定义交互方式，当输入量下降时返回true
 
 目前支持的标签：
 
-- `control::ForwardTag`
+`control::ForwardTag`
+`control::ReverseTag`
 
-- `control::ReverseTag`
-
-#### ForwardTag（默认）
-
+**ForwardTag（默认）**
 正常执行逻辑。
 
-#### ReverseTag
-
+**ReverseTag**
 反转逻辑，即当`logic == false`时发生转移。
 
 ```cpp
-.transition<OFF, ON>(TRANLOGIC { return rand() % 10 > 8; }, control::ReverseTag{})
+.transition<...>(..., control::ReverseTag{})
 ```
 
 ---
 
-## 构建状态机
+## 构建自动机
 
 ### 基本结构
 
 ```cpp
-auto aut = control::AutomataBuilder<states>()
-    .item<...>(...)
-    .transition<...>(...)
+auto aut = control::AutomataBuilder<EnumStatesCollection>()
+    .item<Component>(item)
+    .transition<STATE_BEGINS_WITH, STATE_GOES_TO>(transitionLogic, Tag)
     .build<INITIAL_STATE>();
 ```
 
----
-
-### 示例1
+**示例1**
 
 ```cpp
-auto aut = control::AutomataBuilder<states>()
+auto aut = control::AutomataBuilder<States>()
     .item<control::AutomataInputEdge>(&raw_data_struct::num1)
-    .item<control::AutomataInputEdge>(num2)
-    .item<control::AutomataInputRaw>(num3)
-    .item<control::AutomataInputRaw>(int32_t{})
     .transition<ON, OFF>(TRANLOGIC {
         auto& comp = COMPONENT(0);
         return comp.downEdge();
     })
-    .transition<OFF, ON>(TRANLOGIC {
-        return rand() % 10 <= 8;
-    }, control::ReverseTag{})
+    .transition<OFF, ON>(TRANLOGIC { return rand() % 10 <= 8; }, control::ReverseTag{})
     .build<ON>();
 ```
 
-### 示例2
+**示例2**
 
 ```cpp
 // 射击（供弹轮）
@@ -179,33 +175,27 @@ auto shoot_aut = shoot_builder_with_items
     })
     .build<SHOOT_MODE_STOP>();
 ```
----
+### 构建方式
 
-## 构建方式
-
-### 栈分配（推荐）
+**栈分配（推荐）**
 
 ```cpp
 .build<ON>();
 ```
 
-优点：自动管理生命周期，无额外开销。
-
----
-
-### 堆分配（不推荐）
+**堆分配（不推荐）**
 
 ```cpp
 .build_heap_allocation<ON>();
 ```
 
-缺点：需要手动管理生命周期，并带来额外开销。
+堆分配需要手动管理生命周期，并带来额外开销。
 
 ---
 
-## 使用状态机
+## 使用自动机
 
-### 输入更新
+### 自动机输入
 
 ```cpp
 aut.input(std::make_tuple(...));
@@ -214,11 +204,9 @@ aut.input(std::make_tuple(...));
 注意：顺序必须与 `.item()` 注册顺序一致。
 如果输入类型或输入长度与注册时不一致则编译器报错。
 
-输入更新之后状态机会自动步进一次，如没有任何转置条件为真则默认停留在当前状态。
+输入更新之自动机会自动步进一次，如没有任何转置条件成立则默认停留在当前状态。
 
----
-
-### 获取状态
+### 自动机输出
 
 ```cpp
 aut.state();
@@ -237,70 +225,54 @@ switch (aut.state()) {
 }
 ```
 
----
-
-## 运行示例
+**运行阶段示例**
 
 ```cpp
 while (true) {
-    raw_data1.num1 = (++raw_data1.num1) % 10;
-    num2 = ...;
-    num3 = ...;
-
-    aut.input(std::make_tuple(raw_data1.num1, num2, num3, 3));
-
-    std::cout << aut.state() << std::endl;
+    aut.input(std::make_tuple(raw_data1.num1));
+    std::cout << static_cast<int>(aut.state()) << std::endl;
 }
 ```
 
 ---
 
-## 设计建议
+## 设计与使用建议
 
-### 拆分系统
+**拆分系统**
+建议将复杂逻辑拆分为多个小自动机，通过将输出作为输入组合。
 
-建议将复杂逻辑拆分为多个小状态机，通过将输出作为输入组合。
+**转移逻辑**
+先定义的 `transition` 优先级更高。
+转移逻辑必须返回 `bool`。
+可以直接使用全局符号。
 
----
-
-### 转移优先级
-
-先定义的 transition 优先级更高。
-
----
-
-### Component 使用
-
+**组件使用**
 建议仅用于条件判断，避免复杂逻辑和副作用。
+组件可以单独使用，不一定要注册到自动机中使用。
 
----
+**输入**
+输入顺序必须与注册顺序严格一致。
 
-## 注意事项
-
-- 输入顺序必须严格一致
-
-- 转移逻辑必须返回 bool
-
-- 避免使用堆分配
+**构建**
+避免使用堆分配，使用全局变量广播自动机输出是可以接受的设计。
 
 ---
 ## [高级]自定义组件
 
-自动机系统支持用户自定义输入组件，通过 `.item<control::AutomataInputCustom>(...)` 注册到状态机中。
+自动机系统支持用户自定义输入组件，通过 `.item<control::AutomataInputCustom>(...)` 注册到自动机中。
 
 ### 语法约束
 
 自定义组件必须满足以下最小接口要求：
 
 - 必须为模板类，包含模板参数 `T`
-- 必须提供成员函数：
-  - `void update(const T& value)`（或等价语义）
+- 必须提供成员函数：`void update(const T& value)`（或等价语义）
 
 示例骨架：
 
 ```cpp
 template<typename T>
-class MyComponent {
+class MyComponent : public control::AutomataInputComponentsBase<T> {
 public:
     void update(const T& value) {
         // 更新内部状态
@@ -314,8 +286,6 @@ private:
 };
 ```
 
-### 推荐做法
-
 推荐从基础类继承以复用通用逻辑：
 
 ```cpp
@@ -326,7 +296,7 @@ class MyComponent : public control::AutomataInputComponentsBase<T> {
 ```
 > 虽然不是强制要求，但继承基础类可以获得一致的接口与更好的可维护性。
 
-### 注册方式
+像默认组件一样注册：
 
 ```cpp
 .item<control::AutomataInputCustom>(...)
@@ -342,26 +312,24 @@ class MyComponent : public control::AutomataInputComponentsBase<T> {
 
 这样可以保持项目结构清晰、依赖关系简单。
 
-### 设计提示
+### 组件设计注意事项
 
-- 建议适当使用`concept(C++20)/constexpr/specification`来限制组件的类型。
-- 默认组件与自定义组件**不一定必须绑定到状态机使用**。
+- 建议适当使用`concept/constexpr/specification`来限制组件的类型。
+- 默认组件与自定义组件不一定必须绑定到自动机使用。
 - 组件设计可以使用虚函数特性，自动机系统理论上不使用继承多态（虚函数表）。
 - 设计良好的组件可以独立使用，作为输入处理或信号预处理模块。
-
-例如：边沿检测、滤波、计时器等组件，都可以在自动机之外复用
+​例如：边沿检测、滤波、计时器等组件，都可以在自动机之外复用
 
 ---
-## [高级]性能描述
+## [高级]实现细节和性能描述
 
 本自动机系统主要由两个核心部分构成：
 
 - 有限状态机（Finite State Machine FSM）
 - 数据管理系统（Data Management System DMS）
 
-系统从设计之初即面向嵌入式环境（如 Cortex-M 系列），目标是在资源受限条件下提供接近零开销（zero-overhead）的状态机执行性能。
-
-### 总体设计理念
+系统从设计之初即面向嵌入式环境（如 Cortex-M 系列），
+目标是在资源受限条件下提供接近零开销（zero-overhead）的自动机执行性能。
 
 自动机整体采用模板元编程（Template Metaprogramming）构建，其核心思想是：
 
@@ -369,19 +337,19 @@ class MyComponent : public control::AutomataInputComponentsBase<T> {
 
 具体表现为：
 
-- 自动机的定义过程本质上是类型的逐步构建与累积
-- 大部分结构信息（状态、转移、组件）均编码在类型系统中
-- 运行时仅对已构建的静态结构进行评估
+自动机的定义过程本质上是类型的逐步构建与累积
+大部分结构信息（状态、转移、组件）均编码在类型系统中
+运行时仅对已构建的静态结构进行评估
 
 ### DMS（数据管理系统）
 
-数据管理系统负责维护所有输入组件（Components），其设计特点：
+数据管理系统负责维护所有输入组件（Components），其关键设计：
 
-- 所有组件类型在编译期完全确定
-- 使用 `std::tuple` 连续存储所有组件实例
-- 不涉及动态分配（无 `new` / `malloc`）
+所有组件类型在编译期完全确定
+使用 `std::tuple` 连续存储所有组件实例
+不涉及动态分配（无 `new` / `malloc`）
 
-#### 性能特性
+**性能特性**
 
 - 内存布局连续，缓存友好
 - 编译器可完全展开访问（`get<index>()`）
@@ -392,26 +360,24 @@ class MyComponent : public control::AutomataInputComponentsBase<T> {
 
 FSM 部分负责状态转移，其关键设计：
 
-#### 转移逻辑
+使用无捕获 lambda
+逻辑作为模板参数存储在 `Transition` 类型中
+通过模板展开遍历所有转移
 
-- 使用无捕获 lambda
-- 逻辑作为模板参数存储在 `Transition` 类型中
+**性能特性**
+
 - 在编译期参与类型构建
-
-#### 执行方式
-
-- 通过模板展开遍历所有转移
 - 转移逻辑在调用点直接内联展开
 - 无函数指针、无虚调用
 
 ### 内联与编译优化
 
 该系统高度依赖编译器优化能力：
+所有核心路径均为：
 
-- 所有核心路径均为：
-  - `constexpr`
-  - 模板函数
-  - 无捕获 lambda
+- `constexpr`
+- 模板函数
+- 无捕获 lambda
 
 在启用优化时（如 `-O1` 及以上）：
 
@@ -431,26 +397,26 @@ FSM 部分负责状态转移，其关键设计：
 
 在维护或扩展系统时，必须遵守以下原则：
 
-### 禁止引入运行时多态
+**禁止引入运行时多态**
 
 避免：
 
 - `std::function`
 - 函数指针作为核心路径
 
-### 避免动态行为
+**避免动态行为**
 
 避免：
 
 - 动态分配（`new`, `malloc`）
 - 动态容器（如 `std::vector` 在核心路径）
 
-### 保持类型驱动设计
+**保持类型驱动设计**
 
 - 新功能应优先考虑模板参数表达
 - 逻辑应尽量编码在类型系统中
 
-### 警惕“隐式性能退化”
+**警惕“隐式性能退化”**
 
 任何引入运行时分支或间接调用的改动，都可能导致：
 
@@ -459,6 +425,4 @@ FSM 部分负责状态转移，其关键设计：
 - 流水线空泡，性能显著下降（在 MCU 上尤为明显）
 
 ---
-
-
 
