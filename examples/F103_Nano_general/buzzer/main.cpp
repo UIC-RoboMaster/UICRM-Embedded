@@ -57,7 +57,7 @@ using Note = driver::BuzzerNote;
 // };
 
 static driver::BuzzerNoteDelayed DJI[] = {
-    {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
+    {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Silent, 10},{Note::Finish, 0}};
 
 static driver::BuzzerNoteDelayed Laohu[] = {
     {Note::Do1M, 500},  {Note::Re2M, 500},   {Note::Mi3M, 500}, {Note::Do1M, 450},
@@ -74,7 +74,7 @@ static driver::BuzzerNoteDelayed Laohu[] = {
 void RM_RTOS_Init(void) {
     driver::Buzzer buzzer(&htim1, 1, 1000000);
     buzzer.SingSong(DJI);
-    HAL_Delay(500);
+    HAL_Delay(1000);
     buzzer.SingSong(Laohu);
     HAL_Delay(1000);
 }
