@@ -39,7 +39,8 @@ namespace control {
          */
         template <typename... Ts>
         constexpr void updateItems(const std::tuple<Ts...>& data) {
-            static_assert(sizeof...(Ts) == std::tuple_size_v<decltype(items_)>, "Automata: input size mismatch");
+            static_assert(sizeof...(Ts) == std::tuple_size_v<decltype(items_)>,
+                          "Automata: input size mismatch");
             updateItemsImpl(data, std::index_sequence_for<Ts...>{});
         }
 
@@ -58,28 +59,29 @@ namespace control {
         std::tuple<Components...> items_;
 
         template <typename... Ts, size_t... Index>
-        constexpr void updateItemsImpl(const std::tuple<Ts...>& data, std::index_sequence<Index...>) {
+        constexpr void updateItemsImpl(const std::tuple<Ts...>& data,
+                                       std::index_sequence<Index...>) {
             (std::get<Index>(items_).update(std::get<Index>(data)), ...);
         }
     };
 
     /*CollectItems*/
-    template<typename... Items>
+    template <typename... Items>
     struct CollectItems {
-        template<template<class> class Component, typename T>
+        template <template <class> class Component, typename T>
         constexpr auto addItem(T&& v) const {
             using Type = std::remove_cv_t<std::remove_reference_t<decltype(v)>>;
             using NewComponent = Component<Type>;
             return CollectItems<Items..., NewComponent>{};
         }
-        template<template<class> class Component, typename Struct, typename Member>
+        template <template <class> class Component, typename Struct, typename Member>
         constexpr auto addItem(Member Struct::*) const {
             using Type = std::remove_cv_t<std::remove_reference_t<Member>>;
             using NewComponent = Component<Type>;
             return CollectItems<Items..., NewComponent>{};
         }
 
-        //DEBUG ONLY
+        // DEBUG ONLY
         auto output() {
             return AutomataInputManagement<Items...>{};
         }
@@ -88,9 +90,9 @@ namespace control {
     };
     /*CollectItems*/
 
-    template<typename... Items>
+    template <typename... Items>
     using Ins = AutomataInputManagement<Items...>;
 
-}  // namespace communication
+}  // namespace control
 
 #endif  // UICRM_AUTOMATAINPUTMANAGEMENT_H

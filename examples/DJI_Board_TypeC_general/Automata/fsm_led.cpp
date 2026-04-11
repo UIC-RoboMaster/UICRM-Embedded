@@ -18,14 +18,14 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
+#include "Automata.h"
+#include "bsp_gpio.h"
+#include "bsp_print.h"
 #include "cmsis_os.h"
 #include "main.h"
 #include "rgb.h"
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "Automata.h"
 
-enum key_states {RELEASE, PRESS};
+enum key_states { RELEASE, PRESS };
 control::AutomataBuilder<key_states>* key_builder;
 control::Automata<key_states>* key_aut;
 
@@ -40,24 +40,20 @@ void RM_RTOS_Init(void) {
     (*key_builder)
         .input<remote::AutomataInputRemote>(INTYPE(std::declval<bsp::GPIO>().Read()), "0")
         .transition(
-            RELEASE,
-            PRESS,
+            RELEASE, PRESS,
             TRANLOGIC {
-                auto key_input =
-                    ins.get<remote::AutomataInputRemote>(INTYPE(std::declval<bsp::GPIO>().Read()), 0);
+                auto key_input = ins.get<remote::AutomataInputRemote>(
+                    INTYPE(std::declval<bsp::GPIO>().Read()), 0);
                 return key_input.get() == true;
             })
         .transition(
-            PRESS,
-            RELEASE,
-            TRANLOGIC {
-                auto key_input =
-                    ins.get<remote::AutomataInputRemote>(INTYPE(std::declval<bsp::GPIO>().Read()), 0);
+            PRESS, RELEASE, TRANLOGIC {
+                auto key_input = ins.get<remote::AutomataInputRemote>(
+                    INTYPE(std::declval<bsp::GPIO>().Read()), 0);
                 return key_input.get() == false;
             });
     key_aut = key_builder->build(RELEASE);
     delete key_builder;
-
 }
 
 void RM_RTOS_Default_Task(const void* args) {
@@ -81,8 +77,11 @@ void RM_RTOS_Default_Task(const void* args) {
         print_enabled("PRESSED", key_aut->state() ? PRESS : RELEASE);
 
         key_aut->input(std::make_tuple(key.Read()));
-        if (key_aut->state() == RELEASE) continue;
-        while (key_aut->state() == PRESS) {key_aut->input(std::make_tuple(key.Read()));}
+        if (key_aut->state() == RELEASE)
+            continue;
+        while (key_aut->state() == PRESS) {
+            key_aut->input(std::make_tuple(key.Read()));
+        }
 
         alpha = (RGB_flow_color[i] & 0xFF000000) >> 24;
         red = ((RGB_flow_color[i] & 0x00FF0000) >> 16);

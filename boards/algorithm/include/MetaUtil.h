@@ -24,75 +24,71 @@
 #define UICRM_METAUTIL_H
 
 namespace TemplateMetaUtil {
-    /*ValueList*/               //A type collection container
-    template<auto... Vs>
+    /*ValueList*/  // A type collection container
+    template <auto... Vs>
     struct ValueList {};
 
-    /*Contains & AppendUnique*/ // Search and remove duplicate types, reduce compile cost
-    template<auto V, typename List>
+    /*Contains & AppendUnique*/  // Search and remove duplicate types, reduce compile cost
+    template <auto V, typename List>
     struct Contains;
 
-    template<auto V>
+    template <auto V>
     struct Contains<V, ValueList<>> : std::false_type {};
 
-    template<auto V, auto Head, auto... Tail>
+    template <auto V, auto Head, auto... Tail>
     struct Contains<V, ValueList<Head, Tail...>>
-        : std::conditional_t<V == Head,
-                             std::true_type,
-                             Contains<V, ValueList<Tail...>>> {};
+        : std::conditional_t<V == Head, std::true_type, Contains<V, ValueList<Tail...>>> {};
 
-    template<typename List, auto V>
+    template <typename List, auto V>
     struct AppendUnique;
 
-    template<auto... Vs, auto V>
+    template <auto... Vs, auto V>
     struct AppendUnique<ValueList<Vs...>, V> {
-        using type = std::conditional_t<
-            Contains<V, ValueList<Vs...>>::value,
-            ValueList<Vs...>,
-            ValueList<Vs..., V>
-        >;
+        using type = std::conditional_t<Contains<V, ValueList<Vs...>>::value, ValueList<Vs...>,
+                                        ValueList<Vs..., V>>;
     };
     /*Contains & AppendUnique*/
 
     /*CollectStates*/
-    template<typename... Ts>
+    template <typename... Ts>
     struct CollectStates;
 
-    template<>
+    template <>
     struct CollectStates<> {
         using type = ValueList<>;
     };
 
-    template<typename T, typename... Rest>
+    template <typename T, typename... Rest>
     struct CollectStates<T, Rest...> {
-    private:
+      private:
         using rest = typename CollectStates<Rest...>::type;
         using with_from = typename AppendUnique<rest, T::from>::type;
-    public:
+
+      public:
         using type = typename AppendUnique<with_from, T::to>::type;
     };
     /*CollectStates*/
 
     /*Filter*/
-    template<auto State, typename... Ts>
+    template <auto State, typename... Ts>
     struct Filter;
 
-    template<auto State>
+    template <auto State>
     struct Filter<State> {
         using type = std::tuple<>;
     };
 
-    template<auto State, typename T, typename... Rest>
+    template <auto State, typename T, typename... Rest>
     struct Filter<State, T, Rest...> {
-    private:
+      private:
         using rest_type = typename Filter<State, Rest...>::type;
 
-    public:
-        using type = std::conditional_t<
-            T::from == State,
-            decltype(std::tuple_cat(std::tuple<T>{}, rest_type{})), rest_type>;
+      public:
+        using type =
+            std::conditional_t<T::from == State,
+                               decltype(std::tuple_cat(std::tuple<T>{}, rest_type{})), rest_type>;
     };
     /*Filter*/
-}
+}  // namespace TemplateMetaUtil
 
 #endif  // UICRM_METAUTIL_H

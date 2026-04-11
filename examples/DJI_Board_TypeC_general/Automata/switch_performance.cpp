@@ -35,9 +35,7 @@ enum class S1 { A, B, C };
 enum class S2 { X, Y };
 enum class S3 { IDLE, RUN };
 
-enum class S_BIG {
-    S0,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11
-};
+enum class S_BIG { S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11 };
 
 enum class S_HEAVY { A, B };
 
@@ -55,13 +53,16 @@ uint32_t cpu_hz;
 inline void step_fsm1(uint8_t input) {
     switch (s1) {
         case S1::A:
-            if (input > 100) s1 = S1::B;
+            if (input > 100)
+                s1 = S1::B;
             break;
         case S1::B:
-            if (input > 200) s1 = S1::C;
+            if (input > 200)
+                s1 = S1::C;
             break;
         case S1::C:
-            if (input < 50) s1 = S1::A;
+            if (input < 50)
+                s1 = S1::A;
             break;
     }
 }
@@ -69,10 +70,12 @@ inline void step_fsm1(uint8_t input) {
 inline void step_fsm2(uint8_t fsm1_out) {
     switch (s2) {
         case S2::X:
-            if (fsm1_out == (uint8_t)S1::C) s2 = S2::Y;
+            if (fsm1_out == (uint8_t)S1::C)
+                s2 = S2::Y;
             break;
         case S2::Y:
-            if (fsm1_out == (uint8_t)S1::A) s2 = S2::X;
+            if (fsm1_out == (uint8_t)S1::A)
+                s2 = S2::X;
             break;
     }
 }
@@ -80,10 +83,12 @@ inline void step_fsm2(uint8_t fsm1_out) {
 inline void step_fsm3(uint8_t fsm2_out) {
     switch (s3) {
         case S3::IDLE:
-            if (fsm2_out == (uint8_t)S2::Y) s3 = S3::RUN;
+            if (fsm2_out == (uint8_t)S2::Y)
+                s3 = S3::RUN;
             break;
         case S3::RUN:
-            if (fsm2_out == (uint8_t)S2::X) s3 = S3::IDLE;
+            if (fsm2_out == (uint8_t)S2::X)
+                s3 = S3::IDLE;
             break;
     }
 }
@@ -120,18 +125,16 @@ inline void step_fsm_big(uint16_t input) {
 inline void step_fsm_heavy(uint16_t x) {
     switch (s_heavy) {
         case S_HEAVY::A: {
-            bool cond =
-                (x % 3 == 0) &&
-                (x % 5 != 0) &&
-                (x * x > 1000) &&
-                ((x ^ 0x55) & 0x0F) &&
-                (x > 123 && x < 300);
+            bool cond = (x % 3 == 0) && (x % 5 != 0) && (x * x > 1000) && ((x ^ 0x55) & 0x0F) &&
+                        (x > 123 && x < 300);
 
-            if (cond) s_heavy = S_HEAVY::B;
+            if (cond)
+                s_heavy = S_HEAVY::B;
             break;
         }
         case S_HEAVY::B:
-            if (x < 50) s_heavy = S_HEAVY::A;
+            if (x < 50)
+                s_heavy = S_HEAVY::A;
             break;
     }
 }
@@ -192,15 +195,12 @@ void RM_RTOS_Default_Task(const void* args) {
     print("CPU frequency: %lu\r\n", cpu_hz);
     print("Total run stage cycles: %lu\r\n", TEST_COUNT);
 
-    print("Average cycles (ALL FSM): %lu (%lu ns)\r\n",
-          cycle_time_sum / TEST_COUNT,
+    print("Average cycles (ALL FSM): %lu (%lu ns)\r\n", cycle_time_sum / TEST_COUNT,
           cycleToNanoSec(cycle_time_sum / TEST_COUNT));
 
-    print("Average BIG FSM cycles: %lu (%lu ns)\r\n",
-          cycle_time_big[2] / TEST_COUNT,
+    print("Average BIG FSM cycles: %lu (%lu ns)\r\n", cycle_time_big[2] / TEST_COUNT,
           cycleToNanoSec(cycle_time_big[2] / TEST_COUNT));
 
-    print("Average HEAVY FSM cycles: %lu (%lu ns)\r\n",
-          cycle_time_heavy[2] / TEST_COUNT,
+    print("Average HEAVY FSM cycles: %lu (%lu ns)\r\n", cycle_time_heavy[2] / TEST_COUNT,
           cycleToNanoSec(cycle_time_heavy[2] / TEST_COUNT));
 }

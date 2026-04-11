@@ -114,8 +114,7 @@ void shootTask(void* arg) {
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
             if (!minipc->target_angle.shoot_cmd) {
                 steering_motor->Hold(true);
-                shoot_mode =
-                    shoot_mode == SHOOT_MODE_STOP ? shoot_mode : SHOOT_MODE_PREPARED;
+                shoot_mode = shoot_mode == SHOOT_MODE_STOP ? shoot_mode : SHOOT_MODE_PREPARED;
             }
         }
 

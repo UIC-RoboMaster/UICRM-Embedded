@@ -23,8 +23,8 @@
 #ifndef UICRM_AUTOMATAINPUTCOMPONENTBASE_H
 #define UICRM_AUTOMATAINPUTCOMPONENTBASE_H
 
-#include <string>
 #include <cstdint>
+#include <string>
 
 using std::string;
 
@@ -56,13 +56,16 @@ namespace control {
      */
     template <class T>
     class AutomataInputRaw : public AutomataInputComponentsBase<T> {
-    public:
+      public:
         ~AutomataInputRaw() override = default;
         virtual void update(const T& input) {
             val_ = input;
         }
-        virtual T get() const {return val_;}
-    protected:
+        virtual T get() const {
+            return val_;
+        }
+
+      protected:
         T val_;
     };
 
@@ -161,6 +164,6 @@ namespace control {
         uint16_t last_update_;
     };
 
-}  // namespace communication
+}  // namespace control
 
 #endif  // UICRM_AUTOMATAINPUTCOMPONENTBASE_H

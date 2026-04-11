@@ -39,7 +39,7 @@ struct raw_data_struct {
     bool dummy = false;
 };
 
-enum other_automata_output{s1, s2};
+enum other_automata_output { s1, s2 };
 
 const int global_eight = 8;
 
@@ -89,40 +89,39 @@ int main() {
      * Though it's an option to control life cycle manually.
      */
     auto aut = control::AutomataBuilder<states>()
-        .item<control::AutomataInputEdge>(&raw_data_struct::num1)
-        .item<control::AutomataInputEdge>(num2)
-        .item<control::AutomataInputRaw>(num3)
-        .item<control::AutomataInputRaw>(int32_t{})
-        .transition<ON, OFF>(TRANLOGIC {
-            auto& comp = COMPONENT(0);
-            return comp.downEdge();
-        })
-        // u may insert comments freely like this
-        // the transition below happens in a probability of 10%.
-        .transition<OFF, ON>(TRANLOGIC { return rand() % 10 <= global_eight; }, control::ReverseTag{})
-        .build<ON>();
+                   .item<control::AutomataInputEdge>(&raw_data_struct::num1)
+                   .item<control::AutomataInputEdge>(num2)
+                   .item<control::AutomataInputRaw>(num3)
+                   .item<control::AutomataInputRaw>(int32_t{})
+                   .transition<ON, OFF>(TRANLOGIC {
+                       auto& comp = COMPONENT(0);
+                       return comp.downEdge();
+                   })
+                   // u may insert comments freely like this
+                   // the transition below happens in a probability of 10%.
+                   .transition<OFF, ON>(
+                       TRANLOGIC { return rand() % 10 <= global_eight; }, control::ReverseTag{})
+                   .build<ON>();
 
     // You can also do this to assign to a global pointer:
     auto ptr = control::AutomataBuilder<states>()
-        // ...
-        .build_heap_allocation<ON>();
+                   // ...
+                   .build_heap_allocation<ON>();
     ptr->input(std::make_tuple());
 
     // You may also define automatas base on same builder or in separate segmentations.
     // Though this will be verbose due to background implementation details ...
-    auto builder_base =
-        control::AutomataBuilder<states>().item<control::AutomataInputEdge>(num2);
-    auto aut1_derive = builder_base
-        .transition<ON, OFF>(TRANLOGIC { return true; })
-        .build<ON>();
+    auto builder_base = control::AutomataBuilder<states>().item<control::AutomataInputEdge>(num2);
+    auto aut1_derive = builder_base.transition<ON, OFF>(TRANLOGIC { return true; }).build<ON>();
     auto aut2_derive = builder_base
-        .transition<OFF, ON>(TRANLOGIC { return false; }, control::ReverseTag{})
-        .build<OFF>();
+                           .transition<OFF, ON>(
+                               TRANLOGIC { return false; }, control::ReverseTag{})
+                           .build<OFF>();
 
     while (true) {
         // simulate value changes
         raw_data1.num1 = (++raw_data1.num1) % 10;
-        num2 = (17.0 * num2 + 1.6) > 100.0 ?  (17.0 * num2 + 1.6) : 1;
+        num2 = (17.0 * num2 + 1.6) > 100.0 ? (17.0 * num2 + 1.6) : 1;
         num3 = num3 == s1 ? s2 : s1;
 
         /*
@@ -131,12 +130,11 @@ int main() {
          * multi-thread is also good (for now ;D)
          */
 
-         /* input() gain update and drive automata to move a step based on these inputs.*/
+        /* input() gain update and drive automata to move a step based on these inputs.*/
         aut.input(std::make_tuple(raw_data1.num1, num2, num3, 3));
 
-        std::cout << "num1:" << raw_data1.num1 <<
-            " num2:" << num2 <<
-            " num3:" << (num3 == s1 ? "s1" : "s2") << std::endl;
+        std::cout << "num1:" << raw_data1.num1 << " num2:" << num2
+                  << " num3:" << (num3 == s1 ? "s1" : "s2") << std::endl;
 
         std::cout << "state:";
         /* And here's how to get current automata output*/
