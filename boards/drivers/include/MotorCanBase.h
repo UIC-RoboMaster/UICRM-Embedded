@@ -230,7 +230,8 @@ namespace driver {
         // angle control
         volatile float power_on_angle_ = 0; /* 上电时的编码器角度，单位为[rad] */
         volatile float relative_angle_ = 0; /* 编码器相对于开机角度的角度，单位为[rad] */
-        volatile float cumulated_rad_ = 0; /* 编码器累计圈数，按照2*PI/ratio加减，累积到2*PI清零 */
+        volatile float cumulated_rad_ =
+            0; /* 编码器累计圈数，按照2*PI/ratio加减，累积到2*PI清零 */
         volatile float output_cumulated_turns_ = 0; /* 输出轴累计圈数，按照2*PI加减，单位为[rad]*/
         volatile float output_relative_angle_ =
             0; /* 输出轴在这一圈中的角度，单位为[rad]，范围为[0, 2PI] */

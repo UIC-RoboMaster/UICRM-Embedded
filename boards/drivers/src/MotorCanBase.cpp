@@ -331,7 +331,8 @@ namespace driver {
                 cumulated_rad_ += 2 * PI / transmission_ratio_;
             else if (inner_wrap_detector_->posEdge())
                 cumulated_rad_ -= 2 * PI / transmission_ratio_;
-            cumulated_rad_ = wrap<float>(cumulated_rad_, 0, transmission_ratio_ * 2 * PI);
+            cumulated_rad_ =
+                wrap<float>(cumulated_rad_, 0, transmission_ratio_ * 2 * PI);
 
             output_relative_angle_ =
                 wrap<float>(cumulated_rad_ + relative_angle_ / transmission_ratio_, 0, 2 * PI);
