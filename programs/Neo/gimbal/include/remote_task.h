@@ -150,6 +150,7 @@ inline const char* shoot_load_mode_str(ShootMode mode) {
     }
 }
 extern ShootMode shoot_mode;
+extern ShootMode last_shoot_mode;
 
 enum BulletCapMode {
     BULLET_CAP_MODE_DISABLE = -1,

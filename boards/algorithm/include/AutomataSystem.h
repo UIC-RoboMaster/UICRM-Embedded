@@ -30,12 +30,6 @@
 #include "MetaUtil.h"
 #include "../../drivers/include/Automata/AutomataInputManagement.h"
 
-using namespace TemplateMetaUtil;
-
-using std::vector;
-
-using control::AutomataInputManagement;
-
 namespace control {
 
     /*Tags*/
@@ -53,7 +47,7 @@ namespace control {
     template <typename States, typename... Trs>
     class FiniteStateMachine {
       public:
-        using StateList = typename CollectStates<Trs...>::type;
+        using StateList = typename TemplateMetaUtil::CollectStates<Trs...>::type;
 
         /*interface*/           // with [Automata]
         FiniteStateMachine(States init) : current_state_(init) {}
@@ -69,7 +63,7 @@ namespace control {
         States current_state_;
 
         template<typename Ins, auto... St>
-        void stepImpl(const Ins& ins, ValueList<St...>) {
+        void stepImpl(const Ins& ins, TemplateMetaUtil::ValueList<St...>) {
             States res = current_state_;
             ((current_state_ == St ? (res = evalState<St>(ins), void()) : void()), ...);
             current_state_ = res;
@@ -77,7 +71,7 @@ namespace control {
 
         template<auto St, typename Ins>
         States evalState(const Ins& ins) {
-            using EvalGroup = typename Filter<St, Trs...>::type;
+            using EvalGroup = typename TemplateMetaUtil::Filter<St, Trs...>::type;
             return evalTuple<EvalGroup>(ins, std::make_index_sequence<std::tuple_size_v<EvalGroup>>{});
         }
 

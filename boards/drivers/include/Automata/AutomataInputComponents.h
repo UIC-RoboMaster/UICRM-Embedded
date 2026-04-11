@@ -175,6 +175,6 @@ namespace control {
         uint16_t last_update_;
     };
 
-}  // namespace communication
+}  // namespace control
 
 #endif  // UICRM_AUTOMATAINPUTCOMPONENTBASE_H

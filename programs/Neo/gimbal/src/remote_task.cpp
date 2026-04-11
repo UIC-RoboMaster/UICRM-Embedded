@@ -32,6 +32,7 @@ ShootMode shoot_mode = SHOOT_MODE_STOP;
 BulletCapMode bullet_cap_mode = BULLET_CAP_MODE_CLOSE;
 
 RemoteMode last_remote_mode = REMOTE_MODE_SPIN;
+ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
 void init_remote() {
     dbus = new remote::DBUS(&huart3);
@@ -98,22 +99,25 @@ void remoteTask(void* arg) {
         const auto& fric_state = COMPONENT(1);
         const auto& referee_permit = COMPONENT(2);
         const auto& shoot_key = COMPONENT(3);
+        const auto& remote_mode = COMPONENT(4);
         return (swl.get() == remote::DOWN || shoot_key.get()) &&
             fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
-            referee_permit.get();
+            referee_permit.get() &&
+            (remote_mode.get() == REMOTE_MODE_AUTOPILOT ? minipc->target_angle.shoot_cmd : true);
     };
     auto shoot_aut = control::AutomataBuilder<ShootMode>()
         .item<control::AutomataInputEdge>(dbus->swl)
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .item<control::AutomataInputRaw>(is_referee_shoot_available)
         .item<control::AutomataInputEdge>(bool{}) // shoot_key
+        .item<control::AutomataInputRaw>(REMOTE_MODE_AUTOPILOT)
         .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_STOP>(tranlogic_shooting_condition, control::ReverseTag{})
         .transition<SHOOT_MODE_BURST, SHOOT_MODE_STOP>(tranlogic_shooting_condition, control::ReverseTag{})
         .transition<SHOOT_MODE_STOP, SHOOT_MODE_SINGLE>(tranlogic_shooting_condition)
         .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_BURST>(TRANLOGIC {
             const auto& swl = COMPONENT(0);
             const auto& shoot_key = COMPONENT(3);
-            constexpr uint16_t burst_threshold_cycle = 250;
+            constexpr uint16_t burst_threshold_cycle = 300;
             return swl.lastUpdate() > burst_threshold_cycle ||
                 shoot_key.lastUpdate() > burst_threshold_cycle;
         })
@@ -166,7 +170,9 @@ void remoteTask(void* arg) {
             dbus->swl,
             shoot_fric_wheel_mode,
             is_referee_shoot_available,
-            dbus->mouse.l));
+            dbus->mouse.l,
+            remote_mode));
+        last_shoot_mode = shoot_mode;
         shoot_mode = shoot_aut.state();
 
         bullet_cap_aut.input(std::make_tuple(dbus->swl, shoot_fric_wheel_mode));

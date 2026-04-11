@@ -91,6 +91,6 @@ namespace control {
     template<typename... Items>
     using Ins = AutomataInputManagement<Items...>;
 
-}  // namespace communication
+}  // namespace control
 
 #endif  // UICRM_AUTOMATAINPUTMANAGEMENT_H
