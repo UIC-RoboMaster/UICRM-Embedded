@@ -32,24 +32,41 @@ extern bool turbo_shoot;
  */
 void init_dbus();
 
+enum ActivateStates {
+    KILLED = 0,
+    ACTIVE = 1,
+};
+inline const char* activate_states_str(ActivateStates state) {
+    switch (state) {
+        case KILLED:
+            return "KILLED";
+        case ACTIVE:
+            return "ACTIVE";
+        default:
+            return "UNKNOWN";
+    }
+}
+extern bool is_activate;
+
 enum RemoteMode {
     REMOTE_MODE_PREPARE = -2,
-    REMOTE_MODE_KILL = -1,
+    // REMOTE_MODE_KILL = -1,
     REMOTE_MODE_STOP = 0,
     REMOTE_MODE_FOLLOW = 1,
     REMOTE_MODE_SPIN = 2,
     REMOTE_MODE_ADVANCED = 3,
     REMOTE_MODE_AUTOPILOT = 4,
-    REMOTE_MODE_AUTOAIM = 5
+    REMOTE_MODE_AUTOAIM = 5,
+    REMOTE_MODE_MANIPULATE = 6
 };
 inline const char* remote_mode_str(RemoteMode mode) {
     switch (mode) {
         case REMOTE_MODE_PREPARE:
             return "PREPARE";
             break;
-        case REMOTE_MODE_KILL:
-            return "KILL";
-            break;
+        // case REMOTE_MODE_KILL:
+        //     return "KILL";
+        //     break;
         case REMOTE_MODE_STOP:
             return "STOP";
             break;
@@ -103,7 +120,7 @@ inline const char* shoot_fric_mode_str(ShootFricMode mode) {
             break;
     }
 }
-extern ShootFricMode shoot_flywheel_mode;
+extern ShootFricMode shoot_fric_wheel_mode;
 
 enum ShootMode {
     SHOOT_MODE_DISABLE = -1,
@@ -132,18 +149,22 @@ inline const char* shoot_load_mode_str(ShootMode mode) {
             break;
     }
 }
-extern ShootMode shoot_load_mode;
+extern ShootMode shoot_mode;
 
-enum CapMode { CAP_MODE_DISABLE = -1, CAP_MODE_CLOSE = 0, CAP_MODE_OPEN = 1 };
-inline const char* cap_mode_str(CapMode mode) {
+enum BulletCapMode {
+    BULLET_CAP_MODE_DISABLE = -1,
+    BULLET_CAP_MODE_CLOSE = 0,
+    BULLET_CAP_MODE_OPEN = 1
+};
+inline const char* cap_mode_str(BulletCapMode mode) {
     switch (mode) {
-        case CAP_MODE_DISABLE:
+        case BULLET_CAP_MODE_DISABLE:
             return "DISABLE";
             break;
-        case CAP_MODE_CLOSE:
+        case BULLET_CAP_MODE_CLOSE:
             return "CLOSE";
             break;
-        case CAP_MODE_OPEN:
+        case BULLET_CAP_MODE_OPEN:
             return "OPEN";
             break;
         default:
@@ -151,7 +172,7 @@ inline const char* cap_mode_str(CapMode mode) {
             break;
     }
 }
-extern CapMode cap_mode;
+extern BulletCapMode bullet_cap_mode;
 
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",

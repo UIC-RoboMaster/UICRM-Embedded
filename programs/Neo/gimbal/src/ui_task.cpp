@@ -40,7 +40,7 @@ void uiTask(void* arg) {
     UNUSED(arg);
 
     osDelay(1500);
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         osDelay(UI_OS_DELAY);
     }
     while (!referee->IsOnline()) {
@@ -115,7 +115,7 @@ void uiTask(void* arg) {
     float relative_angle = 0;
     float pitch_angle = 0;
     float power_percent = 1;
-    RemoteMode last_mode = REMOTE_MODE_KILL;
+    RemoteMode last_mode = REMOTE_MODE_SPIN;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
     BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* turboShootDetector = new BoolEdgeDetector(false);
@@ -182,11 +182,11 @@ void uiTask(void* arg) {
         }
 
         // Update wheel status GUI
-        if (last_fric_mode != shoot_flywheel_mode) {
+        if (last_fric_mode != shoot_fric_wheel_mode) {
             char* wheelStr =
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
+                shoot_fric_wheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
             uint32_t wheelColor =
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
+                shoot_fric_wheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }
@@ -203,7 +203,7 @@ void uiTask(void* arg) {
             osDelay(UI_OS_DELAY);
         }
         last_mode = remote_mode;
-        last_fric_mode = shoot_flywheel_mode;
+        last_fric_mode = shoot_fric_wheel_mode;
 
         // Update self-diagnosis messages
         {

@@ -63,18 +63,17 @@ volatile int _Delay;
 static char r;
 
 /*********************************************************************
-*
-*       main
-*/
+ *
+ *       main
+ */
 void main(void) {
-
-  SEGGER_RTT_WriteString(0, "SEGGER Real-Time-Terminal Sample\r\n");
-  SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
-  do {
-    r = SEGGER_RTT_WaitKey();
-    SEGGER_RTT_Write(0, &r, 1);
-    r++;
-  } while (1);
+    SEGGER_RTT_WriteString(0, "SEGGER Real-Time-Terminal Sample\r\n");
+    SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
+    do {
+        r = SEGGER_RTT_WaitKey();
+        SEGGER_RTT_Write(0, &r, 1);
+        r++;
+    } while (1);
 }
 
 /*************************** End of file ****************************/

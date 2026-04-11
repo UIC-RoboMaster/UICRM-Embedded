@@ -50,7 +50,7 @@ void shootTask(void* arg) {
     UNUSED(arg);
     // 启动等待
     osDelay(1000);
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         osDelay(SHOOT_OS_DELAY);
     }
     // 等待IMU初始化
@@ -70,10 +70,9 @@ void shootTask(void* arg) {
     ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
     while (true) {
-        bool shoot_en = true;
-        shoot_en &= remote_mode != REMOTE_MODE_KILL;
+        bool shoot_en = is_activate;
 #ifdef HAS_REFEREE
-        shoot_en &= referee->game_robot_status.mains_power_shooter_output;
+        shoot_en = shoot_en && referee->game_robot_status.mains_power_shooter_output;
 #endif
         if (!shoot_en) {
             // 死了
@@ -92,12 +91,12 @@ void shootTask(void* arg) {
             flywheel_right->Enable();
         }
 
-        switch (shoot_flywheel_mode) {
+        switch (shoot_fric_wheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
                 flywheel_left->SetTarget(120.0f * 2 * PI);
                 flywheel_right->SetTarget(120.0f * 2 * PI);
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
-                shoot_load_mode = SHOOT_MODE_PREPARED;
+                shoot_fric_wheel_mode = SHOOT_FRIC_MODE_PREPARED;
+                shoot_mode = SHOOT_MODE_PREPARED;
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;
@@ -115,13 +114,12 @@ void shootTask(void* arg) {
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
             if (!minipc->target_angle.shoot_cmd) {
                 steering_motor->Hold(true);
-                shoot_load_mode =
-                    shoot_load_mode == SHOOT_MODE_STOP ? shoot_load_mode : SHOOT_MODE_PREPARED;
+                shoot_mode = shoot_mode == SHOOT_MODE_STOP ? shoot_mode : SHOOT_MODE_PREPARED;
             }
         }
 
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
-            switch (shoot_load_mode) {
+        if (shoot_fric_wheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+            switch (shoot_mode) {
                 case SHOOT_MODE_PREPARING:
                 case SHOOT_MODE_PREPARED:
                     // 准备就绪，未发射状态
@@ -139,7 +137,7 @@ void shootTask(void* arg) {
                             steering_motor->SetTarget(
                                 steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
                         }
-                        shoot_load_mode = SHOOT_MODE_PREPARED;
+                        shoot_mode = SHOOT_MODE_PREPARED;
                     }
                     break;
                 case SHOOT_MODE_BURST:
@@ -154,7 +152,7 @@ void shootTask(void* arg) {
                     break;
             }
         }
-        last_shoot_mode = shoot_load_mode;
+        last_shoot_mode = shoot_mode;
 
         osDelay(SHOOT_OS_DELAY);
     }
