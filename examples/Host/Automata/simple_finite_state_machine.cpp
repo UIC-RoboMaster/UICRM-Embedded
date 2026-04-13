@@ -48,6 +48,8 @@ int main() {
     float num2 = 1.1;
     other_automata_output num3 = s1;
 
+    // clang-format off
+
     /*
      * To build an automata, factory function's aid is necessary.
      * Class [AutomataBuilder] in charge of:
@@ -118,6 +120,8 @@ int main() {
     auto aut2_derive = builder_base
         .transition<OFF, ON>(TRANLOGIC { return false; }, control::ReverseTag{})
         .build<OFF>();
+
+    // clang-format on
 
     while (true) {
         // simulate value changes

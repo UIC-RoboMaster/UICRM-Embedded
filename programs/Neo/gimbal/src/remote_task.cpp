@@ -46,6 +46,10 @@ void remoteTask(void* arg) {
     bool is_referee_robot_dead = true;
     bool is_referee_shoot_available = false;
 
+
+    // Automata definitions
+    // clang-format off
+
     // 使/失能（上/下电）
     auto tranlogic_active_condition = TRANLOGIC {
         const auto& referee_cmd_dead = COMPONENT(0);
@@ -135,6 +139,9 @@ void remoteTask(void* arg) {
         .transition<BULLET_CAP_MODE_CLOSE, BULLET_CAP_MODE_OPEN>(tranlogic_bullet_cap_trigger)
         .transition<BULLET_CAP_MODE_OPEN, BULLET_CAP_MODE_CLOSE>(tranlogic_bullet_cap_trigger)
         .build<BULLET_CAP_MODE_CLOSE>();
+
+    // clang-format on
+    // Automata definitions
 
     while (true) {
         osDelay(REMOTE_OS_DELAY);

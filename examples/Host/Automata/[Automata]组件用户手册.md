@@ -256,6 +256,20 @@ while (true) {
 **构建**
 避免使用堆分配，使用全局变量广播自动机输出是可以接受的设计。
 
+**格式**
+推荐对定义automata的块关闭clang-format。
+```cpp
+// clang-format off
+
+auto ptr = control::AutomataBuilder<states>()
+        // ...
+        .build_heap_allocation<ON>();
+    ptr->input(std::make_tuple());
+
+// clang-format on
+```
+> I tried, really. But clang-format is what it is ¯\(ツ)/¯.
+
 ---
 ## [高级]自定义组件
 

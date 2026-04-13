@@ -31,6 +31,8 @@ enum States {s1, s2};
 
 int main() {
 
+    // clang-format off
+
     auto inputs = control::CollectItems()
         .addItem<control::AutomataInputEdge>(int{})
         .output();
@@ -39,6 +41,8 @@ int main() {
         .addTrans<s1, s2, control::ForwardTag>([](const auto& ins) -> bool { return ins.template get<0>().get()==2; })
         .addTrans<s2, s1, control::ForwardTag>([](const auto& ins) -> bool { return true; })
         .output(s1);
+
+    // clang-format on
 
     int num = 0;
     while (true) {
