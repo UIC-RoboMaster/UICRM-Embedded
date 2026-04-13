@@ -4,9 +4,9 @@
 
 ## 基本概念和术语
 
-### 状态（State）
+### <span style="color:#2F6BFF;">状态</span>（State）
 
-使用枚举定义状态：
+使用枚举定义<span style="color:#2F6BFF;">状态</span>：
 
 ```cpp
 enum States { ON, OFF };
@@ -21,7 +21,7 @@ using States::ON, States::OFF;
 
 ---
 
-### 输入（Input）输入量（Item）
+### <span style="color:#1E9E5A;">输入</span>（Input）<span style="color:#0F8C8C;">输入量</span>（Item）
 
 支持以下注册方式：
 
@@ -31,19 +31,19 @@ using States::ON, States::OFF;
 - 枚举常量：`.item<...>(Enum::value)`
 - 临时对象：`.item<...>(Type{})`
 
-输入按照注册顺序自动编号（从 0 开始）。
+<span style="color:#1E9E5A;">输入</span>按照注册顺序自动编号（从 0 开始）。
 
 ---
 
-### 组件（Component）
+### <span style="color:#D97706;">组件</span>（Component）
 
-由item注册的输入量会被封装为组件。
+由 item 注册的<span style="color:#0F8C8C;">输入量</span>会被封装为<span style="color:#D97706;">组件</span>。
 
-组件是依据一些规则，可由用户自定义的，能够按自定义方式与输入量交互的类。
+<span style="color:#D97706;">组件</span>是依据一些规则，可由用户自定义的，能够按自定义方式与<span style="color:#0F8C8C;">输入量</span>交互的类。
 
-每个组件代表一个通道/输入量/变量。
+每个<span style="color:#D97706;">组件</span>代表一个通道/<span style="color:#0F8C8C;">输入量</span>/变量。
 
-默认组件：
+默认<span style="color:#D97706;">组件</span>：
 
 `control::AutomataInputEdge`
 `control::AutomataInputRaw`
@@ -55,7 +55,7 @@ using States::ON, States::OFF;
 .item<control::AutomataInputRaw>(...)	//索引1
 ```
 
-要在状态转移逻辑定义中使用：
+要在<span style="color:#C2410C;">状态转移</span>逻辑定义中使用：
 
 ```cpp
 COMPONENT(index)
@@ -70,7 +70,7 @@ comp.downEdge(); // 自定义交互方式，当输入量下降时返回true
 
 ---
 
-### 状态转移（Transition）
+### <span style="color:#C2410C;">状态转移</span>（Transition）
 
 定义方式：
 
@@ -93,15 +93,15 @@ auto transitionLogic = TRANLOGIC {...};
 - 按定义顺序匹配（先写优先级更高）
 
 注意：逻辑定义不能直接使用局部变量，需要预先注册。转移函数可以直接使用在全局定义的符号。
-设计良好的组件能独立的使用，全局符号也可以这样来获得一致的接口，但需要用户自己管理输入。
+设计良好的<span style="color:#D97706;">组件</span>能独立的使用，全局符号也可以这样来获得一致的接口，但需要用户自己管理<span style="color:#1E9E5A;">输入</span>。
 
 ---
 
-### 标签（Tag）
+### <span style="color:#7C3AED;">标签</span>（Tag）
 
-标签是一套用于直接修改转置逻辑行为的系统，方便用户以简洁的语法构建自动机。
+<span style="color:#7C3AED;">标签</span>是一套用于直接修改转置逻辑行为的系统，方便用户以简洁的语法构建自动机。
 
-目前支持的标签：
+目前支持的<span style="color:#7C3AED;">标签</span>：
 
 `control::ForwardTag`
 `control::ReverseTag`
@@ -195,16 +195,16 @@ auto shoot_aut = shoot_builder_with_items
 
 ## 使用自动机
 
-### 自动机输入
+### 自动机<span style="color:#1E9E5A;">输入</span>
 
 ```cpp
 aut.input(std::make_tuple(...));
 ```
 
 注意：顺序必须与 `.item()` 注册顺序一致。
-如果输入类型或输入长度与注册时不一致则编译器报错。
+如果<span style="color:#1E9E5A;">输入</span>类型或<span style="color:#1E9E5A;">输入</span>长度与注册时不一致则编译器报错。
 
-输入更新之自动机会自动步进一次，如没有任何转置条件成立则默认停留在当前状态。
+<span style="color:#1E9E5A;">输入</span>更新之后自动机会自动步进一次，如没有任何转置条件成立则默认停留在当前<span style="color:#2F6BFF;">状态</span>。
 
 ### 自动机输出
 
@@ -239,19 +239,19 @@ while (true) {
 ## 设计与使用建议
 
 **拆分系统**
-建议将复杂逻辑拆分为多个小自动机，通过将输出作为输入组合。
+建议将复杂逻辑拆分为多个小自动机，通过将输出作为<span style="color:#1E9E5A;">输入</span>组合。
 
-**转移逻辑**
+**<span style="color:#C2410C;">状态转移</span>逻辑**
 先定义的 `transition` 优先级更高。
-转移逻辑必须返回 `bool`。
+<span style="color:#C2410C;">状态转移</span>逻辑必须返回 `bool`。
 可以直接使用全局符号。
 
-**组件使用**
+**<span style="color:#D97706;">组件</span>使用**
 建议仅用于条件判断，避免复杂逻辑和副作用。
-组件可以单独使用，不一定要注册到自动机中使用。
+<span style="color:#D97706;">组件</span>可以单独使用，不一定要注册到自动机中使用。
 
-**输入**
-输入顺序必须与注册顺序严格一致。
+**<span style="color:#1E9E5A;">输入</span>**
+<span style="color:#1E9E5A;">输入</span>顺序必须与注册顺序严格一致。
 
 **构建**
 避免使用堆分配，使用全局变量广播自动机输出是可以接受的设计。
@@ -271,13 +271,13 @@ auto ptr = control::AutomataBuilder<states>()
 > I tried, really. But clang-format is what it is ¯\(ツ)/¯.
 
 ---
-## [高级]自定义组件
+## [高级]自定义<span style="color:#D97706;">组件</span>
 
-自动机系统支持用户自定义输入组件，通过 `.item<control::AutomataInputCustom>(...)` 注册到自动机中。
+自动机系统支持用户自定义<span style="color:#1E9E5A;">输入</span><span style="color:#D97706;">组件</span>，通过 `.item<control::AutomataInputCustom>(...)` 注册到自动机中。
 
 ### 语法约束
 
-自定义组件必须满足以下最小接口要求：
+自定义<span style="color:#D97706;">组件</span>必须满足以下最小接口要求：
 
 - 必须为模板类，包含模板参数 `T`
 - 必须提供成员函数：`void update(const T& value)`（或等价语义）
@@ -310,29 +310,29 @@ class MyComponent : public control::AutomataInputComponentsBase<T> {
 ```
 > 虽然不是强制要求，但继承基础类可以获得一致的接口与更好的可维护性。
 
-像默认组件一样注册：
+像默认<span style="color:#D97706;">组件</span>一样注册：
 
 ```cpp
 .item<control::AutomataInputCustom>(...)
 ```
 
-注册后，可在 `TRANLOGIC` 中通过 `COMPONENT(index)` 访问对应组件实例。
+注册后，可在 `TRANLOGIC` 中通过 `COMPONENT(index)` 访问对应<span style="color:#D97706;">组件</span>实例。
 
 ### 组织与包含建议
 
-- 可以直接将自定义组件写在默认文件 `AutomataInputComponents.h` 中
-- 更推荐将自定义组件放入独立头文件中（如 `MyComponents.h`）
-- 为了使用方便，可在 `Automata.h` 中统一 `#include` 自定义组件头文件
+- 可以直接将自定义<span style="color:#D97706;">组件</span>写在默认文件 `AutomataInputComponents.h` 中
+- 更推荐将自定义<span style="color:#D97706;">组件</span>放入独立头文件中（如 `MyComponents.h`）
+- 为了使用方便，可在 `Automata.h` 中统一 `#include` 自定义<span style="color:#D97706;">组件</span>头文件
 
 这样可以保持项目结构清晰、依赖关系简单。
 
-### 组件设计注意事项
+### <span style="color:#D97706;">组件</span>设计注意事项
 
-- 建议适当使用`concept/constexpr/specification`来限制组件的类型。
-- 默认组件与自定义组件不一定必须绑定到自动机使用。
-- 组件设计可以使用虚函数特性，自动机系统理论上不使用继承多态（虚函数表）。
-- 设计良好的组件可以独立使用，作为输入处理或信号预处理模块。
-​例如：边沿检测、滤波、计时器等组件，都可以在自动机之外复用
+- 建议适当使用`concept/constexpr/specification`来限制<span style="color:#D97706;">组件</span>的类型。
+- 默认<span style="color:#D97706;">组件</span>与自定义<span style="color:#D97706;">组件</span>不一定必须绑定到自动机使用。
+- <span style="color:#D97706;">组件</span>设计可以使用虚函数特性，自动机系统理论上不使用继承多态（虚函数表）。
+- 设计良好的<span style="color:#D97706;">组件</span>可以独立使用，作为输入处理或信号预处理模块。
+​例如：边沿检测、滤波、计时器等<span style="color:#D97706;">组件</span>，都可以在自动机之外复用
 
 ---
 ## [高级]实现细节和性能描述
@@ -352,15 +352,15 @@ class MyComponent : public control::AutomataInputComponentsBase<T> {
 具体表现为：
 
 自动机的定义过程本质上是类型的逐步构建与累积
-大部分结构信息（状态、转移、组件）均编码在类型系统中
+大部分结构信息（<span style="color:#2F6BFF;">状态</span>、<span style="color:#C2410C;">状态转移</span>、<span style="color:#D97706;">组件</span>）均编码在类型系统中
 运行时仅对已构建的静态结构进行评估
 
 ### DMS（数据管理系统）
 
-数据管理系统负责维护所有输入组件（Components），其关键设计：
+数据管理系统负责维护所有<span style="color:#1E9E5A;">输入</span><span style="color:#D97706;">组件</span>（Components），其关键设计：
 
-所有组件类型在编译期完全确定
-使用 `std::tuple` 连续存储所有组件实例
+所有<span style="color:#D97706;">组件</span>类型在编译期完全确定
+使用 `std::tuple` 连续存储所有<span style="color:#D97706;">组件</span>实例
 不涉及动态分配（无 `new` / `malloc`）
 
 **性能特性**
@@ -368,15 +368,15 @@ class MyComponent : public control::AutomataInputComponentsBase<T> {
 - 内存布局连续，缓存友好
 - 编译器可完全展开访问（`get<index>()`）
 - 无虚函数、无运行时多态
-- 由于完整的类型信息，即便组件使用继承，理论上不使用虚函数表。
+- 由于完整的类型信息，即便<span style="color:#D97706;">组件</span>使用继承，理论上不使用虚函数表。
 
 ### FSM（有限状态机）
 
-FSM 部分负责状态转移，其关键设计：
+FSM 部分负责<span style="color:#C2410C;">状态转移</span>，其关键设计：
 
 使用无捕获 lambda
 逻辑作为模板参数存储在 `Transition` 类型中
-通过模板展开遍历所有转移
+通过模板展开遍历所有<span style="color:#C2410C;">状态转移</span>
 
 **性能特性**
 
@@ -395,7 +395,7 @@ FSM 部分负责状态转移，其关键设计：
 
 在启用优化时（如 `-O1` 及以上）：
 
-- 转移判断通常会被完全内联
+- <span style="color:#C2410C;">状态转移</span>判断通常会被完全内联
 - `tuple` 访问会被优化为直接内存访问
 - 不产生额外调用开销
 
