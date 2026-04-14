@@ -1,6 +1,6 @@
-boards/base/*
-boards/third_party/*
-build/*
-cmake-build-debug/*
-venv/*
-.git/*
+*/boards/base/*
+*/boards/third_party/*
+*/build/*
+*/cmake-build-debug/*
+*/venv/*
+*/.git/*
