@@ -26,24 +26,20 @@
 #include "crc_check.h"
 #include "dji_remote.h"
 
-static const uint8_t SOF = 0xA5;
-static const int FRAME_HEADER_LEN = 5;
-static const int CMD_ID_LEN = 2;
-static const int FRAME_TAIL_LEN = 2;
-static const int BYTE = 8;
+static constexpr uint8_t BYTE = 8;
 
 namespace communication {
 
     bool Protocol::Receive(package_t package) {
     Heartbeat();
 
-    for (int i = 0; i < package.length; ++i) {
+    for (uint32_t i = 0; i < package.length; ++i) {
         uint8_t byte = package.data[i];
 
         switch (rx_state.mode) {
 
         case WAITING_FOR_SOF:
-            if (byte == SOF) {
+            if (byte == GENERAL_SOF) {
                 rx_state.mode = RECEIVING_HEADER;
                 rx_state.idx = 0;
                 bufferRx[rx_state.idx++] = byte;
@@ -121,7 +117,7 @@ namespace communication {
 }
 
     package_t Protocol::Transmit(int cmd_id) {
-        bufferTx[0] = SOF;
+        bufferTx[0] = GENERAL_SOF;
         int DATA_LENGTH = ProcessDataTx(cmd_id, bufferTx + FRAME_HEADER_LEN + CMD_ID_LEN);
         if (DATA_LENGTH < 0)
             return package_t{nullptr, 0};
@@ -132,7 +128,7 @@ namespace communication {
         bufferTx[5] = (uint8_t)((uint32_t)cmd_id & 0xFF);
         bufferTx[6] = (uint8_t)((uint32_t)cmd_id >> BYTE);
         AppendFrame(bufferTx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN);
-        return package_t{bufferTx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN};
+        return package_t{bufferTx, static_cast<uint32_t>(FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN)};
     }
 
     bool Protocol::VerifyHeader(const uint8_t* data, int length) {
@@ -169,7 +165,7 @@ namespace communication {
     void UARTProtocol::callback_thread_func_(void* args) {
         UARTProtocol* uart_protocol_ = reinterpret_cast<UARTProtocol*>(args);
         uart_protocol_->Receive(
-            communication::package_t{uart_protocol_->read_ptr_, (int)uart_protocol_->read_len_});
+            communication::package_t{uart_protocol_->read_ptr_, uart_protocol_->read_len_});
     }
     UARTProtocol::~UARTProtocol() {
         delete callback_thread_;
@@ -204,7 +200,7 @@ namespace communication {
     void USBProtocol::callback_thread_func_(void* args) {
         USBProtocol* usb_protocol_ = reinterpret_cast<USBProtocol*>(args);
         usb_protocol_->Receive(communication::package_t{
-            usb_protocol_->read_ptr_, static_cast<int>(usb_protocol_->read_len_)});
+            usb_protocol_->read_ptr_, static_cast<uint32_t>(usb_protocol_->read_len_)});
     }
     USBProtocol::~USBProtocol() {
         delete callback_thread_;

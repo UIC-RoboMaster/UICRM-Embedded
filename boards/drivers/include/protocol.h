@@ -29,18 +29,18 @@
 
 namespace communication {
 
-    constexpr int MAX_FRAME_LEN = 300;
+    constexpr uint16_t MAX_FRAME_LEN = 300;
 
-    constexpr uint8_t SOF = 0xA5;
-    constexpr int FRAME_HEADER_LEN = 5;
-    constexpr int CMD_ID_LEN = 2;
-    constexpr int FRAME_TAIL_LEN = 2;
-    constexpr int MAX_DATA_LEN = 128;
-    constexpr int BUFFER_SIZE = 300;
+    static constexpr uint8_t GENERAL_SOF = 0xA5;
+    constexpr uint8_t FRAME_HEADER_LEN = 5;
+    constexpr uint8_t CMD_ID_LEN = 2;
+    constexpr uint8_t FRAME_TAIL_LEN = 2;
+    constexpr uint16_t MAX_DATA_LEN = 128;
+    constexpr uint16_t BUFFER_SIZE = 300;
 
     typedef struct {
         uint8_t* data;
-        int length;
+        uint32_t length;
     } package_t;
 
     enum RxMode {
