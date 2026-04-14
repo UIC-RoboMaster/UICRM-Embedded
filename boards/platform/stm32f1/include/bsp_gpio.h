@@ -52,6 +52,27 @@ namespace bsp {
         GPIO(GPIO_TypeDef* group, uint16_t pin);
 
         /**
+          * @brief 构造函数，用于需要自定义输入模式/上下拉的 GPIO（非中断）。
+          *
+          * 该构造函数允许在创建 GPIO 对象时直接配置引脚的模式（输入/输出）和上下拉电阻。
+          * 通常用于按键、开关等需要上拉或下拉输入的场景。
+          *
+          * @param group GPIO 端口组（如 GPIOB、GPIOC）。
+          * @param pin   GPIO 引脚号（如 GPIO_PIN_12）。
+          * @param mode  引脚模式，可取 GPIO_MODE_INPUT、GPIO_MODE_OUTPUT_PP 等（HAL 定义）。
+          * @param pull  上下拉配置，可取 GPIO_NOPULL、GPIO_PULLUP、GPIO_PULLDOWN。
+          */
+        GPIO(GPIO_TypeDef* group, uint16_t pin, uint32_t mode, uint32_t pull)
+        : group_(group), pin_(pin), state_(0) {
+            GPIO_InitTypeDef init = {};
+            init.Pin = pin;
+            init.Mode = mode;        // GPIO_MODE_INPUT
+            init.Pull = pull;        // GPIO_PULLUP
+            init.Speed = GPIO_SPEED_FREQ_LOW;
+            HAL_GPIO_Init(group, &init);
+        }
+
+        /**
          * @brief 设置高电平输出
          */
         /**

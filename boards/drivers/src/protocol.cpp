@@ -33,7 +33,6 @@ static const int FRAME_TAIL_LEN = 2;
 static const int BYTE = 8;
 
 namespace communication {
-
     bool Protocol::Receive(package_t package) {
         Heartbeat();
         for (int i = 0; i < package.length; ++i) {
@@ -58,7 +57,7 @@ namespace communication {
                         FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
                         if (VerifyHeader(bufferRx, FRAME_HEADER_LEN) &&
                             VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH +
-                                                      FRAME_TAIL_LEN)) {
+                                                  FRAME_TAIL_LEN)) {
                             int cmd_id =
                                 bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
                             ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN,
@@ -126,18 +125,22 @@ namespace communication {
         };
         callback_thread_ = new bsp::EventThread(thread_init);
     }
+
     void UARTProtocol::CallbackWrapper(void* args) {
         UARTProtocol* uart_protocol_ = reinterpret_cast<UARTProtocol*>(args);
         uart_protocol_->callback_thread_->Set();
     }
+
     void UARTProtocol::callback_thread_func_(void* args) {
         UARTProtocol* uart_protocol_ = reinterpret_cast<UARTProtocol*>(args);
         uart_protocol_->Receive(
             communication::package_t{uart_protocol_->read_ptr_, (int)uart_protocol_->read_len_});
     }
+
     UARTProtocol::~UARTProtocol() {
         delete callback_thread_;
     }
+
     package_t UARTProtocol::Transmit(int cmd_id) {
         package_t package = Protocol::Transmit(cmd_id);
         uart_->Write(package.data, package.length);
@@ -161,18 +164,22 @@ namespace communication {
         };
         callback_thread_ = new bsp::EventThread(thread_init);
     }
+
     void USBProtocol::CallbackWrapper(void* args) {
         USBProtocol* usb_protocol_ = reinterpret_cast<USBProtocol*>(args);
         usb_protocol_->callback_thread_->Set();
     }
+
     void USBProtocol::callback_thread_func_(void* args) {
         USBProtocol* usb_protocol_ = reinterpret_cast<USBProtocol*>(args);
         usb_protocol_->Receive(communication::package_t{
             usb_protocol_->read_ptr_, static_cast<int>(usb_protocol_->read_len_)});
     }
+
     USBProtocol::~USBProtocol() {
         delete callback_thread_;
     }
+
     package_t USBProtocol::Transmit(int cmd_id) {
         package_t package = Protocol::Transmit(cmd_id);
         usb_->Write<false>(package.data, package.length);
@@ -289,6 +296,11 @@ namespace communication {
                 graph_content_ = NO_GRAPH;
                 break;
             }
+            case CUSTOM_CLIENT_DATA: {
+                data_len = sizeof(custom_client_data_t);
+                memcpy(data, &custom_client_data, data_len);
+                break;
+            }
             default:
                 data_len = -1;
         }
@@ -397,6 +409,7 @@ namespace communication {
     HostUSB::HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200, uint32_t rxBufferSize = 200)
         : USBProtocol(usb, txBufferSize, rxBufferSize) {
     }
+
     bool HostUSB::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
         switch (cmd_id) {
             case PACK:
@@ -486,5 +499,4 @@ namespace communication {
     }
 
 #endif
-
 } /* namespace communication */
