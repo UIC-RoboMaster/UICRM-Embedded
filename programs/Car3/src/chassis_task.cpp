@@ -62,12 +62,9 @@ void chassisTask(void* arg) {
     remote::keyboard_t keyboard;
     remote::keyboard_t last_keyboard;
 
-    RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
-    RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
-    RampSource* vz_ramp = new RampSource(0, -chassis_vz_max / 2, chassis_vz_max / 2,
-                                         1.0f / (CHASSIS_OS_DELAY * 1000));
+    RampSource* vx_ramp = new RampSource(0, -chassis_vx_max / 2, chassis_vx_max / 2, 1.0f / (CHASSIS_OS_DELAY * 1000));
+    RampSource* vy_ramp = new RampSource(0, -chassis_vy_max / 2, chassis_vy_max / 2, 1.0f / (CHASSIS_OS_DELAY * 1000));
+    RampSource* vz_ramp = new RampSource(0, -chassis_vz_max / 2, chassis_vz_max / 2, 1.0f / (CHASSIS_OS_DELAY * 1000));
 
     BoolEdgeDetector* w_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* s_edge = new BoolEdgeDetector(false);
@@ -101,8 +98,7 @@ void chassisTask(void* arg) {
                 bl_motor->Enable();
             if (!br_motor->IsEnable() && br_motor->IsOnline())
                 br_motor->Enable();
-            if (fl_motor->IsOnline() && fr_motor->IsOnline() && bl_motor->IsOnline() &&
-                br_motor->IsOnline()) {
+            if (fl_motor->IsOnline() && fr_motor->IsOnline() && bl_motor->IsOnline() && br_motor->IsOnline()) {
                 chassis->Enable();
             }
         }
@@ -190,14 +186,15 @@ void chassisTask(void* arg) {
         vy_set = -sin_yaw * vx_set_org + cos_yaw * vy_set_org;
         switch (remote_mode) {
             case REMOTE_MODE_FOLLOW:
-                manual_mode_pid_output = manual_mode_pid->ComputeOutput(
-                    yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
+                manual_mode_pid_output =
+                    manual_mode_pid->ComputeOutput(yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_));
                 chassis->SetSpeed(vx_set * ratio, vy_set * ratio, manual_mode_pid_output * ratio);
                 //                chassis->Update(true,
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->SetPower(true, (float)referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(true,
+                                  (float)referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   (float)referee->power_heat_data.chassis_power_buffer);
                 chassis->Update();
@@ -215,7 +212,8 @@ void chassisTask(void* arg) {
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->SetPower(true, (float)referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(true,
+                                  (float)referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   (float)referee->power_heat_data.chassis_power_buffer);
                 chassis->Update();
@@ -227,7 +225,8 @@ void chassisTask(void* arg) {
                 //                (float)referee->game_robot_status.chassis_power_limit,
                 //                                referee->power_heat_data.chassis_power,
                 //                                (float)referee->power_heat_data.chassis_power_buffer);
-                chassis->SetPower(true, (float)referee->game_robot_status.chassis_power_limit,
+                chassis->SetPower(true,
+                                  (float)referee->game_robot_status.chassis_power_limit,
                                   referee->power_heat_data.chassis_power,
                                   (float)referee->power_heat_data.chassis_power_buffer);
                 chassis->Update();
@@ -262,11 +261,11 @@ void init_chassis() {
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 6000,                              // 变速积分所能达到的最大值为A+B
-        .B = 4000,                              // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 6000,                                              // 变速积分所能达到的最大值为A+B
+        .B = 4000,                                              // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分

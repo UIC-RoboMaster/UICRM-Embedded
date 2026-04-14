@@ -72,8 +72,12 @@ void imuUpdateTask(void* arguments) {
             // ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
             // mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2], mpu6500->mag_[0],
             // mpu6500->mag_[1], mpu6500->mag_[2]);
-            ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
-                         mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2]);
+            ahrs->Update(mpu6500->gyro_[0],
+                         mpu6500->gyro_[1],
+                         mpu6500->gyro_[2],
+                         mpu6500->accel_[0],
+                         mpu6500->accel_[1],
+                         mpu6500->accel_[2]);
             heater->Update(mpu6500->temperature_);
         }
     }
@@ -164,8 +168,7 @@ void gimbalTask(void* arg) {
         yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
         pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
         yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
-        pitch_target =
-            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = clip<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = wrap<float>(pitch_target, -PI, PI);
@@ -237,19 +240,18 @@ void RM_RTOS_Init(void) {
         .kd = 0,
         .max_out = 16384,
         .max_iout = 4000,
-        .deadband = 0,                          // 死区
-        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 1.5 * PI,                                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                         driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
     yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
@@ -272,11 +274,11 @@ void RM_RTOS_Init(void) {
         .kd = 0,
         .max_out = 16384,
         .max_iout = 4000,
-        .deadband = 0,                            // 死区
-        .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,      // 输出滤波系数
-        .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
+        .deadband = 0,                                                // 死区
+        .A = 0.5 * PI,                                                // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,                                                // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                          // 输出滤波系数
+        .derivative_filtering_coefficient = 0.1,                      // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
@@ -285,8 +287,7 @@ void RM_RTOS_Init(void) {
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     control::gimbal_t gimbal_data;
     gimbal_data.data = gimbal_init_data;
@@ -325,16 +326,18 @@ void RM_RTOS_Default_Task(const void* arg) {
         set_cursor(0, 0);
         clear_screen();
 
-        print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
+        print("# %.2f s, IMU %s\r\n",
+              HAL_GetTick() / 1000.0,
               ahrs->IsCailbrated() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
         print("Temp: %.2f\r\n", mpu6500->temperature_);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n", ahrs->INS_angle[0] / PI * 180,
-              ahrs->INS_angle[1] / PI * 180, ahrs->INS_angle[2] / PI * 180);
+        print("Euler Angles: %.2f, %.2f, %.2f\r\n",
+              ahrs->INS_angle[0] / PI * 180,
+              ahrs->INS_angle[1] / PI * 180,
+              ahrs->INS_angle[2] / PI * 180);
 
         print("\r\n");
 
-        print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ", dbus->ch0, dbus->ch1, dbus->ch2,
-              dbus->ch3);
+        print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ", dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3);
         print("SWL: %d SWR: %d @ %d ms\r\n", dbus->swl, dbus->swr, dbus->GetLastUptime());
 
         osDelay(100);

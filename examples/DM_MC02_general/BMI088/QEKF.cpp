@@ -45,8 +45,8 @@ static bsp::GPIT* bmi088_accel_int = nullptr;
 static bsp::GPIT* bmi088_gyro_int = nullptr;
 
 void BMI088ReceiveDone() {
-    ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
-                 bmi088->accel_[1], bmi088->accel_[2]);
+    ahrs->Update(
+        bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2]);
     heater->Update(bmi088->temperature_);
 }
 
@@ -103,10 +103,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
         set_cursor(0, 0);
         clear_screen();
         print("Temp: %10.4f\r\n", bmi088->temperature_);
-        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", bmi088->accel_[0], bmi088->accel_[1],
-              bmi088->accel_[2]);
-        print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", bmi088->gyro_[0], bmi088->gyro_[1],
-              bmi088->gyro_[2]);
+        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2]);
+        print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2]);
         print("\r\nTime Stamp: %.2f us\r\n", bmi088->time_);
         print("Calibrated: false\r\n");
         osDelay(10);
@@ -117,10 +115,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
         set_cursor(0, 0);
         clear_screen();
         print("Temp: %10.4f\r\n", bmi088->temperature_);
-        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", bmi088->accel_[0], bmi088->accel_[1],
-              bmi088->accel_[2]);
-        print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", bmi088->gyro_[0], bmi088->gyro_[1],
-              bmi088->gyro_[2]);
+        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2]);
+        print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2]);
         print("\r\nTime Stamp: %.2f us\r\n", bmi088->time_);
         print("Calibrating...\r\n");
         osDelay(10);
@@ -133,7 +129,9 @@ void RM_RTOS_Default_Task(const void* arguments) {
             "Temp: %10.4f\r\n"
             "Calibrated: true\r\n"
             "Yaw: %.2f Pitch: %.2f Roll: %.2f\r\n",
-            bmi088->temperature_, ahrs->INS_angle[0] / PI * 180, ahrs->INS_angle[1] / PI * 180,
+            bmi088->temperature_,
+            ahrs->INS_angle[0] / PI * 180,
+            ahrs->INS_angle[1] / PI * 180,
             ahrs->INS_angle[2] / PI * 180);
         osDelay(50);
     }

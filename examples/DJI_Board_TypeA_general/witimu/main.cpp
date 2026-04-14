@@ -70,8 +70,10 @@ void RM_RTOS_Default_Task(const void* arg) {
         clear_screen();
         // print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0);
         // print("Temp: %.2f\r\n", witimu->temp_);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n", witimu->INS_angle[0] / PI * 180,
-              witimu->INS_angle[1] / PI * 180, witimu->INS_angle[2] / PI * 180);
+        print("Euler Angles: %.2f, %.2f, %.2f\r\n",
+              witimu->INS_angle[0] / PI * 180,
+              witimu->INS_angle[1] / PI * 180,
+              witimu->INS_angle[2] / PI * 180);
 
         osDelay(50);
     }

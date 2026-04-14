@@ -74,8 +74,12 @@ namespace control {
          * @param input Original output to be limited, usually the output of PID
          * @param output Limited output
          */
-        void Output(bool turn_on, power_limit_t power_limit_info, float current_power,
-                    float current_power_buffer, float* input, float* output);
+        void Output(bool turn_on,
+                    power_limit_t power_limit_info,
+                    float current_power,
+                    float current_power_buffer,
+                    float* input,
+                    float* output);
 
       private:
         int motor_num_;

@@ -124,8 +124,10 @@ void RM_RTOS_Default_Task(const void* arg) {
             "# %.2f s, IMU %s\r\nTemp: %.2f\r\nEuler Angles: %.2f, %.2f, "
             "%.2f\r\nIs Calibrated: %s\r\n",
             HAL_GetTick() / 1000.0,
-            imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m", imu->Temp,
-            imu->INS_angle[0] / PI * 180, imu->INS_angle[1] / PI * 180,
+            imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m",
+            imu->Temp,
+            imu->INS_angle[0] / PI * 180,
+            imu->INS_angle[1] / PI * 180,
             imu->INS_angle[2] / PI * 180,
             imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
     }

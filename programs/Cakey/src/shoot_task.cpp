@@ -126,8 +126,7 @@ void shootTask(void* arg) {
             continue;
         }
 
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
-            shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING || shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             flywheel_speed_ease->SetTarget(900);
         } else {
             flywheel_speed_ease->SetTarget(0);
@@ -195,10 +194,10 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::MotorPWMBase(&htim1, LEFT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ,
-                                             MOTOR_OUT_FREQ, IDLE_THROTTLE);
-    flywheel_right = new driver::MotorPWMBase(&htim1, RIGHT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ,
-                                              MOTOR_OUT_FREQ, IDLE_THROTTLE);
+    flywheel_left =
+        new driver::MotorPWMBase(&htim1, LEFT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
+    flywheel_right =
+        new driver::MotorPWMBase(&htim1, RIGHT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
     // 等待电调上电初始化校准完成（SNAIL电调需要在稳定的最低油门信号下完成校准）
@@ -228,11 +227,11 @@ void init_shoot() {
         .kd = 0,
         .max_out = 10000,
         .max_iout = 4000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                           // 死区
+        .A = 3 * PI,                                             // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                             // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
                 control::ConstrainedPID::OutputFilter |          // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分

@@ -29,8 +29,7 @@ namespace control {
       public:
         AHRS(bool is_mag);
 
-        void Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my,
-                    float mz);
+        void Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
 
         void Update(float gx, float gy, float gz, float ax, float ay, float az);
 
@@ -54,11 +53,9 @@ namespace control {
         float accel_fliter_1[3] = {0.0f, 0.0f, 0.0f};
         float accel_fliter_2[3] = {0.0f, 0.0f, 0.0f};
         float accel_fliter_3[3] = {0.0f, 0.0f, 0.0f};
-        const float fliter_num[3] = {1.929454039488895f, -0.93178349823448126f,
-                                     0.002329458745586203f};
+        const float fliter_num[3] = {1.929454039488895f, -0.93178349823448126f, 0.002329458745586203f};
 
-        void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx,
-                              float my, float mz);
+        void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
 
         void INSCalculate();
     };

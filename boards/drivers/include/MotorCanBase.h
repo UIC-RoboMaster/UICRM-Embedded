@@ -188,8 +188,7 @@ namespace driver {
          * @param instance 关联的电机实例
          * @param type pid的故障类型
          */
-        static void ErrorCallbackWrapper(void* instance,
-                                         control::ConstrainedPID::PID_ErrorHandler_t type);
+        static void ErrorCallbackWrapper(void* instance, control::ConstrainedPID::PID_ErrorHandler_t type);
 
         /**
          * @brief 设置在执行输出数据前的回调函数，一般用于功率限制
@@ -230,11 +229,9 @@ namespace driver {
         // angle control
         volatile float power_on_angle_ = 0; /* 上电时的编码器角度，单位为[rad] */
         volatile float relative_angle_ = 0; /* 编码器相对于开机角度的角度，单位为[rad] */
-        volatile float cumulated_rad_ =
-            0; /* 编码器累计圈数，按照2*PI/ratio加减，累积到2*PI清零 */
+        volatile float cumulated_rad_ = 0;  /* 编码器累计圈数，按照2*PI/ratio加减，累积到2*PI清零 */
         volatile float output_cumulated_turns_ = 0; /* 输出轴累计圈数，按照2*PI加减，单位为[rad]*/
-        volatile float output_relative_angle_ =
-            0; /* 输出轴在这一圈中的角度，单位为[rad]，范围为[0, 2PI] */
+        volatile float output_relative_angle_ = 0; /* 输出轴在这一圈中的角度，单位为[rad]，范围为[0, 2PI] */
 
         FloatEdgeDetector* inner_wrap_detector_; /* detect motor motion across encoder boarder */
         FloatEdgeDetector* outer_wrap_detector_; /* detect motor motion across encoder boarder */
@@ -280,16 +277,15 @@ namespace driver {
         static bool is_init_;
 
         static bsp::Thread* can_motor_thread_;
-        static constexpr osThreadAttr_t can_motor_thread_attr_ = {
-            .name = "MotorUpdateTask",
-            .attr_bits = osThreadDetached,
-            .cb_mem = nullptr,
-            .cb_size = 0,
-            .stack_mem = nullptr,
-            .stack_size = 256 * 4,
-            .priority = (osPriority_t)osPriorityHigh,
-            .tz_module = 0,
-            .reserved = 0};
+        static constexpr osThreadAttr_t can_motor_thread_attr_ = {.name = "MotorUpdateTask",
+                                                                  .attr_bits = osThreadDetached,
+                                                                  .cb_mem = nullptr,
+                                                                  .cb_size = 0,
+                                                                  .stack_mem = nullptr,
+                                                                  .stack_size = 256 * 4,
+                                                                  .priority = (osPriority_t)osPriorityHigh,
+                                                                  .tz_module = 0,
+                                                                  .reserved = 0};
 
         static void CanMotorThread(void* args);
 
@@ -543,8 +539,7 @@ namespace driver {
          *
          * @note proximity_out should be greater than proximity_in
          */
-        ServoMotor(servo_t data, float align_angle = -1, float proximity_in = 0.05,
-                   float proximity_out = 0.15);
+        ServoMotor(servo_t data, float align_angle = -1, float proximity_in = 0.05, float proximity_out = 0.15);
 
         /**
          * @brief 设置电机的目标角度，如果上一个目标角度没有达到，那么这个函数将不会有任何效果
@@ -673,8 +668,7 @@ namespace driver {
          * ranged between (0, 1)
          * @param detect_period    detection window length
          */
-        void RegisterJamCallback(jam_callback_t callback, float effort_threshold,
-                                 uint8_t detect_period = 50);
+        void RegisterJamCallback(jam_callback_t callback, float effort_threshold, uint8_t detect_period = 50);
 
         /**
          * @brief 打印电机数据

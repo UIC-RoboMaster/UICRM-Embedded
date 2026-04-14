@@ -108,10 +108,8 @@ namespace bsp {
     }
 
     bool SPI::IsBusy() {
-        return HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY ||
-               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_TX ||
-               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_RX ||
-               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_TX_RX;
+        return HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY || HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_TX ||
+               HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_RX || HAL_SPI_GetState(hspi_) == HAL_SPI_STATE_BUSY_TX_RX;
     }
 
     void SPI::Abort() {
@@ -208,8 +206,8 @@ namespace bsp {
         return SPI_MASTER_STATUS_OK;
     }
 
-    spi_master_status_e SPIMaster::TransmitReceive(SPIDevice* device, uint8_t* tx_data,
-                                                   uint8_t* rx_data, uint32_t length) {
+    spi_master_status_e
+    SPIMaster::TransmitReceive(SPIDevice* device, uint8_t* tx_data, uint8_t* rx_data, uint32_t length) {
         if (spi_->IsBusy()) {
             busy_count_++;
             if (busy_count_ > 5) {

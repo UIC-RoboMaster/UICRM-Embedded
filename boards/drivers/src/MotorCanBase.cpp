@@ -88,8 +88,7 @@ namespace driver {
         // 如果是第一次初始化，需要创建一个后台线程以固定频率输出电机指令
         if (!is_init_) {
             is_init_ = true;
-            bsp::thread_init_t thread_init = {
-                .func = CanMotorThread, .args = nullptr, .attr = can_motor_thread_attr_};
+            bsp::thread_init_t thread_init = {.func = CanMotorThread, .args = nullptr, .attr = can_motor_thread_attr_};
             can_motor_thread_ = new bsp::Thread(thread_init);
             can_motor_thread_->Start();
             memset(id_, 0xff, sizeof(id_));
@@ -255,8 +254,7 @@ namespace driver {
             update_time_diff += 65536;
         last_update_time_us_ = update_time_diff;
         motor_update_time_interval = 1000;
-        uint32_t times =
-            (update_time_diff + motor_update_time_interval / 2) / motor_update_time_interval;
+        uint32_t times = (update_time_diff + motor_update_time_interval / 2) / motor_update_time_interval;
 
         if (times == 0) {
             // print("Motor %x packet missing at %d\n", rx_id_, bsp::GetHighresTickMilliSec());
@@ -331,11 +329,9 @@ namespace driver {
                 cumulated_rad_ += 2 * PI / transmission_ratio_;
             else if (inner_wrap_detector_->posEdge())
                 cumulated_rad_ -= 2 * PI / transmission_ratio_;
-            cumulated_rad_ =
-                wrap<float>(cumulated_rad_, 0, transmission_ratio_ * 2 * PI);
+            cumulated_rad_ = wrap<float>(cumulated_rad_, 0, transmission_ratio_ * 2 * PI);
 
-            output_relative_angle_ =
-                wrap<float>(cumulated_rad_ + relative_angle_ / transmission_ratio_, 0, 2 * PI);
+            output_relative_angle_ = wrap<float>(cumulated_rad_ + relative_angle_ / transmission_ratio_, 0, 2 * PI);
         }
 
         // 输出轴角度给到边界检测器
@@ -395,8 +391,7 @@ namespace driver {
             omega_pid_.RegisterErrorCallcack(ErrorCallbackWrapper, this);
         }
     }
-    void MotorCANBase::ErrorCallbackWrapper(void* instance,
-                                            control::ConstrainedPID::PID_ErrorHandler_t type) {
+    void MotorCANBase::ErrorCallbackWrapper(void* instance, control::ConstrainedPID::PID_ErrorHandler_t type) {
         UNUSED(type);
         MotorCANBase* motor = reinterpret_cast<MotorCANBase*>(instance);
         if (motor->error_callback_ != nullptr)
@@ -416,13 +411,11 @@ namespace driver {
         speed_offset_ = offset;
     }
 
-    void MotorCANBase::RegisterPreOutputCallback(MotorCANBase::callback_t callback,
-                                                 void* instance) {
+    void MotorCANBase::RegisterPreOutputCallback(MotorCANBase::callback_t callback, void* instance) {
         pre_output_callback_ = callback;
         pre_output_callback_instance_ = instance;
     }
-    void MotorCANBase::RegisterPostOutputCallback(MotorCANBase::callback_t callback,
-                                                  void* instance) {
+    void MotorCANBase::RegisterPostOutputCallback(MotorCANBase::callback_t callback, void* instance) {
         post_output_callback_ = callback;
         post_output_callback_instance_ = instance;
     }
@@ -468,8 +461,7 @@ namespace driver {
         return raw_temperature_;
     }
 
-    Motor6020::Motor6020(CAN* can, uint16_t rx_id, uint16_t tx_id)
-        : MotorCANBase(can, rx_id, tx_id) {
+    Motor6020::Motor6020(CAN* can, uint16_t rx_id, uint16_t tx_id) : MotorCANBase(can, rx_id, tx_id) {
         // 绝对位置电机不需要初始化align_angle_
         power_on_angle_ = 0;
         can->RegisterRxCallback(rx_id, can_motor_callback, this);
@@ -484,8 +476,7 @@ namespace driver {
         constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
         constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
         theta_ = raw_theta * THETA_SCALE;
-        omega_ =
-            (raw_omega * OMEGA_SCALE) * input_speed_filter_ + omega_ * (1 - input_speed_filter_);
+        omega_ = (raw_omega * OMEGA_SCALE) * input_speed_filter_ + omega_ * (1 - input_speed_filter_);
 
         MotorCANBase::UpdateData(data);
     }
@@ -552,8 +543,7 @@ namespace driver {
         return raw_current_get_;
     }
 
-    MotorDM4310::MotorDM4310(CAN* can, uint16_t rx_id, uint16_t tx_id)
-        : MotorCANBase(can, rx_id, tx_id) {
+    MotorDM4310::MotorDM4310(CAN* can, uint16_t rx_id, uint16_t tx_id) : MotorCANBase(can, rx_id, tx_id) {
         // 绝对位置电机不需要初始化align_angle_
         power_on_angle_ = 0;
         can->RegisterRxCallback(rx_id, can_motor_callback, this);
@@ -609,8 +599,7 @@ namespace driver {
         servo->UpdateData(data);
     }
 
-    ServoMotor::ServoMotor(servo_t data, float align_angle, float proximity_in,
-                           float proximity_out) {
+    ServoMotor::ServoMotor(servo_t data, float align_angle, float proximity_in, float proximity_out) {
         motor_ = data.motor;
         max_speed_ = data.transmission_ratio * data.max_speed;
         max_acceleration_ = data.transmission_ratio * data.max_acceleration;
@@ -684,14 +673,12 @@ namespace driver {
         // v = sqrt(2 * a * d)
         uint64_t current_time = GetHighresTickMicroSec();
         if (!hold_) {
-            float speed_max_start =
-                (current_time - start_time_) / 10e6 * max_acceleration_ * transmission_ratio_;
+            float speed_max_start = (current_time - start_time_) / 10e6 * max_acceleration_ * transmission_ratio_;
             float speed_max_target = sqrt(2 * max_acceleration_ * abs(target_diff));
-            float current_speed =
-                speed_max_start > speed_max_target ? speed_max_target : speed_max_start;
+            float current_speed = speed_max_start > speed_max_target ? speed_max_target : speed_max_start;
             current_speed = clip<float>(current_speed, 0, max_speed_);
-            command = omega_pid_.ComputeConstrainedOutput(
-                motor_->GetOmegaDelta(sign<float>(target_diff, 0) * current_speed));
+            command =
+                omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(sign<float>(target_diff, 0) * current_speed));
         } else {
             command = hold_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_diff * 50));
         }
@@ -728,11 +715,9 @@ namespace driver {
         return target_angle_;
     }
 
-    void ServoMotor::RegisterJamCallback(jam_callback_t callback, float effort_threshold,
-                                         uint8_t detect_period) {
+    void ServoMotor::RegisterJamCallback(jam_callback_t callback, float effort_threshold, uint8_t detect_period) {
         constexpr int maximum_command = 32768;  // maximum command that a CAN motor can accept
-        RM_ASSERT_TRUE(effort_threshold > 0 && effort_threshold <= 1,
-                       "Effort threshold should between 0 and 1");
+        RM_ASSERT_TRUE(effort_threshold > 0 && effort_threshold <= 1, "Effort threshold should between 0 and 1");
         // storing function pointer for future invocation
         jam_callback_ = callback;
 
@@ -856,9 +841,8 @@ namespace driver {
         } else if (align_detect_func()) {
             float current_theta = servo_->motor_->GetTheta();
             float offset = wrap<float>(servo_->align_angle_ - current_theta, -PI, PI);
-            float current =
-                (current_theta + offset - servo_->align_angle_) / servo_->transmission_ratio_ +
-                servo_->offset_angle_ + servo_->cumulated_angle_;
+            float current = (current_theta + offset - servo_->align_angle_) / servo_->transmission_ratio_ +
+                            servo_->offset_angle_ + servo_->cumulated_angle_;
             align_angle_ = current + calibrate_offset;
             align_complete_ = true;
             servo_->SetTarget(align_angle_, true);
@@ -890,8 +874,7 @@ namespace driver {
         target_speed_ = speed;
     }
     void FlyWheelMotor::CalcOutput() {
-        motor_->SetOutput(
-            omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_speed_)));
+        motor_->SetOutput(omega_pid_.ComputeConstrainedOutput(motor_->GetOmegaDelta(target_speed_)));
     }
     float FlyWheelMotor::GetTarget() const {
         if (is_inverted_) {

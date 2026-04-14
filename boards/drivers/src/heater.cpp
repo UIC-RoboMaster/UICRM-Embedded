@@ -33,8 +33,7 @@ namespace driver {
             .B = 0,                                 // 启动变速积分的死区
             .output_filtering_coefficient = 0.1,    // 输出滤波系数
             .derivative_filtering_coefficient = 0,  // 微分滤波系数
-            .mode = control::ConstrainedPID::Integral_Limit |
-                    control::ConstrainedPID::OutputFilter |
+            .mode = control::ConstrainedPID::Integral_Limit | control::ConstrainedPID::OutputFilter |
                     control::ConstrainedPID::Trapezoid_Intergral,
         };
         pid_ = control::ConstrainedPID(pid_init);

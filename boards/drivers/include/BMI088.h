@@ -337,8 +337,12 @@ namespace imu {
          * @param INT_ACCEL accelerometer interrupt pin
          * @param INT_GYRO gyroscope interrupt pin
          */
-        BMI088(bsp::SPIMaster* spi_master, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO,
-               bsp::GPIT* INT_ACCEL = nullptr, bsp::GPIT* INT_GYRO = nullptr, bool is_DMA = true);
+        BMI088(bsp::SPIMaster* spi_master,
+               bsp::GPIO* CS_ACCEL,
+               bsp::GPIO* CS_GYRO,
+               bsp::GPIT* INT_ACCEL = nullptr,
+               bsp::GPIT* INT_GYRO = nullptr,
+               bool is_DMA = true);
         /**
          * @brief 注册回调函数
          * @param callback 回调函数
@@ -389,12 +393,10 @@ namespace imu {
         volatile uint8_t bmi088_start_flag = 0;
 
         uint8_t gyro_dma_rx_buf[BMI088_SPI_DMA_GYRO_LENGHT];
-        uint8_t gyro_dma_tx_buf[BMI088_SPI_DMA_GYRO_LENGHT] = {0x82, 0xFF, 0xFF, 0xFF,
-                                                               0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t gyro_dma_tx_buf[BMI088_SPI_DMA_GYRO_LENGHT] = {0x82, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
         uint8_t accel_dma_rx_buf[BMI088_SPI_DMA_ACCEL_LENGHT];
-        uint8_t accel_dma_tx_buf[BMI088_SPI_DMA_ACCEL_LENGHT] = {0x92, 0xFF, 0xFF, 0xFF, 0xFF,
-                                                                 0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t accel_dma_tx_buf[BMI088_SPI_DMA_ACCEL_LENGHT] = {0x92, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
         uint8_t accel_temp_dma_rx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT];
         uint8_t accel_temp_dma_tx_buf[BMI088_SPI_DMA_ACCEL_TEMP_LENGHT] = {0xA2, 0xFF, 0xFF, 0xFF};
