@@ -25,17 +25,17 @@
 
 #include <sys/types.h>
 // 这是屏幕坐标，请使用 pixpin 校准后填入
-static constexpr uint16_t POS_50_X = 1160; // 50 发
+static constexpr uint16_t POS_50_X = 1160;  // 50 发
 static constexpr uint16_t POS_50_Y = 560;
-static constexpr uint16_t POS_100_X = 1210; // 100 发
+static constexpr uint16_t POS_100_X = 1210;  // 100 发
 static constexpr uint16_t POS_100_Y = 560;
-static constexpr uint16_t POS_200_X = 1210; // 200 发 （点两次）
+static constexpr uint16_t POS_200_X = 1210;  // 200 发 （点两次）
 static constexpr uint16_t POS_200_Y = 560;
-static constexpr uint16_t BUY_X = 960; // 购弹按钮
+static constexpr uint16_t BUY_X = 960;  // 购弹按钮
 static constexpr uint16_t BUY_Y = 670;
-static constexpr uint16_t CONFIRM_BUY_X = 860; // 确认按钮
+static constexpr uint16_t CONFIRM_BUY_X = 860;  // 确认按钮
 static constexpr uint16_t CONFIRM_BUY_Y = 560;
 
-static constexpr uint32_t CLICK_DELAY_MS = 25; // 每次按下要等待的时间
+static constexpr uint32_t CLICK_DELAY_MS = 25;  // 每次按下要等待的时间
 static constexpr uint32_t LOOP_DELAY_MS = 10;
-#endif //UICRM_CONFIG_H
+#endif  // UICRM_CONFIG_H

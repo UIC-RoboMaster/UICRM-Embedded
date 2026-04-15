@@ -21,25 +21,25 @@
 //
 
 #include <sys/types.h>
-//#include "stm32f1xx_hal_uart.h"
+// #include "stm32f1xx_hal_uart.h"
 #include <functional>
-#include "bsp_uart.h"
+
 #include "bsp_gpio.h"
+#include "bsp_uart.h"
 #include "cmsis_os.h"
 #include "main.h"
 #include "protocol.h"
-//#include "config.h"
-//#include "../../../boards/base/DM_MC02_general/Core/Inc/usart.h"
+// #include "config.h"
+// #include "../../../boards/base/DM_MC02_general/Core/Inc/usart.h"
 #include "../include/config.h"
 #include "string.h"
 
 class RefereeUART : public bsp::UART {
-public:
+  public:
     using bsp::UART::UART;
 
-protected:
-    void RxCompleteCallback() final {
-    };
+  protected:
+    void RxCompleteCallback() final {};
 };
 
 static bsp::GPIO* led = nullptr;
@@ -48,7 +48,8 @@ static communication::Referee* referee = nullptr;
 static bsp::GPIO* key_50 = nullptr;
 static bsp::GPIO* key_100 = nullptr;
 static bsp::GPIO* key_200 = nullptr;
-static bsp::GPIO* sw_left = nullptr; // 拨动开关(上拉)，往左拨是 O(17mm 弹丸)，往右拨是 I(42mm 弹丸)
+static bsp::GPIO* sw_left =
+    nullptr;  // 拨动开关(上拉)，往左拨是 O(17mm 弹丸)，往右拨是 I(42mm 弹丸)
 static bsp::GPIO* sw_right = nullptr;
 static bool is_left = true;
 
@@ -71,7 +72,7 @@ static void send_click(uint16_t x, uint16_t y) {
         else if (i == 3)
             referee->custom_client_data.mouse_left = 0;
 
-        referee->Transmit(communication::CUSTOM_CLIENT_DATA); // Transmit 发包
+        referee->Transmit(communication::CUSTOM_CLIENT_DATA);  // Transmit 发包
         osDelay(CLICK_DELAY_MS);
     }
 }
@@ -102,13 +103,12 @@ static void buy_bullets(uint16_t x, uint16_t y, bool double_click) {
     // 确认
     send_click(BUY_X, BUY_Y);
     send_click(CONFIRM_BUY_X, CONFIRM_BUY_Y);
-    //归位
+    // 归位
     click_OI();
     referee->custom_client_data = {0, 0, 0, 0, 0, 0};
     referee->Transmit(communication::CUSTOM_CLIENT_DATA);
     osDelay(CLICK_DELAY_MS);
 }
-
 
 void RM_RTOS_Init(void) {
     // USART1-PA9/10
@@ -138,11 +138,11 @@ void RM_RTOS_Default_Task(const void* arg) {
 
     while (true) {
         // 拨动开关-位置判断
-        bool left_pressed  = (sw_left->Read() == 0);   // 低电平有效
+        bool left_pressed = (sw_left->Read() == 0);  // 低电平有效
         bool right_pressed = (sw_right->Read() == 0);
 
         if (left_pressed && !right_pressed)
-            is_left = true;   // 拨到左边-17mm
+            is_left = true;  // 拨到左边-17mm
         else if (!left_pressed && right_pressed)
             is_left = false;  // 拨到右边-42mm
         // 中间位置(如果有的话)-保持上次状态
@@ -164,8 +164,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         if (k50 && !flag50) {
             buy_bullets(POS_50_X, POS_50_Y, false);
             flag50 = true;
-            //const char* msg = "hello 50\r\n";
-            //referee_uart->Write((uint8_t*)msg, strlen(msg));
+            // const char* msg = "hello 50\r\n";
+            // referee_uart->Write((uint8_t*)msg, strlen(msg));
             led->High();
             osDelay(50);
             led->Low();
@@ -174,8 +174,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         if (k100 && !flag100) {
             buy_bullets(POS_100_X, POS_100_Y, false);
             flag100 = true;
-            //const char* msg = "hello 100\r\n";
-            //referee_uart->Write((uint8_t*)msg, strlen(msg));
+            // const char* msg = "hello 100\r\n";
+            // referee_uart->Write((uint8_t*)msg, strlen(msg));
             led->High();
             osDelay(50);
             led->Low();
@@ -184,8 +184,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         if (k200 && !flag200) {
             buy_bullets(POS_200_X, POS_200_Y, true);
             flag200 = true;
-            //const char* msg = "hello 200\r\n";
-            //referee_uart->Write((uint8_t*)msg, strlen(msg));
+            // const char* msg = "hello 200\r\n";
+            // referee_uart->Write((uint8_t*)msg, strlen(msg));
             led->High();
             osDelay(50);
             led->Low();
