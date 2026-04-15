@@ -29,7 +29,7 @@
 #include "main.h"
 #include "protocol.h"
 //#include "config.h"
-#include "../../../boards/base/DM_MC02_general/Core/Inc/usart.h"
+//#include "../../../boards/base/DM_MC02_general/Core/Inc/usart.h"
 #include "../include/config.h"
 #include "string.h"
 
@@ -117,7 +117,7 @@ void RM_RTOS_Init(void) {
     referee_uart->SetupTx(300);
     referee = new communication::Referee(referee_uart);
     // GPIO 使能
-    led = new bsp::GPIO(LED_GPIO_Port, LED_Pin);
+    led = new bsp::GPIO(LED_GPIO_Port, LED_Pin, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP);
     key_50 = new bsp::GPIO(GPIOB, GPIO_PIN_14, GPIO_MODE_INPUT, GPIO_PULLUP);
     key_100 = new bsp::GPIO(GPIOB, GPIO_PIN_13, GPIO_MODE_INPUT, GPIO_PULLUP);
     key_200 = new bsp::GPIO(GPIOB, GPIO_PIN_12, GPIO_MODE_INPUT, GPIO_PULLUP);
@@ -138,10 +138,14 @@ void RM_RTOS_Default_Task(const void* arg) {
 
     while (true) {
         // 拨动开关-位置判断
-        if ((sw_left->Read() == 0) && (sw_right->Read() == 0))
-            is_left = true;
-        if ((sw_left->Read() == 1) && (sw_right->Read() == 0))
-            is_left = false;
+        bool left_pressed  = (sw_left->Read() == 0);   // 低电平有效
+        bool right_pressed = (sw_right->Read() == 0);
+
+        if (left_pressed && !right_pressed)
+            is_left = true;   // 拨到左边-17mm
+        else if (!left_pressed && right_pressed)
+            is_left = false;  // 拨到右边-42mm
+        // 中间位置(如果有的话)-保持上次状态
 
         // 按键
         bool k50 = (key_50->Read() == 0);
