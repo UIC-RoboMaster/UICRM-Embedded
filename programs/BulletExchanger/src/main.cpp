@@ -21,11 +21,12 @@
 //
 
 #include "main.h"
-#include "bsp_uart.h"
+
+#include "../include/config.h"
 #include "bsp_gpio.h"
+#include "bsp_uart.h"
 #include "cmsis_os.h"
 #include "protocol.h"
-#include "../include/config.h"
 
 class RefereeUART : public bsp::UART {
   public:
@@ -41,11 +42,11 @@ static communication::Referee* referee = nullptr;
 static bsp::GPIO* key_50 = nullptr;
 static bsp::GPIO* key_100 = nullptr;
 static bsp::GPIO* key_200 = nullptr;
-static bsp::GPIO* sw_left = nullptr;  // 拨动开关(上拉)，往左拨是 O(17mm 弹丸)，往右拨是 I(42mm 弹丸)
+static bsp::GPIO* sw_left =
+    nullptr;  // 拨动开关(上拉)，往左拨是 O(17mm 弹丸)，往右拨是 I(42mm 弹丸)
 static bsp::GPIO* sw_right = nullptr;
 static bool is_left = true;
 static osSemaphoreId_t led_sem = nullptr;
-
 
 /**
  *@brief 一次鼠标点击
@@ -111,11 +112,11 @@ void RM_RTOS_Init(void) {
     referee_uart->SetupTx(300);
     referee = new communication::Referee(referee_uart);
     // GPIO 使能
-    led     = new bsp::GPIO(LED_GPIO_Port,     LED_Pin);
-    key_50  = new bsp::GPIO(KEY_50_GPIO_Port,  KEY_50_Pin);
+    led = new bsp::GPIO(LED_GPIO_Port, LED_Pin);
+    key_50 = new bsp::GPIO(KEY_50_GPIO_Port, KEY_50_Pin);
     key_100 = new bsp::GPIO(KEY_100_GPIO_Port, KEY_100_Pin);
     key_200 = new bsp::GPIO(KEY_200_GPIO_Port, KEY_200_Pin);
-    sw_left  = new bsp::GPIO(SW_LEFT_GPIO_Port,  SW_LEFT_Pin);
+    sw_left = new bsp::GPIO(SW_LEFT_GPIO_Port, SW_LEFT_Pin);
     sw_right = new bsp::GPIO(SW_RIGHT_GPIO_Port, SW_RIGHT_Pin);
     // 创建二值信号量，初始计数为 0
     led_sem = osSemaphoreNew(1, 0, nullptr);
@@ -123,15 +124,15 @@ void RM_RTOS_Init(void) {
 
 // LED 线程的属性配置
 static const osThreadAttr_t led_task_attr = {
-    .name       = "ledTask",
-    .attr_bits  = 0U,           // 显式设为 0
-    .cb_mem     = nullptr,
-    .cb_size    = 0U,
-    .stack_mem  = nullptr,
-    .stack_size = 128 * 4,  // 128 words
-    .priority   = osPriorityLow,  // 低优先级
-    .tz_module  = 0U,
-    .reserved   = 0U,
+    .name = "ledTask",
+    .attr_bits = 0U,  // 显式设为 0
+    .cb_mem = nullptr,
+    .cb_size = 0U,
+    .stack_mem = nullptr,
+    .stack_size = 128 * 4,      // 128 words
+    .priority = osPriorityLow,  // 低优先级
+    .tz_module = 0U,
+    .reserved = 0U,
 };
 // LED 线程函数
 static void led_task(void* arg) {
