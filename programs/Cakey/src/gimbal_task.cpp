@@ -192,11 +192,11 @@ void init_gimbal() {
         .kd = 0,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 4,
-        .deadband = 0.005,                               // 死区（覆盖虚位范围）
-        .A = 0,                                          // 变速积分所能达到的最大值为A+B
-        .B = 0,                                          // 启动变速积分的死区
-        .output_filtering_coefficient = 0.2,             // 输出滤波系数
-        .derivative_filtering_coefficient = 0,           // 微分滤波系数
+        .deadband = 0.005,  // 死区（覆盖虚位范围）
+        .A = 0,  // 变速积分所能达到的最大值为A+B
+        .B = 0,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.2,  // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter |  // 输出滤波
                 control::ConstrainedPID::Integral_Limit  // 积分限幅
     };
@@ -209,17 +209,17 @@ void init_gimbal() {
         .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 3000,
-        .deadband = 0.5,                                         // 死区（忽略微小速度波动）
-        .A = 1.5 * PI,                                           // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                                             // 启动变速积分的死区
-        .output_filtering_coefficient = 0.3,                     // 输出滤波系数
-        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
-                control::ConstrainedPID::OutputFilter |          // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+        .deadband = 0.5,  // 死区（忽略微小速度波动）
+        .A = 1.5 * PI,  // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.3,  // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter |  // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
-                control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
+                control::ConstrainedPID::DerivativeFilter  // 微分在测量值上
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
@@ -240,9 +240,9 @@ void init_gimbal() {
             PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
         .max_iout = PI / 4,
         .deadband = PI / 180,
-        .A = 0,                                    // 变速积分所能达到的最大值为A+B
-        .B = 0,                                    // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,       // 输出滤波系数
+        .A = 0,  // 变速积分所能达到的最大值为A+B
+        .B = 0,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,  // 输出滤波系数
         .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
                 control::ConstrainedPID::Integral_Limit};
@@ -254,16 +254,16 @@ void init_gimbal() {
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
         .deadband = 0.3,  // 死区
-        .A = 0.5 * PI,    // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,    // 启动变速积分的死区
+        .A = 0.5 * PI,  // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,  // 启动变速积分的死区
         .output_filtering_coefficient = 0.5,
-        .derivative_filtering_coefficient = 0.0003,                   // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
-                control::ConstrainedPID::OutputFilter |               // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
+        .derivative_filtering_coefficient = 0.0003,  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter |  // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
-                control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
+                control::ConstrainedPID::DerivativeFilter  // 微分在测量值上
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
