@@ -16,3 +16,10 @@ uicrm_add_board_specific_library(F103_Nano_general_platform
         INCLUDES ${STN32F1_INCLUDES}
 )
 target_include_directories(F103_Nano_general_platform PUBLIC ${STM32F1_INCLUDES})
+
+uicrm_add_board_specific_library(BulletExchanger_F103_platform
+        TARGET BulletExchanger_F103
+        SOURCES ${STM32F1_SOURCES}
+        INCLUDES ${STM32F1_INCLUDES}
+)
+target_include_directories(BulletExchanger_F103_platform PUBLIC ${STM32F1_INCLUDES})

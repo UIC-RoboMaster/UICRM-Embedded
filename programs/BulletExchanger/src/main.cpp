@@ -20,18 +20,12 @@
 // Created by Sarzn on 2026/4/14.
 //
 
-#include <sys/types.h>
-// #include "stm32f1xx_hal_uart.h"
-
-#include "bsp_gpio.h"
-#include "bsp_uart.h"
-#include "cmsis_os.h"
 #include "main.h"
+#include "bsp_uart.h"
+#include "bsp_gpio.h"
+#include "cmsis_os.h"
 #include "protocol.h"
-// #include "config.h"
-// #include "../../../boards/base/DM_MC02_general/Core/Inc/usart.h"
 #include "../include/config.h"
-#include "string.h"
 
 class RefereeUART : public bsp::UART {
   public:
@@ -47,10 +41,11 @@ static communication::Referee* referee = nullptr;
 static bsp::GPIO* key_50 = nullptr;
 static bsp::GPIO* key_100 = nullptr;
 static bsp::GPIO* key_200 = nullptr;
-static bsp::GPIO* sw_left =
-    nullptr;  // 拨动开关(上拉)，往左拨是 O(17mm 弹丸)，往右拨是 I(42mm 弹丸)
+static bsp::GPIO* sw_left = nullptr;  // 拨动开关(上拉)，往左拨是 O(17mm 弹丸)，往右拨是 I(42mm 弹丸)
 static bsp::GPIO* sw_right = nullptr;
 static bool is_left = true;
+static osSemaphoreId_t led_sem = nullptr;
+
 
 /**
  *@brief 一次鼠标点击
@@ -116,22 +111,55 @@ void RM_RTOS_Init(void) {
     referee_uart->SetupTx(300);
     referee = new communication::Referee(referee_uart);
     // GPIO 使能
-    led = new bsp::GPIO(LED_GPIO_Port, LED_Pin, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP);
-    key_50 = new bsp::GPIO(GPIOB, GPIO_PIN_14, GPIO_MODE_INPUT, GPIO_PULLUP);
-    key_100 = new bsp::GPIO(GPIOB, GPIO_PIN_13, GPIO_MODE_INPUT, GPIO_PULLUP);
-    key_200 = new bsp::GPIO(GPIOB, GPIO_PIN_12, GPIO_MODE_INPUT, GPIO_PULLUP);
-    sw_left = new bsp::GPIO(GPIOB, GPIO_PIN_2, GPIO_MODE_INPUT, GPIO_PULLUP);
-    sw_right = new bsp::GPIO(GPIOB, GPIO_PIN_3, GPIO_MODE_INPUT, GPIO_PULLUP);
+    led     = new bsp::GPIO(LED_GPIO_Port,     LED_Pin);
+    key_50  = new bsp::GPIO(KEY_50_GPIO_Port,  KEY_50_Pin);
+    key_100 = new bsp::GPIO(KEY_100_GPIO_Port, KEY_100_Pin);
+    key_200 = new bsp::GPIO(KEY_200_GPIO_Port, KEY_200_Pin);
+    sw_left  = new bsp::GPIO(SW_LEFT_GPIO_Port,  SW_LEFT_Pin);
+    sw_right = new bsp::GPIO(SW_RIGHT_GPIO_Port, SW_RIGHT_Pin);
+    // 创建二值信号量，初始计数为 0
+    led_sem = osSemaphoreNew(1, 0, nullptr);
+}
+
+// LED 线程的属性配置
+static const osThreadAttr_t led_task_attr = {
+    .name       = "ledTask",
+    .attr_bits  = 0U,           // 显式设为 0
+    .cb_mem     = nullptr,
+    .cb_size    = 0U,
+    .stack_mem  = nullptr,
+    .stack_size = 128 * 4,  // 128 words
+    .priority   = osPriorityLow,  // 低优先级
+    .tz_module  = 0U,
+    .reserved   = 0U,
+};
+// LED 线程函数
+static void led_task(void* arg) {
+    UNUSED(arg);
+    while (true) {
+        // 阻塞等待信号，永不超时
+        osSemaphoreAcquire(led_sem, osWaitForever);
+
+        // 收到信号后独立完成闪烁
+        led->High();
+        osDelay(80);
+        led->Low();
+        osDelay(80);
+        led->High();
+        osDelay(80);
+        led->Low();
+    }
+}
+
+void RM_RTOS_Threads_Init(void) {
+    osThreadNew(led_task, nullptr, &led_task_attr);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     // 小登快闪-初始化
     for (int i = 0; i < 3; i++) {
-        led->High();
-        osDelay(50);
-        led->Low();
-        osDelay(50);
+        osSemaphoreRelease(led_sem);
     }
     bool flag50 = false, flag100 = false, flag200 = false;
 
@@ -165,30 +193,21 @@ void RM_RTOS_Default_Task(const void* arg) {
             flag50 = true;
             // const char* msg = "hello 50\r\n";
             // referee_uart->Write((uint8_t*)msg, strlen(msg));
-            led->High();
-            osDelay(50);
-            led->Low();
-            osDelay(50);
+            osSemaphoreRelease(led_sem);
         }
         if (k100 && !flag100) {
             buy_bullets(POS_100_X, POS_100_Y, false);
             flag100 = true;
             // const char* msg = "hello 100\r\n";
             // referee_uart->Write((uint8_t*)msg, strlen(msg));
-            led->High();
-            osDelay(50);
-            led->Low();
-            osDelay(50);
+            osSemaphoreRelease(led_sem);
         }
         if (k200 && !flag200) {
             buy_bullets(POS_200_X, POS_200_Y, true);
             flag200 = true;
             // const char* msg = "hello 200\r\n";
             // referee_uart->Write((uint8_t*)msg, strlen(msg));
-            led->High();
-            osDelay(50);
-            led->Low();
-            osDelay(50);
+            osSemaphoreRelease(led_sem);
         }
         osDelay(LOOP_DELAY_MS);
     }
