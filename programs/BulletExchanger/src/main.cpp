@@ -22,7 +22,6 @@
 
 #include <sys/types.h>
 // #include "stm32f1xx_hal_uart.h"
-#include <functional>
 
 #include "bsp_gpio.h"
 #include "bsp_uart.h"
