@@ -31,8 +31,8 @@ remote::SBUS* sbus = nullptr;
 
 RemoteMode remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_ADVANCED,
-                                      REMOTE_MODE_PREPARE_HAND_MOVEMENT};  // disactivate currently
+RemoteMode available_remote_mode[] = {
+    REMOTE_MODE_FOLLOW, REMOTE_MODE_ADVANCED, REMOTE_MODE_PREPARE_HAND_MOVEMENT};  // disactivate currently
 
 const int8_t remote_mode_max = 1;
 const int8_t remote_mode_min = 1;
@@ -94,8 +94,7 @@ void remoteTask(void* arg) {
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available =
-            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
+        is_shoot_available = referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
 #else
         is_robot_dead = false;
         is_shoot_available = true;
@@ -202,8 +201,7 @@ void remoteTask(void* arg) {
         }
 
         // 不发射
-        if (mouse_left_edge->negEdge() || mouse_right_edge->negEdge() ||
-            keyboard_X_edge->negEdge()) {
+        if (mouse_left_edge->negEdge() || mouse_right_edge->negEdge() || keyboard_X_edge->negEdge()) {
             shoot_load_mode = SHOOT_MODE_STOP;
             shoot_burst_timestamp = 0;
         }

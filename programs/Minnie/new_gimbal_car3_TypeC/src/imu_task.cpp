@@ -44,15 +44,13 @@ imu::IST8310* ist8310 = nullptr;
 void IMU_print() {
     print("IMU data:\r\n");
     print("gyro: x:%.2f, y:%.2f, z:%.2f\r\n", bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2]);
-    print("accel: x:%.2f, y:%.2f, z:%.2f\r\n", bmi088->accel_[0], bmi088->accel_[1],
-          bmi088->accel_[2]);
-    print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
-          ahrs->INS_angle[2]);
+    print("accel: x:%.2f, y:%.2f, z:%.2f\r\n", bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2]);
+    print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1], ahrs->INS_angle[2]);
 }
 
 void BMI088ReceiveDone() {
-    ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
-                 bmi088->accel_[1], bmi088->accel_[2]);
+    ahrs->Update(
+        bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2]);
     heater->Update(bmi088->temperature_);
 }
 

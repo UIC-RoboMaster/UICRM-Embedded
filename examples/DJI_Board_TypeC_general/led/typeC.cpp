@@ -46,14 +46,14 @@ void RM_RTOS_Default_Task(const void* args) {
         green = ((RGB_flow_color[i] & 0x0000FF00) >> 8);
         blue = ((RGB_flow_color[i] & 0x000000FF) >> 0);
 
-        delta_alpha = (float)((RGB_flow_color[(i + 1) % 3] & 0xFF000000) >> 24) -
-                      (float)((RGB_flow_color[i] & 0xFF000000) >> 24);
-        delta_red = (float)((RGB_flow_color[(i + 1) % 3] & 0x00FF0000) >> 16) -
-                    (float)((RGB_flow_color[i] & 0x00FF0000) >> 16);
-        delta_green = (float)((RGB_flow_color[(i + 1) % 3] & 0x0000FF00) >> 8) -
-                      (float)((RGB_flow_color[i] & 0x0000FF00) >> 8);
-        delta_blue = (float)((RGB_flow_color[(i + 1) % 3] & 0x000000FF) >> 0) -
-                     (float)((RGB_flow_color[i] & 0x000000FF) >> 0);
+        delta_alpha =
+            (float)((RGB_flow_color[(i + 1) % 3] & 0xFF000000) >> 24) - (float)((RGB_flow_color[i] & 0xFF000000) >> 24);
+        delta_red =
+            (float)((RGB_flow_color[(i + 1) % 3] & 0x00FF0000) >> 16) - (float)((RGB_flow_color[i] & 0x00FF0000) >> 16);
+        delta_green =
+            (float)((RGB_flow_color[(i + 1) % 3] & 0x0000FF00) >> 8) - (float)((RGB_flow_color[i] & 0x0000FF00) >> 8);
+        delta_blue =
+            (float)((RGB_flow_color[(i + 1) % 3] & 0x000000FF) >> 0) - (float)((RGB_flow_color[i] & 0x000000FF) >> 0);
 
         delta_alpha /= RGB_FLOW_COLOR_CHANGE_TIME;
         delta_red /= RGB_FLOW_COLOR_CHANGE_TIME;

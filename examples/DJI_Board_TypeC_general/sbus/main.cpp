@@ -44,8 +44,21 @@ void RM_RTOS_Default_Task(const void* arguments) {
             "CH5: %-4d CH6: %-4d CH7: %-4d CH8: %-4d \r\n"
             "CH9: %-4d CH10: %-4d CH11: %-4d CH12: %-4d \r\n"
             "CH13: %-4d CH14: %-4d CH15: %-4d CH16: %-4d \r\n",
-            dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->ch5, dbus->ch6, dbus->ch7, dbus->ch8,
-            dbus->ch9, dbus->ch10, dbus->ch11, dbus->ch12, dbus->ch13, dbus->ch14, dbus->ch15,
+            dbus->ch1,
+            dbus->ch2,
+            dbus->ch3,
+            dbus->ch4,
+            dbus->ch5,
+            dbus->ch6,
+            dbus->ch7,
+            dbus->ch8,
+            dbus->ch9,
+            dbus->ch10,
+            dbus->ch11,
+            dbus->ch12,
+            dbus->ch13,
+            dbus->ch14,
+            dbus->ch15,
             dbus->ch16);
 
         osDelay(50);

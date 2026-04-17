@@ -40,13 +40,13 @@ control::ConstrainedPID::PID_Init_t flywheel_pid_init = {
     .kd = 0,
     .max_out = 1000,
     .max_iout = 4000,
-    .deadband = 0,                                     // 死区
-    .A = 3 * PI,                                       // 变速积分所能达到的最大值为A+B
-    .B = 2 * PI,                                       // 启动变速积分的死区
-    .output_filtering_coefficient = 0.1,               // 输出滤波系数
-    .derivative_filtering_coefficient = 0,             // 微分滤波系数
+    .deadband = 0,  // 死区
+    .A = 3 * PI,  // 变速积分所能达到的最大值为A+B
+    .B = 2 * PI,  // 启动变速积分的死区
+    .output_filtering_coefficient = 0.1,  // 输出滤波系数
+    .derivative_filtering_coefficient = 0,  // 微分滤波系数
     .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
-            control::ConstrainedPID::OutputFilter |    // 输出滤波
+            control::ConstrainedPID::OutputFilter |  // 输出滤波
             control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
             control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
 };
@@ -64,8 +64,8 @@ void jam_callback(void* args) {
     }
 }
 
-bool steering_SetTarget(driver::MotorCANBase* motor, float SetTarget, float threshold,
-                        bool locked_rotor = true, bool ABS = false) {
+bool steering_SetTarget(
+    driver::MotorCANBase* motor, float SetTarget, float threshold, bool locked_rotor = true, bool ABS = false) {
     motor->Enable();
     bool Steering_Mode = false;
     bool motor_flag = false;
@@ -133,8 +133,8 @@ void steering_stop() {
 
 void Steering_SINGLE() {
     int last_steering_target = steering_motor->GetTheta();
-    bool Shoot_Steering_Mode = steering_SetTarget(
-        steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
+    bool Shoot_Steering_Mode =
+        steering_SetTarget(steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
     steering_unload(Shoot_Steering_Mode);
     shooter_17mm_num++;
     while (true) {
@@ -150,8 +150,8 @@ void Steering_SINGLE() {
 
 void Stering_BURST() {
     int last_steering_target = steering_motor->GetTheta();
-    bool Shoot_Steering_Mode = steering_SetTarget(
-        steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
+    bool Shoot_Steering_Mode =
+        steering_SetTarget(steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
     steering_unload(Shoot_Steering_Mode);
     shooter_17mm_num++;
     while (true) {
@@ -195,16 +195,14 @@ void shootTask(void* arg) {
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL ||
-            !referee->game_robot_status.mains_power_shooter_output) {
+        if (remote_mode == REMOTE_MODE_KILL || !referee->game_robot_status.mains_power_shooter_output) {
             // 死了
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
 
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
-            shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING || shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             // 启动摩擦轮电机(旋转)
             // todo:测试目标摩擦轮转速用[2 * PI], 最后改回[60 * 2 * PI]比赛使用
             flywheel_speed_ease->SetTarget(10 * PI);  // 摩擦轮转速(转速控制)
@@ -281,11 +279,11 @@ void init_shoot() {
         .kd = 0,
         .max_out = 5 * PI,
         .max_iout = 0,
-        .deadband = 0,                                 // 死区
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
+        .deadband = 0,  // 死区
+        .A = 0,  // 变速积分所能达到的最大值为A+B
+        .B = 0,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
+        .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
@@ -294,16 +292,16 @@ void init_shoot() {
         .kd = 0,
         .max_out = 10000,
         .max_iout = 4000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .deadband = 0,  // 死区
+        .A = 3 * PI,  // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
-                control::ConstrainedPID::OutputFilter |          // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter |  // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
-                control::ConstrainedPID::ErrorHandle,            // 错误处理
+                control::ConstrainedPID::ErrorHandle,  // 错误处理
 
     };
     steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);

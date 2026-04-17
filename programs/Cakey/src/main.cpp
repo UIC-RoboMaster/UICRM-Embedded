@@ -122,14 +122,20 @@ void RM_RTOS_Default_Task(const void* arg) {
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
+            dbus->ch0,
+            dbus->ch1,
+            dbus->ch2,
+            dbus->ch3,
+            dbus->ch4,
+            dbus->swl,
+            dbus->swr,
             dbus->GetLastUptime());
         print("\r\n");
 
         // Chassis info
-        print("Chassis speed %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy,
-              chassis->chassis_vt);
-        print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
+        print("Chassis speed %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy, chassis->chassis_vt);
+        print("Power %.3fV %.3fA %.3fW\r\n",
+              referee->power_heat_data.chassis_volt / 1000.0,
               referee->power_heat_data.chassis_current / 1000.0,
               referee->power_heat_data.chassis_power);
         print("\r\n");
@@ -139,13 +145,14 @@ void RM_RTOS_Default_Task(const void* arg) {
               gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
               gimbal->getYawTarget() - gimbal_param->yaw_offset_);
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
-        print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
-              minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
+        print("Vision Target: P%.3f Y%.3f [%d]\r\n",
+              minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw,
+              minipc->target_angle.accuracy);
         print("\r\n");
 
         // Shoot info
-        print("Shooter Cooling Heat: %hu\r\n",
-              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
         print("\r\n");

@@ -41,8 +41,7 @@ float ch1 = 0;
 float ch2 = 0;
 float ch3 = 0;
 
-void update_channel_data(communication::can_bridge_ext_id_t ext_id,
-                         communication::can_bridge_data_t data, void* args) {
+void update_channel_data(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args) {
     UNUSED(args);
     if (ext_id.data.tx_id == 0x51) {
         if (ext_id.data.type == communication::CAN_BRIDGE_TYPE_FOUR_INT16) {
@@ -71,13 +70,13 @@ void init_chassis() {
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .deadband = 0,  // 死区
+        .A = 3 * PI,  // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter |  // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };

@@ -129,8 +129,7 @@ void chassisTask(void* arg) {
                 chassis_vt_pid_error = 0;
             }
 
-            static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
+            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
             float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;
@@ -160,9 +159,11 @@ void chassisTask(void* arg) {
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
         osDelay(CHASSIS_OS_DELAY);
-        chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+        chassis->SetPower(true,
+                          referee->game_robot_status.chassis_power_limit,
                           referee->power_heat_data.chassis_power,
-                          referee->power_heat_data.chassis_power_buffer, false);
+                          referee->power_heat_data.chassis_power_buffer,
+                          false);
         osDelay(CHASSIS_OS_DELAY);
     }
 }

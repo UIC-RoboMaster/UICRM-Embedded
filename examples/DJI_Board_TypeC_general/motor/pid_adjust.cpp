@@ -44,13 +44,13 @@ void RM_RTOS_Init() {
         .kd = 300,
         .max_out = 4 * PI,
         .max_iout = 0.25 * PI,
-        .deadband = 0,                          // 死区
-        .A = 0,                                 // 变速积分所能达到的最大值为A+B
-        .B = 0,                                 // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .deadband = 0,  // 死区
+        .A = 0,  // 变速积分所能达到的最大值为A+B
+        .B = 0,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |     // 积分限幅
-                control::ConstrainedPID::OutputFilter |       // 输出滤波
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter |  // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
     motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
@@ -60,18 +60,17 @@ void RM_RTOS_Init() {
         .kd = 5000,
         .max_out = 10000,
         .max_iout = 0,
-        .deadband = 0,                          // 死区
-        .A = 2 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 1.5 * PI,                          // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .deadband = 0,  // 死区
+        .A = 2 * PI,  // 变速积分所能达到的最大值为A+B
+        .B = 1.5 * PI,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |     // 积分限幅
-                control::ConstrainedPID::OutputFilter |       // 输出滤波
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter |  // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
     motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA |
-                   driver::MotorCANBase::ABSOLUTE);
+    motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA | driver::MotorCANBase::ABSOLUTE);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
@@ -109,8 +108,7 @@ void RM_RTOS_Default_Task(const void* args) {
 void PrintTask(void* argument) {
     UNUSED(argument);
     while (1) {
-        control::ConstrainedPID::PID_State_t state =
-            motor->GetPIDState(driver::MotorCANBase::THETA);
+        control::ConstrainedPID::PID_State_t state = motor->GetPIDState(driver::MotorCANBase::THETA);
         uint8_t buffer[sizeof(state) + 2] = {0xAA, 0xBB};
         memcpy(buffer + 2, &state, sizeof(state));
         dump(&state, sizeof(buffer));

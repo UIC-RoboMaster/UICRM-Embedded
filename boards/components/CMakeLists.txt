@@ -38,3 +38,10 @@ uicrm_add_board_specific_library(F103_Nano_general_components
         INCLUDES ${COMPONENTS_INCLUDES}
         DEPENDS F103_Nano_general_drivers F103_Nano_general_algorithm F103_Nano_general_platform)
 target_include_directories(F103_Nano_general_components PUBLIC ${COMPONENTS_INCLUDES})
+
+uicrm_add_board_specific_library(BulletExchanger_F103_components
+        TARGET BulletExchanger_F103
+        SOURCES ${COMPONENTS_SOURCES}
+        INCLUDES ${COMPONENTS_INCLUDES}
+        DEPENDS BulletExchanger_F103_drivers BulletExchanger_F103_algorithm BulletExchanger_F103_platform)
+target_include_directories(BulletExchanger_F103_components PUBLIC ${COMPONENTS_INCLUDES})

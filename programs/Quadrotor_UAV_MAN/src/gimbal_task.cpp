@@ -100,8 +100,7 @@ void gimbalTask(void* arg) {
         }
 
         // 根据遥控器输入计算目标角度，并且进行限幅
-        pitch_target =
-            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
@@ -165,13 +164,13 @@ void init_gimbal() {
         .kd = 800,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
-        .deadband = 0,                          // 死区
-        .A = 0,                                 // 变速积分所能达到的最大值为A+B
-        .B = 0,                                 // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .deadband = 0,  // 死区
+        .A = 0,  // 变速积分所能达到的最大值为A+B
+        .B = 0,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
-                control::ConstrainedPID::OutputFilter      // 输出滤波
+                control::ConstrainedPID::OutputFilter  // 输出滤波
     };
 
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
@@ -181,22 +180,21 @@ void init_gimbal() {
         .kd = 2000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
-        .deadband = 0,                          // 死区
-        .A = 0.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,                          // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .deadband = 0,  // 死区
+        .A = 0.5 * PI,  // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
-                control::ConstrainedPID::OutputFilter |               // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter |  // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
-                control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
+                control::ConstrainedPID::DerivativeFilter  // 微分在测量值上
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                         driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     /**
      * yaw motor
@@ -209,13 +207,13 @@ void init_gimbal() {
         .kd = 1000,
         .max_out = 4 * PI,  // 最高旋转速度
         .max_iout = 0,
-        .deadband = 0,                          // 死区
-        .A = 0,                                 // 变速积分所能达到的最大值为A+B
-        .B = 0,                                 // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
+        .deadband = 0,  // 死区
+        .A = 0,  // 变速积分所能达到的最大值为A+B
+        .B = 0,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
         .derivative_filtering_coefficient = 0,  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
-                control::ConstrainedPID::OutputFilter      // 输出滤波
+                control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
@@ -224,22 +222,21 @@ void init_gimbal() {
         .kd = 2000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
-        .deadband = 0,                            // 死区
-        .A = 0.5 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 0.5 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,      // 输出滤波系数
+        .deadband = 0,  // 死区
+        .A = 0.5 * PI,  // 变速积分所能达到的最大值为A+B
+        .B = 0.5 * PI,  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,  // 输出滤波系数
         .derivative_filtering_coefficient = 0.1,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
-                control::ConstrainedPID::OutputFilter |               // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
+        .mode = control::ConstrainedPID::Integral_Limit |  // 积分限幅
+                control::ConstrainedPID::OutputFilter |  // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
-                control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
+                control::ConstrainedPID::DerivativeFilter  // 微分在测量值上
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     // 初始化云台对象
     gimbal_data.pitch_motor = pitch_motor;
