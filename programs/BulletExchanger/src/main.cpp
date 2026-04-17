@@ -42,8 +42,7 @@ static communication::Referee* referee = nullptr;
 static bsp::GPIO* key_50 = nullptr;
 static bsp::GPIO* key_100 = nullptr;
 static bsp::GPIO* key_200 = nullptr;
-static bsp::GPIO* sw_left =
-    nullptr;  // 拨动开关(上拉)，往左拨是 O(17mm 弹丸)，往右拨是 I(42mm 弹丸)
+static bsp::GPIO* sw_left = nullptr;  // 拨动开关(上拉)，往左拨是 O(17mm 弹丸)，往右拨是 I(42mm 弹丸)
 static bsp::GPIO* sw_right = nullptr;
 static bool is_left = true;
 static osSemaphoreId_t led_sem = nullptr;

@@ -51,8 +51,12 @@ bsp::SPIMaster* spi5_master = nullptr;
  * @brief  收到MPU6500数据后的回调函数，用来更新AHRS和加热器
  */
 void MPU6500ReceiveDone() {
-    ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2], mpu6500->accel_[0],
-                 mpu6500->accel_[1], mpu6500->accel_[2]);
+    ahrs->Update(mpu6500->gyro_[0],
+                 mpu6500->gyro_[1],
+                 mpu6500->gyro_[2],
+                 mpu6500->accel_[0],
+                 mpu6500->accel_[1],
+                 mpu6500->accel_[2]);
     heater->Update(mpu6500->temperature_);
 }
 

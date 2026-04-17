@@ -73,8 +73,7 @@ void chassis_FOLLOW(float chassis_yaw_diff) {
         chassis_vt_pid_error = 0;
     }
 
-    static control::ConstrainedPID* chassis_vt_pid =
-        new control::ConstrainedPID(12 / (2 * PI), 0, 8, 0.5, 8);
+    static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(12 / (2 * PI), 0, 8, 0.5, 8);
     float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
     if (chassis_vt_pid_error != 0)
         chassis_vt = vt;
@@ -118,8 +117,7 @@ void chassisTask(void* arg) {
     chassis->Enable();
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL ||
-            !referee->game_robot_status.mains_power_chassis_output) {
+        if (remote_mode == REMOTE_MODE_KILL || !referee->game_robot_status.mains_power_chassis_output) {
             kill_chassis();
             while (remote_mode == REMOTE_MODE_KILL) {
                 osDelay(CHASSIS_OS_DELAY + 2);
@@ -185,9 +183,11 @@ void chassisTask(void* arg) {
 
         chassis->SetSpeed(chassis_vx, chassis_vy, chassis_vt);
         osDelay(CHASSIS_OS_DELAY);
-        chassis->SetPower(false, referee->game_robot_status.chassis_power_limit,
+        chassis->SetPower(false,
+                          referee->game_robot_status.chassis_power_limit,
                           referee->power_heat_data.chassis_power,
-                          referee->power_heat_data.chassis_power_buffer, false);
+                          referee->power_heat_data.chassis_power_buffer,
+                          false);
         osDelay(CHASSIS_OS_DELAY);
     }
 }
@@ -228,8 +228,7 @@ void chassis_remote_mode() {
 }
 
 // 假设这是你的更新函数
-void updateCarVelocity(float& car_vx, float& car_vy, float& car_vt, float deltaTime,
-                       const float acceleration) {
+void updateCarVelocity(float& car_vx, float& car_vy, float& car_vt, float deltaTime, const float acceleration) {
     // 根据时间增量逐步增加速度
     car_vx += acceleration * deltaTime;
     car_vy += acceleration * deltaTime;

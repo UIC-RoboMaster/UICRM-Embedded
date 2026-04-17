@@ -157,8 +157,7 @@ void shootTask(void* arg) {
             }
         }
 
-        while (remote_mode == REMOTE_MODE_KILL ||
-               !referee->game_robot_status.mains_power_shooter_output) {
+        while (remote_mode == REMOTE_MODE_KILL || !referee->game_robot_status.mains_power_shooter_output) {
             shoot_kill();
             osDelay(SHOOT_OS_DELAY);
         }
@@ -195,8 +194,7 @@ void shootTask(void* arg) {
         uint16_t game_progress_shifted = game_progress >> 3;
         uint8_t game_progress_bit = game_progress_shifted & 0x01;
         if (game_progress_bit == 4) {
-            uint16_t bullet_remaining_num_17mm =
-                referee->bullet_remaining.bullet_remaining_num_17mm;
+            uint16_t bullet_remaining_num_17mm = referee->bullet_remaining.bullet_remaining_num_17mm;
             if (bullet_remaining_num_17mm == 0) {
                 print("not have bullet!\n");
                 steering_motor->Hold();

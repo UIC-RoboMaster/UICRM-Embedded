@@ -83,7 +83,13 @@ void RM_Car_main_data(bool newline = false) {
         "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
         "@ %d "
         "ms\r\n",
-        dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
+        dbus->ch0,
+        dbus->ch1,
+        dbus->ch2,
+        dbus->ch3,
+        dbus->swl,
+        dbus->swr,
+        dbus->ch4,
         dbus->timestamp);
 
     print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
@@ -93,10 +99,8 @@ void RM_Car_main_data(bool newline = false) {
     print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
     print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
     print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-    print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
-          ahrs->INS_angle[2]);
-    print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch,
-          minipc->target_angle.target_yaw);
+    print("INS Angle: %.3f %.3f %.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1], ahrs->INS_angle[2]);
+    print("Vision Target: %.3f %.3f\r\n", minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
     if (newline) {
         print("\r\n");
     }

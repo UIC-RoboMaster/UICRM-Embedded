@@ -115,8 +115,7 @@ void shootTask(void* arg) {
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
             if (!minipc->target_angle.shoot_cmd) {
                 steering_motor->Hold(true);
-                shoot_load_mode =
-                    shoot_load_mode == SHOOT_MODE_STOP ? shoot_load_mode : SHOOT_MODE_PREPARED;
+                shoot_load_mode = shoot_load_mode == SHOOT_MODE_STOP ? shoot_load_mode : SHOOT_MODE_PREPARED;
             }
         }
 
@@ -136,15 +135,13 @@ void shootTask(void* arg) {
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(
-                                steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
                     }
                     break;
                 case SHOOT_MODE_BURST:
-                    steering_motor->SetTarget(
-                        steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                    steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
                     break;
                 case SHOOT_MODE_STOP:
                     // 停止发射

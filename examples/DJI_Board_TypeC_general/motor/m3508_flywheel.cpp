@@ -107,8 +107,8 @@ void RM_RTOS_Default_Task(const void* args) {
 
             osDelay(20);
         }
-        print("%.2f %.2f %.2f %.2f\r\n", motor1->GetOmega(), motor2->GetOmega(), motor3->GetOmega(),
-              motor4->GetOmega());
+        print(
+            "%.2f %.2f %.2f %.2f\r\n", motor1->GetOmega(), motor2->GetOmega(), motor3->GetOmega(), motor4->GetOmega());
 
         osDelay(1);
     }

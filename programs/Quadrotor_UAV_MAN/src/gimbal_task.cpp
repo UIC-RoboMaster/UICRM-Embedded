@@ -100,8 +100,7 @@ void gimbalTask(void* arg) {
         }
 
         // 根据遥控器输入计算目标角度，并且进行限幅
-        pitch_target =
-            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
@@ -195,8 +194,7 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                         driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     /**
      * yaw motor
@@ -238,8 +236,7 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     // 初始化云台对象
     gimbal_data.pitch_motor = pitch_motor;

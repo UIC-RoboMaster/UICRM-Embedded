@@ -117,8 +117,7 @@ void gimbalTask(void* arg) {
         }
 
         // 根据遥控器输入计算目标角度，并且进行限幅
-        pitch_target =
-            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
@@ -133,8 +132,7 @@ void gimbalTask(void* arg) {
         const float offset_filter_ratio =
             0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
         static float speed_offset = 0;
-        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio +
-                       speed_offset * (1 - offset_filter_ratio);
+        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
 
         yaw_motor->SetSpeedOffset(speed_offset);
         switch (remote_mode) {
@@ -142,8 +140,7 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_FOLLOW:
                 // 如果是跟随模式或者旋转模式，将IMU作为参考系
                 if (minipc->target_angle.shoot_cmd && is_autoaim) {
-                    gimbal->TargetAbs(minipc->target_angle.target_pitch,
-                                      -minipc->target_angle.target_yaw);
+                    gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
                 } else {
                     gimbal->TargetRel(pitch_diff, yaw_diff);
                 }
@@ -160,10 +157,9 @@ void gimbalTask(void* arg) {
                 //                gimbal->Update();
                 //                break;
             case REMOTE_MODE_AUTOAIM:
-                if (minipc->target_angle.target_pitch < 10e3 &&
-                    minipc->target_angle.target_yaw < 10e3 && minipc->target_angle.shoot_cmd) {
-                    gimbal->TargetAbs(minipc->target_angle.target_pitch,
-                                      -minipc->target_angle.target_yaw);
+                if (minipc->target_angle.target_pitch < 10e3 && minipc->target_angle.target_yaw < 10e3 &&
+                    minipc->target_angle.shoot_cmd) {
+                    gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
                 }
                 gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
                 break;
@@ -223,8 +219,7 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                         driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     /**
      * yaw motor
@@ -236,8 +231,7 @@ void init_gimbal() {
         .ki = 0,
         .kd = 200,  // 再大会在前面顿一下
         .max_out =
-            3 *
-            PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
+            3 * PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
         .max_iout = PI / 4,
         .deadband = PI / 180,
         .A = 0,  // 变速积分所能达到的最大值为A+B
@@ -268,8 +262,7 @@ void init_gimbal() {
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
     yaw_motor->SetSpeedFilter(0.1);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     // 初始化云台对象
     gimbal_data.pitch_motor = pitch_motor;

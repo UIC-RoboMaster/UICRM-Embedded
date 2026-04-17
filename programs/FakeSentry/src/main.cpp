@@ -142,7 +142,8 @@ void RM_RTOS_Default_Task(const void* args) {
                 break;
         }
         // chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
-        chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
+        chassis->SetPower(true,
+                          referee->game_robot_status.chassis_power_limit,
                           referee->power_heat_data.chassis_power,
                           referee->power_heat_data.chassis_power_buffer);
         chassis->Update();

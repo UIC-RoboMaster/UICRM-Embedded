@@ -137,8 +137,7 @@ void uiTask(void* arg) {
         // Update chassis GUI
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
         pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
-        chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max,
-                           relative_angle);
+        chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max, relative_angle);
         osDelay(UI_OS_DELAY);
 
         power_percent = battery_vol->GetBatteryPercentage();
@@ -147,8 +146,7 @@ void uiTask(void* arg) {
         osDelay(UI_OS_DELAY);
 
         // Update Gimbal GUI
-        gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle,
-                          imu->CaliDone());
+        gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle, imu->CaliDone());
         osDelay(UI_OS_DELAY);
 
         // Update current mode GUI
@@ -183,10 +181,8 @@ void uiTask(void* arg) {
 
         // Update wheel status GUI
         if (last_fric_mode != shoot_flywheel_mode) {
-            char* wheelStr =
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
-            uint32_t wheelColor =
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
+            char* wheelStr = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
+            uint32_t wheelColor = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }

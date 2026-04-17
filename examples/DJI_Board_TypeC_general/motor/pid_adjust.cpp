@@ -70,8 +70,7 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
     motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA |
-                   driver::MotorCANBase::ABSOLUTE);
+    motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA | driver::MotorCANBase::ABSOLUTE);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
@@ -109,8 +108,7 @@ void RM_RTOS_Default_Task(const void* args) {
 void PrintTask(void* argument) {
     UNUSED(argument);
     while (1) {
-        control::ConstrainedPID::PID_State_t state =
-            motor->GetPIDState(driver::MotorCANBase::THETA);
+        control::ConstrainedPID::PID_State_t state = motor->GetPIDState(driver::MotorCANBase::THETA);
         uint8_t buffer[sizeof(state) + 2] = {0xAA, 0xBB};
         memcpy(buffer + 2, &state, sizeof(state));
         dump(&state, sizeof(buffer));

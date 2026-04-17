@@ -64,8 +64,8 @@ void jam_callback(void* args) {
     }
 }
 
-bool steering_SetTarget(driver::MotorCANBase* motor, float SetTarget, float threshold,
-                        bool locked_rotor = true, bool ABS = false) {
+bool steering_SetTarget(
+    driver::MotorCANBase* motor, float SetTarget, float threshold, bool locked_rotor = true, bool ABS = false) {
     motor->Enable();
     bool Steering_Mode = false;
     bool motor_flag = false;
@@ -133,8 +133,8 @@ void steering_stop() {
 
 void Steering_SINGLE() {
     int last_steering_target = steering_motor->GetTheta();
-    bool Shoot_Steering_Mode = steering_SetTarget(
-        steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
+    bool Shoot_Steering_Mode =
+        steering_SetTarget(steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
     steering_unload(Shoot_Steering_Mode);
     shooter_17mm_num++;
     while (true) {
@@ -150,8 +150,8 @@ void Steering_SINGLE() {
 
 void Stering_BURST() {
     int last_steering_target = steering_motor->GetTheta();
-    bool Shoot_Steering_Mode = steering_SetTarget(
-        steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
+    bool Shoot_Steering_Mode =
+        steering_SetTarget(steering_motor, steering_motor->GetTarget() + 2 * PI / 8, 0.65, false, false);
     steering_unload(Shoot_Steering_Mode);
     shooter_17mm_num++;
     while (true) {
@@ -195,16 +195,14 @@ void shootTask(void* arg) {
     Ease* flywheel_speed_ease = new Ease(0, 0.3);
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL ||
-            !referee->game_robot_status.mains_power_shooter_output) {
+        if (remote_mode == REMOTE_MODE_KILL || !referee->game_robot_status.mains_power_shooter_output) {
             // 死了
             kill_shoot();
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
 
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
-            shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING || shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             // 启动摩擦轮电机(旋转)
             // todo:测试目标摩擦轮转速用[2 * PI], 最后改回[60 * 2 * PI]比赛使用
             flywheel_speed_ease->SetTarget(10 * PI);  // 摩擦轮转速(转速控制)

@@ -83,12 +83,16 @@ void RM_Main_data(bool newline = false) {
         "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
         "@ %d "
         "ms\r\n",
-        dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4);
+        dbus->ch0,
+        dbus->ch1,
+        dbus->ch2,
+        dbus->ch3,
+        dbus->swl,
+        dbus->swr,
+        dbus->ch4);
 
-    print("ahrs Angle: [0]%.3f [1]%.3f [2]%.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
-          ahrs->INS_angle[2]);
-    print("INS Angle: yaw:%.3f roll:%.3f pitch:%.3f\r\n", INS_Angle.yaw, INS_Angle.roll,
-          INS_Angle.pitch);
+    print("ahrs Angle: [0]%.3f [1]%.3f [2]%.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1], ahrs->INS_angle[2]);
+    print("INS Angle: yaw:%.3f roll:%.3f pitch:%.3f\r\n", INS_Angle.yaw, INS_Angle.roll, INS_Angle.pitch);
     print("yaw/pitch target: %.3f %.3f", yaw_target, pitch_target);
     print("yaw/pitch diff: %.3f %.3f", yaw_diff, pitch_diff);
     if (newline) {

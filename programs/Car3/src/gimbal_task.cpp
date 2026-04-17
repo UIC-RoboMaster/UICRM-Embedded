@@ -106,8 +106,7 @@ void gimbalTask(void* arg) {
             yaw_ratio = 0;
         }
 
-        pitch_target =
-            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
@@ -171,8 +170,7 @@ void init_gimbal() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     pitch_motor->ReInitPID(pitch_omega_pid_init, driver::MotorCANBase::OMEGA);
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                         driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
@@ -206,8 +204,7 @@ void init_gimbal() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     yaw_motor->ReInitPID(yaw_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     control::gimbal_t gimbal_data;
     gimbal_data.data = gimbal_init_data;

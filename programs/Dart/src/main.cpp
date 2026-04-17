@@ -124,8 +124,7 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     control::ConstrainedPID::PID_Init_t motor_3508_omega_pid_init = {
         .kp = 2500,

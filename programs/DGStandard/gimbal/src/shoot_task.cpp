@@ -113,8 +113,7 @@ void shootTask(void* arg) {
             continue;
         }
 
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
-            shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING || shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             flywheel_speed_ease->SetTarget(900);
         } else {
             flywheel_speed_ease->SetTarget(0);

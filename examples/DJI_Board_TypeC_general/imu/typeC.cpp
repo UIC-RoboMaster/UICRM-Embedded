@@ -102,13 +102,15 @@ void RM_RTOS_Default_Task(const void* arg) {
     while (true) {
         set_cursor(0, 0);
         clear_screen();
-        print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
+        print("# %.2f s, IMU %s\r\n",
+              HAL_GetTick() / 1000.0,
               imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
         print("Temp: %.2f\r\n", imu->Temp);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
-              imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
-        print("Is Calibrated: %s\r\n",
-              imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+        print("Euler Angles: %.2f, %.2f, %.2f\r\n",
+              imu->INS_angle[0] / PI * 180,
+              imu->INS_angle[1] / PI * 180,
+              imu->INS_angle[2] / PI * 180);
+        print("Is Calibrated: %s\r\n", imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
         osDelay(50);
     }
 }
