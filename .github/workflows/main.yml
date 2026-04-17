@@ -28,16 +28,6 @@ jobs:
         tar -xf ~/gcc-arm-none-eabi.tar.xz --directory ~/arm-toolchain-v10-3 --strip-components=1
     - name: add system path
       run: echo "~/arm-toolchain-v10-3/bin" >> $GITHUB_PATH  # set environment variable
-    - name: DEBUG - what does clang-format actually see
-      run: |
-        echo "=== clang-format version ==="
-        clang-format --version
-        echo ""
-        echo "=== Does it parse .clang-format successfully? ==="
-        clang-format --dump-config -style=file 2>&1 | head -80
-        echo ""
-        echo "=== Key options actually applied ==="
-        clang-format --dump-config -style=file 2>&1 | grep -E "AlignTrailingComments|ColumnLimit|Standard|BasedOnStyle"
     - name: cmake
       run: |
         mkdir build && cd build
