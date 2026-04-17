@@ -22,3 +22,8 @@ uicrm_add_arm_executable(${PROJECT_NAME}_power_limit_test
         TARGET ${BOARD_NAME}
         SOURCES power_limit_test.cpp
 )
+
+uicrm_add_arm_executable(${PROJECT_NAME}_single_helm_wheel
+        TARGET ${BOARD_NAME}
+        SOURCES swerve_wheel/single_swerve_wheel.cpp
+)
