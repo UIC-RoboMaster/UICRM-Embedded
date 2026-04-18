@@ -1,9 +1,12 @@
 project(example_chassis_${BOARD_NAME} ASM C CXX)
 
-uicrm_add_arm_executable(${PROJECT_NAME}
+uicrm_add_arm_executable(${PROJECT_NAME}_mecanum
     TARGET ${BOARD_NAME}
-    SOURCES main.cpp)
+    SOURCES mecanum_example.cpp)
 
+uicrm_add_arm_executable(${PROJECT_NAME}_omni
+        TARGET ${BOARD_NAME}
+        SOURCES omni_example.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_sbus
         TARGET ${BOARD_NAME}
