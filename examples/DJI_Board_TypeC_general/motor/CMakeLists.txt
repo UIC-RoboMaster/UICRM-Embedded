@@ -41,6 +41,9 @@ uicrm_add_arm_executable(${PROJECT_NAME}_dm4310
         TARGET ${BOARD_NAME}
         SOURCES dm4310.cpp)
 
+uicrm_add_arm_executable(${PROJECT_NAME}_dm4310_new
+        TARGET ${BOARD_NAME}
+        SOURCES dm4310_new.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
         TARGET ${BOARD_NAME}
