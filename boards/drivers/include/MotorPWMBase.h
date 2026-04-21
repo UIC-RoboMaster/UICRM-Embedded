@@ -128,9 +128,9 @@ namespace driver {
      * @brief 普通 Lesar PWM标准激光
      */
 
-    class Lesar : public MotorPWMBase {
+    class Laser : public MotorPWMBase {
       public:
-        Lesar(TIM_HandleTypeDef* htim,
+        Laser(TIM_HandleTypeDef* htim,
               uint8_t channel,
               uint32_t clock_freq = 1000000,
               uint32_t output_freq = 50,

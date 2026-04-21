@@ -71,13 +71,13 @@ namespace driver {
         MotorPWMBase::SetOutput(map<int16_t>(angle, 0, 180, MIN_OUTPUT, MAX_OUTPUT));
     }
 
-    /*======================== Lesar PWM control ========================*/
-    Lesar::Lesar(
+    /*======================== Laser PWM control ========================*/
+    Laser::Laser(
         TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle)
         : MotorPWMBase(htim, channel, clock_freq, output_freq, idle_throttle) {
     }
 
-    void Lesar::SetOutput(int16_t brightness) {
+    void Laser::SetOutput(int16_t brightness) {
         constexpr int16_t MIN_OUTPUT = 0;
         constexpr int16_t MAX_OUTPUT = 1000;
         MotorPWMBase::SetOutput(map<int16_t>(brightness, 0, 100, MIN_OUTPUT, MAX_OUTPUT));
