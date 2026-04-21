@@ -12,7 +12,7 @@ AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortBlocksOnASingleLine: Never
 
-PenaltyReturnTypeOnItsOwnLine: 100
+PenaltyReturnTypeOnItsOwnLine: 1000
 PenaltyBreakTemplateDeclaration: 0
 PenaltyBreakBeforeFirstCallParameter: 0
 

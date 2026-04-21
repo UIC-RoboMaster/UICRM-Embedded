@@ -57,8 +57,8 @@ namespace control {
             CailbrateHandler(gx, gy, gz, ax, ay, az, 0, 0, 0);
         }
     }
-    void
-    QEKF::CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
+    void QEKF::CailbrateHandler(
+        float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
         UNUSED(ax);
         UNUSED(ay);
         UNUSED(az);

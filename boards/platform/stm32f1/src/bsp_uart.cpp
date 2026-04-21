@@ -32,8 +32,10 @@
 namespace bsp {
 
     /* modified version of HAL_UART_Receive_DMA */
-    static HAL_StatusTypeDef
-    UartStartDmaNoInt(UART_HandleTypeDef* huart, uint8_t* data0, uint8_t* data1, uint16_t size) {
+    static HAL_StatusTypeDef UartStartDmaNoInt(UART_HandleTypeDef* huart,
+                                               uint8_t* data0,
+                                               uint8_t* data1,
+                                               uint16_t size) {
         /* Check that a Rx process is not already ongoing */
         if (huart->RxState == HAL_UART_STATE_READY) {
             if ((data0 == NULL) || (data1 == NULL) || (size == 0U))

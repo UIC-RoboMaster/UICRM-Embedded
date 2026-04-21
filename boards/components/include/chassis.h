@@ -91,8 +91,8 @@ namespace control {
          * @param current_power Current chassis power, in [W]
          * @param buffer_remain Current chassis power buffer, in [J]
          */
-        void
-        SetPower(bool enabled, float max_power, float current_power, float buffer_remain, bool enable_supercap = false);
+        void SetPower(
+            bool enabled, float max_power, float current_power, float buffer_remain, bool enable_supercap = false);
 
         /**
          * @brief 使用外部采集的底盘数据，更新功率控制信息。

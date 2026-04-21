@@ -121,8 +121,8 @@ namespace control {
         }
     }
 
-    void
-    Chassis::SetPower(bool enabled, float max_power, float current_power, float buffer_remain, bool enable_supercap) {
+    void Chassis::SetPower(
+        bool enabled, float max_power, float current_power, float buffer_remain, bool enable_supercap) {
         power_limit_.enabled = enabled;
 
         UNUSED(max_power);
@@ -402,8 +402,10 @@ namespace control {
             }
         }
     }
-    void
-    ChassisCanBridgeSender::UpdatePower(bool enabled, uint8_t max_watt, float current_voltage, uint8_t buffer_percent) {
+    void ChassisCanBridgeSender::UpdatePower(bool enabled,
+                                             uint8_t max_watt,
+                                             float current_voltage,
+                                             uint8_t buffer_percent) {
         if (!chassis_enable_) {
             return;
         }
