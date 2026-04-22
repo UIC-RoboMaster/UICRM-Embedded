@@ -77,8 +77,10 @@ namespace control {
         float forward_ratio = 1.0 * (max_power - reverse_current) / forward_current;
         for (int i = 0; i < 4; i++) {
             if (motor_input_current[i] > 0)
-                turn_current[i] = ReversePowerModel(
-                    params[i], angular_velocity[i], turn_current[i], forward_ratio * motor_input_current[i]);
+                turn_current[i] = ReversePowerModel(params[i],
+                                                    angular_velocity[i],
+                                                    turn_current[i],
+                                                    forward_ratio * motor_input_current[i]);
         }
     }
 }  // namespace control

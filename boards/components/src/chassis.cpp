@@ -60,8 +60,10 @@ namespace control {
         chassis_offset_ = chassis.offset;
 
         // 功率限制系统
-        NewPowerLimit::power_param_t power_model[4] = {
-            M3508_POWER_MODEL, M3508_POWER_MODEL, M3508_POWER_MODEL, M3508_POWER_MODEL};
+        NewPowerLimit::power_param_t power_model[4] = {M3508_POWER_MODEL,
+                                                       M3508_POWER_MODEL,
+                                                       M3508_POWER_MODEL,
+                                                       M3508_POWER_MODEL};
         power_limit_.enabled = chassis.power_limit_on;
         power_limit_.limiter = new NewPowerLimit(power_model);
         driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);

@@ -59,11 +59,17 @@ const driver::BuzzerNoteDelayed War_Cant_of_Mars[] = {
 
 const driver::BuzzerNoteDelayed DJI[] = {{Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
-const driver::BuzzerNoteDelayed SingCaliStart[] = {
-    {Note::Mi3M, 100}, {Note::Re2M, 100}, {Note::Mi3M, 100}, {Note::Finish, 0}};
+const driver::BuzzerNoteDelayed SingCaliStart[] = {{Note::Mi3M, 100},
+                                                   {Note::Re2M, 100},
+                                                   {Note::Mi3M, 100},
+                                                   {Note::Finish, 0}};
 
-const driver::BuzzerNoteDelayed SingCaliDone[] = {
-    {Note::Re2M, 100}, {Note::Mi3M, 100}, {Note::Re2M, 100}, {Note::Finish, 0}};
+const driver::BuzzerNoteDelayed SingCaliDone[] = {{Note::Re2M, 100},
+                                                  {Note::Mi3M, 100},
+                                                  {Note::Re2M, 100},
+                                                  {Note::Finish, 0}};
 
-const driver::BuzzerNoteDelayed ProtectWarning[] = {
-    {Note::Mi3M, 100}, {Note::Re2M, 100}, {Note::Mi3M, 100}, {Note::Finish, 0}};
+const driver::BuzzerNoteDelayed ProtectWarning[] = {{Note::Mi3M, 100},
+                                                    {Note::Re2M, 100},
+                                                    {Note::Mi3M, 100},
+                                                    {Note::Finish, 0}};

@@ -17,7 +17,7 @@ AllowShortBlocksOnASingleLine: Never
 
 PenaltyReturnTypeOnItsOwnLine: 1000
 PenaltyBreakTemplateDeclaration: 0
-PenaltyBreakBeforeFirstCallParameter: 0
+PenaltyBreakBeforeFirstCallParameter: 200
 
 SpacesInAngles: false
 SpaceBeforeParens: ControlStatements

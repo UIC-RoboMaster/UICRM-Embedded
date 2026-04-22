@@ -49,8 +49,11 @@ namespace bsp {
 
             /* Enable the DMA stream */
 #ifdef BOARD_HAS_UART_DMA_DOUBLE_BUFFER
-            HAL_DMAEx_MultiBufferStart(
-                huart->hdmarx, (uint32_t)&huart->Instance->DR, (uint32_t)data0, (uint32_t)data1, size);
+            HAL_DMAEx_MultiBufferStart(huart->hdmarx,
+                                       (uint32_t)&huart->Instance->DR,
+                                       (uint32_t)data0,
+                                       (uint32_t)data1,
+                                       size);
 #else
             HAL_DMA_Start(huart->hdmarx, (uint32_t)&huart->Instance->DR, (uint32_t)data0, size);
 #endif

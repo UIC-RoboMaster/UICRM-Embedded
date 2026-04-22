@@ -46,11 +46,11 @@
 // the first column:the registers of IST8310.
 // the second column: the value to be writed to the registers.
 // the third column: return error value.
-static const uint8_t ist8310_write_reg_data_error[IST8310_WRITE_REG_NUM][3] = {
-    {0x0B, 0x08, 0x01},   // enalbe interrupt  and low pin polarity.
-    {0x41, 0x09, 0x02},   // average 2 times.
-    {0x42, 0xC0, 0x03},   // must be 0xC0.
-    {0x0A, 0x0B, 0x04}};  // 200Hz output rate.
+static const uint8_t ist8310_write_reg_data_error[IST8310_WRITE_REG_NUM][3] =
+    {{0x0B, 0x08, 0x01},   // enalbe interrupt  and low pin polarity.
+     {0x41, 0x09, 0x02},   // average 2 times.
+     {0x42, 0xC0, 0x03},   // must be 0xC0.
+     {0x0A, 0x0B, 0x04}};  // 200Hz output rate.
 
 #define IST8310_IIC_ADDRESS 0x0E  // the I2C address of IST8310
 
@@ -216,8 +216,8 @@ namespace bsp {
 
         // set mpu6500 sonsor config and check
         for (writeNum = 0; writeNum < IST8310_WRITE_REG_NUM; writeNum++) {
-            ist8310_IIC_write_single_reg(
-                ist8310_write_reg_data_error[writeNum][0], ist8310_write_reg_data_error[writeNum][1]);
+            ist8310_IIC_write_single_reg(ist8310_write_reg_data_error[writeNum][0],
+                                         ist8310_write_reg_data_error[writeNum][1]);
             HAL_Delay(wait_time);
             res = ist8310_IIC_read_single_reg(ist8310_write_reg_data_error[writeNum][0]);
             HAL_Delay(wait_time);
@@ -407,25 +407,25 @@ namespace bsp {
     static float BMI088_ACCEL_SEN = BMI088_ACCEL_3G_SEN;
     static float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
 
-    static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] = {
-        {BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
-        {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR},
-        {BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set, BMI088_ACC_CONF_ERROR},
-        {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
-        {BMI088_INT1_IO_CTRL,
-         BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_LOW,
-         BMI088_INT1_IO_CTRL_ERROR},
-        {BMI088_INT_MAP_DATA, BMI088_ACC_INT1_DRDY_INTERRUPT, BMI088_INT_MAP_DATA_ERROR}};
+    static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] =
+        {{BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
+         {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR},
+         {BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set, BMI088_ACC_CONF_ERROR},
+         {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
+         {BMI088_INT1_IO_CTRL,
+          BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_LOW,
+          BMI088_INT1_IO_CTRL_ERROR},
+         {BMI088_INT_MAP_DATA, BMI088_ACC_INT1_DRDY_INTERRUPT, BMI088_INT_MAP_DATA_ERROR}};
 
-    static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] = {
-        {BMI088_GYRO_RANGE, BMI088_GYRO_2000, BMI088_GYRO_RANGE_ERROR},
-        {BMI088_GYRO_BANDWIDTH, BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set, BMI088_GYRO_BANDWIDTH_ERROR},
-        {BMI088_GYRO_LPM1, BMI088_GYRO_NORMAL_MODE, BMI088_GYRO_LPM1_ERROR},
-        {BMI088_GYRO_CTRL, BMI088_DRDY_ON, BMI088_GYRO_CTRL_ERROR},
-        {BMI088_GYRO_INT3_INT4_IO_CONF,
-         BMI088_GYRO_INT3_GPIO_PP | BMI088_GYRO_INT3_GPIO_LOW,
-         BMI088_GYRO_INT3_INT4_IO_CONF_ERROR},
-        {BMI088_GYRO_INT3_INT4_IO_MAP, BMI088_GYRO_DRDY_IO_INT3, BMI088_GYRO_INT3_INT4_IO_MAP_ERROR}};
+    static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] =
+        {{BMI088_GYRO_RANGE, BMI088_GYRO_2000, BMI088_GYRO_RANGE_ERROR},
+         {BMI088_GYRO_BANDWIDTH, BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set, BMI088_GYRO_BANDWIDTH_ERROR},
+         {BMI088_GYRO_LPM1, BMI088_GYRO_NORMAL_MODE, BMI088_GYRO_LPM1_ERROR},
+         {BMI088_GYRO_CTRL, BMI088_DRDY_ON, BMI088_GYRO_CTRL_ERROR},
+         {BMI088_GYRO_INT3_INT4_IO_CONF,
+          BMI088_GYRO_INT3_GPIO_PP | BMI088_GYRO_INT3_GPIO_LOW,
+          BMI088_GYRO_INT3_INT4_IO_CONF_ERROR},
+         {BMI088_GYRO_INT3_INT4_IO_MAP, BMI088_GYRO_DRDY_IO_INT3, BMI088_GYRO_INT3_INT4_IO_MAP_ERROR}};
 
     uint8_t BMI088::Init() {
         uint8_t error = BMI088_NO_ERROR;
@@ -500,8 +500,8 @@ namespace bsp {
 
         // set gyro sonsor config and check
         for (write_reg_num = 0; write_reg_num < BMI088_WRITE_GYRO_REG_NUM; ++write_reg_num) {
-            BMI088_gyro_write_single_reg(
-                write_BMI088_gyro_reg_data_error[write_reg_num][0], write_BMI088_gyro_reg_data_error[write_reg_num][1]);
+            BMI088_gyro_write_single_reg(write_BMI088_gyro_reg_data_error[write_reg_num][0],
+                                         write_BMI088_gyro_reg_data_error[write_reg_num][1]);
             HAL_Delay(1);
             BMI088_gyro_read_single_reg(write_BMI088_gyro_reg_data_error[write_reg_num][0], &res);
             HAL_Delay(1);
@@ -637,14 +637,15 @@ namespace bsp {
 
         if (accel_update_flag & (1 << IMU_UPDATE_SHFITS)) {
             accel_update_flag &= ~(1 << IMU_UPDATE_SHFITS);
-            BMI088_.accel_read_over(
-                accel_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET, BMI088_real_data_.accel, &BMI088_real_data_.time);
+            BMI088_.accel_read_over(accel_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
+                                    BMI088_real_data_.accel,
+                                    &BMI088_real_data_.time);
         }
 
         if (accel_temp_update_flag & (1 << IMU_UPDATE_SHFITS)) {
             accel_temp_update_flag &= ~(1 << IMU_UPDATE_SHFITS);
-            BMI088_.temperature_read_over(
-                accel_temp_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET, &BMI088_real_data_.temp);
+            BMI088_.temperature_read_over(accel_temp_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
+                                          &BMI088_real_data_.temp);
             Temp = BMI088_real_data_.temp;
             TempPWM = TempControl(BMI088_real_data_.temp);
         }

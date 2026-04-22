@@ -44,8 +44,12 @@ static bsp::GPIT* bmi088_accel_int = nullptr;
 static bsp::GPIT* bmi088_gyro_int = nullptr;
 
 void BMI088ReceiveDone() {
-    ahrs->Update(
-        bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2]);
+    ahrs->Update(bmi088->gyro_[0],
+                 bmi088->gyro_[1],
+                 bmi088->gyro_[2],
+                 bmi088->accel_[0],
+                 bmi088->accel_[1],
+                 bmi088->accel_[2]);
     heater->Update(bmi088->temperature_);
 }
 

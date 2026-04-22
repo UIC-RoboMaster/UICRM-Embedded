@@ -96,10 +96,16 @@ void init_shoot() {
 }
 
 void init_pwm() {
-    flyWheelL = new driver::MotorPWMBase(
-        &htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
-    flyWheelR = new driver::MotorPWMBase(
-        &htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, BLHEIL_MOTOR_MIN_PULSE_WIDTH);
+    flyWheelL = new driver::MotorPWMBase(&htim1,
+                                         LEFT_MOTOR_PWM_CHANNEL,
+                                         TIM_CLOCK_FREQ,
+                                         MOTOR_OUT_FREQ,
+                                         BLHEIL_MOTOR_MIN_PULSE_WIDTH);
+    flyWheelR = new driver::MotorPWMBase(&htim1,
+                                         RIGHT_MOTOR_PWM_CHANNEL,
+                                         TIM_CLOCK_FREQ,
+                                         MOTOR_OUT_FREQ,
+                                         BLHEIL_MOTOR_MIN_PULSE_WIDTH);
 
     flyWheelL->Disable();
     flyWheelR->Disable();

@@ -72,9 +72,10 @@ namespace bsp {
         is_master = (hcan == &hcan1);
         ConfigureFilter(is_master);
         // activate rx interrupt
-        RM_ASSERT_HAL_OK(
-            HAL_CAN_RegisterCallback(hcan, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID, RxFIFO0MessagePendingCallback),
-            "Cannot register CAN rx callback");
+        RM_ASSERT_HAL_OK(HAL_CAN_RegisterCallback(hcan,
+                                                  HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
+                                                  RxFIFO0MessagePendingCallback),
+                         "Cannot register CAN rx callback");
         RM_ASSERT_HAL_OK(HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING),
                          "Cannot activate CAN rx message pending notification");
         RM_ASSERT_HAL_OK(HAL_CAN_Start(hcan), "Cannot start CAN");

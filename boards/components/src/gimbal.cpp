@@ -136,8 +136,11 @@ namespace control {
             abs_yaw = -abs_yaw;
         float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
         float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
-        pitch_angle_ = wrapping_clip<float>(
-            clipped_pitch + data_.pitch_offset_, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
+        pitch_angle_ = wrapping_clip<float>(clipped_pitch + data_.pitch_offset_,
+                                            pitch_lower_limit_,
+                                            pitch_upper_limit_,
+                                            0,
+                                            2 * PI);
         if (data_.yaw_circle_) {
             yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
         } else {

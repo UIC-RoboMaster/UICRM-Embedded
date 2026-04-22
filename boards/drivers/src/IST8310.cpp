@@ -57,8 +57,8 @@ namespace imu {
 
         // set mpu6500 sonsor config and check
         for (writeNum = 0; writeNum < IST8310_WRITE_REG_NUM; writeNum++) {
-            ist8310_IIC_write_single_reg(
-                ist8310_write_reg_data_error[writeNum][0], ist8310_write_reg_data_error[writeNum][1]);
+            ist8310_IIC_write_single_reg(ist8310_write_reg_data_error[writeNum][0],
+                                         ist8310_write_reg_data_error[writeNum][1]);
             HAL_Delay(wait_time);
             res = ist8310_IIC_read_single_reg(ist8310_write_reg_data_error[writeNum][0]);
             HAL_Delay(wait_time);

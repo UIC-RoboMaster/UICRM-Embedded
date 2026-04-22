@@ -71,8 +71,11 @@ static driver::MotorCANBase* yaw_motor = nullptr;
 static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 
-const control::gimbal_data_t gimbal_init_data = {
-    .pitch_offset_ = 2.8582f, .yaw_offset_ = 2.5840f, .pitch_max_ = 0.4897f, .yaw_max_ = PI / 2, .yaw_circle_ = true};
+const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 2.8582f,
+                                                 .yaw_offset_ = 2.5840f,
+                                                 .pitch_max_ = 0.4897f,
+                                                 .yaw_max_ = PI / 2,
+                                                 .yaw_circle_ = true};
 
 const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
                                             .attr_bits = osThreadDetached,
@@ -301,8 +304,12 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
 
         print("CH1: %-4d CH2: %-4d CH3: %-4d CH4: %-4d ", sbus->ch1, sbus->ch2, sbus->ch3, sbus->ch4);
-        print(
-            "CH5: %d CH6: %d CH7: %d CH8: %d @ %d ms\r\n", sbus->ch5, sbus->ch6, sbus->ch7, sbus->ch8, sbus->timestamp);
+        print("CH5: %d CH6: %d CH7: %d CH8: %d @ %d ms\r\n",
+              sbus->ch5,
+              sbus->ch6,
+              sbus->ch7,
+              sbus->ch8,
+              sbus->timestamp);
 
         osDelay(100);
     }
