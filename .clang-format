@@ -8,6 +8,7 @@ ColumnLimit: 120
 AccessModifierOffset: -2
 
 AlignTrailingComments: true
+AlignAfterOpenBracket: true
 
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
