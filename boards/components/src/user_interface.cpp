@@ -521,8 +521,16 @@ namespace communication {
         char str[] = " ";
         char name[15];
         snprintf(name, 15, "M%d", currCount);
-        UI->CharDraw(
-            diag_, name, UI_Graph_Change, 2, UI_Color_Pink, 10, 30, 2, diagStartX_, diagStartY_ - currCount * 20);
+        UI->CharDraw(diag_,
+                     name,
+                     UI_Graph_Change,
+                     2,
+                     UI_Color_Pink,
+                     10,
+                     30,
+                     2,
+                     diagStartX_,
+                     diagStartY_ - currCount * 20);
         UI->CharRefresh(*graph, str, 1);
         referee->PrepareUIContent(communication::CHAR_GRAPH);
     }
@@ -942,8 +950,16 @@ namespace communication {
                       centerY_ - 90,
                       centerX_ + 30,
                       centerY_ - 90);
-        UI_->LineDraw(
-            &crosshair7_, "ch7", UI_Graph_Del, 0, UI_Color_Cyan, 2, centerX_, centerY_ - 30, centerX_, centerY_ - 100);
+        UI_->LineDraw(&crosshair7_,
+                      "ch7",
+                      UI_Graph_Del,
+                      0,
+                      UI_Color_Cyan,
+                      2,
+                      centerX_,
+                      centerY_ - 30,
+                      centerX_,
+                      centerY_ - 100);
         UI_->GraphRefresh(7, crosshair1_, crosshair2_, crosshair3_, crosshair4_, crosshair5_, crosshair6_, crosshair7_);
     }
 
@@ -1075,8 +1091,13 @@ namespace communication {
         pitch_bar_height_ = pitch_bar_height;
         pitch_bar_weight_ = pitch_bar_weight;
         pitch_max_ = pitch_max;
-        pitch_bar_ = new Bar(
-            pitch_bar_X_, pitch_bar_Y_, pitch_bar_weight_, pitch_bar_height_, UI_Color_Green, UI_Color_Pink, true);
+        pitch_bar_ = new Bar(pitch_bar_X_,
+                             pitch_bar_Y_,
+                             pitch_bar_weight_,
+                             pitch_bar_height_,
+                             UI_Color_Green,
+                             UI_Color_Pink,
+                             true);
         Init();
     }
 
@@ -1431,8 +1452,16 @@ namespace communication {
     }
 
     graphic_data_t StringGUI::InitBulk() {
-        UI_->CharDraw(
-            &string_, string_name_, UI_Graph_Add, 4, color_, string_size_, string_length_, 2, string_X_, string_Y_);
+        UI_->CharDraw(&string_,
+                      string_name_,
+                      UI_Graph_Add,
+                      4,
+                      color_,
+                      string_size_,
+                      string_length_,
+                      2,
+                      string_X_,
+                      string_Y_);
         return string_;
     }
 
@@ -1445,14 +1474,30 @@ namespace communication {
         if (string != nullptr)
             string_content_ = string;
         string_length_ = strlen(string_content_);
-        UI_->CharDraw(
-            &string_, string_name_, UI_Graph_Change, 4, color_, string_size_, string_length_, 2, string_X_, string_Y_);
+        UI_->CharDraw(&string_,
+                      string_name_,
+                      UI_Graph_Change,
+                      4,
+                      color_,
+                      string_size_,
+                      string_length_,
+                      2,
+                      string_X_,
+                      string_Y_);
         UI_->CharRefresh(string_, string_content_, string_length_);
     }
 
     graphic_data_t StringGUI::DeleteBulk() {
-        UI_->CharDraw(
-            &string_, string_name_, UI_Graph_Del, 4, color_, string_size_, string_length_, 2, string_X_, string_Y_);
+        UI_->CharDraw(&string_,
+                      string_name_,
+                      UI_Graph_Del,
+                      4,
+                      color_,
+                      string_size_,
+                      string_length_,
+                      2,
+                      string_X_,
+                      string_Y_);
         return string_;
     }
 
@@ -1469,8 +1514,16 @@ namespace communication {
         if (size != -1)
             string_size_ = size;
         string_length_ = strlen(string_content_);
-        UI_->CharDraw(
-            &string_, string_name_, UI_Graph_Change, 4, color_, string_size_, string_length_, 2, string_X_, string_Y_);
+        UI_->CharDraw(&string_,
+                      string_name_,
+                      UI_Graph_Change,
+                      4,
+                      color_,
+                      string_size_,
+                      string_length_,
+                      2,
+                      string_X_,
+                      string_Y_);
         UI_->CharRefresh(string_, string_content_, string_length_);
     }
 
