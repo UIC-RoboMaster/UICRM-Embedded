@@ -35,8 +35,11 @@ remote::SBUS* sbus = nullptr;
 // RemoteMode last_remote_mode = REMOTE_MODE_ADVANCED;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_AUTOAIM;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
-                                      REMOTE_MODE_AUTOAIM, REMOTE_MODE_PREPARE_HAND_MOVEMENT};
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW,
+                                      REMOTE_MODE_SPIN,
+                                      REMOTE_MODE_ADVANCED,
+                                      REMOTE_MODE_AUTOAIM,
+                                      REMOTE_MODE_PREPARE_HAND_MOVEMENT};
 const int8_t remote_mode_max = 4;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
@@ -110,8 +113,7 @@ void remoteTask(void* arg) {
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
-        is_shoot_available =
-            referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
+        is_shoot_available = referee->bullet_remaining.bullet_remaining_num_17mm > 0 && ahrs->IsCailbrated();
 #else
         is_robot_dead = false;
         is_shoot_available = true;
@@ -237,8 +239,7 @@ void remoteTask(void* arg) {
         static BoolEdgeDetector* Magazine_switch_edge = new BoolEdgeDetector(false);
         Magazine_switch_edge->input(state_l == remote::UP);
         keyboard_B_edge->input(keyboard.bit.B);
-        if (keyboard_B_edge->posEdge() ||
-            (shoot_load_mode == SHOOT_MODE_STOP && Magazine_switch_edge->posEdge())) {
+        if (keyboard_B_edge->posEdge() || (shoot_load_mode == SHOOT_MODE_STOP && Magazine_switch_edge->posEdge())) {
             if (magazine_Mode == Magazine_MODE_ON) {
                 magazine_Mode = Magazine_MODE_OFF;
             } else if (magazine_Mode == Magazine_MODE_OFF) {
@@ -302,8 +303,8 @@ void remoteTask(void* arg) {
             }
 
             // 不发射
-            if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() ||
-                mouse_right_edge->negEdge() || keyboard_X_edge->negEdge()) {
+            if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() || mouse_right_edge->negEdge() ||
+                keyboard_X_edge->negEdge()) {
                 shoot_load_mode = SHOOT_MODE_STOP;
                 shoot_burst_timestamp = 0;
             }

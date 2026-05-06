@@ -322,9 +322,9 @@ namespace communication {
 
     /* ===== POWER_HEAT_DATA 0x0202 50Hz ===== */
     typedef struct {
-        uint16_t chassis_volt; // reserved
-        uint16_t chassis_current; // reserved
-        float chassis_power; // reserved
+        uint16_t chassis_volt;     // reserved
+        uint16_t chassis_current;  // reserved
+        float chassis_power;       // reserved
         uint16_t chassis_power_buffer;
         uint16_t shooter_id1_17mm_cooling_heat;
         uint16_t shooter_id1_42mm_cooling_heat;
@@ -737,8 +737,8 @@ namespace communication {
         uint8_t robot_id;
         uint8_t vision_reset;      // 是否重置视觉识别
         uint8_t location_data[2];  // 裁判系统返回的位置数据，RMUL状态下为0
-        uint8_t is_killed;  // 是否被击杀，裁判系统血量为0或者触发手动kill则视为被击杀
-        uint8_t robot_mode;  // 机器人模式
+        uint8_t is_killed;         // 是否被击杀，裁判系统血量为0或者触发手动kill则视为被击杀
+        uint8_t robot_mode;        // 机器人模式
         /*
          * 1:一般跟随
          * 2:小陀螺

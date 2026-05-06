@@ -48,8 +48,13 @@ namespace control {
         gyro_[2] = gz;
 
         if (cailb_done_) {
-            IMU_QuaternionEKF_Update(gx - g_zerodrift[0], gy - g_zerodrift[1], gz - g_zerodrift[2],
-                                     ax, ay, az, ticks_count_current_);
+            IMU_QuaternionEKF_Update(gx - g_zerodrift[0],
+                                     gy - g_zerodrift[1],
+                                     gz - g_zerodrift[2],
+                                     ax,
+                                     ay,
+                                     az,
+                                     ticks_count_current_);
             INS_angle[0] = QEKF_INS.Yaw;
             INS_angle[1] = QEKF_INS.Pitch;
             INS_angle[2] = QEKF_INS.Roll;
@@ -57,8 +62,7 @@ namespace control {
             CailbrateHandler(gx, gy, gz, ax, ay, az, 0, 0, 0);
         }
     }
-    void QEKF::CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az,
-                                float mx, float my, float mz) {
+    void QEKF::CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
         UNUSED(ax);
         UNUSED(ay);
         UNUSED(az);
@@ -87,10 +91,8 @@ namespace control {
         return cailb_done_;
     }
     void QEKF::INSCalculate() {
-        INS_angle[0] =
-            atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
+        INS_angle[0] = atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
         INS_angle[1] = asinf(-2.0f * (q[1] * q[3] - q[0] * q[2]));
-        INS_angle[2] =
-            atan2f(2.0f * (q[0] * q[1] + q[2] * q[3]), 2.0f * (q[0] * q[0] + q[3] * q[3]) - 1.0f);
+        INS_angle[2] = atan2f(2.0f * (q[0] * q[1] + q[2] * q[3]), 2.0f * (q[0] * q[0] + q[3] * q[3]) - 1.0f);
     }
 }  // namespace control

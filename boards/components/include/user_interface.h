@@ -124,35 +124,87 @@ namespace communication {
 
         // 将某个图形的数据放入image
 
-        static void LineDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                             uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
-                             uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y);
-        static void RectangleDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                                  uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
-                                  uint32_t start_x, uint32_t start_y, uint32_t end_x,
+        static void LineDraw(graphic_data_t* image,
+                             const char name[3],
+                             uint32_t graph_operate,
+                             uint32_t graph_layer,
+                             uint32_t graph_color,
+                             uint32_t graph_width,
+                             uint32_t start_x,
+                             uint32_t start_y,
+                             uint32_t end_x,
+                             uint32_t end_y);
+        static void RectangleDraw(graphic_data_t* image,
+                                  const char name[3],
+                                  uint32_t graph_operate,
+                                  uint32_t graph_layer,
+                                  uint32_t graph_color,
+                                  uint32_t graph_width,
+                                  uint32_t start_x,
+                                  uint32_t start_y,
+                                  uint32_t end_x,
                                   uint32_t end_y);
-        static void CircleDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                               uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
-                               uint32_t start_x, uint32_t start_y, uint32_t graph_radius);
-        static void EllipseDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                                uint32_t graph_layer, uint32_t graph_color, uint32_t graph_width,
-                                uint32_t start_x, uint32_t start_y, uint32_t x_length,
+        static void CircleDraw(graphic_data_t* image,
+                               const char name[3],
+                               uint32_t graph_operate,
+                               uint32_t graph_layer,
+                               uint32_t graph_color,
+                               uint32_t graph_width,
+                               uint32_t start_x,
+                               uint32_t start_y,
+                               uint32_t graph_radius);
+        static void EllipseDraw(graphic_data_t* image,
+                                const char name[3],
+                                uint32_t graph_operate,
+                                uint32_t graph_layer,
+                                uint32_t graph_color,
+                                uint32_t graph_width,
+                                uint32_t start_x,
+                                uint32_t start_y,
+                                uint32_t x_length,
                                 uint32_t y_length);
-        static void ArcDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                            uint32_t graph_layer, uint32_t graph_color, uint32_t graph_startAngle,
-                            uint32_t graph_endAngle, uint32_t graph_width, uint32_t start_x,
-                            uint32_t start_y, uint32_t x_length, uint32_t y_length);
-        static void FloatDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                              uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
-                              uint32_t graph_digit, uint32_t graph_width, uint32_t start_x,
-                              uint32_t start_y, float graph_float);
-        static void IntDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                            uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
-                            uint32_t graph_width, uint32_t start_x, uint32_t start_y,
+        static void ArcDraw(graphic_data_t* image,
+                            const char name[3],
+                            uint32_t graph_operate,
+                            uint32_t graph_layer,
+                            uint32_t graph_color,
+                            uint32_t graph_startAngle,
+                            uint32_t graph_endAngle,
+                            uint32_t graph_width,
+                            uint32_t start_x,
+                            uint32_t start_y,
+                            uint32_t x_length,
+                            uint32_t y_length);
+        static void FloatDraw(graphic_data_t* image,
+                              const char name[3],
+                              uint32_t graph_operate,
+                              uint32_t graph_layer,
+                              uint32_t graph_color,
+                              uint32_t graph_size,
+                              uint32_t graph_digit,
+                              uint32_t graph_width,
+                              uint32_t start_x,
+                              uint32_t start_y,
+                              float graph_float);
+        static void IntDraw(graphic_data_t* image,
+                            const char name[3],
+                            uint32_t graph_operate,
+                            uint32_t graph_layer,
+                            uint32_t graph_color,
+                            uint32_t graph_size,
+                            uint32_t graph_width,
+                            uint32_t start_x,
+                            uint32_t start_y,
                             int graph_int);
-        static void CharDraw(graphic_data_t* image, const char name[3], uint32_t graph_operate,
-                             uint32_t graph_layer, uint32_t graph_color, uint32_t graph_size,
-                             uint32_t char_length, uint32_t graph_width, uint32_t start_x,
+        static void CharDraw(graphic_data_t* image,
+                             const char name[3],
+                             uint32_t graph_operate,
+                             uint32_t graph_layer,
+                             uint32_t graph_color,
+                             uint32_t graph_size,
+                             uint32_t char_length,
+                             uint32_t graph_width,
+                             uint32_t start_x,
                              uint32_t start_y);
 
         // 将data_buffer里面的数据作为 机器人交互数据->选手端UI绘图 发送出去
@@ -168,8 +220,7 @@ namespace communication {
 
         void DiagGUIInit(graphic_data_t* message, int len);
         void DiagGUIUpdate(int len);
-        void DiagGUIClear(UserInterface* UI, Referee* referee, graphic_data_t* graph,
-                          int currCount);
+        void DiagGUIClear(UserInterface* UI, Referee* referee, graphic_data_t* graph, int currCount);
         void AddMessage(graphic_data_t* graph, char* messageStr, int len);
 
       private:
@@ -206,8 +257,11 @@ namespace communication {
 
     class ChassisGUI {
       public:
-        ChassisGUI(UserInterface* UI, int16_t chassis_X = 1300, int16_t chassis_Y = 120,
-                   int16_t speed_center_X = 200, int16_t speed_center_Y = 780);
+        ChassisGUI(UserInterface* UI,
+                   int16_t chassis_X = 1300,
+                   int16_t chassis_Y = 120,
+                   int16_t speed_center_X = 200,
+                   int16_t speed_center_Y = 780);
         void Init();
         void Delete();
         void Init2();
@@ -236,11 +290,21 @@ namespace communication {
 
     class CrossairGUI {
       public:
-        CrossairGUI(UserInterface* UI, int16_t centerX = 960, int16_t centerY = 540,
-                    int16_t x1 = -90, int16_t x2 = -100, int16_t x3 = -110, int16_t x4 = -120,
-                    int16_t x5 = -130, int16_t x6 = -140);
-        void Init(int16_t x1 = -90, int16_t x2 = -100, int16_t x3 = -110, int16_t x4 = -120,
-                  int16_t x5 = -130, int16_t x6 = -140);
+        CrossairGUI(UserInterface* UI,
+                    int16_t centerX = 960,
+                    int16_t centerY = 540,
+                    int16_t x1 = -90,
+                    int16_t x2 = -100,
+                    int16_t x3 = -110,
+                    int16_t x4 = -120,
+                    int16_t x5 = -130,
+                    int16_t x6 = -140);
+        void Init(int16_t x1 = -90,
+                  int16_t x2 = -100,
+                  int16_t x3 = -110,
+                  int16_t x4 = -120,
+                  int16_t x5 = -130,
+                  int16_t x6 = -140);
         void Delete();
 
       private:
@@ -258,9 +322,13 @@ namespace communication {
 
     class Bar {
       public:
-        Bar(int16_t barStartX = 1500, int16_t barStartY = 350, int16_t barWidth = 200,
-            int16_t barHeight = 50, uint8_t color = UI_Color_Orange,
-            uint8_t frame_color = UI_Color_Pink, bool isVertical = false);
+        Bar(int16_t barStartX = 1500,
+            int16_t barStartY = 350,
+            int16_t barWidth = 200,
+            int16_t barHeight = 50,
+            uint8_t color = UI_Color_Orange,
+            uint8_t frame_color = UI_Color_Pink,
+            bool isVertical = false);
         graphic_data_t Init();
         graphic_data_t Delete();
         graphic_data_t InitFrame();
@@ -286,10 +354,14 @@ namespace communication {
 
     class GimbalGUI {
       public:
-        GimbalGUI(UserInterface* UI, int16_t gimbal_speed_center_X = 1620,
-                  int16_t gimbal_speed_center_Y = 780, int16_t gimbal_speed_center_R = 100,
-                  int16_t pitch_bar_X = 1800, int16_t pitch_bar_Y = 440,
-                  int16_t pitch_bar_height = 400, int16_t pitch_bar_weight = 30,
+        GimbalGUI(UserInterface* UI,
+                  int16_t gimbal_speed_center_X = 1620,
+                  int16_t gimbal_speed_center_Y = 780,
+                  int16_t gimbal_speed_center_R = 100,
+                  int16_t pitch_bar_X = 1800,
+                  int16_t pitch_bar_Y = 440,
+                  int16_t pitch_bar_height = 400,
+                  int16_t pitch_bar_weight = 30,
                   float pitch_max = 0.4253f);
         ~GimbalGUI();
         void Init();
@@ -324,15 +396,18 @@ namespace communication {
 
     class CapGUI {
       public:
-        CapGUI(UserInterface* UI, char* Cap_name, int16_t Cap_bar_X = 1500, int16_t Cap_bar_Y = 380,
-               int16_t Cap_bar_width = 310, int16_t Cap_bar_height = 20);
+        CapGUI(UserInterface* UI,
+               char* Cap_name,
+               int16_t Cap_bar_X = 1500,
+               int16_t Cap_bar_Y = 380,
+               int16_t Cap_bar_width = 310,
+               int16_t Cap_bar_height = 20);
         ~CapGUI();
         void Init();
         void InitName();
         void Delete();
         void DeleteName();
-        void UpdateBulk(float percent, graphic_data_t* bar = nullptr,
-                        graphic_data_t* cap_percent = nullptr);
+        void UpdateBulk(float percent, graphic_data_t* bar = nullptr, graphic_data_t* cap_percent = nullptr);
         void Update(float Percent);
 
       private:
@@ -359,8 +434,12 @@ namespace communication {
 
     class StringGUI {
       public:
-        StringGUI(UserInterface* UI, char* string_content, int16_t string_X = 1500,
-                  int16_t string_Y = 380, int8_t color = UI_Color_Main, int16_t string_size = 15,
+        StringGUI(UserInterface* UI,
+                  char* string_content,
+                  int16_t string_X = 1500,
+                  int16_t string_Y = 380,
+                  int8_t color = UI_Color_Main,
+                  int16_t string_size = 15,
                   char* string_name = nullptr);
         ~StringGUI();
         graphic_data_t InitBulk();

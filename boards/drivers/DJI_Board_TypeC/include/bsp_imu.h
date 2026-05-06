@@ -360,8 +360,11 @@ namespace bsp {
     class IST8310 : public GPIT {
       public:
         IST8310(IST8310_init_t init, IMU_typeC* imu = nullptr);
-        IST8310(I2C_HandleTypeDef* hi2c, uint16_t int_pin, GPIO_TypeDef* rst_group,
-                uint16_t rst_pin, IMU_typeC* imu = nullptr);
+        IST8310(I2C_HandleTypeDef* hi2c,
+                uint16_t int_pin,
+                GPIO_TypeDef* rst_group,
+                uint16_t rst_pin,
+                IMU_typeC* imu = nullptr);
         bool IsReady();
         void ist8310_read_over(uint8_t* status_buf, IST8310_real_data_t* ist8310_real_data);
         float mag[3];
@@ -431,8 +434,11 @@ namespace bsp {
     class BMI088 {
       public:
         BMI088(BMI088_init_t init);
-        BMI088(SPI_HandleTypeDef* hspi, GPIO_TypeDef* CS_ACCEL_Port, uint16_t CS_ACCEL_Pin,
-               GPIO_TypeDef* CS_GYRO_Port, uint16_t CS_GYRO_Pin);
+        BMI088(SPI_HandleTypeDef* hspi,
+               GPIO_TypeDef* CS_ACCEL_Port,
+               uint16_t CS_ACCEL_Pin,
+               GPIO_TypeDef* CS_GYRO_Port,
+               uint16_t CS_GYRO_Pin);
         bool IsReady();
         void Read(float gyro[3], float accel[3], float* temperate);
         void temperature_read_over(uint8_t* rx_buf, float* temperate);
@@ -532,8 +538,7 @@ namespace bsp {
         float accel_fliter_1[3] = {0.0f, 0.0f, 0.0f};
         float accel_fliter_2[3] = {0.0f, 0.0f, 0.0f};
         float accel_fliter_3[3] = {0.0f, 0.0f, 0.0f};
-        const float fliter_num[3] = {1.929454039488895f, -0.93178349823448126f,
-                                     0.002329458745586203f};
+        const float fliter_num[3] = {1.929454039488895f, -0.93178349823448126f, 0.002329458745586203f};
 
         friend class IST8310;
 
@@ -565,12 +570,10 @@ namespace bsp {
         volatile uint8_t imu_start_dma_flag = 0;
 
         uint8_t gyro_dma_rx_buf[SPI_DMA_GYRO_LENGHT];
-        uint8_t gyro_dma_tx_buf[SPI_DMA_GYRO_LENGHT] = {0x82, 0xFF, 0xFF, 0xFF,
-                                                        0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t gyro_dma_tx_buf[SPI_DMA_GYRO_LENGHT] = {0x82, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
         uint8_t accel_dma_rx_buf[SPI_DMA_ACCEL_LENGHT];
-        uint8_t accel_dma_tx_buf[SPI_DMA_ACCEL_LENGHT] = {0x92, 0xFF, 0xFF, 0xFF, 0xFF,
-                                                          0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t accel_dma_tx_buf[SPI_DMA_ACCEL_LENGHT] = {0x92, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
         uint8_t accel_temp_dma_rx_buf[SPI_DMA_ACCEL_TEMP_LENGHT];
         uint8_t accel_temp_dma_tx_buf[SPI_DMA_ACCEL_TEMP_LENGHT] = {0xA2, 0xFF, 0xFF, 0xFF};

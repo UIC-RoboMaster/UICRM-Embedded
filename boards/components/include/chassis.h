@@ -91,8 +91,8 @@ namespace control {
          * @param current_power Current chassis power, in [W]
          * @param buffer_remain Current chassis power buffer, in [J]
          */
-        void SetPower(bool enabled, float max_power, float current_power, float buffer_remain,
-                      bool enable_supercap = false);
+        void SetPower(
+            bool enabled, float max_power, float current_power, float buffer_remain, bool enable_supercap = false);
 
         /**
          * @brief 使用外部采集的底盘数据，更新功率控制信息。
@@ -102,8 +102,7 @@ namespace control {
          * @param current_voltage 电池电压，单位为V
          * @param buffer_percent 剩余缓冲能量百分比，范围为0~100，50%对应于最大电流的90%
          */
-        void UpdatePower(bool enabled, float max_watt, float current_voltage,
-                         uint8_t buffer_percent);
+        void UpdatePower(bool enabled, float max_watt, float current_voltage, uint8_t buffer_percent);
 
         /**
          * @brief 在双板通信模式下，底盘使用自己采样的电压，因此需要额外暴露接口
@@ -144,15 +143,13 @@ namespace control {
                                                           communication::can_bridge_data_t data,
                                                           void* args);
 
-        static void CanBridgeUpdateEventCurrentPowerWrapper(
-            communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data,
-            void* args);
+        static void CanBridgeUpdateEventCurrentPowerWrapper(communication::can_bridge_ext_id_t ext_id,
+                                                            communication::can_bridge_data_t data,
+                                                            void* args);
 
-        void CanBridgeUpdateEventXY(communication::can_bridge_ext_id_t ext_id,
-                                    communication::can_bridge_data_t data);
+        void CanBridgeUpdateEventXY(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data);
 
-        void CanBridgeUpdateEventTurn(communication::can_bridge_ext_id_t ext_id,
-                                      communication::can_bridge_data_t data);
+        void CanBridgeUpdateEventTurn(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data);
 
         void CanBridgeUpdateEventPowerLimit(communication::can_bridge_ext_id_t ext_id,
                                             communication::can_bridge_data_t data);
@@ -204,7 +201,9 @@ namespace control {
     class ChassisCanBridgeSender {
       public:
         ChassisCanBridgeSender(communication::CanBridge* can_bridge, uint8_t rx_id);
-        void SetChassisRegId(uint8_t xy_reg_id, uint8_t turn_on_reg_id, uint8_t power_limit_reg_id,
+        void SetChassisRegId(uint8_t xy_reg_id,
+                             uint8_t turn_on_reg_id,
+                             uint8_t power_limit_reg_id,
                              uint8_t current_power_reg_id);
         void Enable();
         void Disable();
@@ -225,13 +224,15 @@ namespace control {
          * @param chassis_power Current chassis power, in [W]
          * @param chassis_power_buffer Current chassis power buffer, in [J]
          */
-        void SetPower(bool power_limit_on, float power_limit, float chassis_power,
-                      float chassis_power_buffer, bool enable_supercap = false,
+        void SetPower(bool power_limit_on,
+                      float power_limit,
+                      float chassis_power,
+                      float chassis_power_buffer,
+                      bool enable_supercap = false,
                       bool force_update = false);
 
         // Same as Chassis::SetPower
-        void UpdatePower(bool enabled, uint8_t max_watt, float current_voltage,
-                         uint8_t buffer_percent);
+        void UpdatePower(bool enabled, uint8_t max_watt, float current_voltage, uint8_t buffer_percent);
 
       private:
         communication::CanBridge* can_bridge_;

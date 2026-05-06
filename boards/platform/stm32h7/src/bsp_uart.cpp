@@ -32,8 +32,10 @@
 namespace bsp {
 
     /* modified version of HAL_UART_Receive_DMA */
-    static HAL_StatusTypeDef UartStartDmaNoInt(UART_HandleTypeDef* huart, uint8_t* data0,
-                                               uint8_t* data1, uint16_t size) {
+    static HAL_StatusTypeDef UartStartDmaNoInt(UART_HandleTypeDef* huart,
+                                               uint8_t* data0,
+                                               uint8_t* data1,
+                                               uint16_t size) {
         /* Check that a Rx process is not already ongoing */
         if (huart->RxState == HAL_UART_STATE_READY) {
             if ((data0 == NULL) || (data1 == NULL) || (size == 0U))
@@ -47,8 +49,11 @@ namespace bsp {
 
             /* Enable the DMA stream */
 #ifdef BOARD_HAS_UART_DMA_DOUBLE_BUFFER
-            HAL_DMAEx_MultiBufferStart(huart->hdmarx, (uint32_t)&huart->Instance->RDR,
-                                       (uint32_t)data0, (uint32_t)data1, size);
+            HAL_DMAEx_MultiBufferStart(huart->hdmarx,
+                                       (uint32_t)&huart->Instance->RDR,
+                                       (uint32_t)data0,
+                                       (uint32_t)data1,
+                                       size);
 #else
             HAL_DMA_Start(huart->hdmarx, (uint32_t)&huart->Instance->RDR, (uint32_t)data0, size);
 #endif
@@ -90,8 +95,7 @@ namespace bsp {
         if (!uart)
             return;
 
-        if (__HAL_UART_GET_FLAG(huart, UART_FLAG_IDLE) &&
-            __HAL_UART_GET_IT_SOURCE(huart, UART_IT_IDLE)) {
+        if (__HAL_UART_GET_FLAG(huart, UART_FLAG_IDLE) && __HAL_UART_GET_IT_SOURCE(huart, UART_IT_IDLE)) {
             uart->RxCompleteCallback();
             __HAL_UART_CLEAR_IDLEFLAG(huart);
         }
@@ -154,8 +158,7 @@ namespace bsp {
             /* enable uart rx dma transfer in back ground */
             UartStartDmaNoInt(huart_, rx_data_[0], rx_data_[1], rx_size_);
         } else {
-            HAL_UART_RegisterCallback(huart_, HAL_UART_RX_COMPLETE_CB_ID,
-                                      RxCompleteCallbackWrapper);
+            HAL_UART_RegisterCallback(huart_, HAL_UART_RX_COMPLETE_CB_ID, RxCompleteCallbackWrapper);
             HAL_UART_Receive_IT(huart_, rx_data_[0], rx_size_);
         }
 
@@ -216,8 +219,7 @@ namespace bsp {
 #else
         // software double buffer
         HAL_DMA_Abort(huart_->hdmarx);
-        HAL_DMA_Start(huart_->hdmarx, (uint32_t)&huart_->Instance->RDR,
-                      (uint32_t)rx_data_[rx_index_], rx_size_);
+        HAL_DMA_Start(huart_->hdmarx, (uint32_t)&huart_->Instance->RDR, (uint32_t)rx_data_[rx_index_], rx_size_);
 #endif
 
         // exit critical session

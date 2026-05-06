@@ -59,8 +59,7 @@ namespace display {
          * @param channelB the pwm channel for blue
          * @param clock_freq timer clock frequency
          */
-        RGB(TIM_HandleTypeDef* htim, uint8_t channelR, uint8_t channelG, uint8_t channelB,
-            uint32_t clock_freq);
+        RGB(TIM_HandleTypeDef* htim, uint8_t channelR, uint8_t channelG, uint8_t channelB, uint32_t clock_freq);
         /**
          * @brief 显示一个颜色
          * @param aRGB

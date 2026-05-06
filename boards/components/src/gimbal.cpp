@@ -85,8 +85,8 @@ namespace control {
     void Gimbal::UpdateIMU(float pitch, float yaw) {
         float pt_diff = pitch_angle_ - data_.pitch_offset_ - pitch;
         float actual_pitch_angle = pitch_motor_->GetTheta();
-        float new_pitch_diff = wrapping_clip<float>(
-            pt_diff + actual_pitch_angle, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
+        float new_pitch_diff =
+            wrapping_clip<float>(pt_diff + actual_pitch_angle, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
         new_pitch_diff = new_pitch_diff - actual_pitch_angle;
         if (pt_diff != new_pitch_diff) {
             pitch_angle_ = wrap<float>(pitch_angle_ + new_pitch_diff - pt_diff, 0, 2 * PI);
@@ -105,8 +105,8 @@ namespace control {
         float yt_diff = yaw_angle_ - data_.yaw_offset_ - yaw;
         float actual_yaw_angle = yaw_motor_->GetTheta();
         if (!data_.yaw_circle_) {
-            float new_yaw_diff = wrapping_clip<float>(yt_diff + actual_yaw_angle, yaw_lower_limit_,
-                                                      yaw_upper_limit_, 0, 2 * PI);
+            float new_yaw_diff =
+                wrapping_clip<float>(yt_diff + actual_yaw_angle, yaw_lower_limit_, yaw_upper_limit_, 0, 2 * PI);
             new_yaw_diff = new_yaw_diff - actual_yaw_angle;
             if (yt_diff != new_yaw_diff) {
                 yaw_angle_ = wrap<float>(yaw_angle_ + new_yaw_diff - yt_diff, 0, 2 * PI);
@@ -136,13 +136,16 @@ namespace control {
             abs_yaw = -abs_yaw;
         float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
         float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
-        pitch_angle_ = wrapping_clip<float>(clipped_pitch + data_.pitch_offset_, pitch_lower_limit_,
-                                            pitch_upper_limit_, 0, 2 * PI);
+        pitch_angle_ = wrapping_clip<float>(clipped_pitch + data_.pitch_offset_,
+                                            pitch_lower_limit_,
+                                            pitch_upper_limit_,
+                                            0,
+                                            2 * PI);
         if (data_.yaw_circle_) {
             yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
         } else {
-            yaw_angle_ = wrapping_clip<float>(clipped_yaw + data_.yaw_offset_, yaw_lower_limit_,
-                                              yaw_upper_limit_, 0, 2 * PI);
+            yaw_angle_ =
+                wrapping_clip<float>(clipped_yaw + data_.yaw_offset_, yaw_lower_limit_, yaw_upper_limit_, 0, 2 * PI);
         }
     }
 

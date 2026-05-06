@@ -77,10 +77,27 @@ void RM_RTOS_Default_Task(const void* argument) {
             "Z: %d X: %d C: %d V: %d B: %d\r\n"
             "SHIFT: %d CTRL: %d\r\n"
             "Mouse: x: %d y: %d z: %d l: %d r: %d\r\n",
-            keyboard.bit.W, keyboard.bit.A, keyboard.bit.S, keyboard.bit.D, keyboard.bit.Q,
-            keyboard.bit.E, keyboard.bit.R, keyboard.bit.F, keyboard.bit.G, keyboard.bit.Z,
-            keyboard.bit.X, keyboard.bit.C, keyboard.bit.V, keyboard.bit.B, keyboard.bit.SHIFT,
-            keyboard.bit.CTRL, mouse.x, mouse.y, mouse.z, mouse.l, mouse.r);
+            keyboard.bit.W,
+            keyboard.bit.A,
+            keyboard.bit.S,
+            keyboard.bit.D,
+            keyboard.bit.Q,
+            keyboard.bit.E,
+            keyboard.bit.R,
+            keyboard.bit.F,
+            keyboard.bit.G,
+            keyboard.bit.Z,
+            keyboard.bit.X,
+            keyboard.bit.C,
+            keyboard.bit.V,
+            keyboard.bit.B,
+            keyboard.bit.SHIFT,
+            keyboard.bit.CTRL,
+            mouse.x,
+            mouse.y,
+            mouse.z,
+            mouse.l,
+            mouse.r);
         osDelay(1);
     }
 }

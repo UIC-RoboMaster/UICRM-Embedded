@@ -1,15 +1,37 @@
 Language: Cpp
-Standard:  c++17
+Standard: c++20
+
 BasedOnStyle: Google
-IndentWidth:     4
-AccessModifierOffset:  -2
-AllowShortBlocksOnASingleLine: Empty
-AllowShortLoopsOnASingleLine:  false
-AllowShortCaseLabelsOnASingleLine: false
-AllowShortIfStatementsOnASingleLine:   false
-AllowShortFunctionsOnASingleLine:  None
-NamespaceIndentation:  All
-ColumnLimit: 100
-DerivePointerAlignment: false
+
+IndentWidth: 4
+ColumnLimit: 120
+AccessModifierOffset: -2
+
+AlignTrailingComments: true
+AlignAfterOpenBracket: true
+
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+
+PenaltyReturnTypeOnItsOwnLine: 1000
+PenaltyBreakTemplateDeclaration: 0
+PenaltyBreakBeforeFirstCallParameter: 200
+
+SpacesInAngles: false
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+
+BinPackParameters: false
+BinPackArguments: false
+AllowAllArgumentsOnNextLine: false
+
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: false
+
+SortIncludes: false
+
 PointerAlignment: Left
 
+NamespaceIndentation: All

@@ -138,8 +138,7 @@ namespace driver {
          *                    defaults to HAL_Delay implementation
          */
         void SingSong(
-            const BuzzerNoteDelayed* notes,
-            buzzer_delay_t delay_func = [](uint32_t milli) { HAL_Delay(milli); });
+            const BuzzerNoteDelayed* notes, buzzer_delay_t delay_func = [](uint32_t milli) { HAL_Delay(milli); });
 
         /**
          * @brief 停止唱歌

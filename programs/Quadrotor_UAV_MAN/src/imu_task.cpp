@@ -49,20 +49,21 @@ bsp::SPIMaster* spi5_master = nullptr;
 
 void IMU_print() {
     print("IMU data:\r\n");
-    print("gyro: x:%.2f, y:%.2f, z:%.2f\r\n", mpu6500->gyro_[0], mpu6500->gyro_[1],
-          mpu6500->gyro_[2]);
-    print("accel: x:%.2f, y:%.2f, z:%.2f\r\n", mpu6500->accel_[0], mpu6500->accel_[1],
-          mpu6500->accel_[2]);
-    print("INS Angle: yaw:%.3f pitch:%.3f roll:%.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1],
-          ahrs->INS_angle[2]);
+    print("gyro: x:%.2f, y:%.2f, z:%.2f\r\n", mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2]);
+    print("accel: x:%.2f, y:%.2f, z:%.2f\r\n", mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2]);
+    print("INS Angle: yaw:%.3f pitch:%.3f roll:%.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1], ahrs->INS_angle[2]);
 }
 
 /**
  * @brief  收到MPU6500数据后的回调函数，用来更新AHRS和加热器
  */
 void MPU6500ReceiveDone() {
-    ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2], mpu6500->accel_[0],
-                 mpu6500->accel_[1], mpu6500->accel_[2]);
+    ahrs->Update(mpu6500->gyro_[0],
+                 mpu6500->gyro_[1],
+                 mpu6500->gyro_[2],
+                 mpu6500->accel_[0],
+                 mpu6500->accel_[1],
+                 mpu6500->accel_[2]);
     heater->Update(mpu6500->temperature_);
 }
 

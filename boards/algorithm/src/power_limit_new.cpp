@@ -33,16 +33,16 @@ namespace control {
         }
     }
 
-    int16_t NewPowerLimit::PowerModel(power_param_t param, float angular_velocity,
-                                      int16_t turn_current) {
+    int16_t NewPowerLimit::PowerModel(power_param_t param, float angular_velocity, int16_t turn_current) {
         // I = k1ωτ + k2ω^2 + k3τ^2 + k4
-        return param.k1 * angular_velocity * turn_current +
-               param.k2 * angular_velocity * angular_velocity +
+        return param.k1 * angular_velocity * turn_current + param.k2 * angular_velocity * angular_velocity +
                param.k3 * turn_current * turn_current + param.k4;
     }
 
-    int16_t NewPowerLimit::ReversePowerModel(power_param_t param, float angular_velocity,
-                                             int16_t turn_current, int16_t target_current) {
+    int16_t NewPowerLimit::ReversePowerModel(power_param_t param,
+                                             float angular_velocity,
+                                             int16_t turn_current,
+                                             int16_t target_current) {
         // (k3)τ^2 + (k1ω)τ + (k2ω^2 + k4 - I) = 0
         float a = param.k3;
         float b = param.k1 * angular_velocity;
@@ -57,8 +57,7 @@ namespace control {
         }
     }
 
-    void NewPowerLimit::LimitPower(int16_t* turn_current, float* angular_velocity,
-                                   uint16_t max_power) {
+    void NewPowerLimit::LimitPower(int16_t* turn_current, float* angular_velocity, uint16_t max_power) {
         int16_t motor_input_current[4];
         int16_t forward_current = 0;
         int16_t reverse_current = 0;
@@ -78,7 +77,9 @@ namespace control {
         float forward_ratio = 1.0 * (max_power - reverse_current) / forward_current;
         for (int i = 0; i < 4; i++) {
             if (motor_input_current[i] > 0)
-                turn_current[i] = ReversePowerModel(params[i], angular_velocity[i], turn_current[i],
+                turn_current[i] = ReversePowerModel(params[i],
+                                                    angular_velocity[i],
+                                                    turn_current[i],
                                                     forward_ratio * motor_input_current[i]);
         }
     }

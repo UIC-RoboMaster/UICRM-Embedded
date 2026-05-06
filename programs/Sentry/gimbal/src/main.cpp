@@ -150,21 +150,24 @@ void RM_RTOS_Default_Task(const void* arg) {
             "TWL: %d "
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->swl, dbus->swr, dbus->ch4,
+            dbus->ch0,
+            dbus->ch1,
+            dbus->ch2,
+            dbus->ch3,
+            dbus->swl,
+            dbus->swr,
+            dbus->ch4,
             dbus->GetLastUptime());
 
         print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
         print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
         print("Chassis Power: %.3f\r\n", referee->power_heat_data.chassis_power);
         print("\r\n");
-        print("Shooter Cooling Heat: %hu\r\n",
-              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        print("INS Angle: %.3f %.3f %.3f\r\n", imu->INS_angle[0], imu->INS_angle[1],
-              imu->INS_angle[2]);
-        print("Vision Target: %.3f %.3f", minipc->target_angle.target_pitch,
-              minipc->target_angle.target_yaw);
+        print("INS Angle: %.3f %.3f %.3f\r\n", imu->INS_angle[0], imu->INS_angle[1], imu->INS_angle[2]);
+        print("Vision Target: %.3f %.3f", minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
         osDelay(100);
     }
 }

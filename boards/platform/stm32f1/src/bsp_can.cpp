@@ -71,7 +71,8 @@ namespace bsp {
         RM_ASSERT_FALSE(HandleExists(hcan), "Repeated CAN initialization");
         ConfigureFilter(is_master);
         // activate rx interrupt
-        RM_ASSERT_HAL_OK(HAL_CAN_RegisterCallback(hcan, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
+        RM_ASSERT_HAL_OK(HAL_CAN_RegisterCallback(hcan,
+                                                  HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
                                                   RxFIFO0MessagePendingCallback),
                          "Cannot register CAN rx callback");
         RM_ASSERT_HAL_OK(HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING),
@@ -96,8 +97,7 @@ namespace bsp {
         return 0;
     }
 
-    int CAN::RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback,
-                                      void* args) {
+    int CAN::RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback, void* args) {
         if (ext_callback_count_ >= MAX_CAN_DEVICES)
             return -1;
 
@@ -234,8 +234,7 @@ namespace bsp {
         else
             CAN_FilterConfigStructure.FilterBank = 14;  // Slave CAN get filter 14-27
 
-        RM_EXPECT_HAL_OK(HAL_CAN_ConfigFilter(hcan_, &CAN_FilterConfigStructure),
-                         "CAN filter configuration failed.");
+        RM_EXPECT_HAL_OK(HAL_CAN_ConfigFilter(hcan_, &CAN_FilterConfigStructure), "CAN filter configuration failed.");
     }
 
 } /* namespace bsp */

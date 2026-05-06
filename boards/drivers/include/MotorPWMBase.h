@@ -56,8 +56,11 @@ namespace driver {
          * @note M3508 have idle_throttle about 1500, snail have idle_throttle about
          * 1100
          */
-        MotorPWMBase(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,
-                     uint32_t output_freq, uint32_t idle_throttle);
+        MotorPWMBase(TIM_HandleTypeDef* htim,
+                     uint8_t channel,
+                     uint32_t clock_freq,
+                     uint32_t output_freq,
+                     uint32_t idle_throttle);
 
         /**
          * @brief 设置输出
@@ -94,8 +97,11 @@ namespace driver {
      */
     class Motor2305 : public MotorPWMBase {
       public:
-        Motor2305(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq,
-                  uint32_t output_freq, uint32_t idle_throttle);
+        Motor2305(TIM_HandleTypeDef* htim,
+                  uint8_t channel,
+                  uint32_t clock_freq,
+                  uint32_t output_freq,
+                  uint32_t idle_throttle);
         /* override base implementation with max current protection */
         void SetOutput(int16_t val) override final;
     };
@@ -109,8 +115,11 @@ namespace driver {
 
     class ServoMG995 : public MotorPWMBase {
       public:
-        ServoMG995(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq = 1000000,
-                   uint32_t output_freq = 50, uint32_t idle_throttle = 0);
+        ServoMG995(TIM_HandleTypeDef* htim,
+                   uint8_t channel,
+                   uint32_t clock_freq = 1000000,
+                   uint32_t output_freq = 50,
+                   uint32_t idle_throttle = 0);
         /* override base implementation with max current protection */
         void SetOutput(int16_t angle) override final;
     };
@@ -119,10 +128,13 @@ namespace driver {
      * @brief 普通 Lesar PWM标准激光
      */
 
-    class Lesar : public MotorPWMBase {
+    class Laser : public MotorPWMBase {
       public:
-        Lesar(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq = 1000000,
-              uint32_t output_freq = 50, uint32_t idle_throttle = 0);
+        Laser(TIM_HandleTypeDef* htim,
+              uint8_t channel,
+              uint32_t clock_freq = 1000000,
+              uint32_t output_freq = 50,
+              uint32_t idle_throttle = 0);
         /* override base implementation with max current protection */
         void SetOutput(int16_t brightness) override final;
     };

@@ -47,7 +47,7 @@ void RM_RTOS_Init(void) {
     init_buzzer();
     init_referee();  // todo
                      // referee线程由父类UARTProtocal构造函数创建，考虑转移到RM_RTOS_Threads_Init
-    init_minipc();  // todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
+    init_minipc();   // todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
     init_remote();
     init_shoot();
     init_gimbal();
@@ -111,26 +111,36 @@ void RM_RTOS_Default_Task(const void* arg) {
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr);
+            dbus->ch0,
+            dbus->ch1,
+            dbus->ch2,
+            dbus->ch3,
+            dbus->ch4,
+            dbus->swl,
+            dbus->swr);
         print("\r\n");
 
         // Chassis info
         print("Chassis speed %.3f %.3f %.3f\r\n", chassis_vx, chassis_vy, chassis_vt);
-        print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
+        print("Power %.3fV %.3fA %.3fW\r\n",
+              referee->power_heat_data.chassis_volt / 1000.0,
               referee->power_heat_data.chassis_current / 1000.0,
               referee->power_heat_data.chassis_power);
-        print("Navigation Target X%.3f Y%.3f Spin%.3f\r\n", minipc->robot_move.target_x,
-              minipc->robot_move.target_y, minipc->robot_move.target_turn);
+        print("Navigation Target X%.3f Y%.3f Spin%.3f\r\n",
+              minipc->robot_move.target_x,
+              minipc->robot_move.target_y,
+              minipc->robot_move.target_turn);
         print("\r\n");
 
         // Gimbal info
         print("Gimbal target P%.3f Y%.3f\r\n",
               gimbal->getPitchTarget() - gimbal_param->pitch_offset_ - (2 * PI),
               gimbal->getYawTarget() - gimbal_param->yaw_offset_ - (2 * PI));
-        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", -imu->INS_angle[1], imu->INS_angle[0],
-              imu->INS_angle[2]);
-        print("Vision Target: P%.3f Y%.3f Acc[%d]\r\n", minipc->target_angle.target_pitch,
-              minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
+        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", -imu->INS_angle[1], imu->INS_angle[0], imu->INS_angle[2]);
+        print("Vision Target: P%.3f Y%.3f Acc[%d]\r\n",
+              minipc->target_angle.target_pitch,
+              minipc->target_angle.target_yaw,
+              minipc->target_angle.accuracy);
         // auto it = time_queue.begin();
         // if (std::find(time_queue.begin(), time_queue.end(), minipc->target_angle.time_stamp) !=
         // time_queue.end())
@@ -138,8 +148,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
 
         // Shoot info
-        print("Shooter Cooling Heat: %hu\r\n",
-              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
         print_enabled("MiniPC Shoot CMD", minipc->target_angle.shoot_cmd);

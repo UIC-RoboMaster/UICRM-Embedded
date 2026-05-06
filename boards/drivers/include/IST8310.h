@@ -38,11 +38,11 @@
 // the first column:the registers of IST8310.
 // the second column: the value to be writed to the registers.
 // the third column: return error value.
-static const uint8_t ist8310_write_reg_data_error[IST8310_WRITE_REG_NUM][3] = {
-    {0x0B, 0x08, 0x01},   // enalbe interrupt  and low pin polarity.
-    {0x41, 0x09, 0x02},   // average 2 times.
-    {0x42, 0xC0, 0x03},   // must be 0xC0.
-    {0x0A, 0x0B, 0x04}};  // 200Hz output rate.
+static const uint8_t ist8310_write_reg_data_error[IST8310_WRITE_REG_NUM][3] =
+    {{0x0B, 0x08, 0x01},   // enalbe interrupt  and low pin polarity.
+     {0x41, 0x09, 0x02},   // average 2 times.
+     {0x42, 0xC0, 0x03},   // must be 0xC0.
+     {0x0A, 0x0B, 0x04}};  // 200Hz output rate.
 
 #define IST8310_IIC_ADDRESS 0x0E  // the I2C address of IST8310
 

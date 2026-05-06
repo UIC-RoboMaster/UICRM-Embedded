@@ -178,8 +178,7 @@ void remoteTask(void* arg) {
             // 射出单颗子弹
             if (shoot_switch) {
                 shoot_switch = false;
-                if (shoot_load_mode == SHOOT_MODE_PREPARED &&
-                    shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+                if (shoot_load_mode == SHOOT_MODE_PREPARED && shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
                     // 摩擦轮与拔弹系统准备就绪则发射子弹
                     shoot_load_mode = SHOOT_MODE_SINGLE;
                 }
@@ -188,8 +187,7 @@ void remoteTask(void* arg) {
             if (shoot_burst_switch) {
                 if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
                     // 必须要在准备就绪或者发出单发子弹的情况下才能发射连发子弹
-                    if (shoot_load_mode == SHOOT_MODE_PREPARED ||
-                        shoot_load_mode == SHOOT_MODE_SINGLE) {
+                    if (shoot_load_mode == SHOOT_MODE_PREPARED || shoot_load_mode == SHOOT_MODE_SINGLE) {
                         shoot_load_mode = SHOOT_MODE_BURST;
                         shoot_burst_switch = false;
                     }

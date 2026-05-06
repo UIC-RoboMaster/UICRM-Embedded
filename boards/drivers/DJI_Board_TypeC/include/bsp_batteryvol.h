@@ -27,8 +27,7 @@
 namespace bsp {
     class BatteryVol {
       public:
-        BatteryVol(ADC_HandleTypeDef* hadc, uint32_t channel, uint32_t rank,
-                   uint32_t sampling_time);
+        BatteryVol(ADC_HandleTypeDef* hadc, uint32_t channel, uint32_t rank, uint32_t sampling_time);
         void InitVREF();
         void Start();
         void Stop();

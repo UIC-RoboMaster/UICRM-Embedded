@@ -35,8 +35,12 @@ namespace imu {
             ;
     }
 
-    BMI088::BMI088(bsp::SPIMaster* spi_master, bsp::GPIO* CS_ACCEL, bsp::GPIO* CS_GYRO,
-                   bsp::GPIT* INT_ACCEL, bsp::GPIT* INT_GYRO, bool is_DMA) {
+    BMI088::BMI088(bsp::SPIMaster* spi_master,
+                   bsp::GPIO* CS_ACCEL,
+                   bsp::GPIO* CS_GYRO,
+                   bsp::GPIT* INT_ACCEL,
+                   bsp::GPIT* INT_GYRO,
+                   bool is_DMA) {
         spi_master_ = spi_master;
         spi_device_accel_ = spi_master_->NewDevice(CS_ACCEL);
         spi_device_gyro_ = spi_master_->NewDevice(CS_GYRO);
@@ -123,27 +127,25 @@ namespace imu {
     static float BMI088_ACCEL_SEN = BMI088_ACCEL_3G_SEN;
     static float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
 
-    static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] = {
-        {BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
-        {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR},
-        {BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set,
-         BMI088_ACC_CONF_ERROR},
-        {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
-        {BMI088_INT1_IO_CTRL,
-         BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_LOW,
-         BMI088_INT1_IO_CTRL_ERROR},
-        {BMI088_INT_MAP_DATA, BMI088_ACC_INT1_DRDY_INTERRUPT, BMI088_INT_MAP_DATA_ERROR}};
+    static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] =
+        {{BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
+         {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR},
+         {BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set, BMI088_ACC_CONF_ERROR},
+         {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
+         {BMI088_INT1_IO_CTRL,
+          BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_LOW,
+          BMI088_INT1_IO_CTRL_ERROR},
+         {BMI088_INT_MAP_DATA, BMI088_ACC_INT1_DRDY_INTERRUPT, BMI088_INT_MAP_DATA_ERROR}};
 
-    static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] = {
-        {BMI088_GYRO_RANGE, BMI088_GYRO_2000, BMI088_GYRO_RANGE_ERROR},
-        {BMI088_GYRO_BANDWIDTH, BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set,
-         BMI088_GYRO_BANDWIDTH_ERROR},
-        {BMI088_GYRO_LPM1, BMI088_GYRO_NORMAL_MODE, BMI088_GYRO_LPM1_ERROR},
-        {BMI088_GYRO_CTRL, BMI088_DRDY_ON, BMI088_GYRO_CTRL_ERROR},
-        {BMI088_GYRO_INT3_INT4_IO_CONF, BMI088_GYRO_INT3_GPIO_PP | BMI088_GYRO_INT3_GPIO_LOW,
-         BMI088_GYRO_INT3_INT4_IO_CONF_ERROR},
-        {BMI088_GYRO_INT3_INT4_IO_MAP, BMI088_GYRO_DRDY_IO_INT3,
-         BMI088_GYRO_INT3_INT4_IO_MAP_ERROR}};
+    static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] =
+        {{BMI088_GYRO_RANGE, BMI088_GYRO_2000, BMI088_GYRO_RANGE_ERROR},
+         {BMI088_GYRO_BANDWIDTH, BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set, BMI088_GYRO_BANDWIDTH_ERROR},
+         {BMI088_GYRO_LPM1, BMI088_GYRO_NORMAL_MODE, BMI088_GYRO_LPM1_ERROR},
+         {BMI088_GYRO_CTRL, BMI088_DRDY_ON, BMI088_GYRO_CTRL_ERROR},
+         {BMI088_GYRO_INT3_INT4_IO_CONF,
+          BMI088_GYRO_INT3_GPIO_PP | BMI088_GYRO_INT3_GPIO_LOW,
+          BMI088_GYRO_INT3_INT4_IO_CONF_ERROR},
+         {BMI088_GYRO_INT3_INT4_IO_MAP, BMI088_GYRO_DRDY_IO_INT3, BMI088_GYRO_INT3_INT4_IO_MAP_ERROR}};
 
     uint8_t BMI088::Init() {
         uint8_t error = BMI088_NO_ERROR;
@@ -348,7 +350,9 @@ namespace imu {
             gyro_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
             gyro_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
             spi_device_gyro_->PrepareTransmit();
-            spi_master_->TransmitReceive(spi_device_gyro_, gyro_dma_tx_buf, gyro_dma_rx_buf,
+            spi_master_->TransmitReceive(spi_device_gyro_,
+                                         gyro_dma_tx_buf,
+                                         gyro_dma_rx_buf,
                                          BMI088_SPI_DMA_GYRO_LENGHT);
             return;
         }
@@ -360,19 +364,22 @@ namespace imu {
             accel_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
 
             spi_device_accel_->PrepareTransmit();
-            spi_master_->TransmitReceive(spi_device_accel_, accel_dma_tx_buf, accel_dma_rx_buf,
+            spi_master_->TransmitReceive(spi_device_accel_,
+                                         accel_dma_tx_buf,
+                                         accel_dma_rx_buf,
                                          BMI088_SPI_DMA_ACCEL_LENGHT);
             return;
         }
         if ((accel_temp_update_flag & (1 << BMI088_IMU_DR_SHFITS)) && !spi_master_->IsBusy() &&
-            !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) &&
-            !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
+            !(gyro_update_flag & (1 << BMI088_IMU_SPI_SHFITS)) && !(accel_update_flag & (1 << BMI088_IMU_SPI_SHFITS))) {
             accel_temp_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
             accel_temp_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
 
             spi_device_accel_->PrepareTransmit();
-            spi_master_->TransmitReceive(spi_device_accel_, accel_temp_dma_tx_buf,
-                                         accel_temp_dma_rx_buf, BMI088_SPI_DMA_ACCEL_TEMP_LENGHT);
+            spi_master_->TransmitReceive(spi_device_accel_,
+                                         accel_temp_dma_tx_buf,
+                                         accel_temp_dma_rx_buf,
+                                         BMI088_SPI_DMA_ACCEL_TEMP_LENGHT);
             return;
         }
     }

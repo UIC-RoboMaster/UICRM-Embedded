@@ -46,11 +46,11 @@
 // the first column:the registers of IST8310.
 // the second column: the value to be writed to the registers.
 // the third column: return error value.
-static const uint8_t ist8310_write_reg_data_error[IST8310_WRITE_REG_NUM][3] = {
-    {0x0B, 0x08, 0x01},   // enalbe interrupt  and low pin polarity.
-    {0x41, 0x09, 0x02},   // average 2 times.
-    {0x42, 0xC0, 0x03},   // must be 0xC0.
-    {0x0A, 0x0B, 0x04}};  // 200Hz output rate.
+static const uint8_t ist8310_write_reg_data_error[IST8310_WRITE_REG_NUM][3] =
+    {{0x0B, 0x08, 0x01},   // enalbe interrupt  and low pin polarity.
+     {0x41, 0x09, 0x02},   // average 2 times.
+     {0x42, 0xC0, 0x03},   // must be 0xC0.
+     {0x0A, 0x0B, 0x04}};  // 200Hz output rate.
 
 #define IST8310_IIC_ADDRESS 0x0E  // the I2C address of IST8310
 
@@ -185,8 +185,8 @@ namespace bsp {
         Init();
     }
 
-    IST8310::IST8310(I2C_HandleTypeDef* hi2c, uint16_t int_pin, GPIO_TypeDef* rst_group,
-                     uint16_t rst_pin, IMU_typeC* imu)
+    IST8310::IST8310(
+        I2C_HandleTypeDef* hi2c, uint16_t int_pin, GPIO_TypeDef* rst_group, uint16_t rst_pin, IMU_typeC* imu)
         : GPIT(int_pin) {
         hi2c_ = hi2c;
         rst_group_ = rst_group;
@@ -295,8 +295,7 @@ namespace bsp {
     }
 
     void IST8310::ist8310_IIC_write_muli_reg(uint8_t reg, uint8_t* data, uint8_t len) {
-        HAL_I2C_Mem_Write(hi2c_, IST8310_IIC_ADDRESS << 1, reg, I2C_MEMADD_SIZE_8BIT, data, len,
-                          10);
+        HAL_I2C_Mem_Write(hi2c_, IST8310_IIC_ADDRESS << 1, reg, I2C_MEMADD_SIZE_8BIT, data, len, 10);
     }
 
     BMI088::BMI088(BMI088_init_t init) {
@@ -308,8 +307,11 @@ namespace bsp {
         Init();
     }
 
-    BMI088::BMI088(SPI_HandleTypeDef* hspi, GPIO_TypeDef* CS_ACCEL_Port, uint16_t CS_ACCEL_Pin,
-                   GPIO_TypeDef* CS_GYRO_Port, uint16_t CS_GYRO_Pin) {
+    BMI088::BMI088(SPI_HandleTypeDef* hspi,
+                   GPIO_TypeDef* CS_ACCEL_Port,
+                   uint16_t CS_ACCEL_Pin,
+                   GPIO_TypeDef* CS_GYRO_Port,
+                   uint16_t CS_GYRO_Pin) {
         hspi_ = hspi;
         CS1_ACCEL_GPIO_Port_ = CS_ACCEL_Port;
         CS1_ACCEL_Pin_ = CS_ACCEL_Pin;
@@ -405,27 +407,25 @@ namespace bsp {
     static float BMI088_ACCEL_SEN = BMI088_ACCEL_3G_SEN;
     static float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
 
-    static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] = {
-        {BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
-        {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR},
-        {BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set,
-         BMI088_ACC_CONF_ERROR},
-        {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
-        {BMI088_INT1_IO_CTRL,
-         BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_LOW,
-         BMI088_INT1_IO_CTRL_ERROR},
-        {BMI088_INT_MAP_DATA, BMI088_ACC_INT1_DRDY_INTERRUPT, BMI088_INT_MAP_DATA_ERROR}};
+    static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] =
+        {{BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
+         {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR},
+         {BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set, BMI088_ACC_CONF_ERROR},
+         {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
+         {BMI088_INT1_IO_CTRL,
+          BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_LOW,
+          BMI088_INT1_IO_CTRL_ERROR},
+         {BMI088_INT_MAP_DATA, BMI088_ACC_INT1_DRDY_INTERRUPT, BMI088_INT_MAP_DATA_ERROR}};
 
-    static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] = {
-        {BMI088_GYRO_RANGE, BMI088_GYRO_2000, BMI088_GYRO_RANGE_ERROR},
-        {BMI088_GYRO_BANDWIDTH, BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set,
-         BMI088_GYRO_BANDWIDTH_ERROR},
-        {BMI088_GYRO_LPM1, BMI088_GYRO_NORMAL_MODE, BMI088_GYRO_LPM1_ERROR},
-        {BMI088_GYRO_CTRL, BMI088_DRDY_ON, BMI088_GYRO_CTRL_ERROR},
-        {BMI088_GYRO_INT3_INT4_IO_CONF, BMI088_GYRO_INT3_GPIO_PP | BMI088_GYRO_INT3_GPIO_LOW,
-         BMI088_GYRO_INT3_INT4_IO_CONF_ERROR},
-        {BMI088_GYRO_INT3_INT4_IO_MAP, BMI088_GYRO_DRDY_IO_INT3,
-         BMI088_GYRO_INT3_INT4_IO_MAP_ERROR}};
+    static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] =
+        {{BMI088_GYRO_RANGE, BMI088_GYRO_2000, BMI088_GYRO_RANGE_ERROR},
+         {BMI088_GYRO_BANDWIDTH, BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set, BMI088_GYRO_BANDWIDTH_ERROR},
+         {BMI088_GYRO_LPM1, BMI088_GYRO_NORMAL_MODE, BMI088_GYRO_LPM1_ERROR},
+         {BMI088_GYRO_CTRL, BMI088_DRDY_ON, BMI088_GYRO_CTRL_ERROR},
+         {BMI088_GYRO_INT3_INT4_IO_CONF,
+          BMI088_GYRO_INT3_GPIO_PP | BMI088_GYRO_INT3_GPIO_LOW,
+          BMI088_GYRO_INT3_INT4_IO_CONF_ERROR},
+         {BMI088_GYRO_INT3_INT4_IO_MAP, BMI088_GYRO_DRDY_IO_INT3, BMI088_GYRO_INT3_INT4_IO_MAP_ERROR}};
 
     uint8_t BMI088::Init() {
         uint8_t error = BMI088_NO_ERROR;
@@ -632,14 +632,14 @@ namespace bsp {
     void IMU_typeC::Update() {
         if (gyro_update_flag & (1 << IMU_NOTIFY_SHFITS)) {
             gyro_update_flag &= ~(1 << IMU_NOTIFY_SHFITS);
-            BMI088_.gyro_read_over(gyro_dma_rx_buf + BMI088_GYRO_RX_BUF_DATA_OFFSET,
-                                   BMI088_real_data_.gyro);
+            BMI088_.gyro_read_over(gyro_dma_rx_buf + BMI088_GYRO_RX_BUF_DATA_OFFSET, BMI088_real_data_.gyro);
         }
 
         if (accel_update_flag & (1 << IMU_UPDATE_SHFITS)) {
             accel_update_flag &= ~(1 << IMU_UPDATE_SHFITS);
             BMI088_.accel_read_over(accel_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
-                                    BMI088_real_data_.accel, &BMI088_real_data_.time);
+                                    BMI088_real_data_.accel,
+                                    &BMI088_real_data_.time);
         }
 
         if (accel_temp_update_flag & (1 << IMU_UPDATE_SHFITS)) {
@@ -670,23 +670,21 @@ namespace bsp {
             }
             accel_fliter_1[0] = accel_fliter_2[0];
             accel_fliter_2[0] = accel_fliter_3[0];
-            accel_fliter_3[0] = accel_fliter_2[0] * fliter_num[0] +
-                                accel_fliter_1[0] * fliter_num[1] +
+            accel_fliter_3[0] = accel_fliter_2[0] * fliter_num[0] + accel_fliter_1[0] * fliter_num[1] +
                                 BMI088_real_data_.accel[0] * fliter_num[2];
             accel_fliter_1[1] = accel_fliter_2[1];
             accel_fliter_2[1] = accel_fliter_3[1];
-            accel_fliter_3[1] = accel_fliter_2[1] * fliter_num[0] +
-                                accel_fliter_1[1] * fliter_num[1] +
+            accel_fliter_3[1] = accel_fliter_2[1] * fliter_num[0] + accel_fliter_1[1] * fliter_num[1] +
                                 BMI088_real_data_.accel[1] * fliter_num[2];
             accel_fliter_1[2] = accel_fliter_2[2];
             accel_fliter_2[2] = accel_fliter_3[2];
-            accel_fliter_3[2] = accel_fliter_2[2] * fliter_num[0] +
-                                accel_fliter_1[2] * fliter_num[1] +
+            accel_fliter_3[2] = accel_fliter_2[2] * fliter_num[0] + accel_fliter_1[2] * fliter_num[1] +
                                 BMI088_real_data_.accel[2] * fliter_num[2];
-            AHRS_update(INS_quat, 0.001f, BMI088_real_data_.gyro, BMI088_real_data_.accel,
-                        IST8310_real_data_.mag);
-            GetAngle(INS_quat, INS_angle + INS_YAW_ADDRESS_OFFSET,
-                     INS_angle + INS_PITCH_ADDRESS_OFFSET, INS_angle + INS_ROLL_ADDRESS_OFFSET);
+            AHRS_update(INS_quat, 0.001f, BMI088_real_data_.gyro, BMI088_real_data_.accel, IST8310_real_data_.mag);
+            GetAngle(INS_quat,
+                     INS_angle + INS_YAW_ADDRESS_OFFSET,
+                     INS_angle + INS_PITCH_ADDRESS_OFFSET,
+                     INS_angle + INS_ROLL_ADDRESS_OFFSET);
         }
     }
 
@@ -709,8 +707,7 @@ namespace bsp {
         UNUSED(time);
 
         if (useMag_) {
-            MahonyAHRSupdate(quat, gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2], mag[0],
-                             mag[1], mag[2]);
+            MahonyAHRSupdate(quat, gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2], mag[0], mag[1], mag[2]);
         } else {
             MahonyAHRSupdateIMU(quat, gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2]);
         }
@@ -726,11 +723,9 @@ namespace bsp {
         roll:   atan2( 2 * (q_w * q_x + q_y * q_z) , 1 - 2 * (q_x^2 + q_y^2) )
     */
     void IMU_typeC::GetAngle(float* q, float* yaw, float* pitch, float* roll) {
-        *yaw =
-            atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
+        *yaw = atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]), 2.0f * (q[0] * q[0] + q[1] * q[1]) - 1.0f);
         *pitch = asinf(-2.0f * (q[1] * q[3] - q[0] * q[2]));
-        *roll =
-            atan2f(2.0f * (q[0] * q[1] + q[2] * q[3]), 2.0f * (q[0] * q[0] + q[3] * q[3]) - 1.0f);
+        *roll = atan2f(2.0f * (q[0] * q[1] + q[2] * q[3]), 2.0f * (q[0] * q[0] + q[3] * q[3]) - 1.0f);
     }
 
     float IMU_typeC::TempControl(float real_temp) {
@@ -813,50 +808,38 @@ namespace bsp {
         UBaseType_t uxSavedInterruptStatus;
         uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
 
-        if ((gyro_update_flag & (1 << IMU_DR_SHFITS)) &&
-            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-            !(accel_update_flag & (1 << IMU_SPI_SHFITS)) &&
+        if ((gyro_update_flag & (1 << IMU_DR_SHFITS)) && !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
+            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) && !(accel_update_flag & (1 << IMU_SPI_SHFITS)) &&
             !(accel_temp_update_flag & (1 << IMU_SPI_SHFITS))) {
             gyro_update_flag &= ~(1 << IMU_DR_SHFITS);
             gyro_update_flag |= (1 << IMU_SPI_SHFITS);
 
-            HAL_GPIO_WritePin(BMI088_param_.CS_GYRO_Port, BMI088_param_.CS_GYRO_Pin,
-                              GPIO_PIN_RESET);
-            SPI_DMA_enable((uint32_t)gyro_dma_tx_buf, (uint32_t)gyro_dma_rx_buf,
-                           SPI_DMA_GYRO_LENGHT);
+            HAL_GPIO_WritePin(BMI088_param_.CS_GYRO_Port, BMI088_param_.CS_GYRO_Pin, GPIO_PIN_RESET);
+            SPI_DMA_enable((uint32_t)gyro_dma_tx_buf, (uint32_t)gyro_dma_rx_buf, SPI_DMA_GYRO_LENGHT);
             taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
             return;
         }
 
-        if ((accel_update_flag & (1 << IMU_DR_SHFITS)) &&
-            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-            !(gyro_update_flag & (1 << IMU_SPI_SHFITS)) &&
+        if ((accel_update_flag & (1 << IMU_DR_SHFITS)) && !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
+            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) && !(gyro_update_flag & (1 << IMU_SPI_SHFITS)) &&
             !(accel_temp_update_flag & (1 << IMU_SPI_SHFITS))) {
             accel_update_flag &= ~(1 << IMU_DR_SHFITS);
             accel_update_flag |= (1 << IMU_SPI_SHFITS);
 
-            HAL_GPIO_WritePin(BMI088_param_.CS_ACCEL_Port, BMI088_param_.CS_ACCEL_Pin,
-                              GPIO_PIN_RESET);
-            SPI_DMA_enable((uint32_t)accel_dma_tx_buf, (uint32_t)accel_dma_rx_buf,
-                           SPI_DMA_ACCEL_LENGHT);
+            HAL_GPIO_WritePin(BMI088_param_.CS_ACCEL_Port, BMI088_param_.CS_ACCEL_Pin, GPIO_PIN_RESET);
+            SPI_DMA_enable((uint32_t)accel_dma_tx_buf, (uint32_t)accel_dma_rx_buf, SPI_DMA_ACCEL_LENGHT);
             taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
             return;
         }
 
-        if ((accel_temp_update_flag & (1 << IMU_DR_SHFITS)) &&
-            !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
-            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) &&
-            !(gyro_update_flag & (1 << IMU_SPI_SHFITS)) &&
+        if ((accel_temp_update_flag & (1 << IMU_DR_SHFITS)) && !(hspi1.hdmatx->Instance->CR & DMA_SxCR_EN) &&
+            !(hspi1.hdmarx->Instance->CR & DMA_SxCR_EN) && !(gyro_update_flag & (1 << IMU_SPI_SHFITS)) &&
             !(accel_update_flag & (1 << IMU_SPI_SHFITS))) {
             accel_temp_update_flag &= ~(1 << IMU_DR_SHFITS);
             accel_temp_update_flag |= (1 << IMU_SPI_SHFITS);
 
-            HAL_GPIO_WritePin(BMI088_param_.CS_ACCEL_Port, BMI088_param_.CS_ACCEL_Pin,
-                              GPIO_PIN_RESET);
-            SPI_DMA_enable((uint32_t)accel_temp_dma_tx_buf, (uint32_t)accel_temp_dma_rx_buf,
-                           SPI_DMA_ACCEL_TEMP_LENGHT);
+            HAL_GPIO_WritePin(BMI088_param_.CS_ACCEL_Port, BMI088_param_.CS_ACCEL_Pin, GPIO_PIN_RESET);
+            SPI_DMA_enable((uint32_t)accel_temp_dma_tx_buf, (uint32_t)accel_temp_dma_rx_buf, SPI_DMA_ACCEL_TEMP_LENGHT);
             taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
             return;
         }
@@ -875,22 +858,19 @@ namespace bsp {
             if (imu->gyro_update_flag & (1 << IMU_SPI_SHFITS)) {
                 imu->gyro_update_flag &= ~(1 << IMU_SPI_SHFITS);
                 imu->gyro_update_flag |= (1 << IMU_UPDATE_SHFITS);
-                HAL_GPIO_WritePin(imu->BMI088_param_.CS_GYRO_Port, imu->BMI088_param_.CS_GYRO_Pin,
-                                  GPIO_PIN_SET);
+                HAL_GPIO_WritePin(imu->BMI088_param_.CS_GYRO_Port, imu->BMI088_param_.CS_GYRO_Pin, GPIO_PIN_SET);
             }
             // accel read over
             if (imu->accel_update_flag & (1 << IMU_SPI_SHFITS)) {
                 imu->accel_update_flag &= ~(1 << IMU_SPI_SHFITS);
                 imu->accel_update_flag |= (1 << IMU_UPDATE_SHFITS);
-                HAL_GPIO_WritePin(imu->BMI088_param_.CS_ACCEL_Port, imu->BMI088_param_.CS_ACCEL_Pin,
-                                  GPIO_PIN_SET);
+                HAL_GPIO_WritePin(imu->BMI088_param_.CS_ACCEL_Port, imu->BMI088_param_.CS_ACCEL_Pin, GPIO_PIN_SET);
             }
             // temperature read over
             if (imu->accel_temp_update_flag & (1 << IMU_SPI_SHFITS)) {
                 imu->accel_temp_update_flag &= ~(1 << IMU_SPI_SHFITS);
                 imu->accel_temp_update_flag |= (1 << IMU_UPDATE_SHFITS);
-                HAL_GPIO_WritePin(imu->BMI088_param_.CS_ACCEL_Port, imu->BMI088_param_.CS_ACCEL_Pin,
-                                  GPIO_PIN_SET);
+                HAL_GPIO_WritePin(imu->BMI088_param_.CS_ACCEL_Port, imu->BMI088_param_.CS_ACCEL_Pin, GPIO_PIN_SET);
             }
 
             imu->imu_cmd_spi_dma();

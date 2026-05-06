@@ -106,13 +106,15 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     imu->Calibrate();
     while (true) {
-        sprintf(buffer, "# %.2f s, IMU %s", HAL_GetTick() / 1000.0,
-                imu->DataReady() ? "Ready" : "Not Ready");
+        sprintf(buffer, "# %.2f s, IMU %s", HAL_GetTick() / 1000.0, imu->DataReady() ? "Ready" : "Not Ready");
         oled->ShowString(0, 0, (unsigned char*)buffer);
         sprintf(buffer, "Temp: %.2f", imu->Temp);
         oled->ShowString(1, 0, (unsigned char*)buffer);
-        sprintf(buffer, "EAngles: %.2f, %.2f, %.2f", imu->INS_angle[0] / PI * 180,
-                imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
+        sprintf(buffer,
+                "EAngles: %.2f, %.2f, %.2f",
+                imu->INS_angle[0] / PI * 180,
+                imu->INS_angle[1] / PI * 180,
+                imu->INS_angle[2] / PI * 180);
         oled->ShowString(2, 0, (unsigned char*)buffer);
         oled->RefreshGram();
         osDelay(50);

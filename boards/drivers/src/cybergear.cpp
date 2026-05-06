@@ -77,8 +77,7 @@ namespace driver {
                 case 2:
                     // read frame
                     mit_theta_ = uint_to_float((data[0] << 8) | data[1], -4 * PI, 4 * PI, 16);
-                    theta_ = wrapc<float>(
-                        uint_to_float((data[0] << 8) | data[1], -4 * PI, 4 * PI, 16), 0, 2 * PI);
+                    theta_ = wrapc<float>(uint_to_float((data[0] << 8) | data[1], -4 * PI, 4 * PI, 16), 0, 2 * PI);
                     omega_ = uint_to_float((data[2] << 8) | data[3], -30, 30, 16);
                     torque_ = uint_to_float((data[4] << 8) | data[5], -12, 12, 16);
                     temperature_ = ((data[6] << 8) | data[7]) * 0.1;

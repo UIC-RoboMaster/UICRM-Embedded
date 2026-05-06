@@ -55,7 +55,9 @@ namespace control {
          * @param target_current 目标输入电流
          * @return 要让电调消耗目标的输入电流，需要发送给电调的转矩电流
          */
-        int16_t ReversePowerModel(power_param_t param, float angular_velocity, int16_t turn_current,
+        int16_t ReversePowerModel(power_param_t param,
+                                  float angular_velocity,
+                                  int16_t turn_current,
                                   int16_t target_current);
 
       public:

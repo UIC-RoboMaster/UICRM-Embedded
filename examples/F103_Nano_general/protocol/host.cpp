@@ -45,8 +45,7 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Default_Task(const void* argument) {
     UNUSED(argument);
     communication::package_t frame;
-    communication::pack_t message[3] = {
-        {"Sazabi Gundam!"}, {"Sinanju Gundam!"}, {"Kshatriya Gundam!"}};
+    communication::pack_t message[3] = {{"Sazabi Gundam!"}, {"Sinanju Gundam!"}, {"Kshatriya Gundam!"}};
 
     while (true) {
         for (int i = 0; i < 3; ++i) {
