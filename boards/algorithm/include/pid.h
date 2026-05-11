@@ -398,8 +398,8 @@ namespace control {
         float control_period_ = 0.0f;  /// 控制周期
         float max_error_ = 0.0f;       /// 最大误差
 
-        float ScalarA = 0.0f;  /// For Changing Integral
-        float ScalarB = 0.0f;  /// ITerm = Err*((A-abs(err)+B)/A)  when B<|err|<A+B
+        float ScalarA = 0.0f;                           /// For Changing Integral
+        float ScalarB = 0.0f;                           /// ITerm = Err*((A-abs(err)+B)/A)  when B<|err|<A+B
         float Output_Filtering_Coefficient = 0.0f;      /// 输出滤波系数
         float Derivative_Filtering_Coefficient = 0.0f;  /// 微分滤波系数
 

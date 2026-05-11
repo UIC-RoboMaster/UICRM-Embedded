@@ -23,10 +23,11 @@
 #include "pid.h"
 
 // basic information of gimbal
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 0.9750f,
-                                                 .yaw_offset_ = 1.1819f,
-                                                 .pitch_max_ = 0.5039f,
-                                                 .yaw_max_ = PI,
-                                                 .yaw_circle_ = true,
-                                                 .pitch_inverted = true,
-                                                 .yaw_inverted = false};
+const control::gimbal_data_t gimbal_init_data =
+    {.pitch_offset_ = 0.9750f,
+     .yaw_offset_ = 1.1819f,
+     .pitch_max_ = 0.5039f,
+     .yaw_max_ = PI,
+     .yaw_circle_ = true,
+     .pitch_inverted = true,
+     .yaw_inverted = false};

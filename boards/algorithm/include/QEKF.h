@@ -54,8 +54,7 @@ namespace control {
         float accel_[3];
         float gyro_[3];
 
-        void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx,
-                              float my, float mz);
+        void CailbrateHandler(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
 
         void INSCalculate();
     };

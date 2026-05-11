@@ -126,8 +126,7 @@ namespace bsp {
          *
          * @return return 0 if success, -1 if invalid std_id
          */
-        int RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback,
-                                     void* args = NULL);
+        int RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback, void* args = NULL);
 
         /**
          * @brief 发送CAN数据
