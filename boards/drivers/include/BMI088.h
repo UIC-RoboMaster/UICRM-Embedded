@@ -337,12 +337,14 @@ namespace imu {
          * @param INT_ACCEL accelerometer interrupt pin
          * @param INT_GYRO gyroscope interrupt pin
          */
-        BMI088(bsp::SPIMaster* spi_master,
-               bsp::GPIO* CS_ACCEL,
-               bsp::GPIO* CS_GYRO,
-               bsp::GPIT* INT_ACCEL = nullptr,
-               bsp::GPIT* INT_GYRO = nullptr,
-               bool is_DMA = true);
+        BMI088(
+            bsp::SPIMaster* spi_master,
+            bsp::GPIO* CS_ACCEL,
+            bsp::GPIO* CS_GYRO,
+            bsp::GPIT* INT_ACCEL = nullptr,
+            bsp::GPIT* INT_GYRO = nullptr,
+            bool is_DMA = true
+        );
         /**
          * @brief 注册回调函数
          * @param callback 回调函数
@@ -445,15 +447,16 @@ namespace imu {
 
         bsp::EventThread* callback_thread_ = nullptr;
 
-        const osThreadAttr_t callback_thread_attr_ = {.name = "bmi088UpdateTask",
-                                                      .attr_bits = osThreadDetached,
-                                                      .cb_mem = nullptr,
-                                                      .cb_size = 0,
-                                                      .stack_mem = nullptr,
-                                                      .stack_size = 128 * 4,
-                                                      .priority = (osPriority_t)osPriorityRealtime,
-                                                      .tz_module = 0,
-                                                      .reserved = 0};
+        const osThreadAttr_t callback_thread_attr_ =
+            {.name = "bmi088UpdateTask",
+             .attr_bits = osThreadDetached,
+             .cb_mem = nullptr,
+             .cb_size = 0,
+             .stack_mem = nullptr,
+             .stack_size = 128 * 4,
+             .priority = (osPriority_t)osPriorityRealtime,
+             .tz_module = 0,
+             .reserved = 0};
 
         static void callback_thread_func_(void* arg);
     };

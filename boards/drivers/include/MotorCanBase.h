@@ -277,15 +277,16 @@ namespace driver {
         static bool is_init_;
 
         static bsp::Thread* can_motor_thread_;
-        static constexpr osThreadAttr_t can_motor_thread_attr_ = {.name = "MotorUpdateTask",
-                                                                  .attr_bits = osThreadDetached,
-                                                                  .cb_mem = nullptr,
-                                                                  .cb_size = 0,
-                                                                  .stack_mem = nullptr,
-                                                                  .stack_size = 256 * 4,
-                                                                  .priority = (osPriority_t)osPriorityHigh,
-                                                                  .tz_module = 0,
-                                                                  .reserved = 0};
+        static constexpr osThreadAttr_t can_motor_thread_attr_ =
+            {.name = "MotorUpdateTask",
+             .attr_bits = osThreadDetached,
+             .cb_mem = nullptr,
+             .cb_size = 0,
+             .stack_mem = nullptr,
+             .stack_size = 256 * 4,
+             .priority = (osPriority_t)osPriorityHigh,
+             .tz_module = 0,
+             .reserved = 0};
 
         static void CanMotorThread(void* args);
 

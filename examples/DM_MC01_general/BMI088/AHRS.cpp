@@ -43,15 +43,16 @@ static bsp::GPIO* bmi088_gyro_cs = nullptr;
 static bsp::GPIT* bmi088_accel_int = nullptr;
 static bsp::GPIT* bmi088_gyro_int = nullptr;
 
-const osThreadAttr_t imuUpdateTaskAttribute = {.name = "imuUpdateTask",
-                                               .attr_bits = osThreadDetached,
-                                               .cb_mem = nullptr,
-                                               .cb_size = 0,
-                                               .stack_mem = nullptr,
-                                               .stack_size = 256 * 4,
-                                               .priority = (osPriority_t)osPriorityNormal,
-                                               .tz_module = 0,
-                                               .reserved = 0};
+const osThreadAttr_t imuUpdateTaskAttribute =
+    {.name = "imuUpdateTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 
 osThreadId_t imuUpdateTaskHandle;
 
@@ -67,12 +68,14 @@ void imuUpdateTask(void* arguments) {
             // ahrs->Update(bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2], bmi088->accel_[0],
             // bmi088->accel_[1], bmi088->accel_[2], ist8310->mag_[0], ist8310->mag_[1],
             // ist8310->mag_[2]);
-            ahrs->Update(bmi088->gyro_[0],
-                         bmi088->gyro_[1],
-                         bmi088->gyro_[2],
-                         bmi088->accel_[0],
-                         bmi088->accel_[1],
-                         bmi088->accel_[2]);
+            ahrs->Update(
+                bmi088->gyro_[0],
+                bmi088->gyro_[1],
+                bmi088->gyro_[2],
+                bmi088->accel_[0],
+                bmi088->accel_[1],
+                bmi088->accel_[2]
+            );
             heater->Update(bmi088->temperature_);
         }
     }
@@ -159,7 +162,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
             bmi088->temperature_,
             ahrs->INS_angle[0] / PI * 180,
             ahrs->INS_angle[1] / PI * 180,
-            ahrs->INS_angle[2] / PI * 180);
+            ahrs->INS_angle[2] / PI * 180
+        );
         osDelay(50);
     }
 }

@@ -162,7 +162,8 @@ namespace communication {
     void USBProtocol::callback_thread_func_(void* args) {
         USBProtocol* usb_protocol_ = reinterpret_cast<USBProtocol*>(args);
         usb_protocol_->Receive(
-            communication::package_t{usb_protocol_->read_ptr_, static_cast<int>(usb_protocol_->read_len_)});
+            communication::package_t{usb_protocol_->read_ptr_, static_cast<int>(usb_protocol_->read_len_)}
+        );
     }
     USBProtocol::~USBProtocol() {
         delete callback_thread_;

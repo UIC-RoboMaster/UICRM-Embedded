@@ -26,12 +26,14 @@ namespace control {
         motor_num_ = motor_num;
     }
 
-    void PowerLimit::Output(bool turn_on,
-                            power_limit_t power_limit_info,
-                            float current_power,
-                            float current_power_buffer,
-                            float* input,
-                            float* output) {
+    void PowerLimit::Output(
+        bool turn_on,
+        power_limit_t power_limit_info,
+        float current_power,
+        float current_power_buffer,
+        float* input,
+        float* output
+    ) {
         // if not turn on, just output PID output
         // 如果没有开启功率限制，直接输出PID输出
         if (!turn_on) {

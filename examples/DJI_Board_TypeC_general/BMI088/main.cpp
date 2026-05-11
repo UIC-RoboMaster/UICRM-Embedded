@@ -75,7 +75,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
             bmi088->gyro_[0],
             bmi088->gyro_[1],
             bmi088->gyro_[2],
-            bmi088->temperature_);
+            bmi088->temperature_
+        );
         osDelay(30);
     }
 }

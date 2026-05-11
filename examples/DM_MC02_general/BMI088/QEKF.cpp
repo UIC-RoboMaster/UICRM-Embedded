@@ -45,12 +45,14 @@ static bsp::GPIT* bmi088_accel_int = nullptr;
 static bsp::GPIT* bmi088_gyro_int = nullptr;
 
 void BMI088ReceiveDone() {
-    ahrs->Update(bmi088->gyro_[0],
-                 bmi088->gyro_[1],
-                 bmi088->gyro_[2],
-                 bmi088->accel_[0],
-                 bmi088->accel_[1],
-                 bmi088->accel_[2]);
+    ahrs->Update(
+        bmi088->gyro_[0],
+        bmi088->gyro_[1],
+        bmi088->gyro_[2],
+        bmi088->accel_[0],
+        bmi088->accel_[1],
+        bmi088->accel_[2]
+    );
     heater->Update(bmi088->temperature_);
 }
 
@@ -136,7 +138,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
             bmi088->temperature_,
             ahrs->INS_angle[0] / PI * 180,
             ahrs->INS_angle[1] / PI * 180,
-            ahrs->INS_angle[2] / PI * 180);
+            ahrs->INS_angle[2] / PI * 180
+        );
         osDelay(50);
     }
 }

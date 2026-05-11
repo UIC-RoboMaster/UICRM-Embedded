@@ -24,15 +24,16 @@
 #include "tim.h"
 
 bsp::EventThread* buzzer_thread = nullptr;
-const osThreadAttr_t buzzer_thread_attr_ = {.name = "BuzzerTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 256 * 4,
-                                            .priority = (osPriority_t)osPriorityLow,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t buzzer_thread_attr_ =
+    {.name = "BuzzerTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityLow,
+     .tz_module = 0,
+     .reserved = 0};
 
 void buzzerTask(void* args);
 

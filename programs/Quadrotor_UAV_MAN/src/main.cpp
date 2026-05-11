@@ -89,7 +89,8 @@ void RM_Main_data(bool newline = false) {
         dbus->ch3,
         dbus->swl,
         dbus->swr,
-        dbus->ch4);
+        dbus->ch4
+    );
 
     print("ahrs Angle: [0]%.3f [1]%.3f [2]%.3f\r\n", ahrs->INS_angle[0], ahrs->INS_angle[1], ahrs->INS_angle[2]);
     print("INS Angle: yaw:%.3f roll:%.3f pitch:%.3f\r\n", INS_Angle.yaw, INS_Angle.roll, INS_Angle.pitch);

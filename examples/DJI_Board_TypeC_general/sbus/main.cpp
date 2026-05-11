@@ -59,7 +59,8 @@ void RM_RTOS_Default_Task(const void* arguments) {
             dbus->ch13,
             dbus->ch14,
             dbus->ch15,
-            dbus->ch16);
+            dbus->ch16
+        );
 
         osDelay(50);
     }

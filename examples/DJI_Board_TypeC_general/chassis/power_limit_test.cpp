@@ -40,15 +40,16 @@ bsp::BatteryVol* battery_vol = nullptr;
 
 void Dump(void* args);
 void callback(uint16_t voltage, int16_t current);
-const osThreadAttr_t dump_thread_attr_ = {.name = "DumpThread",
-                                          .attr_bits = osThreadDetached,
-                                          .cb_mem = nullptr,
-                                          .cb_size = 0,
-                                          .stack_mem = nullptr,
-                                          .stack_size = 256 * 4,
-                                          .priority = (osPriority_t)osPriorityNormal,
-                                          .tz_module = 0,
-                                          .reserved = 0};
+const osThreadAttr_t dump_thread_attr_ =
+    {.name = "DumpThread",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 const bsp::thread_init_t thread_init = {
     .func = Dump,
     .args = nullptr,

@@ -850,7 +850,8 @@ namespace driver {
             return true;
         } else {
             servo_->motor_->SetOutput(servo_->omega_pid_.ComputeConstrainedOutput(
-                servo_->motor_->GetOmegaDelta(test_speed_ * servo_->transmission_ratio_)));
+                servo_->motor_->GetOmegaDelta(test_speed_ * servo_->transmission_ratio_)
+            ));
         }
         return false;
     }

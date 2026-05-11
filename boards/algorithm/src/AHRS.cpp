@@ -60,16 +60,18 @@ namespace control {
         accel_fliter_3[2] =
             accel_fliter_2[2] * fliter_num[0] + accel_fliter_1[2] * fliter_num[1] + accel_[2] * fliter_num[2];
         if (cailb_done_) {
-            MahonyAHRSupdate(q,
-                             gx - g_zerodrift[0],
-                             gy - g_zerodrift[1],
-                             gz - g_zerodrift[2],
-                             accel_fliter_1[0],
-                             accel_fliter_1[1],
-                             accel_fliter_1[2],
-                             mx,
-                             my,
-                             mz);
+            MahonyAHRSupdate(
+                q,
+                gx - g_zerodrift[0],
+                gy - g_zerodrift[1],
+                gz - g_zerodrift[2],
+                accel_fliter_1[0],
+                accel_fliter_1[1],
+                accel_fliter_1[2],
+                mx,
+                my,
+                mz
+            );
             INSCalculate();
         } else if (cailb_flag_) {
             CailbrateHandler(gx, gy, gz, ax, ay, az, mx, my, mz);
@@ -95,20 +97,23 @@ namespace control {
         accel_fliter_3[2] =
             accel_fliter_2[2] * fliter_num[0] + accel_fliter_1[2] * fliter_num[1] + accel_[2] * fliter_num[2];
         if (cailb_done_) {
-            MahonyAHRSupdateIMU(q,
-                                gx - g_zerodrift[0],
-                                gy - g_zerodrift[1],
-                                gz - g_zerodrift[2],
-                                accel_fliter_1[0],
-                                accel_fliter_1[1],
-                                accel_fliter_1[2]);
+            MahonyAHRSupdateIMU(
+                q,
+                gx - g_zerodrift[0],
+                gy - g_zerodrift[1],
+                gz - g_zerodrift[2],
+                accel_fliter_1[0],
+                accel_fliter_1[1],
+                accel_fliter_1[2]
+            );
             INSCalculate();
         } else if (cailb_flag_) {
             CailbrateHandler(gx, gy, gz, ax, ay, az, 0, 0, 0);
         }
     }
     void AHRS::CailbrateHandler(
-        float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
+        float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz
+    ) {
         UNUSED(ax);
         UNUSED(ay);
         UNUSED(az);

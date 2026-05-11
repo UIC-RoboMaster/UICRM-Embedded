@@ -24,7 +24,8 @@
 
 namespace driver {
     MotorPWMBase::MotorPWMBase(
-        TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle)
+        TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle
+    )
         : pwm_(htim, channel, clock_freq, output_freq, idle_throttle), idle_throttle_(idle_throttle) {
         pwm_.Start();
     }
@@ -49,7 +50,8 @@ namespace driver {
 
     /*======================== Motor2305 PWM control ========================*/
     Motor2305::Motor2305(
-        TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle)
+        TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle
+    )
         : MotorPWMBase(htim, channel, clock_freq, output_freq, idle_throttle) {
     }
 
@@ -61,7 +63,8 @@ namespace driver {
 
     /*======================== ServoMG995 PWM control ========================*/
     ServoMG995::ServoMG995(
-        TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle)
+        TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle
+    )
         : MotorPWMBase(htim, channel, clock_freq, output_freq, idle_throttle) {
     }
 
@@ -73,7 +76,8 @@ namespace driver {
 
     /*======================== Laser PWM control ========================*/
     Laser::Laser(
-        TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle)
+        TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle
+    )
         : MotorPWMBase(htim, channel, clock_freq, output_freq, idle_throttle) {
     }
 

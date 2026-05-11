@@ -35,12 +35,14 @@ namespace imu {
             ;
     }
 
-    BMI088::BMI088(bsp::SPIMaster* spi_master,
-                   bsp::GPIO* CS_ACCEL,
-                   bsp::GPIO* CS_GYRO,
-                   bsp::GPIT* INT_ACCEL,
-                   bsp::GPIT* INT_GYRO,
-                   bool is_DMA) {
+    BMI088::BMI088(
+        bsp::SPIMaster* spi_master,
+        bsp::GPIO* CS_ACCEL,
+        bsp::GPIO* CS_GYRO,
+        bsp::GPIT* INT_ACCEL,
+        bsp::GPIT* INT_GYRO,
+        bool is_DMA
+    ) {
         spi_master_ = spi_master;
         spi_device_accel_ = spi_master_->NewDevice(CS_ACCEL);
         spi_device_gyro_ = spi_master_->NewDevice(CS_GYRO);
@@ -212,8 +214,10 @@ namespace imu {
 
         // set accel sonsor config and check
         for (write_reg_num = 0; write_reg_num < BMI088_WRITE_ACCEL_REG_NUM; ++write_reg_num) {
-            BMI088_accel_write_single_reg(write_BMI088_accel_reg_data_error[write_reg_num][0],
-                                          write_BMI088_accel_reg_data_error[write_reg_num][1]);
+            BMI088_accel_write_single_reg(
+                write_BMI088_accel_reg_data_error[write_reg_num][0],
+                write_BMI088_accel_reg_data_error[write_reg_num][1]
+            );
             HAL_Delay(1);
             BMI088_accel_read_single_reg(write_BMI088_accel_reg_data_error[write_reg_num][0], &res);
             HAL_Delay(1);
@@ -249,8 +253,10 @@ namespace imu {
 
         // set gyro sonsor config and check
         for (write_reg_num = 0; write_reg_num < BMI088_WRITE_GYRO_REG_NUM; ++write_reg_num) {
-            BMI088_gyro_write_single_reg(write_BMI088_gyro_reg_data_error[write_reg_num][0],
-                                         write_BMI088_gyro_reg_data_error[write_reg_num][1]);
+            BMI088_gyro_write_single_reg(
+                write_BMI088_gyro_reg_data_error[write_reg_num][0],
+                write_BMI088_gyro_reg_data_error[write_reg_num][1]
+            );
             HAL_Delay(1);
             BMI088_gyro_read_single_reg(write_BMI088_gyro_reg_data_error[write_reg_num][0], &res);
             HAL_Delay(1);
@@ -350,10 +356,8 @@ namespace imu {
             gyro_update_flag &= ~(1 << BMI088_IMU_DR_SHFITS);
             gyro_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
             spi_device_gyro_->PrepareTransmit();
-            spi_master_->TransmitReceive(spi_device_gyro_,
-                                         gyro_dma_tx_buf,
-                                         gyro_dma_rx_buf,
-                                         BMI088_SPI_DMA_GYRO_LENGHT);
+            spi_master_
+                ->TransmitReceive(spi_device_gyro_, gyro_dma_tx_buf, gyro_dma_rx_buf, BMI088_SPI_DMA_GYRO_LENGHT);
             return;
         }
 
@@ -364,10 +368,8 @@ namespace imu {
             accel_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
 
             spi_device_accel_->PrepareTransmit();
-            spi_master_->TransmitReceive(spi_device_accel_,
-                                         accel_dma_tx_buf,
-                                         accel_dma_rx_buf,
-                                         BMI088_SPI_DMA_ACCEL_LENGHT);
+            spi_master_
+                ->TransmitReceive(spi_device_accel_, accel_dma_tx_buf, accel_dma_rx_buf, BMI088_SPI_DMA_ACCEL_LENGHT);
             return;
         }
         if ((accel_temp_update_flag & (1 << BMI088_IMU_DR_SHFITS)) && !spi_master_->IsBusy() &&
@@ -376,10 +378,12 @@ namespace imu {
             accel_temp_update_flag |= (1 << BMI088_IMU_SPI_SHFITS);
 
             spi_device_accel_->PrepareTransmit();
-            spi_master_->TransmitReceive(spi_device_accel_,
-                                         accel_temp_dma_tx_buf,
-                                         accel_temp_dma_rx_buf,
-                                         BMI088_SPI_DMA_ACCEL_TEMP_LENGHT);
+            spi_master_->TransmitReceive(
+                spi_device_accel_,
+                accel_temp_dma_tx_buf,
+                accel_temp_dma_rx_buf,
+                BMI088_SPI_DMA_ACCEL_TEMP_LENGHT
+            );
             return;
         }
     }

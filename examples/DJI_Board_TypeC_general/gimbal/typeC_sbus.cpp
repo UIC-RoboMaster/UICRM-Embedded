@@ -32,15 +32,16 @@ static remote::SBUS* sbus = nullptr;
 
 #define RX_SIGNAL (1 << 0)
 
-const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
-                                         .attr_bits = osThreadDetached,
-                                         .cb_mem = nullptr,
-                                         .cb_size = 0,
-                                         .stack_mem = nullptr,
-                                         .stack_size = 256 * 4,
-                                         .priority = (osPriority_t)osPriorityNormal,
-                                         .tz_module = 0,
-                                         .reserved = 0};
+const osThreadAttr_t imuTaskAttribute =
+    {.name = "imuTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 osThreadId_t imuTaskHandle;
 
 class IMU : public bsp::IMU_typeC {
@@ -71,21 +72,19 @@ static driver::MotorCANBase* yaw_motor = nullptr;
 static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 
-const control::gimbal_data_t gimbal_init_data = {.pitch_offset_ = 2.8582f,
-                                                 .yaw_offset_ = 2.5840f,
-                                                 .pitch_max_ = 0.4897f,
-                                                 .yaw_max_ = PI / 2,
-                                                 .yaw_circle_ = true};
+const control::gimbal_data_t gimbal_init_data =
+    {.pitch_offset_ = 2.8582f, .yaw_offset_ = 2.5840f, .pitch_max_ = 0.4897f, .yaw_max_ = PI / 2, .yaw_circle_ = true};
 
-const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 256 * 4,
-                                            .priority = (osPriority_t)osPriorityNormal,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t gimbalTaskAttribute =
+    {.name = "gimbalTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 osThreadId_t gimbalTaskHandle;
 
 void gimbalTask(void* arg) {
@@ -292,24 +291,30 @@ void RM_RTOS_Default_Task(const void* arg) {
         set_cursor(0, 0);
         clear_screen();
 
-        print("# %.2f s, IMU %s\r\n",
-              HAL_GetTick() / 1000.0,
-              imu->CaliDone() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
+        print(
+            "# %.2f s, IMU %s\r\n",
+            HAL_GetTick() / 1000.0,
+            imu->CaliDone() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m"
+        );
         print("Temp: %.2f\r\n", imu->Temp);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n",
-              imu->INS_angle[0] / PI * 180,
-              imu->INS_angle[1] / PI * 180,
-              imu->INS_angle[2] / PI * 180);
+        print(
+            "Euler Angles: %.2f, %.2f, %.2f\r\n",
+            imu->INS_angle[0] / PI * 180,
+            imu->INS_angle[1] / PI * 180,
+            imu->INS_angle[2] / PI * 180
+        );
 
         print("\r\n");
 
         print("CH1: %-4d CH2: %-4d CH3: %-4d CH4: %-4d ", sbus->ch1, sbus->ch2, sbus->ch3, sbus->ch4);
-        print("CH5: %d CH6: %d CH7: %d CH8: %d @ %d ms\r\n",
-              sbus->ch5,
-              sbus->ch6,
-              sbus->ch7,
-              sbus->ch8,
-              sbus->timestamp);
+        print(
+            "CH5: %d CH6: %d CH7: %d CH8: %d @ %d ms\r\n",
+            sbus->ch5,
+            sbus->ch6,
+            sbus->ch7,
+            sbus->ch8,
+            sbus->timestamp
+        );
 
         osDelay(100);
     }

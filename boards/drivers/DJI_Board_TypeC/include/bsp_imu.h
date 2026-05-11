@@ -360,11 +360,13 @@ namespace bsp {
     class IST8310 : public GPIT {
       public:
         IST8310(IST8310_init_t init, IMU_typeC* imu = nullptr);
-        IST8310(I2C_HandleTypeDef* hi2c,
-                uint16_t int_pin,
-                GPIO_TypeDef* rst_group,
-                uint16_t rst_pin,
-                IMU_typeC* imu = nullptr);
+        IST8310(
+            I2C_HandleTypeDef* hi2c,
+            uint16_t int_pin,
+            GPIO_TypeDef* rst_group,
+            uint16_t rst_pin,
+            IMU_typeC* imu = nullptr
+        );
         bool IsReady();
         void ist8310_read_over(uint8_t* status_buf, IST8310_real_data_t* ist8310_real_data);
         float mag[3];
@@ -434,11 +436,13 @@ namespace bsp {
     class BMI088 {
       public:
         BMI088(BMI088_init_t init);
-        BMI088(SPI_HandleTypeDef* hspi,
-               GPIO_TypeDef* CS_ACCEL_Port,
-               uint16_t CS_ACCEL_Pin,
-               GPIO_TypeDef* CS_GYRO_Port,
-               uint16_t CS_GYRO_Pin);
+        BMI088(
+            SPI_HandleTypeDef* hspi,
+            GPIO_TypeDef* CS_ACCEL_Port,
+            uint16_t CS_ACCEL_Pin,
+            GPIO_TypeDef* CS_GYRO_Port,
+            uint16_t CS_GYRO_Pin
+        );
         bool IsReady();
         void Read(float gyro[3], float accel[3], float* temperate);
         void temperature_read_over(uint8_t* rx_buf, float* temperate);

@@ -97,7 +97,8 @@ void RM_RTOS_Default_Task(const void* argument) {
             mouse.y,
             mouse.z,
             mouse.l,
-            mouse.r);
+            mouse.r
+        );
         osDelay(1);
     }
 }

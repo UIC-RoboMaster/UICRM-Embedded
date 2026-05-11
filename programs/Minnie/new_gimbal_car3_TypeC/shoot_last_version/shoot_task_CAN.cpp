@@ -65,7 +65,8 @@ void jam_callback(void* args) {
 }
 
 bool steering_SetTarget(
-    driver::MotorCANBase* motor, float SetTarget, float threshold, bool locked_rotor = true, bool ABS = false) {
+    driver::MotorCANBase* motor, float SetTarget, float threshold, bool locked_rotor = true, bool ABS = false
+) {
     motor->Enable();
     bool Steering_Mode = false;
     bool motor_flag = false;

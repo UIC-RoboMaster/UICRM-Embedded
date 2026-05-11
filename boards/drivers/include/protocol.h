@@ -145,15 +145,16 @@ namespace communication {
         bsp::EventThread* callback_thread_ = nullptr;
         static void callback_thread_func_(void* args);
 
-        const osThreadAttr_t callback_thread_attr_ = {.name = "ProtocolUpdateTask",
-                                                      .attr_bits = osThreadDetached,
-                                                      .cb_mem = nullptr,
-                                                      .cb_size = 0,
-                                                      .stack_mem = nullptr,
-                                                      .stack_size = 256 * 4,
-                                                      .priority = (osPriority_t)osPriorityHigh,
-                                                      .tz_module = 0,
-                                                      .reserved = 0};
+        const osThreadAttr_t callback_thread_attr_ =
+            {.name = "ProtocolUpdateTask",
+             .attr_bits = osThreadDetached,
+             .cb_mem = nullptr,
+             .cb_size = 0,
+             .stack_mem = nullptr,
+             .stack_size = 256 * 4,
+             .priority = (osPriority_t)osPriorityHigh,
+             .tz_module = 0,
+             .reserved = 0};
     };
 
 #ifndef NO_USB
@@ -176,15 +177,16 @@ namespace communication {
         bsp::EventThread* callback_thread_ = nullptr;
         static void callback_thread_func_(void* args);
 
-        const osThreadAttr_t callback_thread_attr_ = {.name = "ProtocolUpdateTask",
-                                                      .attr_bits = osThreadDetached,
-                                                      .cb_mem = nullptr,
-                                                      .cb_size = 0,
-                                                      .stack_mem = nullptr,
-                                                      .stack_size = 256 * 4,
-                                                      .priority = (osPriority_t)osPriorityHigh,
-                                                      .tz_module = 0,
-                                                      .reserved = 0};
+        const osThreadAttr_t callback_thread_attr_ =
+            {.name = "ProtocolUpdateTask",
+             .attr_bits = osThreadDetached,
+             .cb_mem = nullptr,
+             .cb_size = 0,
+             .stack_mem = nullptr,
+             .stack_size = 256 * 4,
+             .priority = (osPriority_t)osPriorityHigh,
+             .tz_module = 0,
+             .reserved = 0};
     };
 
 #endif

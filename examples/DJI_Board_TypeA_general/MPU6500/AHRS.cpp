@@ -49,12 +49,14 @@ void MPU6500ReceiveDone() {
     // ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
     // mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2], mpu6500->mag_[0],
     // mpu6500->mag_[1], mpu6500->mag_[2]);
-    ahrs->Update(mpu6500->gyro_[0],
-                 mpu6500->gyro_[1],
-                 mpu6500->gyro_[2],
-                 mpu6500->accel_[0],
-                 mpu6500->accel_[1],
-                 mpu6500->accel_[2]);
+    ahrs->Update(
+        mpu6500->gyro_[0],
+        mpu6500->gyro_[1],
+        mpu6500->gyro_[2],
+        mpu6500->accel_[0],
+        mpu6500->accel_[1],
+        mpu6500->accel_[2]
+    );
     heater->Update(mpu6500->temperature_);
 }
 
@@ -132,10 +134,12 @@ void RM_RTOS_Default_Task(const void* arguments) {
         print("MAG_X: %9.0f MAG_Y: %9.0f MAG_Z: %9.0f\r\n", mpu6500->mag_[0], mpu6500->mag_[1], mpu6500->mag_[2]);
         print("\r\nTime Stamp: %.2f us\r\n", mpu6500->time_);
         print("Calibrated: true\r\n");
-        print("Yaw: %.2f Pitch: %.2f Roll: %.2f\r\n",
-              ahrs->INS_angle[0] / PI * 180,
-              ahrs->INS_angle[1] / PI * 180,
-              ahrs->INS_angle[2] / PI * 180);
+        print(
+            "Yaw: %.2f Pitch: %.2f Roll: %.2f\r\n",
+            ahrs->INS_angle[0] / PI * 180,
+            ahrs->INS_angle[1] / PI * 180,
+            ahrs->INS_angle[2] / PI * 180
+        );
         osDelay(50);
     }
 }

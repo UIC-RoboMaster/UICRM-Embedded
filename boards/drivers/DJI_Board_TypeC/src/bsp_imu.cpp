@@ -186,7 +186,8 @@ namespace bsp {
     }
 
     IST8310::IST8310(
-        I2C_HandleTypeDef* hi2c, uint16_t int_pin, GPIO_TypeDef* rst_group, uint16_t rst_pin, IMU_typeC* imu)
+        I2C_HandleTypeDef* hi2c, uint16_t int_pin, GPIO_TypeDef* rst_group, uint16_t rst_pin, IMU_typeC* imu
+    )
         : GPIT(int_pin) {
         hi2c_ = hi2c;
         rst_group_ = rst_group;
@@ -216,8 +217,10 @@ namespace bsp {
 
         // set mpu6500 sonsor config and check
         for (writeNum = 0; writeNum < IST8310_WRITE_REG_NUM; writeNum++) {
-            ist8310_IIC_write_single_reg(ist8310_write_reg_data_error[writeNum][0],
-                                         ist8310_write_reg_data_error[writeNum][1]);
+            ist8310_IIC_write_single_reg(
+                ist8310_write_reg_data_error[writeNum][0],
+                ist8310_write_reg_data_error[writeNum][1]
+            );
             HAL_Delay(wait_time);
             res = ist8310_IIC_read_single_reg(ist8310_write_reg_data_error[writeNum][0]);
             HAL_Delay(wait_time);
@@ -307,11 +310,13 @@ namespace bsp {
         Init();
     }
 
-    BMI088::BMI088(SPI_HandleTypeDef* hspi,
-                   GPIO_TypeDef* CS_ACCEL_Port,
-                   uint16_t CS_ACCEL_Pin,
-                   GPIO_TypeDef* CS_GYRO_Port,
-                   uint16_t CS_GYRO_Pin) {
+    BMI088::BMI088(
+        SPI_HandleTypeDef* hspi,
+        GPIO_TypeDef* CS_ACCEL_Port,
+        uint16_t CS_ACCEL_Pin,
+        GPIO_TypeDef* CS_GYRO_Port,
+        uint16_t CS_GYRO_Pin
+    ) {
         hspi_ = hspi;
         CS1_ACCEL_GPIO_Port_ = CS_ACCEL_Port;
         CS1_ACCEL_Pin_ = CS_ACCEL_Pin;
@@ -464,8 +469,10 @@ namespace bsp {
 
         // set accel sonsor config and check
         for (write_reg_num = 0; write_reg_num < BMI088_WRITE_ACCEL_REG_NUM; ++write_reg_num) {
-            BMI088_accel_write_single_reg(write_BMI088_accel_reg_data_error[write_reg_num][0],
-                                          write_BMI088_accel_reg_data_error[write_reg_num][1]);
+            BMI088_accel_write_single_reg(
+                write_BMI088_accel_reg_data_error[write_reg_num][0],
+                write_BMI088_accel_reg_data_error[write_reg_num][1]
+            );
             HAL_Delay(1);
             BMI088_accel_read_single_reg(write_BMI088_accel_reg_data_error[write_reg_num][0], &res);
             HAL_Delay(1);
@@ -500,8 +507,10 @@ namespace bsp {
 
         // set gyro sonsor config and check
         for (write_reg_num = 0; write_reg_num < BMI088_WRITE_GYRO_REG_NUM; ++write_reg_num) {
-            BMI088_gyro_write_single_reg(write_BMI088_gyro_reg_data_error[write_reg_num][0],
-                                         write_BMI088_gyro_reg_data_error[write_reg_num][1]);
+            BMI088_gyro_write_single_reg(
+                write_BMI088_gyro_reg_data_error[write_reg_num][0],
+                write_BMI088_gyro_reg_data_error[write_reg_num][1]
+            );
             HAL_Delay(1);
             BMI088_gyro_read_single_reg(write_BMI088_gyro_reg_data_error[write_reg_num][0], &res);
             HAL_Delay(1);
@@ -637,15 +646,19 @@ namespace bsp {
 
         if (accel_update_flag & (1 << IMU_UPDATE_SHFITS)) {
             accel_update_flag &= ~(1 << IMU_UPDATE_SHFITS);
-            BMI088_.accel_read_over(accel_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
-                                    BMI088_real_data_.accel,
-                                    &BMI088_real_data_.time);
+            BMI088_.accel_read_over(
+                accel_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
+                BMI088_real_data_.accel,
+                &BMI088_real_data_.time
+            );
         }
 
         if (accel_temp_update_flag & (1 << IMU_UPDATE_SHFITS)) {
             accel_temp_update_flag &= ~(1 << IMU_UPDATE_SHFITS);
-            BMI088_.temperature_read_over(accel_temp_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
-                                          &BMI088_real_data_.temp);
+            BMI088_.temperature_read_over(
+                accel_temp_dma_rx_buf + BMI088_ACCEL_RX_BUF_DATA_OFFSET,
+                &BMI088_real_data_.temp
+            );
             Temp = BMI088_real_data_.temp;
             TempPWM = TempControl(BMI088_real_data_.temp);
         }
@@ -681,10 +694,12 @@ namespace bsp {
             accel_fliter_3[2] = accel_fliter_2[2] * fliter_num[0] + accel_fliter_1[2] * fliter_num[1] +
                                 BMI088_real_data_.accel[2] * fliter_num[2];
             AHRS_update(INS_quat, 0.001f, BMI088_real_data_.gyro, BMI088_real_data_.accel, IST8310_real_data_.mag);
-            GetAngle(INS_quat,
-                     INS_angle + INS_YAW_ADDRESS_OFFSET,
-                     INS_angle + INS_PITCH_ADDRESS_OFFSET,
-                     INS_angle + INS_ROLL_ADDRESS_OFFSET);
+            GetAngle(
+                INS_quat,
+                INS_angle + INS_YAW_ADDRESS_OFFSET,
+                INS_angle + INS_PITCH_ADDRESS_OFFSET,
+                INS_angle + INS_ROLL_ADDRESS_OFFSET
+            );
         }
     }
 

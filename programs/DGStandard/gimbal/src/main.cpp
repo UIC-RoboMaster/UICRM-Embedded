@@ -129,7 +129,8 @@ void RM_RTOS_Default_Task(const void* arg) {
             dbus->ch4,
             dbus->swl,
             dbus->swr,
-            dbus->GetLastUptime());
+            dbus->GetLastUptime()
+        );
         print("\r\n");
 
         // Remote info
@@ -144,26 +145,33 @@ void RM_RTOS_Default_Task(const void* arg) {
             refereerc->vt13_packet.remote.mode_sw,
             refereerc->vt13_packet.remote.swl,
             refereerc->vt13_packet.remote.swr,
-            refereerc->vt13_packet.remote.trigger);
+            refereerc->vt13_packet.remote.trigger
+        );
         print("\r\n");
 
         // Chassis info
         print("Chassis speed %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy, chassis->chassis_vt);
-        print("Power %.3fV %.3fA %.3fW\r\n",
-              referee->power_heat_data.chassis_volt / 1000.0,
-              referee->power_heat_data.chassis_current / 1000.0,
-              referee->power_heat_data.chassis_power);
+        print(
+            "Power %.3fV %.3fA %.3fW\r\n",
+            referee->power_heat_data.chassis_volt / 1000.0,
+            referee->power_heat_data.chassis_current / 1000.0,
+            referee->power_heat_data.chassis_power
+        );
         print("\r\n");
 
         // Gimbal info
-        print("Gimbal target P%.3f Y%.3f\r\n",
-              gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
-              gimbal->getYawTarget() - gimbal_param->yaw_offset_);
+        print(
+            "Gimbal target P%.3f Y%.3f\r\n",
+            gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
+            gimbal->getYawTarget() - gimbal_param->yaw_offset_
+        );
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
-        print("Vision Target: P%.3f Y%.3f [%d]\r\n",
-              minipc->target_angle.target_pitch,
-              minipc->target_angle.target_yaw,
-              minipc->target_angle.accuracy);
+        print(
+            "Vision Target: P%.3f Y%.3f [%d]\r\n",
+            minipc->target_angle.target_pitch,
+            minipc->target_angle.target_yaw,
+            minipc->target_angle.accuracy
+        );
         print("\r\n");
 
         // Shoot info

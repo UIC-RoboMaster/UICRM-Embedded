@@ -48,15 +48,16 @@ static bsp::GPIT* mpu6500_it = nullptr;
 static bsp::SPI* spi5 = nullptr;
 static bsp::SPIMaster* spi5_master = nullptr;
 
-const osThreadAttr_t imuUpdateTaskAttribute = {.name = "imuUpdateTask",
-                                               .attr_bits = osThreadDetached,
-                                               .cb_mem = nullptr,
-                                               .cb_size = 0,
-                                               .stack_mem = nullptr,
-                                               .stack_size = 256 * 4,
-                                               .priority = (osPriority_t)osPriorityNormal,
-                                               .tz_module = 0,
-                                               .reserved = 0};
+const osThreadAttr_t imuUpdateTaskAttribute =
+    {.name = "imuUpdateTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 
 osThreadId_t imuUpdateTaskHandle;
 
@@ -72,12 +73,14 @@ void imuUpdateTask(void* arguments) {
             // ahrs->Update(mpu6500->gyro_[0], mpu6500->gyro_[1], mpu6500->gyro_[2],
             // mpu6500->accel_[0], mpu6500->accel_[1], mpu6500->accel_[2], mpu6500->mag_[0],
             // mpu6500->mag_[1], mpu6500->mag_[2]);
-            ahrs->Update(mpu6500->gyro_[0],
-                         mpu6500->gyro_[1],
-                         mpu6500->gyro_[2],
-                         mpu6500->accel_[0],
-                         mpu6500->accel_[1],
-                         mpu6500->accel_[2]);
+            ahrs->Update(
+                mpu6500->gyro_[0],
+                mpu6500->gyro_[1],
+                mpu6500->gyro_[2],
+                mpu6500->accel_[0],
+                mpu6500->accel_[1],
+                mpu6500->accel_[2]
+            );
             heater->Update(mpu6500->temperature_);
         }
     }
@@ -104,15 +107,16 @@ const control::gimbal_data_t gimbal_init_data = {
     .yaw_eposition = 0,
 };
 
-const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 256 * 4,
-                                            .priority = (osPriority_t)osPriorityNormal,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t gimbalTaskAttribute =
+    {.name = "gimbalTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 osThreadId_t gimbalTaskHandle;
 
 void gimbalTask(void* arg) {
@@ -326,14 +330,18 @@ void RM_RTOS_Default_Task(const void* arg) {
         set_cursor(0, 0);
         clear_screen();
 
-        print("# %.2f s, IMU %s\r\n",
-              HAL_GetTick() / 1000.0,
-              ahrs->IsCailbrated() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
+        print(
+            "# %.2f s, IMU %s\r\n",
+            HAL_GetTick() / 1000.0,
+            ahrs->IsCailbrated() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m"
+        );
         print("Temp: %.2f\r\n", mpu6500->temperature_);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n",
-              ahrs->INS_angle[0] / PI * 180,
-              ahrs->INS_angle[1] / PI * 180,
-              ahrs->INS_angle[2] / PI * 180);
+        print(
+            "Euler Angles: %.2f, %.2f, %.2f\r\n",
+            ahrs->INS_angle[0] / PI * 180,
+            ahrs->INS_angle[1] / PI * 180,
+            ahrs->INS_angle[2] / PI * 180
+        );
 
         print("\r\n");
 

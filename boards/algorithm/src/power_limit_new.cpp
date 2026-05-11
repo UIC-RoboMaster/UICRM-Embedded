@@ -39,10 +39,9 @@ namespace control {
                param.k3 * turn_current * turn_current + param.k4;
     }
 
-    int16_t NewPowerLimit::ReversePowerModel(power_param_t param,
-                                             float angular_velocity,
-                                             int16_t turn_current,
-                                             int16_t target_current) {
+    int16_t NewPowerLimit::ReversePowerModel(
+        power_param_t param, float angular_velocity, int16_t turn_current, int16_t target_current
+    ) {
         // (k3)τ^2 + (k1ω)τ + (k2ω^2 + k4 - I) = 0
         float a = param.k3;
         float b = param.k1 * angular_velocity;
@@ -77,10 +76,12 @@ namespace control {
         float forward_ratio = 1.0 * (max_power - reverse_current) / forward_current;
         for (int i = 0; i < 4; i++) {
             if (motor_input_current[i] > 0)
-                turn_current[i] = ReversePowerModel(params[i],
-                                                    angular_velocity[i],
-                                                    turn_current[i],
-                                                    forward_ratio * motor_input_current[i]);
+                turn_current[i] = ReversePowerModel(
+                    params[i],
+                    angular_velocity[i],
+                    turn_current[i],
+                    forward_ratio * motor_input_current[i]
+                );
         }
     }
 }  // namespace control

@@ -31,15 +31,16 @@
 #include "remote_task.h"
 #include "utils.h"
 extern osThreadId_t chassisTaskHandle;
-const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
-                                             .attr_bits = osThreadDetached,
-                                             .cb_mem = nullptr,
-                                             .cb_size = 0,
-                                             .stack_mem = nullptr,
-                                             .stack_size = 512 * 4,
-                                             .priority = (osPriority_t)osPriorityAboveNormal,
-                                             .tz_module = 0,
-                                             .reserved = 0};
+const osThreadAttr_t chassisTaskAttribute =
+    {.name = "chassisTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 512 * 4,
+     .priority = (osPriority_t)osPriorityAboveNormal,
+     .tz_module = 0,
+     .reserved = 0};
 void chassisTask(void* arg);
 void init_chassis();
 void kill_chassis();

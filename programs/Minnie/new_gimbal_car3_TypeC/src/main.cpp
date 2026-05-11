@@ -90,7 +90,8 @@ void RM_Car_main_data(bool newline = false) {
         dbus->swl,
         dbus->swr,
         dbus->ch4,
-        dbus->timestamp);
+        dbus->timestamp
+    );
 
     print("Chassis Volt: %.3f\r\n", referee->power_heat_data.chassis_volt / 1000.0);
     print("Chassis Curr: %.3f\r\n", referee->power_heat_data.chassis_current / 1000.0);
