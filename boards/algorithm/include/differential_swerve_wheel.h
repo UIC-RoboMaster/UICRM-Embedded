@@ -21,13 +21,16 @@
 #pragma once
 
 #include "bsp_dwt.h"
-#include "pid.h"
-#include "utils.h"
 
 namespace control {
 
-    class DifferentialSwerveWheel {
+    class DifferentialSwerveWheelKinematic {
       public:
+        struct Vector2 {
+            float x1;
+            float x2;
+        };
+
         struct Matrix2x2 {
             float a11;
             float a12;
@@ -35,107 +38,74 @@ namespace control {
             float a22;
         };
 
-        struct MotorTarget {
-            float motor1_theta;
-            float motor2_theta;
-            float motor1_omega;
-            float motor2_omega;
-        };
-
-        struct State {
+        struct WheelState {
             float yaw_angle;
-            float yaw_rate;
             float drive_angle;
             float drive_speed;
-            float motor1_theta;
-            float motor2_theta;
-            float motor1_omega;
-            float motor2_omega;
         };
 
-        struct Config {
-            // x_dot = B * u, u = [motor1_omega, motor2_omega]^T
-            // The default assumes a standard differential-swerve mapping:
-            // yaw depends on motor speed difference and drive depends on motor speed sum.
-            Matrix2x2 kinematics = {
-                .a11 = 8.4f,
-                .a12 = -8.4f,
-                .a21 = 5.6f,
-                .a22 = 5.6f,
-            };
-
-            ConstrainedPID::PID_Init_t yaw_pid_init = {
-                .kp = 10.0f,
-                .ki = 0.0f,
-                .kd = 0.1f,
-                .max_out = 12.0f,
-                .max_iout = 0.0f,
-                .deadband = 0.0f,
-                .A = 0.0f,
-                .B = 0.0f,
-                .output_filtering_coefficient = 0.0f,
-                .derivative_filtering_coefficient = 0.0f,
-                .mode = ConstrainedPID::OutputFilter,
-            };
-
-            float max_yaw_rate = 6.0f * PI;
-            float max_drive_speed = 30.0f * PI;
-            float max_motor_speed = 30.0f * PI;
-            float min_dt = 1e-4f;
-            float max_dt = 0.05f;
-            float singular_epsilon = 1e-5f;
+        struct MotorTarget {
+            float motor1_angle;
+            float motor2_angle;
         };
 
-        explicit DifferentialSwerveWheel(const Config& config = Config());
+        explicit DifferentialSwerveWheelKinematic(
+            const Matrix2x2& control_matrix = DefaultControlMatrix());
 
+        // State order is always [yaw, drive].
+        // x_dot = B * u, where:
+        // yaw_dot   = a11 * motor1 + a12 * motor2
+        // drive_dot = a21 * motor1 + a22 * motor2
+        Vector2 InverseSolve(float yaw_rate, float drive_speed) const;
+        void InverseSolve(float yaw_rate, float drive_speed, float& motor1_omega,
+                          float& motor2_omega) const;
+
+        // Solve wheel yaw rate and drive speed from motor angular velocities.
+        Vector2 ForwardSolve(float motor1_omega, float motor2_omega) const;
+        void ForwardSolve(float motor1_omega, float motor2_omega, float& yaw_rate,
+                          float& drive_speed) const;
+
+        // Estimate wheel yaw angle and drive speed from motor angles.
+        WheelState Update(float motor1_theta, float motor2_theta);
+        void Update(float motor1_theta, float motor2_theta, float& yaw_angle,
+                    float& drive_speed);
         void Reset(float motor1_theta = 0.0f, float motor2_theta = 0.0f);
-        void UpdateFeedback(float motor1_theta, float motor2_theta);
-        MotorTarget Update(float motor1_theta, float motor2_theta);
 
-        void SetTarget(float yaw_relative, float drive_speed);
-        void SetYawTarget(float yaw_relative);
-        void SetDriveSpeed(float drive_speed);
+        // Solve motor target angles from target yaw angle and target drive speed.
+        MotorTarget UpdateTarget(float yaw_angle_target, float drive_speed_target);
+        void UpdateTarget(float yaw_angle_target, float drive_speed_target, float& motor1_angle,
+                          float& motor2_angle);
+        void ResetTarget(float yaw_angle_target = 0.0f, float drive_angle_target = 0.0f);
 
-        void SetKinematics(const Matrix2x2& kinematics);
-        void ReInitYawPID(const ConstrainedPID::PID_Init_t& pid_init);
-        void SetMaxYawRate(float max_yaw_rate);
-        void SetMaxDriveSpeed(float max_drive_speed);
-        void SetMaxMotorSpeed(float max_motor_speed);
+        const Matrix2x2& GetControlMatrix() const;
+        const Matrix2x2& GetInverseMatrix() const;
+        bool IsInvertible() const;
+        float GetDriveAngleTarget() const;
 
-        const MotorTarget& GetMotorTarget() const;
-        const State& GetState() const;
-        float GetYawTarget() const;
-        float GetDriveSpeedTarget() const;
-        bool IsKinematicsInvertible() const;
-
-      private:
-        void UpdateStateFromFeedback(float motor1_theta, float motor2_theta, float dt);
-        void SolveMotorOmega(float yaw_rate, float drive_speed, float& motor1_omega,
-                             float& motor2_omega) const;
-        float GetDeltaT();
-        void RefreshInverse();
+        static constexpr Matrix2x2 DefaultControlMatrix() {
+            return {
+                5.6f, 5.6f,
+                8.4f, -8.4f,
+            };
+        }
 
       private:
-        Config config_;
-        ConstrainedPID yaw_pid_;
+        static float Determinant(const Matrix2x2& matrix);
+        static Matrix2x2 Inverse(const Matrix2x2& matrix);
 
-        Matrix2x2 inverse_ = {};
-        bool invertible_ = false;
-
-        State state_ = {};
-        MotorTarget motor_target_ = {};
-
-        float yaw_target_ = 0.0f;
-        float drive_speed_target_ = 0.0f;
-        float yaw_zero_ = 0.0f;
-        float drive_zero_ = 0.0f;
-
-        float last_motor1_theta_ = 0.0f;
-        float last_motor2_theta_ = 0.0f;
-        bool has_feedback_ = false;
-
-        uint32_t last_dwt_cnt_ = 0;
-        bool dwt_ready_ = false;
+      private:
+        Matrix2x2 control_matrix_;
+        Matrix2x2 inverse_matrix_;
+        bool invertible_;
+        WheelState state_;
+        float target_drive_angle_;
+        uint32_t last_feedback_dwt_cnt_;
+        uint32_t last_target_dwt_cnt_;
+        bool feedback_dwt_ready_;
+        bool target_dwt_ready_;
     };
+
+    // Backward-compatible alias for the previous misspelled name.
+    using DifferentialSwerveWheelKinemetic = DifferentialSwerveWheelKinematic;
 
 }  // namespace control
