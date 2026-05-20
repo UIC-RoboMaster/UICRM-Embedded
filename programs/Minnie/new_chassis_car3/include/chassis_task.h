@@ -39,8 +39,7 @@ void init_chassis();
 void chassisDebug();
 void kill_chassis();
 
-void update_channel_data(communication::can_bridge_ext_id_t ext_id,
-                         communication::can_bridge_data_t data, void* args);
+void update_channel_data(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args);
 
 extern control::Chassis* chassis;
 extern driver::MotorCANBase* fl_motor;

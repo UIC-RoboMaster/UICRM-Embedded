@@ -22,8 +22,7 @@
 
 #include "bsp_gpio.h"
 #include "cmsis_os.h"
-static bsp::GPIO* led_flow[8] = {nullptr, nullptr, nullptr, nullptr,
-                                 nullptr, nullptr, nullptr, nullptr};
+static bsp::GPIO* led_flow[8] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
 
 void RM_RTOS_Init(void) {
     led_flow[0] = new bsp::GPIO(LED_G1_GPIO_Port, LED_G1_Pin);

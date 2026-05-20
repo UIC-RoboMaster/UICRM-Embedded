@@ -53,8 +53,7 @@ namespace bsp {
          * @param output_freq  desired pwm output frequency, in [Hz]
          * @param pulse_width  desired pwm output pulse width, is [us]
          */
-        PWM(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq,
-            uint32_t pulse_width);
+        PWM(TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t pulse_width);
 
         /**
          * @brief 启动PWM信号输出

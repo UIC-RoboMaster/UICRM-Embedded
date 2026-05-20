@@ -80,12 +80,9 @@ void RM_RTOS_Default_Task(const void* arguments) {
         clear_screen();
         set_cursor(0, 0);
         print("Temp: %10.4f\r\n", bmi088->temperature_);
-        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", bmi088->accel_[0], bmi088->accel_[1],
-              bmi088->accel_[2]);
-        print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", bmi088->gyro_[0], bmi088->gyro_[1],
-              bmi088->gyro_[2]);
-        print("MAG_X: %9.0f MAG_Y: %9.0f MAG_Z: %9.0f\r\n", ist8310->mag_[0], ist8310->mag_[1],
-              ist8310->mag_[2]);
+        print("ACC_X: %9.4f ACC_Y: %9.4f ACC_Z: %9.4f\r\n", bmi088->accel_[0], bmi088->accel_[1], bmi088->accel_[2]);
+        print("GYRO_X: %8.4f GYRO_Y: %8.4f GYRO_Z: %8.4f\r\n", bmi088->gyro_[0], bmi088->gyro_[1], bmi088->gyro_[2]);
+        print("MAG_X: %9.0f MAG_Y: %9.0f MAG_Z: %9.0f\r\n", ist8310->mag_[0], ist8310->mag_[1], ist8310->mag_[2]);
         print("\r\nTime Stamp: %.2f s\r\n", bmi088->time_);
         osDelay(20);
     }

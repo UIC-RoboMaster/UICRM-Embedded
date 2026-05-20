@@ -288,15 +288,13 @@ namespace control {
         dout_ = kd_ * (measure_ - last_measure_);
     }
     void ConstrainedPID::PID_OutputFilter() {
-        output_ = output_ * Output_Filtering_Coefficient +
-                  last_output_ * (1 - Output_Filtering_Coefficient);
+        output_ = output_ * Output_Filtering_Coefficient + last_output_ * (1 - Output_Filtering_Coefficient);
     }
     void ConstrainedPID::PID_OutputLimit() {
         output_ = clip<float>(output_, -max_out_, max_out_);
     }
     void ConstrainedPID::PID_DerivativeFilter() {
-        dout_ = dout_ * Derivative_Filtering_Coefficient +
-                last_dout_ * (1 - Derivative_Filtering_Coefficient);
+        dout_ = dout_ * Derivative_Filtering_Coefficient + last_dout_ * (1 - Derivative_Filtering_Coefficient);
     }
     void ConstrainedPID::PID_ProportionLimit() {
         pout_ = clip<float>(pout_, -max_out_, max_out_);
@@ -328,8 +326,7 @@ namespace control {
 
         output_ = 0;
     }
-    void ConstrainedPID::RegisterErrorCallcack(ConstrainedPID::PID_ErrorCallback_t callback,
-                                               void* instance) {
+    void ConstrainedPID::RegisterErrorCallcack(ConstrainedPID::PID_ErrorCallback_t callback, void* instance) {
         error_callback_ = callback;
         error_callback_instance_ = instance;
     }

@@ -23,8 +23,7 @@
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
 
-#define M3508_POWER_MODEL \
-    { 0.000931, 0.000455, 0.000006, 39.151850 }
+#define M3508_POWER_MODEL {0.000931, 0.000455, 0.000006, 39.151850}
 
 namespace control {
 
@@ -60,8 +59,8 @@ namespace control {
         chassis_offset_ = chassis.offset;
 
         // 功率限制系统
-        NewPowerLimit::power_param_t power_model[4] = {M3508_POWER_MODEL, M3508_POWER_MODEL,
-                                                       M3508_POWER_MODEL, M3508_POWER_MODEL};
+        NewPowerLimit::power_param_t power_model[4] =
+            {M3508_POWER_MODEL, M3508_POWER_MODEL, M3508_POWER_MODEL, M3508_POWER_MODEL};
         power_limit_.enabled = chassis.power_limit_on;
         power_limit_.limiter = new NewPowerLimit(power_model);
         driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
@@ -107,10 +106,8 @@ namespace control {
                 float move_sum = fabs(x_speed) + fabs(y_speed) + fabs(turn_speed);
                 float scale = move_sum > max_motor_speed_ ? max_motor_speed_ / move_sum : 1.0f;
 
-                speeds_[FourWheel::front_left] =
-                    scale * (y_speed + x_speed + turn_speed * (1 - chassis_offset_));  // 2
-                speeds_[FourWheel::back_left] =
-                    scale * (y_speed - x_speed + turn_speed * (1 + chassis_offset_));  // 3
+                speeds_[FourWheel::front_left] = scale * (y_speed + x_speed + turn_speed * (1 - chassis_offset_));  // 2
+                speeds_[FourWheel::back_left] = scale * (y_speed - x_speed + turn_speed * (1 + chassis_offset_));   // 3
                 speeds_[FourWheel::front_right] =
                     -scale * (y_speed - x_speed - turn_speed * (1 - chassis_offset_));  // 1
                 speeds_[FourWheel::back_right] =
@@ -123,8 +120,9 @@ namespace control {
         }
     }
 
-    void Chassis::SetPower(bool enabled, float max_power, float current_power, float buffer_remain,
-                           bool enable_supercap) {
+    void Chassis::SetPower(
+        bool enabled, float max_power, float current_power, float buffer_remain, bool enable_supercap
+    ) {
         power_limit_.enabled = enabled;
 
         UNUSED(max_power);
@@ -135,8 +133,7 @@ namespace control {
         return;
     }
 
-    void Chassis::UpdatePower(bool enabled, float max_watt, float current_voltage,
-                              uint8_t buffer_percent) {
+    void Chassis::UpdatePower(bool enabled, float max_watt, float current_voltage, uint8_t buffer_percent) {
         power_limit_.enabled = enabled;
         power_limit_.buffer_percent = buffer_percent;
         // 双板通信下，云台可以选择不更新电压值，底盘可以使用自己采样的电压值
@@ -191,35 +188,37 @@ namespace control {
         }
     }
 
-    void Chassis::CanBridgeUpdateEventXYWrapper(communication::can_bridge_ext_id_t ext_id,
-                                                communication::can_bridge_data_t data, void* args) {
+    void Chassis::CanBridgeUpdateEventXYWrapper(
+        communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args
+    ) {
         Chassis* chassis = reinterpret_cast<Chassis*>(args);
         chassis->CanBridgeUpdateEventXY(ext_id, data);
     }
 
-    void Chassis::CanBridgeUpdateEventTurnWrapper(communication::can_bridge_ext_id_t ext_id,
-                                                  communication::can_bridge_data_t data,
-                                                  void* args) {
+    void Chassis::CanBridgeUpdateEventTurnWrapper(
+        communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args
+    ) {
         Chassis* chassis = reinterpret_cast<Chassis*>(args);
         chassis->CanBridgeUpdateEventTurn(ext_id, data);
     }
 
-    void Chassis::CanBridgeUpdateEventPowerLimitWrapper(communication::can_bridge_ext_id_t ext_id,
-                                                        communication::can_bridge_data_t data,
-                                                        void* args) {
+    void Chassis::CanBridgeUpdateEventPowerLimitWrapper(
+        communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args
+    ) {
         Chassis* chassis = reinterpret_cast<Chassis*>(args);
         chassis->CanBridgeUpdateEventPowerLimit(ext_id, data);
     }
 
-    void Chassis::CanBridgeUpdateEventCurrentPowerWrapper(communication::can_bridge_ext_id_t ext_id,
-                                                          communication::can_bridge_data_t data,
-                                                          void* args) {
+    void Chassis::CanBridgeUpdateEventCurrentPowerWrapper(
+        communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args
+    ) {
         Chassis* chassis = reinterpret_cast<Chassis*>(args);
         chassis->CanBridgeUpdateEventCurrentPower(ext_id, data);
     }
 
-    void Chassis::CanBridgeUpdateEventXY(communication::can_bridge_ext_id_t ext_id,
-                                         communication::can_bridge_data_t data) {
+    void Chassis::CanBridgeUpdateEventXY(
+        communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data
+    ) {
         if (can_bridge_tx_id_ != 0x00) {
             if (can_bridge_tx_id_ != ext_id.data.tx_id) {
                 return;
@@ -228,8 +227,9 @@ namespace control {
         can_bridge_vx_ = data.data_two_float.data[0];
         can_bridge_vy_ = data.data_two_float.data[1];
     }
-    void Chassis::CanBridgeUpdateEventTurn(communication::can_bridge_ext_id_t ext_id,
-                                           communication::can_bridge_data_t data) {
+    void Chassis::CanBridgeUpdateEventTurn(
+        communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data
+    ) {
         if (can_bridge_tx_id_ != 0x00) {
             if (can_bridge_tx_id_ != ext_id.data.tx_id) {
                 return;
@@ -248,8 +248,9 @@ namespace control {
             SetSpeed(0, 0, 0);
         }
     }
-    void Chassis::CanBridgeUpdateEventPowerLimit(communication::can_bridge_ext_id_t ext_id,
-                                                 communication::can_bridge_data_t data) {
+    void Chassis::CanBridgeUpdateEventPowerLimit(
+        communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data
+    ) {
         if (can_bridge_tx_id_ != 0x00) {
             if (can_bridge_tx_id_ != ext_id.data.tx_id) {
                 return;
@@ -262,8 +263,9 @@ namespace control {
         float voltage = data.data_two_float.data[1];
         UpdatePower(enabled, max_watt, voltage, buffer_percent);
     }
-    void Chassis::CanBridgeUpdateEventCurrentPower(communication::can_bridge_ext_id_t ext_id,
-                                                   communication::can_bridge_data_t data) {
+    void Chassis::CanBridgeUpdateEventCurrentPower(
+        communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data
+    ) {
         if (can_bridge_tx_id_ != 0x00) {
             if (can_bridge_tx_id_ != ext_id.data.tx_id) {
                 return;
@@ -289,8 +291,7 @@ namespace control {
         float max_current = power_limit_.max_watt / power_limit_.voltage;
 
         // 根据缓冲区剩余能量，使用线性插值，计算最大电流。
-        max_current = max_current *
-                      linear_interpolation<int>(20, 80, 80, 150, power_limit_.buffer_percent) / 100;
+        max_current = max_current * linear_interpolation<int>(20, 80, 80, 150, power_limit_.buffer_percent) / 100;
 
         // 获取数据
         int16_t turn_current[FourWheel::motor_num];
@@ -301,8 +302,7 @@ namespace control {
         }
 
         // 在转矩电流之上应用功率限制
-        power_limit_.limiter->LimitPower(turn_current, angular_velocity,
-                                         (int16_t)(max_current * 1000));
+        power_limit_.limiter->LimitPower(turn_current, angular_velocity, (int16_t)(max_current * 1000));
 
         // 应用限制后的转矩电流
         for (uint8_t i = 0; i < FourWheel::motor_num; ++i)
@@ -325,15 +325,14 @@ namespace control {
         max_motor_speed_ = max_speed;
     }
 
-    ChassisCanBridgeSender::ChassisCanBridgeSender(communication::CanBridge* can_bridge,
-                                                   uint8_t rx_id)
+    ChassisCanBridgeSender::ChassisCanBridgeSender(communication::CanBridge* can_bridge, uint8_t rx_id)
         : can_bridge_(can_bridge), device_rx_id_(rx_id) {
         rx_id_.data.rx_id = rx_id;
         rx_id_.data.type = communication::CAN_BRIDGE_TYPE_TWO_FLOAT;
     }
-    void ChassisCanBridgeSender::SetChassisRegId(uint8_t xy_reg_id, uint8_t turn_on_reg_id,
-                                                 uint8_t power_limit_reg_id,
-                                                 uint8_t current_power_reg_id) {
+    void ChassisCanBridgeSender::SetChassisRegId(
+        uint8_t xy_reg_id, uint8_t turn_on_reg_id, uint8_t power_limit_reg_id, uint8_t current_power_reg_id
+    ) {
         chassis_xy_reg_id_ = xy_reg_id;
         chassis_turn_on_reg_id_ = turn_on_reg_id;
         chassis_power_limit_reg_id_ = power_limit_reg_id;
@@ -357,8 +356,7 @@ namespace control {
         rx_id_.data.reg = chassis_turn_on_reg_id_;
         can_bridge_->Send(rx_id_, data_);
     }
-    void ChassisCanBridgeSender::SetSpeed(const float x_speed, const float y_speed,
-                                          const float turn_speed) {
+    void ChassisCanBridgeSender::SetSpeed(const float x_speed, const float y_speed, const float turn_speed) {
         if (chassis_enable_) {
             data_.data_two_float.data[0] = x_speed;
             data_.data_two_float.data[1] = y_speed;
@@ -380,9 +378,14 @@ namespace control {
         chassis_vy = y_speed;
         chassis_vt = turn_speed;
     }
-    void ChassisCanBridgeSender::SetPower(bool power_limit_on, float power_limit,
-                                          float chassis_power, float chassis_power_buffer,
-                                          bool enable_supercap, bool force_update) {
+    void ChassisCanBridgeSender::SetPower(
+        bool power_limit_on,
+        float power_limit,
+        float chassis_power,
+        float chassis_power_buffer,
+        bool enable_supercap,
+        bool force_update
+    ) {
         UNUSED(force_update);
         if (chassis_enable_) {
             {
@@ -404,8 +407,9 @@ namespace control {
             }
         }
     }
-    void ChassisCanBridgeSender::UpdatePower(bool enabled, uint8_t max_watt, float current_voltage,
-                                             uint8_t buffer_percent) {
+    void ChassisCanBridgeSender::UpdatePower(
+        bool enabled, uint8_t max_watt, float current_voltage, uint8_t buffer_percent
+    ) {
         if (!chassis_enable_) {
             return;
         }
