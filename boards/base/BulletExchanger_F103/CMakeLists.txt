@@ -1,0 +1,60 @@
+get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${CURRENT_DIR_NAME} C ASM)
+
+set(MCU_LINE STM32F103xB)
+set(MCU_ARCH cortex-m3)
+set(MCU_LINKER_SCRIPT STM32F103CBTx_FLASH.ld)
+set(MCU_OPTIONS -mcpu=${MCU_ARCH} -mthumb -mthumb-interwork)
+
+# ----- board specific interface library -----
+add_library(${PROJECT_NAME}_interface INTERFACE)
+target_compile_definitions(${PROJECT_NAME}_interface INTERFACE
+        ${MCU_LINE}
+        ARM_MATH_CM3
+        NO_IMU
+        NO_ONBOARD_SENSOR
+        NO_USB
+        F103_Nano
+)
+target_compile_options(${PROJECT_NAME}_interface INTERFACE ${MCU_OPTIONS})
+target_link_options(${PROJECT_NAME}_interface INTERFACE
+        ${MCU_OPTIONS} -T${CMAKE_CURRENT_SOURCE_DIR}/${MCU_LINKER_SCRIPT})
+
+target_link_libraries(${PROJECT_NAME}_interface INTERFACE board_interface)
+target_include_directories(${PROJECT_NAME}_interface INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc
+        ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F1xx_HAL_Driver/Inc
+        ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F1xx_HAL_Driver/Inc/Legacy
+        ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/CMSIS/Include
+        ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32F1xx/Include
+        ${CMAKE_CURRENT_SOURCE_DIR}/DSP/Include
+        ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
+        ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3
+)
+
+# ----- DSP library -----
+file(GLOB_RECURSE DSP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/DSP/Source/*.c)
+add_library(${PROJECT_NAME}_libDSP ${DSP_SOURCES})
+target_compile_options(${PROJECT_NAME}_libDSP PRIVATE
+        -Wno-strict-aliasing -Wno-unused-parameter)
+target_compile_definitions(${PROJECT_NAME}_libDSP PRIVATE __FPU_PRESENT)
+target_link_libraries(${PROJECT_NAME}_libDSP PRIVATE ${PROJECT_NAME}_interface)
+
+# ----- board driver library -----
+file(GLOB_RECURSE CORE_SOURCES    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/*.c)
+file(GLOB_RECURSE DRIVER_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/*.c)
+file(GLOB_RECURSE MIDDLEWARE_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/*.c)
+file(GLOB_RECURSE STARTUP_ASM     ${CMAKE_CURRENT_SOURCE_DIR}/startup_stm32f103xb.s)
+
+add_library(${PROJECT_NAME} OBJECT
+        ${CORE_SOURCES}
+        ${DRIVER_SOURCES}
+        ${MIDDLEWARE_SOURCES}
+        ${STARTUP_ASM})
+target_compile_options(${PROJECT_NAME} PRIVATE
+        -Wno-maybe-uninitialized -Wno-unused-parameter
+        -Wno-sign-compare -Wno-int-conversion)
+target_link_libraries(${PROJECT_NAME}
+        PRIVATE ${PROJECT_NAME}_libDSP
+        PUBLIC  ${PROJECT_NAME}_interface)
