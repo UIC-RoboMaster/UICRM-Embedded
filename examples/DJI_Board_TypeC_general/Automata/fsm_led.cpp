@@ -25,7 +25,7 @@
 #include "bsp_print.h"
 #include "Automata.h"
 
-enum key_states {RELEASE, PRESS};
+enum key_states { RELEASE, PRESS };
 control::AutomataBuilder<key_states>* key_builder;
 control::Automata<key_states>* key_aut;
 
@@ -43,21 +43,20 @@ void RM_RTOS_Init(void) {
             RELEASE,
             PRESS,
             TRANLOGIC {
-                auto key_input =
-                    ins.get<remote::AutomataInputRemote>(INTYPE(std::declval<bsp::GPIO>().Read()), 0);
+                auto key_input = ins.get<remote::AutomataInputRemote>(INTYPE(std::declval<bsp::GPIO>().Read()), 0);
                 return key_input.get() == true;
-            })
+            }
+        )
         .transition(
             PRESS,
             RELEASE,
             TRANLOGIC {
-                auto key_input =
-                    ins.get<remote::AutomataInputRemote>(INTYPE(std::declval<bsp::GPIO>().Read()), 0);
+                auto key_input = ins.get<remote::AutomataInputRemote>(INTYPE(std::declval<bsp::GPIO>().Read()), 0);
                 return key_input.get() == false;
-            });
+            }
+        );
     key_aut = key_builder->build(RELEASE);
     delete key_builder;
-
 }
 
 void RM_RTOS_Default_Task(const void* args) {
@@ -81,22 +80,25 @@ void RM_RTOS_Default_Task(const void* args) {
         print_enabled("PRESSED", key_aut->state() ? PRESS : RELEASE);
 
         key_aut->input(std::make_tuple(key.Read()));
-        if (key_aut->state() == RELEASE) continue;
-        while (key_aut->state() == PRESS) {key_aut->input(std::make_tuple(key.Read()));}
+        if (key_aut->state() == RELEASE)
+            continue;
+        while (key_aut->state() == PRESS) {
+            key_aut->input(std::make_tuple(key.Read()));
+        }
 
         alpha = (RGB_flow_color[i] & 0xFF000000) >> 24;
         red = ((RGB_flow_color[i] & 0x00FF0000) >> 16);
         green = ((RGB_flow_color[i] & 0x0000FF00) >> 8);
         blue = ((RGB_flow_color[i] & 0x000000FF) >> 0);
 
-        delta_alpha = (float)((RGB_flow_color[(i + 1) % 3] & 0xFF000000) >> 24) -
-                      (float)((RGB_flow_color[i] & 0xFF000000) >> 24);
-        delta_red = (float)((RGB_flow_color[(i + 1) % 3] & 0x00FF0000) >> 16) -
-                    (float)((RGB_flow_color[i] & 0x00FF0000) >> 16);
-        delta_green = (float)((RGB_flow_color[(i + 1) % 3] & 0x0000FF00) >> 8) -
-                      (float)((RGB_flow_color[i] & 0x0000FF00) >> 8);
-        delta_blue = (float)((RGB_flow_color[(i + 1) % 3] & 0x000000FF) >> 0) -
-                     (float)((RGB_flow_color[i] & 0x000000FF) >> 0);
+        delta_alpha =
+            (float)((RGB_flow_color[(i + 1) % 3] & 0xFF000000) >> 24) - (float)((RGB_flow_color[i] & 0xFF000000) >> 24);
+        delta_red =
+            (float)((RGB_flow_color[(i + 1) % 3] & 0x00FF0000) >> 16) - (float)((RGB_flow_color[i] & 0x00FF0000) >> 16);
+        delta_green =
+            (float)((RGB_flow_color[(i + 1) % 3] & 0x0000FF00) >> 8) - (float)((RGB_flow_color[i] & 0x0000FF00) >> 8);
+        delta_blue =
+            (float)((RGB_flow_color[(i + 1) % 3] & 0x000000FF) >> 0) - (float)((RGB_flow_color[i] & 0x000000FF) >> 0);
 
         delta_alpha /= RGB_FLOW_COLOR_CHANGE_TIME;
         delta_red /= RGB_FLOW_COLOR_CHANGE_TIME;

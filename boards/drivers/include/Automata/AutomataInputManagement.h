@@ -64,22 +64,22 @@ namespace control {
     };
 
     /*CollectItems*/
-    template<typename... Items>
+    template <typename... Items>
     struct CollectItems {
-        template<template<class> class Component, typename T>
+        template <template <class> class Component, typename T>
         constexpr auto addItem(T&& v) const {
             using Type = std::remove_cv_t<std::remove_reference_t<decltype(v)>>;
             using NewComponent = Component<Type>;
             return CollectItems<Items..., NewComponent>{};
         }
-        template<template<class> class Component, typename Struct, typename Member>
+        template <template <class> class Component, typename Struct, typename Member>
         constexpr auto addItem(Member Struct::*) const {
             using Type = std::remove_cv_t<std::remove_reference_t<Member>>;
             using NewComponent = Component<Type>;
             return CollectItems<Items..., NewComponent>{};
         }
 
-        //DEBUG ONLY
+        // DEBUG ONLY
         auto output() {
             return AutomataInputManagement<Items...>{};
         }
@@ -88,7 +88,7 @@ namespace control {
     };
     /*CollectItems*/
 
-    template<typename... Items>
+    template <typename... Items>
     using Ins = AutomataInputManagement<Items...>;
 
 }  // namespace control

@@ -95,8 +95,8 @@ void shootTask(void* arg) {
         switch (shoot_fric_wheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
                 flywheel_target = 120.0f * 2 * PI;
-                shoot_fric_wheel_mode = SHOOT_FRIC_MODE_PREPARED; //todo move to remote_task and
-                                                                  // trigger by speed of flywheels
+                shoot_fric_wheel_mode = SHOOT_FRIC_MODE_PREPARED;  // todo move to remote_task and
+                                                                   //  trigger by speed of flywheels
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;
@@ -122,14 +122,12 @@ void shootTask(void* arg) {
                 // 发射一枚子弹
                 if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                     if (steering_motor->IsHolding()) {
-                        steering_motor->SetTarget(
-                            steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                        steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
                     }
                 }
                 break;
             case SHOOT_MODE_BURST:
-                steering_motor->SetTarget(
-                    steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
                 break;
             case SHOOT_MODE_STOP:
                 // 停止发射

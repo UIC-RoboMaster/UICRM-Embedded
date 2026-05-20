@@ -56,13 +56,16 @@ namespace control {
      */
     template <class T>
     class AutomataInputRaw : public AutomataInputComponentsBase<T> {
-    public:
+      public:
         ~AutomataInputRaw() override = default;
         virtual void update(const T& input) {
             val_ = input;
         }
-        virtual T get() const {return val_;}
-    protected:
+        virtual T get() const {
+            return val_;
+        }
+
+      protected:
         T val_;
     };
 
@@ -74,7 +77,8 @@ namespace control {
     template <class T>
     class AutomataInputEdge : public AutomataInputComponentsBase<T> {
       public:
-        AutomataInputEdge() : last_update_(0) {}
+        AutomataInputEdge() : last_update_(0) {
+        }
         ~AutomataInputEdge() override = default;
 
         /**

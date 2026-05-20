@@ -46,7 +46,6 @@ void remoteTask(void* arg) {
     bool is_referee_robot_dead = true;
     bool is_referee_shoot_available = false;
 
-
     // Automata definitions
     // clang-format off
 
@@ -150,9 +149,9 @@ void remoteTask(void* arg) {
         // Kill Detection
         is_referee_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_referee_shoot_available = (referee->game_robot_status.shooter_heat_limit -
-                              referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
-                             // referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
-                             imu->CaliDone();
+                                      referee->power_heat_data.shooter_id1_17mm_cooling_heat) >= 100 &&
+                                     // referee->bullet_remaining.bullet_remaining_num_17mm > 0 &&
+                                     imu->CaliDone();
 #else
         is_referee_robot_dead = false;
         is_referee_shoot_available = true;
@@ -160,30 +159,23 @@ void remoteTask(void* arg) {
 
         activate_aut.input(std::make_tuple(is_referee_robot_dead));
         is_activate = activate_aut.state() == ACTIVE;
-        if (!is_activate || !imu->DataReady() || !imu->CaliDone()) continue;
+        if (!is_activate || !imu->DataReady() || !imu->CaliDone())
+            continue;
 
-        remote_mode_aut.input(std::make_tuple(
-            dbus->swr,
-            static_cast<bool>(dbus->keyboard.bit.SHIFT)));
+        remote_mode_aut.input(std::make_tuple(dbus->swr, static_cast<bool>(dbus->keyboard.bit.SHIFT)));
         last_remote_mode = remote_mode;
         remote_mode = remote_mode_aut.state();
 
-        fric_wheel_aut.input(std::make_tuple(
-            dbus->swl,
-            static_cast<bool>(dbus->keyboard.bit.Z)));
+        fric_wheel_aut.input(std::make_tuple(dbus->swl, static_cast<bool>(dbus->keyboard.bit.Z)));
         shoot_fric_wheel_mode = fric_wheel_aut.state();
 
-        shoot_aut.input(std::make_tuple(
-            dbus->swl,
-            shoot_fric_wheel_mode,
-            is_referee_shoot_available,
-            dbus->mouse.l,
-            remote_mode));
+        shoot_aut.input(
+            std::make_tuple(dbus->swl, shoot_fric_wheel_mode, is_referee_shoot_available, dbus->mouse.l, remote_mode)
+        );
         last_shoot_mode = shoot_mode;
         shoot_mode = shoot_aut.state();
 
         bullet_cap_aut.input(std::make_tuple(dbus->swl, shoot_fric_wheel_mode));
         bullet_cap_mode = bullet_cap_aut.state();
-
     }
 }

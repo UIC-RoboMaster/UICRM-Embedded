@@ -49,50 +49,54 @@ namespace control {
       public:
         using StateList = typename TemplateMetaUtil::CollectStates<Trs...>::type;
 
-        /*interface*/           // with [Automata]
-        FiniteStateMachine(States init) : current_state_(init) {}
+        /*interface*/  // with [Automata]
+        FiniteStateMachine(States init) : current_state_(init) {
+        }
 
-        template<typename Ins>
+        template <typename Ins>
         void step(const Ins& ins) {
             stepImpl(ins, StateList{});
         }
 
-        States state() const {return current_state_;}
+        States state() const {
+            return current_state_;
+        }
         /*interface*/
       private:
         States current_state_;
 
-        template<typename Ins, auto... St>
+        template <typename Ins, auto... St>
         void stepImpl(const Ins& ins, TemplateMetaUtil::ValueList<St...>) {
             States res = current_state_;
             ((current_state_ == St ? (res = evalState<St>(ins), void()) : void()), ...);
             current_state_ = res;
         }
 
-        template<auto St, typename Ins>
+        template <auto St, typename Ins>
         States evalState(const Ins& ins) {
             using EvalGroup = typename TemplateMetaUtil::Filter<St, Trs...>::type;
             return evalTuple<EvalGroup>(ins, std::make_index_sequence<std::tuple_size_v<EvalGroup>>{});
         }
 
-        template<typename EvalGroup, typename Ins, size_t... Index>
+        template <typename EvalGroup, typename Ins, size_t... Index>
         States evalTuple(const Ins& ins, std::index_sequence<Index...>) {
             bool made_transit = false;
             States res = current_state_;
             ((!made_transit && std::tuple_element_t<Index, EvalGroup>::eval(ins) ?
-                (res = std::tuple_element_t<Index, EvalGroup>::to, made_transit = true) : made_transit),
-                ...);
+                  (res = std::tuple_element_t<Index, EvalGroup>::to, made_transit = true) :
+                  made_transit),
+             ...);
             return res;
         }
     };
     /*FiniteStateMachine*/
 
     /*Transition*/
-    template<auto From, auto To, typename Fn, typename ReTag>
+    template <auto From, auto To, typename Fn, typename ReTag>
     struct Transition {
         static constexpr auto from = From;
-        static constexpr auto to   = To;
-        template<typename Ins>
+        static constexpr auto to = To;
+        template <typename Ins>
         static bool eval(const Ins& ins) {
             return std::is_same_v<ReTag, ReverseTag> ? !Fn{}(ins) : Fn{}(ins);
         }
@@ -100,15 +104,15 @@ namespace control {
     /*Transition*/
 
     /*CollectTransitions*/
-    template<typename EnumStatesCollection, typename... Trs>
+    template <typename EnumStatesCollection, typename... Trs>
     struct CollectTransitions {
-        template<auto From, auto To, typename ReTag, typename Fn>
+        template <auto From, auto To, typename ReTag, typename Fn>
         constexpr auto addTrans(Fn) const {
             using NewTr = Transition<From, To, Fn, ReTag>;
             return CollectTransitions<EnumStatesCollection, Trs..., NewTr>{};
         }
 
-        //DEBUG ONLY
+        // DEBUG ONLY
         auto output(EnumStatesCollection init_state) {
             return FiniteStateMachine<EnumStatesCollection, Trs...>(init_state);
         }
@@ -134,9 +138,9 @@ namespace control {
     template <typename FSM, typename DMS>
     class Automata {
       public:
-        template<typename StateType>
-        explicit constexpr Automata(StateType init_state)
-            : state_machine_(init_state), comps_() {}
+        template <typename StateType>
+        explicit constexpr Automata(StateType init_state) : state_machine_(init_state), comps_() {
+        }
 
         /**
          * Update items and drive automata to transit once.
@@ -183,9 +187,9 @@ namespace control {
      * @tparam Trans Defined transitions store here
      */
     template <
-    typename EnumStatesCollection,
-    typename Items = CollectItems<>,
-    typename Trans = CollectTransitions<EnumStatesCollection>>
+        typename EnumStatesCollection,
+        typename Items = CollectItems<>,
+        typename Trans = CollectTransitions<EnumStatesCollection>>
     struct AutomataBuilder {
         Items items_;
         Trans trans_;
@@ -205,7 +209,7 @@ namespace control {
          * @param v Forward declaration
          * @return The new builder that has updated type.
          */
-        template <template<class> class Component, typename T>
+        template <template <class> class Component, typename T>
         constexpr auto item(T&& v) const {
             auto new_items = items_.template addItem<Component>(std::forward<T>(v));
             using NewItems = decltype(new_items);
@@ -224,7 +228,7 @@ namespace control {
          * @param member Forward declaration
          * @return The new builder that has updated type.
          */
-        template <template<class> class Component, typename Struct, typename Member>
+        template <template <class> class Component, typename Struct, typename Member>
         constexpr auto item(Member Struct::*member) const {
             auto new_items = items_.template addItem<Component>(member);
             using NewItems = decltype(new_items);

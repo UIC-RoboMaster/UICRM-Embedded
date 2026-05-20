@@ -39,7 +39,7 @@ struct raw_data_struct {
     bool dummy = false;
 };
 
-enum other_automata_output{s1, s2};
+enum other_automata_output { s1, s2 };
 
 const int global_eight = 8;
 
@@ -126,7 +126,7 @@ int main() {
     while (true) {
         // simulate value changes
         raw_data1.num1 = (++raw_data1.num1) % 10;
-        num2 = (17.0 * num2 + 1.6) > 100.0 ?  (17.0 * num2 + 1.6) : 1;
+        num2 = (17.0 * num2 + 1.6) > 100.0 ? (17.0 * num2 + 1.6) : 1;
         num3 = num3 == s1 ? s2 : s1;
 
         /*
@@ -135,12 +135,11 @@ int main() {
          * multi-thread is also good (for now ;D)
          */
 
-         /* input() gain update and drive automata to move a step based on these inputs.*/
+        /* input() gain update and drive automata to move a step based on these inputs.*/
         aut.input(std::make_tuple(raw_data1.num1, num2, num3, 3));
 
-        std::cout << "num1:" << raw_data1.num1 <<
-            " num2:" << num2 <<
-            " num3:" << (num3 == s1 ? "s1" : "s2") << std::endl;
+        std::cout << "num1:" << raw_data1.num1 << " num2:" << num2 << " num3:" << (num3 == s1 ? "s1" : "s2")
+                  << std::endl;
 
         std::cout << "state:";
         /* And here's how to get current automata output*/

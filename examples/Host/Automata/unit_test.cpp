@@ -27,10 +27,9 @@
 #include "Automata.h"
 #include "Automata/AutomataInputManagement.h"
 
-enum States {s1, s2};
+enum States { s1, s2 };
 
 int main() {
-
     // clang-format off
 
     auto inputs = control::CollectItems()
@@ -46,7 +45,6 @@ int main() {
 
     int num = 0;
     while (true) {
-
         num = (num + 1) % 3;
         inputs.updateItems(std::make_tuple(num));
 
