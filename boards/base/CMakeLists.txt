@@ -16,3 +16,4 @@ add_subdirectory(DJI_Board_TypeA_general)
 add_subdirectory(F103_Nano_general)
 
 add_subdirectory(DM_MC02_general)
+add_subdirectory(BulletExchanger_F103)

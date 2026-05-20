@@ -92,3 +92,10 @@ uicrm_add_board_specific_library(F103_Nano_general_drivers
         ${F103_Nano_Drivers_INCLUDES}
         DEPENDS F103_Nano_general_platform F103_Nano_general_algorithm)
 target_include_directories(F103_Nano_general_drivers PUBLIC ${F103_Nano_Drivers_INCLUDES})
+
+uicrm_add_board_specific_library(BulletExchanger_F103_drivers
+        TARGET BulletExchanger_F103
+        SOURCES ${DRIVER_SOURCES}
+        INCLUDES ${DRIVER_INCLUDES}
+        DEPENDS BulletExchanger_F103_platform BulletExchanger_F103_algorithm)
+target_include_directories(BulletExchanger_F103_drivers PUBLIC ${DRIVER_INCLUDES})
