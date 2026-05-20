@@ -39,7 +39,7 @@
 
 // bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
-    bsp::SetHighresClockTimer(&htim5);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     print_use_uart(&BOARD_UART1, true, 921600);
     init_can();
     init_batt();
@@ -101,9 +101,10 @@ void RM_RTOS_Default_Task(const void* arg) {
         clear_screen();
 
         // Mode info
+        // print_enabled("Active:%s ", activate_states_str());
         print("Mode:%s\r\n", remote_mode_str(remote_mode));
-        print("Shoot Fric Mode:%s\r\n", shoot_fric_mode_str(shoot_flywheel_mode));
-        print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_load_mode));
+        print("Shoot Fric Mode:%s\r\n", shoot_fric_mode_str(shoot_fric_wheel_mode));
+        print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_mode));
         print("\r\n");
 
         // DBUS info

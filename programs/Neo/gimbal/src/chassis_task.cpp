@@ -40,7 +40,7 @@ void chassisTask(void* arg) {
     kill_chassis();
     osDelay(1000);
 
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         kill_chassis();
         osDelay(CHASSIS_OS_DELAY);
     }
@@ -52,9 +52,9 @@ void chassisTask(void* arg) {
     chassis->Enable();
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+        if (!is_activate) {
             kill_chassis();
-            while (remote_mode == REMOTE_MODE_KILL) {
+            while (!is_activate) {
                 osDelay(CHASSIS_OS_DELAY + 2);
             }
             chassis->Enable();
