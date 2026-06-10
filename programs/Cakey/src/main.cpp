@@ -33,17 +33,21 @@
 #include "referee_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"
+#include "tongji_vision_task.h"
 #include "ui_task.h"
 /**
  * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
  */
 
 bsp::GPIO* gimbal_power = nullptr;
+
 void RM_RTOS_Init(void) {
     // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     // 初始化调试串口，使print()函数能够输出调试信息
     print_use_uart(&huart8, true, 921600);
+    // rtt
+    // print_use_rtt();
     // 初始化can总线，can在各个进程中都需要被使用所以在这里独立初始化
     init_can();
     // 初始化IMU
@@ -52,6 +56,8 @@ void RM_RTOS_Init(void) {
     init_buzzer();
     // 初始化裁判系统，裁判系统类能够读取裁判系统的数据
     init_referee();
+    // 初始化同济自瞄链路
+    init_tongji_vision();
     // 初始化遥控器与远程模式选择，遥控器类能够读取遥控器的数据
     init_minipc();
     init_remote();
@@ -75,6 +81,7 @@ void RM_RTOS_Threads_Init(void) {
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
+    tongjiVisionTaskHandle = osThreadNew(tongjiVisionTask, nullptr, &tongjiVisionTaskAttribute);
     if (ENABLE_UI)
         uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
@@ -156,6 +163,12 @@ void RM_RTOS_Default_Task(const void* arg) {
             minipc->target_angle.target_yaw,
             minipc->target_angle.accuracy
         );
+        print("Tongji: P%.3f Y%.3f [ctrl=%d shoot=%d online=%d]\r\n",
+              tongji_vision->cmd.pitch_rad,
+              tongji_vision->cmd.yaw_rad,
+              tongji_vision->cmd.control,
+              tongji_vision->cmd.shoot,
+              tongji_vision->IsOnline());
         print("\r\n");
 
         // Shoot info

@@ -39,6 +39,14 @@ namespace control {
 
         float INS_angle[3];  // yaw pitch roll
 
+        /**
+         * @brief 获取当前姿态四元数
+         * @return 指向长度为 4 的 float 数组，顺序 [w, x, y, z]
+         */
+        const float* GetQuat() const {
+            return q;
+        }
+
       private:
         float q[4];
         float g_zerodrift[3] = {0};

@@ -23,6 +23,7 @@
 #include "chassis_task.h"
 #include "dji_remote.h"
 #include "minipc_task.h"
+#include "tongji_vision_task.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -139,7 +140,10 @@ void gimbalTask(void* arg) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
                 // 如果是跟随模式或者旋转模式，将IMU作为参考系
-                if (minipc->target_angle.shoot_cmd && is_autoaim) {
+                if (is_autoaim && tongji_vision->IsOnline() && tongji_vision->cmd.control) {
+                    // 同济链路优先, 目前先使用旧 minipc 的 yaw 取负, 等暑假实际测试的时候来看看是否保留
+                    gimbal->TargetAbs(tongji_vision->cmd.pitch_rad, -tongji_vision->cmd.yaw_rad);
+                } else if (minipc->target_angle.shoot_cmd && is_autoaim) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
                 } else {
                     gimbal->TargetRel(pitch_diff, yaw_diff);
@@ -157,10 +161,13 @@ void gimbalTask(void* arg) {
                 //                gimbal->Update();
                 //                break;
             case REMOTE_MODE_AUTOAIM:
-                if (minipc->target_angle.target_pitch < 10e3 && minipc->target_angle.target_yaw < 10e3 &&
-                    minipc->target_angle.shoot_cmd) {
+                if (tongji_vision->IsOnline() && tongji_vision->cmd.control) {
+                    gimbal->TargetAbs(tongji_vision->cmd.pitch_rad, -tongji_vision->cmd.yaw_rad);
+                } else if (minipc->target_angle.target_pitch < 10e3 && minipc->target_angle.target_yaw < 10e3 &&
+                           minipc->target_angle.shoot_cmd) {
                     gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
                 }
+                // 若两个都不在线, 则保留上一帧目标 - 不动如山/
                 gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
                 break;
             default:

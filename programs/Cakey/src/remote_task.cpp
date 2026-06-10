@@ -24,6 +24,7 @@
 
 #include "gimbal_task.h"
 #include "imu_task.h"
+#include "tongji_vision_task.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
@@ -193,7 +194,8 @@ void remoteTask(void* arg) {
             }
         }
 
-        if (!is_autoaim || !minipc->IsOnline()) {
+        bool any_vision_online = minipc->IsOnline() || tongji_vision->IsOnline();
+        if (!is_autoaim || !any_vision_online) {
             // 单发
             static BoolEdgeDetector* shoot_switch_edge = new BoolEdgeDetector(false);
             shoot_switch_edge->input(state_l == remote::DOWN);
@@ -219,14 +221,14 @@ void remoteTask(void* arg) {
                 shoot_burst_timestamp = 0;
             }
         } else {
-            // 自喵模式下只有连发
-            if (minipc->IsOnline()) {
-                if (minipc->target_angle.shoot_cmd != 0 && mouse.l) {
-                    shoot_load_mode = SHOOT_MODE_BURST;
-                } else {
-                    shoot_load_mode = SHOOT_MODE_STOP;
-                    shoot_burst_timestamp = 0;
-                }
+            // 说明: 自瞄模式下只有连发, 同济链路与旧链路都可以发送开火, 与此同时仍然需要按住鼠标左键
+            bool tongji_fire = tongji_vision->IsOnline() && tongji_vision->cmd.shoot;
+            bool minipc_fire = minipc->IsOnline() && minipc->target_angle.shoot_cmd != 0;
+            if ((tongji_fire || minipc_fire) && mouse.l) {
+                shoot_load_mode = SHOOT_MODE_BURST;
+            } else {
+                shoot_load_mode = SHOOT_MODE_STOP;
+                shoot_burst_timestamp = 0;
             }
         }
 
