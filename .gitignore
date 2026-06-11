@@ -7,7 +7,11 @@ build
 .idea/editor.xml
 .idea/misc.xml
 .idea/uicrm.iml
+.idea/.name
+.idea/.gitignore
+.idea/scopes
 .idea/codeStyles/Project.xml
+.idea/copilot.data.migration.*
 
 ### CMake template
 CMakeLists.txt.user
