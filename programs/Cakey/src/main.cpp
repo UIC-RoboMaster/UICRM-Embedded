@@ -119,6 +119,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         clear_screen();
 
         // Mode info
+        print("\r\n====================Beginning===============\r\n");
         print("Mode:%s\r\n", remote_mode_str(remote_mode));
         print("Shoot Fric Mode:%s\r\n", shoot_fric_mode_str(shoot_flywheel_mode));
         print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_load_mode));

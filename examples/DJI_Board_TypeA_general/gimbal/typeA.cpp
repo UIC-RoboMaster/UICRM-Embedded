@@ -222,7 +222,7 @@ void RM_RTOS_Init(void) {
     };
     heater = new driver::Heater(heater_init);
 
-    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
+    pitch_motor = new driver::Motor6020(can2, 0x208, 0x1FF);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 10,
@@ -256,7 +256,7 @@ void RM_RTOS_Init(void) {
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
-    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
+    yaw_motor = new driver::Motor6020(can2, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
         .kp = 8,

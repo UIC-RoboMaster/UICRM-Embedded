@@ -166,10 +166,10 @@ void chassisTask(void* arg) {
 
 void init_chassis() {
     // 初始化底盘电机
-    fl_motor = new driver::Motor3508(can1, 0x201);
-    fr_motor = new driver::Motor3508(can1, 0x202);
-    bl_motor = new driver::Motor3508(can1, 0x203);
-    br_motor = new driver::Motor3508(can1, 0x204);
+    fl_motor = new driver::Motor3508(can1, 0x202);
+    fr_motor = new driver::Motor3508(can1, 0x203);
+    bl_motor = new driver::Motor3508(can1, 0x204);
+    br_motor = new driver::Motor3508(can1, 0x201);
 
     // 底盘电机PID参数
     control::ConstrainedPID::PID_Init_t omega_pid_init = {

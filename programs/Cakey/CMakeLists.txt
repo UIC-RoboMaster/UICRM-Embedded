@@ -17,5 +17,5 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeA
         src/buzzer_task.cpp
         src/tongji_vision_task.cpp
         INCLUDES include
-        DEFINES HAS_REFEREE
+        # DEFINES HAS_REFEREE     # 临时关闭, no KILL 判定/热量保护/功率限制
 )
