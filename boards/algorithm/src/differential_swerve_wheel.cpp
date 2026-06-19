@@ -20,6 +20,9 @@
 
 #include "differential_swerve_wheel.h"
 
+#include "arm_math.h"
+#include "utils.h"
+
 namespace control {
 
     namespace {
@@ -33,7 +36,7 @@ namespace control {
           inverse_matrix_(Inverse(control_matrix)),
           invertible_(Determinant(control_matrix) > kSingularEpsilon ||
                       Determinant(control_matrix) < -kSingularEpsilon),
-          state_({0.0f, 0.0f, 0.0f}),
+          state_({0.0f, 0.0f, 0.0f, 0.0f}),
           target_drive_angle_(0.0f),
           last_feedback_dwt_cnt_(0),
           last_target_dwt_cnt_(0),
@@ -75,40 +78,85 @@ namespace control {
         drive_speed = control_matrix_.a21 * motor1_omega + control_matrix_.a22 * motor2_omega;
     }
 
-    DifferentialSwerveWheelKinematic::WheelState DifferentialSwerveWheelKinematic::Update(
-        float motor1_theta, float motor2_theta) {
-        const float yaw_angle =
-            control_matrix_.a11 * motor1_theta + control_matrix_.a12 * motor2_theta;
+    inline float WrapToPi(float angle)
+    {
+        while (angle > PI)
+        {
+            angle -= 2.0f * PI;
+        }
+
+        while (angle <= -PI)
+        {
+            angle += 2.0f * PI;
+        }
+
+        return angle;
+    }
+
+    DifferentialSwerveWheelKinematic::WheelState
+    DifferentialSwerveWheelKinematic::Update(
+        float motor1_theta,
+        float motor2_theta,
+        float m1_trans_ratio,
+        float m2_trans_ratio) {
+
+        // 1. 转换到输入端角度
+        const float input1_theta = motor1_theta / m1_trans_ratio;
+        const float input2_theta = motor2_theta / m2_trans_ratio;
+
+        // 2. 正解计算当前的绝对角度
+        const float yaw_angle_raw =
+            control_matrix_.a11 * input1_theta +
+            control_matrix_.a12 * input2_theta;
+
         const float drive_angle =
-            control_matrix_.a21 * motor1_theta + control_matrix_.a22 * motor2_theta;
+            control_matrix_.a21 * input1_theta +
+            control_matrix_.a22 * input2_theta;
 
         float drive_speed = 0.0f;
+
+        // 3. 计算时间步长 dt
         if (feedback_dwt_ready_) {
             float dt = DWT_GetDeltaT(&last_feedback_dwt_cnt_);
             if (dt < kMinDt) {
                 dt = kMinDt;
             }
-            drive_speed = (drive_angle - state_.drive_angle) / dt;
+
+            // 4. 安全的速度计算：处理潜在的角度回绕
+            // 如果 drive_angle 是连续累加且不溢出的 float，可直接减；
+            // 如果 drive_angle 存在范围限制（如 0~2pi 或因编码器溢出断点），需计算最短步长：
+            float delta_drive = drive_angle - state_.drive_angle;
+
+            // 关键安全保障：假设单帧内驱动轮转动不超过半圈（π rad），防止由于回绕导致的速度暴走
+            // 如果你的 drive_angle 是纯连续累加且永不溢出的 double/float，可以注释掉下面这行
+            // delta_drive = WrapToPi(delta_drive);
+
+            drive_speed = delta_drive / dt;
         } else {
             last_feedback_dwt_cnt_ = DWT->CYCCNT;
             feedback_dwt_ready_ = true;
         }
 
-        state_.yaw_angle = yaw_angle;
+        // 5. 更新状态
+        state_.yaw_angle_raw = yaw_angle_raw;
+        state_.yaw_angle = WrapToPi(yaw_angle_raw); // 转向角限制在 [-PI, PI]
+
         state_.drive_angle = drive_angle;
         state_.drive_speed = drive_speed;
+
         return state_;
     }
 
     void DifferentialSwerveWheelKinematic::Update(float motor1_theta, float motor2_theta,
-                                                  float& yaw_angle, float& drive_speed) {
-        const WheelState state = Update(motor1_theta, motor2_theta);
-        yaw_angle = state.yaw_angle;
+                                                  float& yaw_angle, float& drive_speed,
+                                                  float m1_trans_ratio, float m2_trans_ratio) {
+        const WheelState state = Update(motor1_theta, motor2_theta, m1_trans_ratio, m2_trans_ratio);
+        yaw_angle = state.yaw_angle_raw;
         drive_speed = state.drive_speed;
     }
 
     void DifferentialSwerveWheelKinematic::Reset(float motor1_theta, float motor2_theta) {
-        state_.yaw_angle = control_matrix_.a11 * motor1_theta + control_matrix_.a12 * motor2_theta;
+        state_.yaw_angle_raw = control_matrix_.a11 * motor1_theta + control_matrix_.a12 * motor2_theta;
         state_.drive_angle =
             control_matrix_.a21 * motor1_theta + control_matrix_.a22 * motor2_theta;
         state_.drive_speed = 0.0f;
@@ -159,7 +207,7 @@ namespace control {
                                                        float drive_angle_target) {
         target_drive_angle_ = drive_angle_target;
 
-        state_.yaw_angle = yaw_angle_target;
+        state_.yaw_angle_raw = yaw_angle_target;
         state_.drive_angle = drive_angle_target;
         state_.drive_speed = 0.0f;
         last_feedback_dwt_cnt_ = DWT->CYCCNT;

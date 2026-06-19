@@ -62,6 +62,8 @@ namespace driver {
           output_shaft_omega_(0),
           can_(can),
           rx_id_(rx_id),
+          last_update_time_us_(0),
+          motor_update_time_interval(1000),
           speed_offset_(0) {
         // 大疆的电机，自动识别TX_ID
         if (tx_id == 0x00) {
@@ -252,8 +254,8 @@ namespace driver {
         // diff > 1500 说明收到了新的CAN数据包，但是因为丢包，距离上次收到的CAN数据包已经超过1.5ms
         uint32_t update_time_diff = update_time_us - last_update_time_us_;
         if (update_time_diff > 65535)
-            update_time_diff += 65536;
-        last_update_time_us_ = update_time_diff;
+            update_time_diff = static_cast<uint16_t>(update_time_diff);
+        last_update_time_us_ = update_time_us;
         motor_update_time_interval = 1000;
         uint32_t times =
             (update_time_diff + motor_update_time_interval / 2) / motor_update_time_interval;
@@ -331,6 +333,10 @@ namespace driver {
                 cumulated_rad_ += 2 * PI / transmission_ratio_;
             else if (inner_wrap_detector_->posEdge())
                 cumulated_rad_ -= 2 * PI / transmission_ratio_;
+            if (inner_wrap_detector_->negEdge())
+                ++output_cumulated_rounds_;
+            else if (inner_wrap_detector_->posEdge())
+                --output_cumulated_rounds_;
             cumulated_rad_ =
                 wrap<float>(cumulated_rad_, 0, transmission_ratio_ * 2 * PI);
 
@@ -366,6 +372,9 @@ namespace driver {
         // 设置电机的传动比
         // 这里的传动比不是电机的实际传动比，而是电机与编码器的传动比
         transmission_ratio_ = ratio;
+    }
+    float MotorCANBase::GetTransmissionRatio() const {
+        return transmission_ratio_;
     }
     float MotorCANBase::GetOutputShaftTheta() const {
         return output_shaft_theta_;

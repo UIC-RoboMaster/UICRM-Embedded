@@ -81,6 +81,20 @@ T wrap(T value, T min, T max) {
     return value < min ? value + range : (value > max ? value - range : value);
 }
 
+template<typename T>
+T wrapStrict(T value, T min, T max)
+{
+    const T range = max - min;
+
+    while (value < min)
+        value += range;
+
+    while (value >= max)
+        value -= range;
+
+    return value;
+}
+
 /**
  * @brief 环绕一个值使其落入给定范围，此函数会不断环绕直到落入范围
  *

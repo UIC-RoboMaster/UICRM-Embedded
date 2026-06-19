@@ -39,6 +39,7 @@ namespace control {
         };
 
         struct WheelState {
+            float yaw_angle_raw;
             float yaw_angle;
             float drive_angle;
             float drive_speed;
@@ -66,9 +67,9 @@ namespace control {
                           float& drive_speed) const;
 
         // Estimate wheel yaw angle and drive speed from motor angles.
-        WheelState Update(float motor1_theta, float motor2_theta);
+        WheelState Update(float motor1_theta, float motor2_theta, float, float);
         void Update(float motor1_theta, float motor2_theta, float& yaw_angle,
-                    float& drive_speed);
+                    float& drive_speed, float, float);
         void Reset(float motor1_theta = 0.0f, float motor2_theta = 0.0f);
 
         // Solve motor target angles from target yaw angle and target drive speed.
@@ -83,9 +84,13 @@ namespace control {
         float GetDriveAngleTarget() const;
 
         static constexpr Matrix2x2 DefaultControlMatrix() {
+            // return {
+            //     1.0f/8.4f, 1.0f/8.4f,
+            //     1.0f/5.6f, -1.0f/5.6f,
+            // };
             return {
-                5.6f, 5.6f,
-                8.4f, -8.4f,
+                1.0f/16.8f, 1.0f/16.8f,
+                1.0f/11.2f, -1.0f/11.2f,
             };
         }
 

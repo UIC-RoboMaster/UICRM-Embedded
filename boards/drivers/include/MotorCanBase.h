@@ -125,6 +125,11 @@ namespace driver {
         virtual uint16_t GetTemp() const;
 
         /**
+         * @return 电机的减速箱传动比
+         */
+        virtual float GetTransmissionRatio() const;
+
+        /**
          * @brief 通过电机的pid控制器计算电机的输出
          * @note 本函数会在电机输出进程中按照所设定的频率被自动调用，正常情况下请勿手动调用
          */
@@ -218,6 +223,8 @@ namespace driver {
          */
         void SetSpeedOffset(float offset);
 
+        [[nodiscard]] int32_t GetCumulatedRounds() const {return output_cumulated_rounds_;}
+
       protected:
         volatile float theta_;  // 编码器提供的角度值，单位为[rad]
         volatile float omega_;  // 编码器提供的速度值，单位为[rad/s]
@@ -231,8 +238,9 @@ namespace driver {
         volatile float power_on_angle_ = 0; /* 上电时的编码器角度，单位为[rad] */
         volatile float relative_angle_ = 0; /* 编码器相对于开机角度的角度，单位为[rad] */
         volatile float cumulated_rad_ =
-            0; /* 编码器累计圈数，按照2*PI/ratio加减，累积到2*PI清零 */
+            0; /* 编码器累计角度，按照2*PI/ratio加减，累积到2*PI清零 */
         volatile float output_cumulated_turns_ = 0; /* 输出轴累计圈数，按照2*PI加减，单位为[rad]*/
+        volatile int32_t output_cumulated_rounds_ = 0;
         volatile float output_relative_angle_ =
             0; /* 输出轴在这一圈中的角度，单位为[rad]，范围为[0, 2PI] */
 
