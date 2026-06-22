@@ -144,6 +144,9 @@ void gimbalTask(void* arg) {
         pitch_diff = clip<float>(pitch_target, -PI, PI);
         yaw_diff = wrap<float>(yaw_target, -PI, PI);
 
+        if (fabs(pitch_diff) < 0.001f) pitch_diff = 0;
+        if (fabs(yaw_diff) < 0.001f) yaw_diff = 0;  //死区过滤忽略微小位移
+
         //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
         //            pitch_diff = 0;
         //        }
@@ -213,21 +216,21 @@ void init_gimbal() {
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
         .kp = 13,
         .ki = 0,
-        .kd = 4.5,
+        .kd = 2,  //原参数4.5，下调至2
         .max_out = 6 * PI,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
         .output_filtering_coefficient = 0.1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
+        .derivative_filtering_coefficient = 0.5,         // 微分滤波系数,上调至0.5
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
         .kp = 4000,
         .ki = 0,
-        .kd = 2000,
+        .kd = 500, //原参数2000，下调减小对噪音的放大
         .max_out = 16383,
         .max_iout = 10000,
         .deadband = 0,                          // 死区
