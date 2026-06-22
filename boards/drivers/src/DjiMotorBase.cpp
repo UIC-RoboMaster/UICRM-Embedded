@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 
 #include "arm_math.h"
 #include "bsp_error_handler.h"
@@ -552,50 +552,6 @@ namespace driver {
         return raw_current_get_;
     }
 
-    MotorDM4310::MotorDM4310(CAN* can, uint16_t rx_id, uint16_t tx_id)
-        : MotorCANBase(can, rx_id, tx_id) {
-        // 绝对位置电机不需要初始化align_angle_
-        power_on_angle_ = 0;
-        can->RegisterRxCallback(rx_id, can_motor_callback, this);
-    }
-
-    void MotorDM4310::UpdateData(const uint8_t data[]) {
-        const int16_t raw_theta = data[0] << 8 | data[1];
-        const int16_t raw_omega = data[2] << 8 | data[3];
-        raw_current_get_ = data[4] << 8 | data[5];
-        raw_temperature_ = data[6];
-        raw_temperature_esc_ = data[7];
-
-        constexpr float THETA_SCALE = 2 * PI / 8192;      // digital -> rad
-        constexpr float OMEGA_SCALE = 2 * PI / 60 / 100;  // rpm -> rad / sec
-        theta_ = raw_theta * THETA_SCALE;
-        omega_ = raw_omega * OMEGA_SCALE;
-
-        MotorCANBase::UpdateData(data);
-    }
-
-    void MotorDM4310::PrintData() const {
-        print("online: %s ", (IsOnline() ? "true" : "false"));
-        print("theta: % .4f ", GetTheta());
-        print("output shaft theta: % .4f ", GetOutputShaftTheta());
-        print("omega: % .4f ", GetOmega());
-        print("output shaft omega: % .4f ", GetOutputShaftOmega());
-        print("raw temperature: %3d ", raw_temperature_);
-        print("raw current get: % d \r\n", raw_current_get_);
-    }
-
-    void MotorDM4310::SetOutput(int16_t val) {
-        constexpr int16_t MAX_ABS_CURRENT = 12288;  // ~20A
-        output_ = clip<int16_t>(val, -MAX_ABS_CURRENT, MAX_ABS_CURRENT);
-    }
-
-    int16_t MotorDM4310::GetCurr() const {
-        return raw_current_get_;
-    }
-
-    uint16_t MotorDM4310::GetTemp() const {
-        return raw_temperature_;
-    }
 
     /**
      * @brief default servomotor callback that overrides the standard can motor

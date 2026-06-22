@@ -20,7 +20,7 @@
 
 #include "AHRS.h"
 #include "MPU6500.h"
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_can.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"

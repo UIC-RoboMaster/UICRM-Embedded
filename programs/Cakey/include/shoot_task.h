@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "MotorPWMBase.h"
 #include "bsp_gpio.h"
 #include "cmsis_os2.h"

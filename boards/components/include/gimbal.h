@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "pid.h"
 #include "utils.h"
 

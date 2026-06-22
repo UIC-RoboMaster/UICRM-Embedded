@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "DMmotor.h"
+#include "DmMotorBase.h"
 
 namespace driver {
     /**

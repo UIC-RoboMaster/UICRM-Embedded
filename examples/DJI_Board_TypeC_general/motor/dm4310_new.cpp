@@ -18,7 +18,7 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include "DMmotor.h"
+#include "DmMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "bsp_print.h"

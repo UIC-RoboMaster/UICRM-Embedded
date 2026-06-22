@@ -20,7 +20,7 @@
 
 #include "main.h"
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_can.h"
 #include "bsp_print.h"
 #include "buzzer_notes.h"
