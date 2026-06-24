@@ -64,14 +64,14 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor3->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor4->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    motor2->SetMode(driver::MotorCANBase::OMEGA);
-    motor3->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    motor4->SetMode(driver::MotorCANBase::OMEGA);
+    motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor2->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor3->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor4->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor1->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
+    motor2->SetMode(driver::DjiMotorBase::OMEGA);
+    motor3->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
+    motor4->SetMode(driver::DjiMotorBase::OMEGA);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);

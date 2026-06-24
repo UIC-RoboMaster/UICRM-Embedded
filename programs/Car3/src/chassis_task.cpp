@@ -273,20 +273,20 @@ void init_chassis() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
-    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fl_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    fl_motor->SetMode(driver::DjiMotorBase::OMEGA);
     fl_motor->SetTransmissionRatio(19);
 
-    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fr_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    fr_motor->SetMode(driver::DjiMotorBase::OMEGA);
     fr_motor->SetTransmissionRatio(19);
 
-    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    bl_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    bl_motor->SetMode(driver::DjiMotorBase::OMEGA);
     bl_motor->SetTransmissionRatio(19);
 
-    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    br_motor->SetMode(driver::MotorCANBase::OMEGA);
+    br_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    br_motor->SetMode(driver::DjiMotorBase::OMEGA);
     br_motor->SetTransmissionRatio(19);
 
     // 底盘初始化

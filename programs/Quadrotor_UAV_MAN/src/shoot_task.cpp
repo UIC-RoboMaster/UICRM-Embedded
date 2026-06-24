@@ -89,9 +89,9 @@ void init_shoot() {
     steering_motor = new driver::Motor2006(can1, 0x201);
     steering_motor->SetTransmissionRatio(36);
 
-    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::DjiMotorBase::THETA);
+    steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
 }
 

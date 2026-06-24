@@ -182,10 +182,10 @@ void init_shoot() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    flywheel_left->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_right->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_left->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::INVERTED);
-    flywheel_right->SetMode(driver::MotorCANBase::OMEGA);
+    flywheel_left->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    flywheel_right->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    flywheel_left->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
+    flywheel_right->SetMode(driver::DjiMotorBase::OMEGA);
 
     steering_motor = new driver::Motor2006(can2, 0x203);
 
@@ -205,7 +205,7 @@ void init_shoot() {
                 control::ConstrainedPID::OutputFilter |       // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
-    steering_motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
+    steering_motor->ReInitPID(steering_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t steering_omega_pid_init = {
         .kp = 800,
         .ki = 0,
@@ -224,9 +224,9 @@ void init_shoot() {
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
 
     };
-    steering_motor->ReInitPID(steering_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
-    //    steering_motor->SetMode(driver::MotorCANBase::OMEGA);
+    steering_motor->ReInitPID(steering_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
+    //    steering_motor->SetMode(driver::DjiMotorBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
     // laser = new bsp::Laser(&htim3, 3, 1000000);

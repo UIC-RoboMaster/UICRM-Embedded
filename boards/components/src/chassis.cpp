@@ -64,7 +64,7 @@ namespace control {
                                                        M3508_POWER_MODEL, M3508_POWER_MODEL};
         power_limit_.enabled = chassis.power_limit_on;
         power_limit_.limiter = new NewPowerLimit(power_model);
-        driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
+        driver::DjiMotorBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
 
         // 底盘是否有超级电容
         if (chassis.has_super_capacitor) {
@@ -74,7 +74,7 @@ namespace control {
     }
 
     Chassis::~Chassis() {
-        driver::MotorCANBase::RegisterPreOutputCallback([](void* args) { UNUSED(args); }, nullptr);
+        driver::DjiMotorBase::RegisterPreOutputCallback([](void* args) { UNUSED(args); }, nullptr);
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
             case CHASSIS_OMNI_WHEEL: {
