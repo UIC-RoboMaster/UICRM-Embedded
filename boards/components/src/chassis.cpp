@@ -38,7 +38,7 @@ namespace control {
             case CHASSIS_MECANUM_WHEEL:
             case CHASSIS_OMNI_WHEEL: {
                 // 新建电机关联
-                motors_ = new driver::MotorCANBase*[FourWheel::motor_num];
+                motors_ = new driver::DjiMotorBase*[FourWheel::motor_num];
                 motors_[FourWheel::front_left] = chassis.motors[FourWheel::front_left];
                 motors_[FourWheel::front_right] = chassis.motors[FourWheel::front_right];
                 motors_[FourWheel::back_left] = chassis.motors[FourWheel::back_left];

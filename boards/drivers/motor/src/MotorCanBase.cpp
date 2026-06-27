@@ -18,43 +18,11 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "DjiMotorBase.h"
-#include "bsp_gpio.h"
-#include "bsp_print.h"
-#include "cmsis_os.h"
-#include "main.h"
+// All MotorCANBase template definitions are inline in MotorCanBase.h.
+// This file exists only to keep the build system happy.
 
-bsp::CAN* can2 = NULL;
-driver::DjiMotorBase* motor1 = NULL;
-// control::DjiMotorBase* motor2 = NULL;
+#include "MotorCanBase.h"
 
-void RM_RTOS_Init() {
-    print_use_uart(&huart4);
-
-    can2 = new bsp::CAN(&hcan2, false);
-    motor1 = new driver::Motor6020(can2, 0x205);
-    // motor2 = new control::Motor6020(can2, 0x206);
-}
-
-void RM_RTOS_Default_Task(const void* args) {
-    UNUSED(args);
-
-    bsp::GPIO key(KEY_GPIO_Port, KEY_Pin);
-    bsp::GPIO power_output(Power_OUT1_EN_GPIO_Port, Power_OUT1_EN_Pin);
-    osDelay(1000);
-    power_output.High();
-    osDelay(1000);
-    while (true) {
-        if (key.Read()) {
-            motor1->SetOutput(800);
-            // motor2->SetOutput(800);
-        } else {
-            motor1->SetOutput(0);
-            // motor2->SetOutput(0);
-        }
-        set_cursor(0, 0);
-        clear_screen();
-        motor1->PrintData();
-        osDelay(100);
-    }
-}
+namespace driver {
+// Template instantiations happen automatically via the header.
+}  // namespace driver

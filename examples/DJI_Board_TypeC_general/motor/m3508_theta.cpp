@@ -24,6 +24,8 @@
 #include "cmsis_os.h"
 #include "main.h"
 #include "pid.h"
+#include "tim.h"
+#include "bsp_os.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
@@ -33,8 +35,10 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor3508* motor1 = nullptr;
 
 void RM_RTOS_Init() {
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
+
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hcan1, true);
+    can1 = new bsp::CAN(&hcan1, false);
     motor1 = new driver::Motor3508(can1, 0x201);
     motor1->SetTransmissionRatio(19);
     control::ConstrainedPID::PID_Init_t theta_pid_init = {

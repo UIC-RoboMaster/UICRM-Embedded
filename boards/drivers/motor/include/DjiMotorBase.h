@@ -31,6 +31,54 @@
 namespace driver {
 
 /**
+ * @brief DJI 电机特有状态结构体
+ *
+ * 扩展 MotorState（基类 state_），存放 DJI 品牌 PID 控制相关的专属字段。
+ */
+struct DjiMotorState {
+    // ── 编码器反馈 ──
+    float theta = 0;              // 编码器角度 [rad], 范围 [0, 2PI]
+    float omega = 0;              // 编码器角速度 [rad/s]
+
+    // ── 原始回传 ──
+    int16_t raw_current = 0;      // 原始电流反馈
+    uint8_t raw_temperature = 0;  // 原始温度
+
+    // ── 输出轴 ──
+    float output_shaft_theta = 0; // 输出轴累计角度 [rad]
+    float output_shaft_omega = 0; // 输出轴角速度 [rad/s]
+
+    // ── 角度追踪 ──
+    float power_on_angle = -1;           // 上电时的编码器角度 [rad]（-1 表示未初始化）
+    float relative_angle = 0;            // 编码器相对上电角度的角度 [rad]
+    float cumulated_rad = 0;             // 编码器累计圈数（2*PI/ratio 为单位）
+    float output_cumulated_turns = 0;    // 输出轴累计圈数（2*PI 为单位）[rad]
+    float output_relative_angle = 0;     // 输出轴当前圈内角度 [rad], 范围 [0, 2PI]
+
+    // ── 配置 ──
+    float transmission_ratio = 1;  // 减速比
+    bool enable = true;            // 使能
+    bool absolute_mode = false;    // 绝对模式：输出轴不累计圈数
+
+    // ── CAN 连接 ──
+    bsp::CAN* can = nullptr;  // CAN 硬件对象
+    uint16_t rx_id = 0;       // 接收 CAN ID
+    uint16_t tx_id = 0;       // 发送 CAN ID
+
+    // ── 时间戳 ──
+    uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳
+
+    // ── DJI 专属控制字段 ──
+    uint8_t mode = 0;                      // 控制模式（OMEGA/THETA/ABSOLUTE/INVERTED）
+    float target = 0;                      // 目标值：角度 [rad] 或 角速度 [rad/s]
+    float speed_offset = 0;                // 前馈速度偏移
+    float proximity_in = 0.05;             // 进入保持状态的临界角度差
+    float proximity_out = 0.15;            // 退出保持状态的临界角度差
+    bool holding = true;                   // 角度模式下是否已达目标
+    uint32_t motor_update_time_interval;   // CAN 回传间隔 [us]
+};
+
+/**
  * @brief DJI 品牌 CAN 电机的基类
  *
  * 在 MotorCANBase 的基础上添加 DJI 电机特有的能力：
@@ -40,8 +88,10 @@ namespace driver {
  * - 堵转回调
  * - 前馈偏移
  */
-class DjiMotorBase : public MotorCANBase {
+class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
   public:
+    friend class MotorCANBase<DjiMotorBase>;
+
     enum motor_mode {
         // 未使用
         NONE = 0x00,
@@ -168,26 +218,32 @@ class DjiMotorBase : public MotorCANBase {
      */
     void SetSpeedOffset(float offset);
 
-  protected:
-    float proximity_in_ = 0.05;   /* 电机进入保持状态的临界角度差 */
-    float proximity_out_ = 0.15;  /* 电机退出保持状态的临界角度差 */
+    /**
+     * @brief 设置电机扭矩（力矩控制模式）
+     * @note 需先通过 SetMode(CURRENT) 切换到力矩控制模式
+     * @param torque_nm 目标扭矩 [N·m]，内部换算：raw = torque_nm * 1000 / (torque_constant_ * RAW_CURRENT_TO_AMP)
+     * @param override 是否覆盖之前的目标
+     */
+    void SetTorque(float torque_nm, bool override = true);
 
-    bool holding_ = true; /* 角度模式下，电机是否达到目标 */
+    /**
+     * @brief 获取当前电机扭矩
+     * @return 当前扭矩 [N·m]，换算公式：raw_current * RAW_CURRENT_TO_AMP * torque_constant_ / 1000
+     */
+    float GetTorque() const;
+
+  protected:
+    DjiMotorState state_;  // 电机全部状态数据（反馈 + 控制）
+
+    /// DJI CAN 协议：raw_current ∈ [-16384, 16384] 对应转矩电流 ∈ [-3A, 3A]
+    static constexpr float RAW_CURRENT_TO_AMP = 3.0f / 16384.0f;
+
+    /// 转矩常数 [mN·m/A]，由各子类构造函数根据电机规格设置
+    float torque_constant_ = 0;
 
   private:
-    uint16_t tx_id_;
-
-    uint8_t mode_ = 0;
     control::ConstrainedPID omega_pid_;
     control::ConstrainedPID theta_pid_;
-    // 电机 CAN 数据包回传间隔，单位为微秒
-    uint32_t motor_update_time_interval;
-
-    // 目标，取决于电机的模式，可以是角度 [RAD]、角速度 [RAD/S]
-    float target_;
-
-    // 前馈中使用，在角度环输出的速度上加上一个偏移量
-    float speed_offset_;
 
     callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
     void* error_callback_instance_ = nullptr;
@@ -244,10 +300,7 @@ class Motor2006 : public DjiMotorBase {
     /* override base implementation with max current protection */
     void SetOutput(int16_t val) override final;
 
-    int16_t GetCurr() const override final;
-
   private:
-    volatile int16_t raw_current_get_ = 0;
     static const int16_t MAX_OUT = 10000;
 };
 
@@ -265,13 +318,7 @@ class Motor3508 : public DjiMotorBase {
     /* override base implementation with max current protection */
     void SetOutput(int16_t val) override final;
 
-    int16_t GetCurr() const override final;
-
-    uint16_t GetTemp() const override final;
-
   private:
-    volatile int16_t raw_current_get_ = 0;
-    volatile uint8_t raw_temperature_ = 0;
     static const int16_t MAX_OUT = 32767;
 };
 
@@ -289,15 +336,9 @@ class Motor6020 : public DjiMotorBase {
     /* override base implementation with max current protection */
     void SetOutput(int16_t val) override final;
 
-    int16_t GetCurr() const override final;
-
-    uint16_t GetTemp() const override final;
-
     void SetSpeedFilter(float ratio);
 
   private:
-    volatile int16_t raw_current_get_ = 0;
-    volatile uint8_t raw_temperature_ = 0;
     static const int16_t MAX_OUT = 25000;
     static const int16_t MAX_OUT_C = 16383;
     float input_speed_filter_ = 0.1;
@@ -344,7 +385,7 @@ typedef void (*jam_callback_t)(ServoMotor* servo, const servo_jam_t data);
  * @brief 伺服电机的初始化结构体
  */
 typedef struct {
-    MotorCANBase* motor;      /* motor instance to be wrapped as a servomotor      */
+    DjiMotorBase* motor;      /* motor instance to be wrapped as a servomotor      */
     float max_speed;          /* desired turning speed of motor shaft, in [rad/s]  */
     float max_acceleration;   /* desired acceleration of motor shaft, in [rad/s^2] */
     float transmission_ratio; /* transmission ratio of motor */
@@ -494,7 +535,7 @@ class ServoMotor {
 
   private:
     // refer to servo_t for details
-    MotorCANBase* motor_;
+    DjiMotorBase* motor_;
     float max_speed_;
     float max_acceleration_;
     float transmission_ratio_;
@@ -543,7 +584,7 @@ typedef bool (*align_detect_t)(void);
  * @brief 舵轮用转向电机的初始化结构体
  */
 typedef struct {
-    MotorCANBase* motor; /* motor instance to be wrapped as a servomotor      */
+    DjiMotorBase* motor; /* motor instance to be wrapped as a servomotor      */
     float max_speed;     /* desired turning speed of motor shaft, in [rad/s]  */
     float test_speed;
     float max_acceleration;   /* desired acceleration of motor shaft, in [rad/s^2] */
@@ -590,7 +631,7 @@ class SteeringMotor {
  * @brief 飞轮电机的初始化结构体
  */
 typedef struct {
-    MotorCANBase* motor;    /* motor instance to be wrapped as a flywheel      */
+    DjiMotorBase* motor;    /* motor instance to be wrapped as a flywheel      */
     float max_speed;        /* desired turning speed of motor shaft, in [rad/s]  */
     float* omega_pid_param; /* pid parameter used to control speed of motor   */
     bool is_inverted;
@@ -673,7 +714,7 @@ class FlyWheelMotor {
     void UpdateData(const uint8_t data[]);
 
   private:
-    MotorCANBase* motor_;
+    DjiMotorBase* motor_;
     bool is_inverted_;
     float max_speed_;
     float target_speed_;

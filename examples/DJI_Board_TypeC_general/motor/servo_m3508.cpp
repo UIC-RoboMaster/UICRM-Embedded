@@ -27,7 +27,7 @@
 #include "main.h"
 
 bsp::CAN* can1 = NULL;
-driver::MotorCANBase* motor1 = NULL;
+driver::DjiMotorBase* motor1 = NULL;
 driver::ServoMotor* load_servo = NULL;
 remote::DBUS* dbus = nullptr;
 float load_step_angle = 10 * PI;

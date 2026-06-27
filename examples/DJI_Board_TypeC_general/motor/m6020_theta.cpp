@@ -36,6 +36,7 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor6020* motor1 = nullptr;
 
 void RM_RTOS_Init() {
+
     bsp::SetHighresClockTimer(&htim5);
 
 
@@ -44,7 +45,7 @@ void RM_RTOS_Init() {
     motor1 = new driver::Motor6020(can1, 0x209, 0x2fe);
     motor1->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t theta_pid_init = {
-        .kp = 40,
+        .kp = 20,
         .ki = 0,
         .kd = 0,
         .max_out = 6 * PI,
@@ -52,13 +53,13 @@ void RM_RTOS_Init() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 0.5,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
     motor1->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 80,
+        .kp = 800,
         .ki = 1,
         .kd = 0,
         .max_out = 16384,
@@ -74,8 +75,7 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
-    motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA |
-                    driver::DjiMotorBase::ABSOLUTE);
+    motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
     motor1->SetTarget(0);
     // Snail need to be run at idle throttle for some
@@ -95,7 +95,7 @@ void RM_RTOS_Default_Task(const void* args) {
             while (key.Read() == 0) {
                 osDelay(30);
             }
-            motor1->SetTarget(motor1->GetTarget() + 2 * PI);
+            motor1->SetTarget(motor1->GetTarget() + 1.5 * PI);
             osDelay(20);
         }
         motor1->PrintData();

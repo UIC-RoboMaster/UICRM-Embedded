@@ -40,7 +40,7 @@ namespace control {
      * @brief structure used when chassis instance is initialized
      */
     struct chassis_t {
-        driver::MotorCANBase** motors; /* motor instances of all chassis motors */
+        driver::DjiMotorBase** motors; /* motor instances of all chassis motors */
         chassis_model_t model;         /* chassis model                         */
         float offset = 0;
         bool power_limit_on = false;
@@ -162,7 +162,7 @@ namespace control {
 
       private:
         // acquired from user
-        driver::MotorCANBase** motors_ = nullptr;
+        driver::DjiMotorBase** motors_ = nullptr;
         chassis_model_t model_;
 
         // pids and current speeds for each motor on the chassis

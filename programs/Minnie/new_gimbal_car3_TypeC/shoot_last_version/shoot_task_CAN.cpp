@@ -26,7 +26,7 @@
 static driver::Motor3508* flywheel_left = nullptr;
 static driver::Motor3508* flywheel_right = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::DjiMotorBase* steering_motor = nullptr;
 
 driver::ServoMG995* MG995 = nullptr;
 
@@ -64,7 +64,7 @@ void jam_callback(void* args) {
     }
 }
 
-bool steering_SetTarget(driver::MotorCANBase* motor, float SetTarget, float threshold,
+bool steering_SetTarget(driver::DjiMotorBase* motor, float SetTarget, float threshold,
                         bool locked_rotor = true, bool ABS = false) {
     motor->Enable();
     bool Steering_Mode = false;

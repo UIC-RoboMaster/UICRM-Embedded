@@ -32,10 +32,10 @@
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
-driver::MotorCANBase* fl_motor = nullptr;
-driver::MotorCANBase* fr_motor = nullptr;
-driver::MotorCANBase* bl_motor = nullptr;
-driver::MotorCANBase* br_motor = nullptr;
+driver::DjiMotorBase* fl_motor = nullptr;
+driver::DjiMotorBase* fr_motor = nullptr;
+driver::DjiMotorBase* bl_motor = nullptr;
+driver::DjiMotorBase* br_motor = nullptr;
 
 driver::SuperCap* super_cap = nullptr;
 
@@ -106,7 +106,7 @@ void RM_RTOS_Init() {
 
     can_bridge = new communication::CanBridge(can1, 0x52);
 
-    driver::MotorCANBase* motors[control::FourWheel::motor_num];
+    driver::DjiMotorBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;

@@ -26,8 +26,8 @@
 
 osThreadId_t gimbalTaskHandle;
 
-driver::MotorCANBase* pitch_motor = nullptr;
-driver::MotorCANBase* yaw_motor = nullptr;
+driver::DjiMotorBase* pitch_motor = nullptr;
+driver::DjiMotorBase* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;

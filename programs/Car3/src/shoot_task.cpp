@@ -27,7 +27,7 @@ static float* pid2_param = nullptr;
 static driver::FlyWheelMotor* flywheel1 = nullptr;
 static driver::FlyWheelMotor* flywheel2 = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::DjiMotorBase* steering_motor = nullptr;
 
 driver::ServoMotor* load_servo = nullptr;
 

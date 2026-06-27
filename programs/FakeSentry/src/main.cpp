@@ -33,10 +33,10 @@
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
-driver::MotorCANBase* fl_motor = nullptr;
-driver::MotorCANBase* fr_motor = nullptr;
-driver::MotorCANBase* bl_motor = nullptr;
-driver::MotorCANBase* br_motor = nullptr;
+driver::DjiMotorBase* fl_motor = nullptr;
+driver::DjiMotorBase* fr_motor = nullptr;
+driver::DjiMotorBase* bl_motor = nullptr;
+driver::DjiMotorBase* br_motor = nullptr;
 
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
@@ -88,7 +88,7 @@ void RM_RTOS_Init() {
     br_motor->SetMode(driver::DjiMotorBase::OMEGA);
     br_motor->SetTransmissionRatio(19);
 
-    driver::MotorCANBase* motors[control::FourWheel::motor_num];
+    driver::DjiMotorBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;

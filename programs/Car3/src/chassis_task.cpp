@@ -20,10 +20,10 @@
 
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
-driver::MotorCANBase* fl_motor = nullptr;
-driver::MotorCANBase* fr_motor = nullptr;
-driver::MotorCANBase* bl_motor = nullptr;
-driver::MotorCANBase* br_motor = nullptr;
+driver::DjiMotorBase* fl_motor = nullptr;
+driver::DjiMotorBase* fr_motor = nullptr;
+driver::DjiMotorBase* bl_motor = nullptr;
+driver::DjiMotorBase* br_motor = nullptr;
 control::Chassis* chassis = nullptr;
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -249,7 +249,7 @@ void init_chassis() {
     br_motor = new driver::Motor3508(can1, 0x204);
 
     // 初始化电机组
-    driver::MotorCANBase* motors[control::FourWheel::motor_num];
+    driver::DjiMotorBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;

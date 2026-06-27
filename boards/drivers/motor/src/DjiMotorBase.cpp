@@ -29,17 +29,6 @@ using namespace bsp;
 
 namespace driver {
 
-/**
- * @brief standard can motor callback, used to update motor data
- *
- * @param data data that come from motor
- * @param args pointer to a MotorCANBase instance
- */
-static void can_motor_callback(const uint8_t data[], void* args) {
-    MotorCANBase* motor = reinterpret_cast<MotorCANBase*>(args);
-    motor->UpdateData(data);
-}
-
 bool DjiMotorBase::is_init_ = false;
 uint16_t DjiMotorBase::id_[10] = {0};
 bsp::CAN* DjiMotorBase::can_to_index_[10] = {nullptr};
@@ -55,9 +44,10 @@ void* DjiMotorBase::pre_output_callback_instance_ = nullptr;
 void* DjiMotorBase::post_output_callback_instance_ = nullptr;
 
 DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
-    : MotorCANBase(can, rx_id),
-      speed_offset_(0) {
-    // 大疆的电机，自动识别 TX_ID
+    : MotorCANBase<DjiMotorBase>(30) {
+    state_.can = can;
+    state_.rx_id = rx_id;
+    // 大疆的电机，自动识别 TX_ID（覆盖基类默认值）
     if (tx_id == 0x00) {
         constexpr uint16_t GROUP_SIZE = 4;
         constexpr uint16_t RX1_ID_START = 0x201;
@@ -70,13 +60,11 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
         RM_ASSERT_GE(rx_id, RX1_ID_START, "Invalid rx id");
         RM_ASSERT_LT(rx_id, RX3_ID_START + GROUP_SIZE, "Invalid rx id");
         if (rx_id >= RX3_ID_START)
-            tx_id_ = TX3_ID;
+            state_.tx_id = TX3_ID;
         else if (rx_id >= RX2_ID_START)
-            tx_id_ = TX2_ID;
+            state_.tx_id = TX2_ID;
         else
-            tx_id_ = TX1_ID;
-    } else {
-        tx_id_ = tx_id;
+            state_.tx_id = TX1_ID;
     }
 
     // 如果是第一次初始化，需要创建一个后台线程以固定频率输出电机指令
@@ -93,7 +81,7 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     }
     // 如果已经初始化，需要检查是否有重复的 ID，如果没有则加入到数组以使后台线程能够持续给电机输出数据
     for (uint8_t i = 0; i < 10; i++) {
-        if (tx_id_ == id_[i] && can_to_index_[i] == can_) {
+        if (state_.tx_id == id_[i] && can_to_index_[i] == state_.can) {
             if (motor_cnt_[i] < 4) {
                 motors_[i][motor_cnt_[i]] = this;
                 motor_cnt_[i]++;
@@ -102,8 +90,8 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
                 RM_ASSERT_TRUE(false, "Exceeding maximum of 4 motor commands per CAN message");
             }
         } else if (id_[i] == 0xffff) {
-            id_[i] = tx_id_;
-            can_to_index_[i] = can_;
+            id_[i] = state_.tx_id;
+            can_to_index_[i] = state_.can;
             motors_[i][0] = this;
             group_cnt_++;
             motor_cnt_[i]++;
@@ -114,8 +102,6 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     // 默认 PID 参数
     omega_pid_ = control::ConstrainedPID();
     theta_pid_ = control::ConstrainedPID();
-
-    target_ = 0;
 
     // Check if the high resolution timer is initialized
     RM_ASSERT_TRUE(bsp::GetHighresTickMicroSec() != 0, "Highres timer not initialized");
@@ -135,15 +121,15 @@ void DjiMotorBase::TransmitOutput(DjiMotorBase* motors[], uint8_t num_motors) {
     RM_ASSERT_LE(num_motors, 4, "Exceeding maximum of 4 motor commands per CAN message");
     // 获取输出的数据到缓冲区
     for (uint8_t i = 0; i < num_motors; ++i) {
-        RM_ASSERT_EQ(motors[i]->tx_id_, motors[0]->tx_id_, "tx id mismatch");
-        RM_ASSERT_EQ(motors[i]->can_, motors[0]->can_, "can line mismatch");
-        const uint8_t motor_idx = (motors[i]->rx_id_ - 1) % 4;
+        RM_ASSERT_EQ(motors[i]->state_.tx_id, motors[0]->state_.tx_id, "tx id mismatch");
+        RM_ASSERT_EQ(motors[i]->state_.can, motors[0]->state_.can, "can line mismatch");
+        const uint8_t motor_idx = (motors[i]->state_.rx_id - 1) % 4;
         const int16_t output = motors[i]->output_;
         data[2 * motor_idx] = output >> 8;
         data[2 * motor_idx + 1] = output & 0xff;
     }
     // 发送数据
-    motors[0]->can_->Transmit(motors[0]->tx_id_, data, 8);
+    motors[0]->state_.can->Transmit(motors[0]->state_.tx_id, data, 8);
 }
 
 void DjiMotorBase::CanMotorThread(void* args) {
@@ -168,15 +154,16 @@ void DjiMotorBase::CanMotorThread(void* args) {
 }
 
 void DjiMotorBase::UpdateData(const uint8_t data[]) {
-    MotorCANBase::UpdateData(data);
+    UNUSED(data);
+    ProcessAngleTracking();
 }
 
 void DjiMotorBase::UpdateHoldingState() {
-    if (mode_ & THETA) {
-        float diff = target_ - GetOutputShaftTheta();
-        if (mode_ & ABSOLUTE)
+    if (state_.mode & THETA) {
+        float diff = state_.target - GetOutputShaftTheta();
+        if (state_.mode & ABSOLUTE)
             diff = wrap<float>(diff, -PI, PI);
-        holding_ = abs(diff) < proximity_in_;
+        state_.holding = abs(diff) < state_.proximity_in;
     }
 }
 
@@ -185,19 +172,20 @@ void DjiMotorBase::SetTarget(float target, bool override) {
     // 目标值的单位取决于电机的模式
     // 如果电机启动了角度环PID，则目标值为角度，单位为Rad
     // 如果电机没启动角度环PID的情况下启动了速度环PID，则目标值为角速度，单位为Rad/s
-    if (mode_ & INVERTED) {
+    if (state_.mode & INVERTED) {
         target = -target;
     }
 
-    if (override == false && !holding_) {
+    // CURRENT 模式下不检查 holding（holding 是角度控制概念）
+    if (!(state_.mode & CURRENT) && override == false && !state_.holding) {
         // 如果电机没有在 hold 状态，则不修改目标值
         return;
     }
-    target_ = target;
+    state_.target = target;
 
     // ABSOLUTE 模式下，认为输出轴只有一圈。
-    if ((mode_ & THETA) && (mode_ & ABSOLUTE)) {
-        target_ = wrap<float>(target_, -PI, PI);
+    if ((state_.mode & THETA) && (state_.mode & ABSOLUTE)) {
+        state_.target = wrap<float>(state_.target, -PI, PI);
     }
 
     // 重新计算是否 Holding
@@ -205,55 +193,64 @@ void DjiMotorBase::SetTarget(float target, bool override) {
 }
 
 void DjiMotorBase::CalcOutput() {
-    if (!enable_) {
+    if (!state_.enable) {
         // 如果电机被禁用，则清空 PID 积分项并输出 0
         SetOutput(0);
-        theta_pid_.ResetIntegral();
-        omega_pid_.ResetIntegral();
+        // CURRENT 模式下不使用角度/速度 PID，无需清积分
+        if (!(state_.mode & CURRENT)) {
+            theta_pid_.ResetIntegral();
+            omega_pid_.ResetIntegral();
+        }
         return;
     }
 
-    float target = target_;
+    // 力矩控制模式：旁路角度/速度 PID，直接输出目标电流值
+    if (state_.mode & CURRENT) {
+        SetOutput((int16_t)state_.target);
+        return;
+    }
+
+    float target = state_.target;
 
     // 最新收到的 CAN 包的时间戳
     uint32_t update_time_us = GetLastUptimeMicrosec();
         // 当前最新的CAN数据包的时间戳，和上次运行这个函数时，最新的CAN数据包的时间戳的差值
         // diff == 0 说明自从上次运行这个函数后没有收到新的CAN数据包
         // diff > 1500 说明收到了新的CAN数据包，但是因为丢包，距离上次收到的CAN数据包已经超过1.5ms
-        uint32_t update_time_diff = update_time_us - last_update_time_us_;
+        uint32_t update_time_diff = update_time_us - state_.last_update_time_us;
         if (update_time_diff > 65535)
             update_time_diff += 65536;
-        last_update_time_us_ = update_time_diff;
-    motor_update_time_interval = 1000;
-    uint32_t times = (update_time_diff + motor_update_time_interval / 2) / motor_update_time_interval;
+        state_.last_update_time_us = update_time_diff;
+    state_.motor_update_time_interval = 1000;
+    uint32_t times = (update_time_diff + state_.motor_update_time_interval / 2) / state_.motor_update_time_interval;
 
     if (times == 0) {
-            // print("Motor %x packet missing at %d\n", rx_id_, bsp::GetHighresTickMilliSec());
+            // print("Motor %x packet missing at %d\n", state_.rx_id, bsp::GetHighresTickMilliSec());
         return;
     }
 
     // 处理角度环 PID，输入角度差，输出速度值
-    if (mode_ & THETA) {
-        if (mode_ & ABSOLUTE) {
+    if (state_.mode & THETA) {
+        if (state_.mode & ABSOLUTE) {
             // 在 ABSOLUTE 模式下，如果输出轴到目标要转动大于半圈，则从另一侧转过去
-            if (target - output_shaft_theta_ > PI)
+            if (target - state_.output_shaft_theta > PI)
                 target = target - 2 * PI;
-            if (target - output_shaft_theta_ < -PI)
+            if (target - state_.output_shaft_theta < -PI)
                 target = target + 2 * PI;
         }
-        target = theta_pid_.ComputeOutput(target, output_shaft_theta_);
+        target = theta_pid_.ComputeOutput(target, state_.output_shaft_theta);
     }
 
     // 对速度加上偏移量，前馈时使用
-    target += speed_offset_;
+    target += state_.speed_offset;
 
     // 处理速度环 PID，输入速度差，输出电流值
-    if (mode_ & OMEGA) {
+    if (state_.mode & OMEGA) {
         target = omega_pid_.ComputeOutput(target, GetOutputShaftOmega());
     }
 
     // 输出
-    if (mode_ != NONE) {
+    if (state_.mode != NONE) {
         SetOutput((int16_t)target);
     }
 }
@@ -267,42 +264,54 @@ void DjiMotorBase::ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8
 }
 
 control::ConstrainedPID::PID_State_t DjiMotorBase::GetPIDState(uint8_t mode) const {
-    if (mode & OMEGA && mode_ & OMEGA) {
+    if (mode & OMEGA && state_.mode & OMEGA) {
         return omega_pid_.State();
-    } else if (mode & THETA && mode_ & THETA) {
+    } else if (mode & THETA && state_.mode & THETA) {
         return theta_pid_.State();
     }
     return control::ConstrainedPID::PID_State_t();
 }
 
 void DjiMotorBase::SetMode(uint8_t mode) {
-    mode_ = mode;
+    state_.mode = mode;
     // Sync absolute mode to base class
     SetAbsoluteMode(mode & ABSOLUTE);
 }
 
 float DjiMotorBase::GetTarget() const {
-    return target_;
+    return state_.target;
 }
 
 bool DjiMotorBase::IsHolding() const {
-    return holding_;
+    return state_.holding;
 }
 
 void DjiMotorBase::Hold(bool override) {
-    if (!IsHolding() && mode_ & THETA) {
+    if (!IsHolding() && state_.mode & THETA) {
         SetTarget(GetOutputShaftTheta(), override);
     }
 }
 
 void DjiMotorBase::SetSpeedOffset(float offset) {
-    speed_offset_ = offset;
+    state_.speed_offset = offset;
+}
+
+void DjiMotorBase::SetTorque(float torque_nm, bool override) {
+    RM_ASSERT_TRUE(torque_constant_ > 0, "Torque constant not set for this motor");
+    // torque_nm [N·m] → Amp → raw_current
+    float raw_current = torque_nm * 1000.0f / (torque_constant_ * RAW_CURRENT_TO_AMP);
+    SetTarget(raw_current, override);
+}
+
+float DjiMotorBase::GetTorque() const {
+    // raw_current → Amp → N·m
+    return state_.raw_current * RAW_CURRENT_TO_AMP * torque_constant_ / 1000.0f;
 }
 
 void DjiMotorBase::RegisterErrorCallback(DjiMotorBase::callback_t callback, void* instance) {
     error_callback_ = callback;
     error_callback_instance_ = instance;
-    if (!(mode_ & OMEGA)) {
+    if (!(state_.mode & OMEGA)) {
             // 角度环才需要注册错误回调
         RM_ASSERT_TRUE(false, "Only theta mode motor can register error callback");
     } else {
@@ -332,21 +341,21 @@ void DjiMotorBase::RegisterPostOutputCallback(DjiMotorBase::callback_t callback,
 
 // ===== Motor3508 =====
 Motor3508::Motor3508(CAN* can, uint16_t rx_id) : DjiMotorBase(can, rx_id) {
-    can->RegisterRxCallback(rx_id, can_motor_callback, this);
+    RegisterCanCallback();
 }
 
 void Motor3508::UpdateData(const uint8_t data[]) {
     const int16_t raw_theta = data[0] << 8 | data[1];
     const int16_t raw_omega = data[2] << 8 | data[3];
-    raw_current_get_ = data[4] << 8 | data[5];
-    raw_temperature_ = data[6];
+    state_.raw_current = data[4] << 8 | data[5];
+    state_.raw_temperature = data[6];
 
     constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
     constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
-    theta_ = raw_theta * THETA_SCALE;
-    omega_ = raw_omega * OMEGA_SCALE;
+    state_.theta = raw_theta * THETA_SCALE;
+    state_.omega = raw_omega * OMEGA_SCALE;
 
-    MotorCANBase::UpdateData(data);
+    ProcessAngleTracking();
 }
 
 void Motor3508::PrintData() const {
@@ -355,8 +364,8 @@ void Motor3508::PrintData() const {
     print("output shaft theta: % .4f ", GetOutputShaftTheta());
     print("omega: % .4f ", GetOmega());
     print("output shaft omega: % .4f ", GetOutputShaftOmega());
-    print("raw temperature: %3d ", raw_temperature_);
-    print("raw current get: % d \r\n", raw_current_get_);
+    print("raw temperature: %3d ", state_.raw_temperature);
+    print("raw current get: % d \r\n", state_.raw_current);
 }
 
 void Motor3508::SetOutput(int16_t val) {
@@ -364,35 +373,27 @@ void Motor3508::SetOutput(int16_t val) {
     output_ = clip<int16_t>(val, -MAX_ABS_CURRENT, MAX_ABS_CURRENT);
 }
 
-int16_t Motor3508::GetCurr() const {
-    return raw_current_get_;
-}
-
-uint16_t Motor3508::GetTemp() const {
-    return raw_temperature_;
-}
-
 // ===== Motor6020 =====
 Motor6020::Motor6020(CAN* can, uint16_t rx_id, uint16_t tx_id)
     : DjiMotorBase(can, rx_id, tx_id) {
     // 绝对位置电机不需要初始化 align_angle_
-    power_on_angle_ = 0;
-    can->RegisterRxCallback(rx_id, can_motor_callback, this);
+    state_.power_on_angle = 0;
+    RegisterCanCallback();
 }
 
 void Motor6020::UpdateData(const uint8_t data[]) {
     const int16_t raw_theta = data[0] << 8 | data[1];
     const int16_t raw_omega = data[2] << 8 | data[3];
-    raw_current_get_ = data[4] << 8 | data[5];
-    raw_temperature_ = data[6];
+    state_.raw_current = data[4] << 8 | data[5];
+    state_.raw_temperature = data[6];
 
     constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
     constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
-    theta_ = raw_theta * THETA_SCALE;
-    omega_ =
-        (raw_omega * OMEGA_SCALE) * input_speed_filter_ + omega_ * (1 - input_speed_filter_);
+    state_.theta = raw_theta * THETA_SCALE;
+    state_.omega =
+        (raw_omega * OMEGA_SCALE) * input_speed_filter_ + state_.omega * (1 - input_speed_filter_);
 
-    MotorCANBase::UpdateData(data);
+    ProcessAngleTracking();
 }
 
 void Motor6020::PrintData() const {
@@ -401,21 +402,13 @@ void Motor6020::PrintData() const {
     print("output shaft theta: % .4f ", GetOutputShaftTheta());
     print("omega: % .4f ", GetOmega());
     print("output shaft omega: % .4f ", GetOutputShaftOmega());
-    print("raw temperature: %3d ", raw_temperature_);
-    print("raw current get: % d \r\n", raw_current_get_);
+    print("raw temperature: %3d ", state_.raw_temperature);
+    print("raw current get: % d \r\n", state_.raw_current);
 }
 
 void Motor6020::SetOutput(int16_t val) {
     constexpr int16_t MAX_ABS_CURRENT = 30000;
     output_ = clip<int16_t>(val, -MAX_ABS_CURRENT, MAX_ABS_CURRENT);
-}
-
-int16_t Motor6020::GetCurr() const {
-    return raw_current_get_;
-}
-
-uint16_t Motor6020::GetTemp() const {
-    return raw_temperature_;
 }
 
 void Motor6020::SetSpeedFilter(float ratio) {
@@ -424,20 +417,20 @@ void Motor6020::SetSpeedFilter(float ratio) {
 
 // ===== Motor2006 =====
 Motor2006::Motor2006(CAN* can, uint16_t rx_id) : DjiMotorBase(can, rx_id) {
-    can->RegisterRxCallback(rx_id, can_motor_callback, this);
+    RegisterCanCallback();
 }
 
 void Motor2006::UpdateData(const uint8_t data[]) {
     const int16_t raw_theta = data[0] << 8 | data[1];
     const int16_t raw_omega = data[2] << 8 | data[3];
-    raw_current_get_ = data[4] << 8 | data[5];
+    state_.raw_current = data[4] << 8 | data[5];
 
     constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
     constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
-    theta_ = raw_theta * THETA_SCALE;
-    omega_ = raw_omega * OMEGA_SCALE;
+    state_.theta = raw_theta * THETA_SCALE;
+    state_.omega = raw_omega * OMEGA_SCALE;
 
-    MotorCANBase::UpdateData(data);
+    ProcessAngleTracking();
 }
 
 void Motor2006::PrintData() const {
@@ -446,16 +439,12 @@ void Motor2006::PrintData() const {
     print("output shaft theta: % .4f ", GetOutputShaftTheta());
     print("omega: % .4f ", GetOmega());
     print("output shaft omega: % .4f ", GetOutputShaftOmega());
-    print("raw current get: % d \r\n", raw_current_get_);
+    print("raw current get: % d \r\n", state_.raw_current);
 }
 
 void Motor2006::SetOutput(int16_t val) {
     constexpr int16_t MAX_ABS_CURRENT = 10000;  // ~10A
     output_ = clip<int16_t>(val, -MAX_ABS_CURRENT, MAX_ABS_CURRENT);
-}
-
-int16_t Motor2006::GetCurr() const {
-    return raw_current_get_;
 }
 
 
@@ -490,7 +479,7 @@ ServoMotor::ServoMotor(servo_t data, float align_angle, float proximity_in,
     hold_pid_.Reinit(data.hold_pid_param, data.hold_max_iout, data.hold_max_out);
 
     // override original motor rx callback with servomotor callback
-    data.motor->can_->RegisterRxCallback(data.motor->rx_id_, servomotor_callback, this);
+    data.motor->state_.can->RegisterRxCallback(data.motor->state_.rx_id, servomotor_callback, this);
 
     // Initially jam detection is not enabled
     jam_callback_ = nullptr;
@@ -627,7 +616,7 @@ float ServoMotor::GetThetaDelta(const float target) const {
 }
 
 float ServoMotor::GetOmega() const {
-    return motor_->omega_ / transmission_ratio_;
+    return motor_->GetOmega() / transmission_ratio_;
 }
 
 float ServoMotor::GetOmegaDelta(const float target) const {
@@ -640,13 +629,13 @@ void ServoMotor::UpdateData(const uint8_t data[]) {
         // TODO: change the align angle calibration method
         // This is a dumb method to get the align angle
     if (align_angle_ < 0)
-        align_angle_ = motor_->theta_;
+        align_angle_ = motor_->GetTheta();
 
         // If motor angle is jumped from near 2PI to near 0, then wrap detecter will
         // sense a negative edge, which means that the motor is turning in positive
         // direction when crossing encoder boarder. Vice versa for motor angle jumped
         // from near 0 to near 2PI
-    motor_angle_ = motor_->theta_ - align_angle_;
+    motor_angle_ = motor_->GetTheta() - align_angle_;
     inner_wrap_detector_->input(motor_angle_);
     if (inner_wrap_detector_->negEdge())
         offset_angle_ = wrap<float>(offset_angle_ + 2 * PI / transmission_ratio_, 0, 2 * PI);

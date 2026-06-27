@@ -25,8 +25,8 @@
 #include "main.h"
 
 bsp::CAN* can1 = NULL;
-driver::MotorCANBase* motor1 = NULL;
-// control::MotorCANBase* motor2 = NULL;
+driver::DjiMotorBase* motor1 = NULL;
+// control::DjiMotorBase* motor2 = NULL;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);

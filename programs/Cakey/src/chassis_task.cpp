@@ -29,10 +29,10 @@ float chassis_vy = 0;
 float chassis_vt = 0;
 bool chassis_boost_flag = true;
 
-driver::MotorCANBase* fl_motor = nullptr;
-driver::MotorCANBase* fr_motor = nullptr;
-driver::MotorCANBase* bl_motor = nullptr;
-driver::MotorCANBase* br_motor = nullptr;
+driver::DjiMotorBase* fl_motor = nullptr;
+driver::DjiMotorBase* fr_motor = nullptr;
+driver::DjiMotorBase* bl_motor = nullptr;
+driver::DjiMotorBase* br_motor = nullptr;
 
 driver::SuperCap* super_cap = nullptr;
 control::Chassis* chassis = nullptr;
@@ -228,7 +228,7 @@ void init_chassis() {
     // battery_vol = new bsp::BatteryVol(&hadc3, ADC_CHANNEL_8, 1, ADC_SAMPLETIME_3CYCLES);
 
     // 初始化底盘
-    driver::MotorCANBase* motors[control::FourWheel::motor_num];
+    driver::DjiMotorBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;

@@ -34,10 +34,10 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor6020* motor1 = nullptr;
 
 void RM_RTOS_Init() {
-    bsp::SetHighresClockTimer(&htim5);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
 
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hcan1, false);
+    can1 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::Motor6020(can1, 0x209, 0x2fe);
     motor1->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {

@@ -66,8 +66,8 @@ void imuTask(void* arg) {
     }
 }
 
-static driver::MotorCANBase* pitch_motor = nullptr;
-static driver::MotorCANBase* yaw_motor = nullptr;
+static driver::DjiMotorBase* pitch_motor = nullptr;
+static driver::DjiMotorBase* yaw_motor = nullptr;
 static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 

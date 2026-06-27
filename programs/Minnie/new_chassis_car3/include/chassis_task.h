@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_can.h"
 #include "chassis.h"
 #include "cmsis_os2.h"
@@ -43,10 +43,10 @@ void update_channel_data(communication::can_bridge_ext_id_t ext_id,
                          communication::can_bridge_data_t data, void* args);
 
 extern control::Chassis* chassis;
-extern driver::MotorCANBase* fl_motor;
-extern driver::MotorCANBase* fr_motor;
-extern driver::MotorCANBase* bl_motor;
-extern driver::MotorCANBase* br_motor;
+extern driver::DjiMotorBase* fl_motor;
+extern driver::DjiMotorBase* fr_motor;
+extern driver::DjiMotorBase* bl_motor;
+extern driver::DjiMotorBase* br_motor;
 extern float chassis_vx;
 extern float chassis_vy;
 extern float chassis_vz;

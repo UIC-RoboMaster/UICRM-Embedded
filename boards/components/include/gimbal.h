@@ -56,8 +56,8 @@ namespace control {
      * @brief structure used when gimbal instance is initialized
      */
     typedef struct {
-        driver::MotorCANBase* pitch_motor; /* pitch motor instance */
-        driver::MotorCANBase* yaw_motor;   /* yaw motor instance   */
+        driver::DjiMotorBase* pitch_motor; /* pitch motor instance */
+        driver::DjiMotorBase* yaw_motor;   /* yaw motor instance   */
         gimbal_data_t data;                /* gimbal related constants */
     } gimbal_t;
 
@@ -187,8 +187,8 @@ namespace control {
 
       private:
         // acquired from user
-        driver::MotorCANBase* pitch_motor_ = nullptr;
-        driver::MotorCANBase* yaw_motor_ = nullptr;
+        driver::DjiMotorBase* pitch_motor_ = nullptr;
+        driver::DjiMotorBase* yaw_motor_ = nullptr;
 
         // pitch and yaw constants
         gimbal_data_t data_;

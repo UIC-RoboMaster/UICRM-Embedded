@@ -45,8 +45,8 @@ const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
 
 void gimbalTask(void* arg);
 extern control::Gimbal* gimbal;
-extern driver::MotorCANBase* pitch_motor;
-extern driver::MotorCANBase* yaw_motor;
+extern driver::DjiMotorBase* pitch_motor;
+extern driver::DjiMotorBase* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
 extern float pitch_diff, yaw_diff;
 void init_gimbal();

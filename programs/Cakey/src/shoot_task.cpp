@@ -36,7 +36,7 @@
 static driver::MotorPWMBase* flywheel_left = nullptr;
 static driver::MotorPWMBase* flywheel_right = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::DjiMotorBase* steering_motor = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 

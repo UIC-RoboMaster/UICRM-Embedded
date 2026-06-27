@@ -83,8 +83,8 @@ static bsp::CAN* can1 = nullptr;
 static bsp::CAN* can2 = nullptr;
 static remote::DBUS* dbus = nullptr;
 
-static driver::MotorCANBase* pitch_motor = nullptr;
-static driver::MotorCANBase* yaw_motor = nullptr;
+static driver::DjiMotorBase* pitch_motor = nullptr;
+static driver::DjiMotorBase* yaw_motor = nullptr;
 static control::Gimbal* gimbal = nullptr;
 static control::gimbal_data_t* gimbal_param = nullptr;
 
