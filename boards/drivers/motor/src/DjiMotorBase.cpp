@@ -38,9 +38,12 @@ uint8_t DjiMotorBase::group_count_ = 0;
 bsp::Thread* DjiMotorBase::can_motor_thread_ = nullptr;
 uint32_t DjiMotorBase::delay_time = 1;
 
+// 发送电机输出前的回调函数
 DjiMotorBase::callback_t DjiMotorBase::pre_output_callback_ = [](void* args) { UNUSED(args); };
-DjiMotorBase::callback_t DjiMotorBase::post_output_callback_ = [](void* args) { UNUSED(args); };
 void* DjiMotorBase::pre_output_callback_instance_ = nullptr;
+
+// 发送电机输出后的回调函数
+DjiMotorBase::callback_t DjiMotorBase::post_output_callback_ = [](void* args) { UNUSED(args); };
 void* DjiMotorBase::post_output_callback_instance_ = nullptr;
 
 DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
