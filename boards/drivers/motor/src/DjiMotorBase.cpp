@@ -77,25 +77,22 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
         can_motor_thread_ = new bsp::Thread(thread_init);
         can_motor_thread_->Start();
         memset(&groups_, 0, sizeof(groups_));
-        for (uint8_t k = 0; k < 10; k++) groups_[k].tx_id = 0xFFFF;
         group_count_ = 0;
     }
-    // 如果已经初始化，需要检查是否有重复的 ID，如果没有则加入到数组以使后台线程能够持续给电机输出数据
+    // 在已有 group 中查找 (tx_id, can) 匹配的组，找不到则占用新槽位
     for (uint8_t i = 0; i < 10; i++) {
-        if (state_.tx_id == groups_[i].tx_id && groups_[i].can == state_.can) {
-            if (groups_[i].count < 4) {
-                groups_[i].motors[groups_[i].count] = this;
-                groups_[i].count++;
-                break;
-            } else {
-                RM_ASSERT_TRUE(false, "Exceeding maximum of 4 motor commands per CAN message");
-            }
-        } else if (groups_[i].tx_id == 0xFFFF) {
+        if (groups_[i].occupied && groups_[i].tx_id == state_.tx_id && groups_[i].can == state_.can) {
+            RM_ASSERT_LT(groups_[i].count, 4, "Exceeding maximum of 4 motor commands per CAN message");
+            groups_[i].motors[groups_[i].count++] = this;
+            break;
+        }
+        if (!groups_[i].occupied) {
+            groups_[i].occupied = true;
             groups_[i].tx_id = state_.tx_id;
             groups_[i].can = state_.can;
             groups_[i].motors[0] = this;
+            groups_[i].count = 1;
             group_count_++;
-            groups_[i].count++;
             break;
         }
     }

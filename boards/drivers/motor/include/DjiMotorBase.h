@@ -257,7 +257,8 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
      * 相同 (TX ID, CAN 总线) 的电机归为一组，共享一帧 CAN 报文。
      */
     struct MotorGroup {
-        uint16_t tx_id = 0xFFFF;       // 组的 CAN 发送 ID（0xFFFF 表示空闲槽位）
+        bool occupied = false;          // 槽位是否已占用（memset(0) 后天然为 false）
+        uint16_t tx_id = 0;            // 组的 CAN 发送 ID
         bsp::CAN* can = nullptr;       // 组的 CAN 总线
         DjiMotorBase* motors[4] = {};  // 组内电机指针（最多 4 个）
         uint8_t count = 0;             // 组内实际电机数
@@ -294,8 +295,8 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
      * 一个 group = (TX ID, CAN 总线) 二元组。同组电机共享一帧 CAN 报文（最多 4 个）。
      * 不同 TX ID 或不同 CAN 总线即创建新 group。
      *
-     * DJI 协议仅 3 个 TX ID（0x200 / 0x1FF / 0x2FF），即使 2 条 CAN 全用也仅 6 组。
-     * 数组大小 [10] 为预留值，多余的 slot 以 tx_id == 0xFFFF 标记为空闲。
+     * Group 从 0 开始连续存放、从不删除，group_count_ 即已占用槽位数。
+     * DJI 协议仅 3 个 TX ID（0x200 / 0x1FF / 0x2FF），即使 2 条 CAN 全用也仅 6 组，[10] 为预留值。
      */
     static MotorGroup groups_[10];
     static uint8_t group_count_;
