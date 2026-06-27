@@ -55,7 +55,10 @@ void chassisTask(void* arg) {
     float manual_mode_yaw_pid_max_iout = 100;
     float manual_mode_yaw_pid_max_out = 500;
     control::ConstrainedPID* manual_mode_pid = new control::ConstrainedPID(
-        manual_mode_yaw_pid_args, manual_mode_yaw_pid_max_iout, manual_mode_yaw_pid_max_out);
+        manual_mode_yaw_pid_args,
+        manual_mode_yaw_pid_max_iout,
+        manual_mode_yaw_pid_max_out
+    );
     manual_mode_pid->Reset();
     float yaw_pid_error = 0;
     float manual_mode_pid_output = 0;
@@ -223,9 +226,12 @@ void chassisTask(void* arg) {
                 vz_set = manual_mode_pid_output * ratio;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
+                chassis->SetPower(
+                    true,
+                    referee->game_robot_status.chassis_power_limit,
+                    referee->power_heat_data.chassis_power,
+                    referee->power_heat_data.chassis_power_buffer
+                );
                 osDelay(1);
                 break;
             case REMOTE_MODE_SPIN:
@@ -238,9 +244,12 @@ void chassisTask(void* arg) {
                 vz_set = spin_speed * ratio;
                 chassis->SetSpeed(vx_set, vy_set, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
+                chassis->SetPower(
+                    true,
+                    referee->game_robot_status.chassis_power_limit,
+                    referee->power_heat_data.chassis_power,
+                    referee->power_heat_data.chassis_power_buffer
+                );
                 osDelay(1);
                 break;
             case REMOTE_MODE_ADVANCED:
@@ -248,9 +257,12 @@ void chassisTask(void* arg) {
 
                 chassis->SetSpeed(chassis_vx, chassis_vy, vz_set);
                 osDelay(1);
-                chassis->SetPower(true, referee->game_robot_status.chassis_power_limit,
-                                  referee->power_heat_data.chassis_power,
-                                  referee->power_heat_data.chassis_power_buffer);
+                chassis->SetPower(
+                    true,
+                    referee->game_robot_status.chassis_power_limit,
+                    referee->power_heat_data.chassis_power,
+                    referee->power_heat_data.chassis_power_buffer
+                );
                 osDelay(1);
                 break;
             default:

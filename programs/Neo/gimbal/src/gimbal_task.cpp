@@ -39,13 +39,13 @@ void gimbalTask(void* arg) {
     yaw_motor->Disable();
 
     osDelay(1500);
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         kill_gimbal();
         osDelay(GIMBAL_OS_DELAY);
     }
     int i = 0;
     while (i < 5000 || !imu->DataReady()) {
-        while (remote_mode == REMOTE_MODE_KILL) {
+        while (!is_activate) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);
         }
@@ -85,10 +85,9 @@ void gimbalTask(void* arg) {
 
     //    float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
-        bool gimbal_en = true;
-        gimbal_en &= remote_mode != REMOTE_MODE_KILL;
+        bool gimbal_en = is_activate;
 #ifdef HAS_REFEREE
-        gimbal_en &= referee->game_robot_status.mains_power_gimbal_output;
+        gimbal_en = gimbal_en && referee->game_robot_status.mains_power_gimbal_output;
 #endif
         if (!gimbal_en) {
             kill_gimbal();
@@ -99,11 +98,11 @@ void gimbalTask(void* arg) {
         // 子弹盖
         if (!bulletCap->isEnable())
             bulletCap->Enable();
-        switch (cap_mode) {
-            case CAP_MODE_CLOSE:
+        switch (bullet_cap_mode) {
+            case BULLET_CAP_MODE_CLOSE:
                 bulletCap->SetOutput(200);
                 break;
-            case CAP_MODE_OPEN:
+            case BULLET_CAP_MODE_OPEN:
                 bulletCap->SetOutput(0);
                 break;
             default:
@@ -148,8 +147,7 @@ void gimbalTask(void* arg) {
         }
 
         // 根据遥控器输入计算目标角度，并且进行限幅
-        pitch_target =
-            clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         pitch_diff = clip<float>(pitch_target, -PI, PI);
@@ -168,8 +166,7 @@ void gimbalTask(void* arg) {
         const float offset_filter_ratio =
             0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
         static float speed_offset = 0;
-        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio +
-                       speed_offset * (1 - offset_filter_ratio);
+        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
         yaw_motor->SetSpeedOffset(speed_offset);
 
         // float pitch_speed_offset = pitch_ratio;
@@ -194,8 +191,7 @@ void gimbalTask(void* arg) {
                     abs(minipc->target_angle.target_pitch) > (90.0f * PI / 180) ||
                     abs(minipc->target_angle.target_yaw) > (180.0f * PI / 180))
                     break;
-                gimbal->TargetAbs(-minipc->target_angle.target_pitch,
-                                  minipc->target_angle.target_yaw);
+                gimbal->TargetAbs(-minipc->target_angle.target_pitch, minipc->target_angle.target_yaw);
                 break;
             default:
                 kill_gimbal();
@@ -233,11 +229,11 @@ void init_gimbal() {
         .kd = 500,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
-        .deadband = 0,                          // 死区
-        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                                // 死区
+        .A = 1.5 * PI,                                                // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                                  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                          // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                        // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
@@ -246,8 +242,7 @@ void init_gimbal() {
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
-    pitch_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA |
-                         driver::DjiMotorBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
@@ -270,19 +265,18 @@ void init_gimbal() {
         .kd = 500,  // 2000
         .max_out = 16383,
         .max_iout = 10000,
-        .deadband = 0,                               // 死区
-        .A = 1.5 * PI,                               // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                                 // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,         // 输出滤波系数
-        .derivative_filtering_coefficient = 0.0003,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 1.5 * PI,                                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0.0003,             // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
     yaw_motor->ReInitPID(yaw_omega_pid_init, driver::DjiMotorBase::OMEGA);
-    yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA |
-                       driver::DjiMotorBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
     yaw_motor->SetSpeedFilter(0.03);
 
     // 初始化云台对象

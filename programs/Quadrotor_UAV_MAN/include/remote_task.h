@@ -53,11 +53,11 @@ extern ShootFricMode last_shoot_flywheel_mode;
 
 enum ShootMode {
     SHOOT_MODE_DISABLE = -1,
-    SHOOT_MODE_UNLOAD = -2,  // 退弹
-    SHOOT_MODE_STOP = 0,     // 停止供弹
-    SHOOT_MODE_IDLE = 1,     // 供弹机构待机
-    SHOOT_MODE_SINGLE = 2,  // 单发，用于通知shoot_task，发射后由shoot_task设置回IDLE
-    SHOOT_MODE_BURST = 3,   // 连发
+    SHOOT_MODE_UNLOAD = -2,    // 退弹
+    SHOOT_MODE_STOP = 0,       // 停止供弹
+    SHOOT_MODE_IDLE = 1,       // 供弹机构待机
+    SHOOT_MODE_SINGLE = 2,     // 单发，用于通知shoot_task，发射后由shoot_task设置回IDLE
+    SHOOT_MODE_BURST = 3,      // 连发
     SHOOT_MODE_RELOADING = 4,  // 补弹
 };
 extern ShootMode shoot_load_mode;
@@ -72,14 +72,15 @@ extern ShootSpeed shoot_speed;
 extern bool is_autoaim;
 
 extern osThreadId_t remoteTaskHandle;
-const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 768 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t remoteTaskAttribute =
+    {.name = "remoteTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 768 * 4,
+     .priority = (osPriority_t)osPriorityHigh,
+     .tz_module = 0,
+     .reserved = 0};
 void remoteTask(void* arg);
 void init_remote();

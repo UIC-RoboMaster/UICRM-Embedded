@@ -30,15 +30,16 @@
 #include "user_define.h"
 #include "utils.h"
 extern osThreadId_t shootTaskHandle;
-const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
-                                           .attr_bits = osThreadDetached,
-                                           .cb_mem = nullptr,
-                                           .cb_size = 0,
-                                           .stack_mem = nullptr,
-                                           .stack_size = 512 * 4,
-                                           .priority = (osPriority_t)osPriorityNormal,
-                                           .tz_module = 0,
-                                           .reserved = 0};
+const osThreadAttr_t shootTaskAttribute =
+    {.name = "shootTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 512 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 
 extern driver::Motor2006* steering_motor;
 void shootTask(void* arg);

@@ -32,15 +32,16 @@
 #include "remote_task.h"
 #include "utils.h"
 extern osThreadId_t chassisTaskHandle;
-const osThreadAttr_t chassisTaskAttribute = {.name = "chassisTask",
-                                             .attr_bits = osThreadDetached,
-                                             .cb_mem = nullptr,
-                                             .cb_size = 0,
-                                             .stack_mem = nullptr,
-                                             .stack_size = 512 * 4,
-                                             .priority = (osPriority_t)osPriorityAboveNormal,
-                                             .tz_module = 0,
-                                             .reserved = 0};
+const osThreadAttr_t chassisTaskAttribute =
+    {.name = "chassisTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 512 * 4,
+     .priority = (osPriority_t)osPriorityAboveNormal,
+     .tz_module = 0,
+     .reserved = 0};
 void debug_chassis_init();
 void debug_chassis(bool retprint = true, bool newline = false);
 void chassisTask(void* arg);
@@ -48,8 +49,7 @@ void chassis_remote_mode();
 void init_chassis();
 void kill_chassis();
 
-void updateCarVelocity(float& car_vx, float& car_vy, float& car_vt, float deltaTime,
-                       const float acceleration = 0.1f);
+void updateCarVelocity(float& car_vx, float& car_vy, float& car_vt, float deltaTime, const float acceleration = 0.1f);
 void Slow_start(float& in_val, float deltaTime, const float acceleration = 0.1f);
 
 void chassis_ADVANCED();

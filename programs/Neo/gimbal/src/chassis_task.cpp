@@ -40,7 +40,7 @@ void chassisTask(void* arg) {
     kill_chassis();
     osDelay(1000);
 
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         kill_chassis();
         osDelay(CHASSIS_OS_DELAY);
     }
@@ -52,9 +52,9 @@ void chassisTask(void* arg) {
     chassis->Enable();
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+        if (!is_activate) {
             kill_chassis();
-            while (remote_mode == REMOTE_MODE_KILL) {
+            while (!is_activate) {
                 osDelay(CHASSIS_OS_DELAY + 2);
             }
             chassis->Enable();
@@ -137,8 +137,7 @@ void chassisTask(void* arg) {
                 chassis_vt_pid_error = 0;
             }
 
-            static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
+            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
             float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;

@@ -50,7 +50,7 @@ void shootTask(void* arg) {
     UNUSED(arg);
     // 启动等待
     osDelay(1000);
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         osDelay(SHOOT_OS_DELAY);
     }
     // 等待IMU初始化
@@ -67,13 +67,13 @@ void shootTask(void* arg) {
     //    uint8_t servo_back = 0;
     //    bool can_shoot_click = false;
 
-    ShootMode last_shoot_mode = SHOOT_MODE_STOP;
-
+    float flywheel_target = 0.0;
     while (true) {
-        bool shoot_en = true;
-        shoot_en &= remote_mode != REMOTE_MODE_KILL;
+        osDelay(SHOOT_OS_DELAY);
+
+        bool shoot_en = is_activate;
 #ifdef HAS_REFEREE
-        shoot_en &= referee->game_robot_status.mains_power_shooter_output;
+        shoot_en = shoot_en && referee->game_robot_status.mains_power_shooter_output;
 #endif
         if (!shoot_en) {
             // 死了
@@ -92,71 +92,50 @@ void shootTask(void* arg) {
             flywheel_right->Enable();
         }
 
-        switch (shoot_flywheel_mode) {
+        switch (shoot_fric_wheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
-                flywheel_left->SetTarget(120.0f * 2 * PI);
-                flywheel_right->SetTarget(120.0f * 2 * PI);
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
-                shoot_load_mode = SHOOT_MODE_PREPARED;
+                flywheel_target = 120.0f * 2 * PI;
+                shoot_fric_wheel_mode = SHOOT_FRIC_MODE_PREPARED;  // todo move to remote_task and
+                                                                   //  trigger by speed of flywheels
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;
             case SHOOT_FRIC_MODE_STOP:
-                flywheel_left->SetTarget(0);
-                flywheel_right->SetTarget(0);
-                // laser->SetOutput(0);
+                flywheel_target = 0.0;
                 break;
             default:
-                //                shoot_flywheel_offset = -1000;
-                // laser->SetOutput(0);
+                flywheel_target = 0.0;
                 break;
         }
+        flywheel_left->SetTarget(flywheel_target);
+        flywheel_right->SetTarget(flywheel_target);
 
-        if (remote_mode == REMOTE_MODE_AUTOPILOT) {
-            if (!minipc->target_angle.shoot_cmd) {
-                steering_motor->Hold(true);
-                shoot_load_mode =
-                    shoot_load_mode == SHOOT_MODE_STOP ? shoot_load_mode : SHOOT_MODE_PREPARED;
-            }
-        }
-
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
-            switch (shoot_load_mode) {
-                case SHOOT_MODE_PREPARING:
-                case SHOOT_MODE_PREPARED:
-                    // 准备就绪，未发射状态
-                    // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
-                    //                    if (!steering_motor->IsHolding()) {
-                    //                        steering_motor->SetTarget(steering_motor->GetTheta());
-                    //                    }
-                    if (last_shoot_mode == SHOOT_MODE_BURST)
-                        steering_motor->Hold(true);
-                    break;
-                case SHOOT_MODE_SINGLE:
-                    // 发射一枚子弹
-                    if (last_shoot_mode != SHOOT_MODE_SINGLE) {
-                        if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(
-                                steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
-                        }
-                        shoot_load_mode = SHOOT_MODE_PREPARED;
-                    }
-                    break;
-                case SHOOT_MODE_BURST:
-                    steering_motor->SetTarget(
-                        steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
-                    break;
-                case SHOOT_MODE_STOP:
-                    // 停止发射
+        switch (shoot_mode) {
+            case SHOOT_MODE_PREPARING:
+            case SHOOT_MODE_PREPARED:
+                // 准备就绪，未发射状态
+                // 如果检测到未上膛（刚发射一枚子弹），则回到准备模式
+                if (last_shoot_mode == SHOOT_MODE_BURST)
                     steering_motor->Hold(true);
-                    break;
-                default:
-                    break;
-            }
+                break;
+            case SHOOT_MODE_SINGLE:
+                // 发射一枚子弹
+                if (last_shoot_mode != SHOOT_MODE_SINGLE) {
+                    if (steering_motor->IsHolding()) {
+                        steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                    }
+                }
+                break;
+            case SHOOT_MODE_BURST:
+                steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                break;
+            case SHOOT_MODE_STOP:
+                // 停止发射
+                steering_motor->Hold(true);
+                break;
+            default:
+                break;
         }
-        last_shoot_mode = shoot_load_mode;
-
-        osDelay(SHOOT_OS_DELAY);
     }
 }
 
@@ -172,11 +151,11 @@ void init_shoot() {
         .kd = 1,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -196,11 +175,11 @@ void init_shoot() {
         .kd = 300,
         .max_out = 4 * PI,
         .max_iout = 0.25 * PI,
-        .deadband = 0,                          // 死区
-        .A = 0,                                 // 变速积分所能达到的最大值为A+B
-        .B = 0,                                 // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                        // 死区
+        .A = 0,                                               // 变速积分所能达到的最大值为A+B
+        .B = 0,                                               // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                  // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |     // 积分限幅
                 control::ConstrainedPID::OutputFilter |       // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
@@ -212,11 +191,11 @@ void init_shoot() {
         .kd = 5000,
         .max_out = 10000,
         .max_iout = 0,
-        .deadband = 0,                          // 死区
-        .A = 2 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 1.5 * PI,                          // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                           // 死区
+        .A = 2 * PI,                                             // 变速积分所能达到的最大值为A+B
+        .B = 1.5 * PI,                                           // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
                 control::ConstrainedPID::OutputFilter |          // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
@@ -226,13 +205,13 @@ void init_shoot() {
     };
     steering_motor->ReInitPID(steering_omega_pid_init, driver::DjiMotorBase::OMEGA);
     steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
-    //    steering_motor->SetMode(driver::DjiMotorBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
-    // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
     steering_motor->Disable();
+    flywheel_left->SetTarget(0);
+    flywheel_right->SetTarget(0);
     flywheel_left->Disable();
     flywheel_right->Disable();
 }

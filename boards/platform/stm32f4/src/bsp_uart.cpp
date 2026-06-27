@@ -187,8 +187,8 @@ namespace bsp {
         // TODO: Rx No DMA is currently not supported
         if (!rx_dma_) {
             // dma not supported
-            __HAL_UART_DISABLE_IT(huart_, UART_IT_IDLE);
-            __HAL_UART_DISABLE_IT(huart_, UART_IT_RXNE);
+            (void)__HAL_UART_DISABLE_IT(huart_, UART_IT_IDLE);
+            (void)__HAL_UART_DISABLE_IT(huart_, UART_IT_RXNE);
             length = rx_size_ - huart_->RxXferCount;
             rx_index_ = 1 - rx_index_;
             HAL_UART_Receive_IT(huart_, rx_data_[rx_index_], rx_size_);

@@ -4,7 +4,13 @@ find_program(CLANG_FORMAT_EXE NAMES
     clang-format-9
     clang-format-8
     clang-format)
-
+# log the detected clang-format version and path
+if (CLANG_FORMAT_EXE)
+    execute_process(COMMAND ${CLANG_FORMAT_EXE} --version
+            OUTPUT_VARIABLE CLANG_FORMAT_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+    message(STATUS "Using clang-format: ${CLANG_FORMAT_EXE} (${CLANG_FORMAT_VERSION})")
+endif()
 # gather all source code
 file(GLOB_RECURSE ALL_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/*.c

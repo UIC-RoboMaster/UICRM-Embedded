@@ -35,15 +35,16 @@ communication::HostUSB* minipc = nullptr;
 
 bsp::Thread* minipc_thread = nullptr;
 
-const osThreadAttr_t minipc_thread_attr_ = {.name = "MiniPCTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 256 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t minipc_thread_attr_ =
+    {.name = "MiniPCTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityHigh,
+     .tz_module = 0,
+     .reserved = 0};
 
 void minipc_task(void* args);
 

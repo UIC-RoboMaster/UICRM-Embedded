@@ -240,6 +240,7 @@ namespace communication {
         STUDENT_INTERACTIVE = 0x0301,
         REMOTE_CONTROL_DATA = 0x304,
         REMOTE_CONTROL_VT13 = 0x53,
+        CUSTOM_CLIENT_DATA = 0x0306,
     } referee_cmd;
 
     /* ===== GAME_STATUS 0x0001 1Hz ===== */
@@ -548,7 +549,7 @@ namespace communication {
 
     /* ===== CUSTOM_CLIENT_DATA 0x0306 ===== */
     typedef struct {
-        uint16_t key_value;
+        uint16_t key_value; // 按键值
         uint16_t x_position : 12;
         uint16_t mouse_left : 4;
         uint16_t y_position : 12;
