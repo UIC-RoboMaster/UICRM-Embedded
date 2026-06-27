@@ -265,11 +265,10 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
     };
 
     /**
-     * @brief 发送 CAN 消息以设置电机输出
-     * @param motors[]    CAN 电机指针数组
-     * @param num_motors  要发送的电机数量
+     * @brief 发送 CAN 消息以设置电机输出（一帧 = 一个 group 的全部电机）
+     * @param group  电机分组
      */
-    static void TransmitOutput(DjiMotorBase* motors[], uint8_t num_motors);
+    static void TransmitOutput(const MotorGroup& group);
 
     static const int16_t MAX_OUT = 32767;
 

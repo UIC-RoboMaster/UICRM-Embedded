@@ -76,16 +76,18 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
             .func = CanMotorThread, .args = nullptr, .attr = can_motor_thread_attr_};
         can_motor_thread_ = new bsp::Thread(thread_init);
         can_motor_thread_->Start();
+        // 初始化电机组，清空所有槽位
         memset(&groups_, 0, sizeof(groups_));
         group_count_ = 0;
     }
-    // 在已有 group 中查找 (tx_id, can) 匹配的组，找不到则占用新槽位
+    // 在已有 group 中查找 (tx_id, can) 匹配的组
     for (uint8_t i = 0; i < 10; i++) {
         if (groups_[i].occupied && groups_[i].tx_id == state_.tx_id && groups_[i].can == state_.can) {
             RM_ASSERT_LT(groups_[i].count, 4, "Exceeding maximum of 4 motor commands per CAN message");
             groups_[i].motors[groups_[i].count++] = this;
             break;
         }
+        // 如果没有找到匹配的组，则占用一个新的槽位
         if (!groups_[i].occupied) {
             groups_[i].occupied = true;
             groups_[i].tx_id = state_.tx_id;
@@ -112,22 +114,20 @@ void DjiMotorBase::SetFrequency(uint32_t freq) {
     delay_time = 1000 / freq;
 }
 
-void DjiMotorBase::TransmitOutput(DjiMotorBase* motors[], uint8_t num_motors) {
+void DjiMotorBase::TransmitOutput(const MotorGroup& group) {
+    // 初始化数据帧
     uint8_t data[8] = {0};
 
-    RM_ASSERT_GT(num_motors, 0, "Meaningless empty can motor transmission");
-    RM_ASSERT_LE(num_motors, 4, "Exceeding maximum of 4 motor commands per CAN message");
-    // 获取输出的数据到缓冲区
-    for (uint8_t i = 0; i < num_motors; ++i) {
-        RM_ASSERT_EQ(motors[i]->state_.tx_id, motors[0]->state_.tx_id, "tx id mismatch");
-        RM_ASSERT_EQ(motors[i]->state_.can, motors[0]->state_.can, "can line mismatch");
-        const uint8_t motor_idx = (motors[i]->state_.rx_id - 1) % 4;
-        const int16_t output = motors[i]->output_;
+    for (uint8_t i = 0; i < group.count; ++i) {
+        // 计算电机在数据帧中的索引位置
+        const uint8_t motor_idx = (group.motors[i]->state_.rx_id - 1) % 4;
+        // 获取电机的电流输出值
+        const int16_t output = group.motors[i]->output_;
+        // 将电流输出值拆分为高字节和低字节，并放入数据帧中
         data[2 * motor_idx] = output >> 8;
         data[2 * motor_idx + 1] = output & 0xff;
     }
-    // 发送数据
-    motors[0]->state_.can->Transmit(motors[0]->state_.tx_id, data, 8);
+    group.can->Transmit(group.tx_id, data, 8);
 }
 
 void DjiMotorBase::CanMotorThread(void* args) {
@@ -144,7 +144,7 @@ void DjiMotorBase::CanMotorThread(void* args) {
         pre_output_callback_(pre_output_callback_instance_);
         for (uint8_t i = 0; i < group_count_; i++) {
             // 输出电机指令
-            TransmitOutput(groups_[i].motors, groups_[i].count);
+            TransmitOutput(groups_[i]);
         }
         post_output_callback_(post_output_callback_instance_);
         osDelay(delay_time);
