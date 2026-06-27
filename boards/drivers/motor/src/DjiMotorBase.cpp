@@ -30,11 +30,11 @@ using namespace bsp;
 namespace driver {
 
 bool DjiMotorBase::is_init_ = false;
-uint16_t DjiMotorBase::id_[10] = {0};
-bsp::CAN* DjiMotorBase::can_to_index_[10] = {nullptr};
-uint8_t DjiMotorBase::group_cnt_ = 0;
-DjiMotorBase* DjiMotorBase::motors_[10][4] = {{nullptr}};
-uint8_t DjiMotorBase::motor_cnt_[10] = {0};
+// 一个 group = (TX ID, CAN) 二元组。DJI 仅 3 个 TX ID，[10] 为预留值。
+// 同组电机共享一帧 CAN 报文（最多 4 个），不同 (TX ID, CAN) 即新建 group。
+DjiMotorBase::MotorGroup DjiMotorBase::groups_[10] = {};
+uint8_t DjiMotorBase::group_count_ = 0;
+
 bsp::Thread* DjiMotorBase::can_motor_thread_ = nullptr;
 uint32_t DjiMotorBase::delay_time = 1;
 
@@ -47,7 +47,7 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     : MotorCANBase<DjiMotorBase>(30) {
     state_.can = can;
     state_.rx_id = rx_id;
-    // 大疆的电机，自动识别 TX_ID（覆盖基类默认值）
+    // 大疆的电机，自动识别 TX_ID 或使用显式指定的值
     if (tx_id == 0x00) {
         constexpr uint16_t GROUP_SIZE = 4;
         constexpr uint16_t RX1_ID_START = 0x201;
@@ -65,6 +65,8 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
             state_.tx_id = TX2_ID;
         else
             state_.tx_id = TX1_ID;
+    } else {
+        state_.tx_id = tx_id;
     }
 
     // 如果是第一次初始化，需要创建一个后台线程以固定频率输出电机指令
@@ -74,27 +76,26 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
             .func = CanMotorThread, .args = nullptr, .attr = can_motor_thread_attr_};
         can_motor_thread_ = new bsp::Thread(thread_init);
         can_motor_thread_->Start();
-        memset(id_, 0xff, sizeof(id_));
-        memset(motors_, 0, sizeof(motors_));
-        group_cnt_ = 0;
-        memset(motor_cnt_, 0, sizeof(motor_cnt_));
+        memset(&groups_, 0, sizeof(groups_));
+        for (uint8_t k = 0; k < 10; k++) groups_[k].tx_id = 0xFFFF;
+        group_count_ = 0;
     }
     // 如果已经初始化，需要检查是否有重复的 ID，如果没有则加入到数组以使后台线程能够持续给电机输出数据
     for (uint8_t i = 0; i < 10; i++) {
-        if (state_.tx_id == id_[i] && can_to_index_[i] == state_.can) {
-            if (motor_cnt_[i] < 4) {
-                motors_[i][motor_cnt_[i]] = this;
-                motor_cnt_[i]++;
+        if (state_.tx_id == groups_[i].tx_id && groups_[i].can == state_.can) {
+            if (groups_[i].count < 4) {
+                groups_[i].motors[groups_[i].count] = this;
+                groups_[i].count++;
                 break;
             } else {
                 RM_ASSERT_TRUE(false, "Exceeding maximum of 4 motor commands per CAN message");
             }
-        } else if (id_[i] == 0xffff) {
-            id_[i] = state_.tx_id;
-            can_to_index_[i] = state_.can;
-            motors_[i][0] = this;
-            group_cnt_++;
-            motor_cnt_[i]++;
+        } else if (groups_[i].tx_id == 0xFFFF) {
+            groups_[i].tx_id = state_.tx_id;
+            groups_[i].can = state_.can;
+            groups_[i].motors[0] = this;
+            group_count_++;
+            groups_[i].count++;
             break;
         }
     }
@@ -137,16 +138,16 @@ void DjiMotorBase::CanMotorThread(void* args) {
     // 后台线程，用于持续输出电机指令
     while (1) {
         // 遍历所有的电机组，对每个组的电机进行输出
-        for (uint8_t i = 0; i < group_cnt_; i++) {
+        for (uint8_t i = 0; i < group_count_; i++) {
             // 计算每个组的电机的 PID 输出
-            for (uint8_t j = 0; j < motor_cnt_[i]; j++) {
-                motors_[i][j]->CalcOutput();
+            for (uint8_t j = 0; j < groups_[i].count; j++) {
+                groups_[i].motors[j]->CalcOutput();
             }
         }
         pre_output_callback_(pre_output_callback_instance_);
-        for (uint8_t i = 0; i < group_cnt_; i++) {
+        for (uint8_t i = 0; i < group_count_; i++) {
             // 输出电机指令
-            TransmitOutput(motors_[i], motor_cnt_[i]);
+            TransmitOutput(groups_[i].motors, groups_[i].count);
         }
         post_output_callback_(post_output_callback_instance_);
         osDelay(delay_time);
@@ -345,15 +346,15 @@ Motor3508::Motor3508(CAN* can, uint16_t rx_id) : DjiMotorBase(can, rx_id) {
 }
 
 void Motor3508::UpdateData(const uint8_t data[]) {
-    const int16_t raw_theta = data[0] << 8 | data[1];
-    const int16_t raw_omega = data[2] << 8 | data[3];
+    state_.raw_theta = data[0] << 8 | data[1];
+    state_.raw_omega = data[2] << 8 | data[3];
     state_.raw_current = data[4] << 8 | data[5];
     state_.raw_temperature = data[6];
 
     constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
     constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
-    state_.theta = raw_theta * THETA_SCALE;
-    state_.omega = raw_omega * OMEGA_SCALE;
+    state_.theta = state_.raw_theta * THETA_SCALE;
+    state_.omega = state_.raw_omega * OMEGA_SCALE;
 
     ProcessAngleTracking();
 }
@@ -382,16 +383,16 @@ Motor6020::Motor6020(CAN* can, uint16_t rx_id, uint16_t tx_id)
 }
 
 void Motor6020::UpdateData(const uint8_t data[]) {
-    const int16_t raw_theta = data[0] << 8 | data[1];
-    const int16_t raw_omega = data[2] << 8 | data[3];
+    state_.raw_theta = data[0] << 8 | data[1];
+    state_.raw_omega = data[2] << 8 | data[3];
     state_.raw_current = data[4] << 8 | data[5];
     state_.raw_temperature = data[6];
 
     constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
     constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
-    state_.theta = raw_theta * THETA_SCALE;
+    state_.theta = state_.raw_theta * THETA_SCALE;
     state_.omega =
-        (raw_omega * OMEGA_SCALE) * input_speed_filter_ + state_.omega * (1 - input_speed_filter_);
+        (state_.raw_omega * OMEGA_SCALE) * input_speed_filter_ + state_.omega * (1 - input_speed_filter_);
 
     ProcessAngleTracking();
 }
@@ -421,14 +422,14 @@ Motor2006::Motor2006(CAN* can, uint16_t rx_id) : DjiMotorBase(can, rx_id) {
 }
 
 void Motor2006::UpdateData(const uint8_t data[]) {
-    const int16_t raw_theta = data[0] << 8 | data[1];
-    const int16_t raw_omega = data[2] << 8 | data[3];
+    state_.raw_theta = data[0] << 8 | data[1];
+    state_.raw_omega = data[2] << 8 | data[3];
     state_.raw_current = data[4] << 8 | data[5];
 
     constexpr float THETA_SCALE = 2 * PI / 8192;  // digital -> rad
     constexpr float OMEGA_SCALE = 2 * PI / 60;    // rpm -> rad / sec
-    state_.theta = raw_theta * THETA_SCALE;
-    state_.omega = raw_omega * OMEGA_SCALE;
+    state_.theta = state_.raw_theta * THETA_SCALE;
+    state_.omega = state_.raw_omega * OMEGA_SCALE;
 
     ProcessAngleTracking();
 }

@@ -40,7 +40,9 @@ struct DjiMotorState {
     float theta = 0;              // 编码器角度 [rad], 范围 [0, 2PI]
     float omega = 0;              // 编码器角速度 [rad/s]
 
-    // ── 原始回传 ──
+    // ── 电机原始回传 ──
+    int16_t raw_theta = 0;        // 转子机械角度（原始编码器角度）
+    int16_t raw_omega = 0;        // 转子转速（原始编码器角速度）
     int16_t raw_current = 0;      // 原始电流反馈
     uint8_t raw_temperature = 0;  // 原始温度
 
@@ -249,6 +251,19 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
     void* error_callback_instance_ = nullptr;
 
     /**
+     * @brief DJI CAN 电机分组结构体
+     *
+     * DJI 协议同一 TX ID 最多承载 4 个电机（8 字节 = 4 × int16_t），
+     * 相同 (TX ID, CAN 总线) 的电机归为一组，共享一帧 CAN 报文。
+     */
+    struct MotorGroup {
+        uint16_t tx_id = 0xFFFF;       // 组的 CAN 发送 ID（0xFFFF 表示空闲槽位）
+        bsp::CAN* can = nullptr;       // 组的 CAN 总线
+        DjiMotorBase* motors[4] = {};  // 组内电机指针（最多 4 个）
+        uint8_t count = 0;             // 组内实际电机数
+    };
+
+    /**
      * @brief 发送 CAN 消息以设置电机输出
      * @param motors[]    CAN 电机指针数组
      * @param num_motors  要发送的电机数量
@@ -273,11 +288,17 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
 
     static void CanMotorThread(void* args);
 
-    static uint16_t id_[10];
-    static bsp::CAN* can_to_index_[10];
-    static uint8_t group_cnt_;
-    static DjiMotorBase* motors_[10][4];
-    static uint8_t motor_cnt_[10];
+    /**
+     * @brief DJI CAN 电机分组注册表
+     *
+     * 一个 group = (TX ID, CAN 总线) 二元组。同组电机共享一帧 CAN 报文（最多 4 个）。
+     * 不同 TX ID 或不同 CAN 总线即创建新 group。
+     *
+     * DJI 协议仅 3 个 TX ID（0x200 / 0x1FF / 0x2FF），即使 2 条 CAN 全用也仅 6 组。
+     * 数组大小 [10] 为预留值，多余的 slot 以 tx_id == 0xFFFF 标记为空闲。
+     */
+    static MotorGroup groups_[10];
+    static uint8_t group_count_;
     static uint32_t delay_time;
 
     static callback_t pre_output_callback_;
