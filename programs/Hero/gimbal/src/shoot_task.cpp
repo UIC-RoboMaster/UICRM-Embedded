@@ -20,9 +20,11 @@
 
 #include "shoot_task.h"
 
+// 摩擦轮
 driver::Motor3508* flywheel_left = nullptr;
 driver::Motor3508* flywheel_right = nullptr;
 
+// 供弹轮
 driver::Motor3508* steering_motor = nullptr;
 
 bool jam_notify_flags = false;

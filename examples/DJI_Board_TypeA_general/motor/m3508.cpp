@@ -33,7 +33,7 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor3508* motor1 = nullptr;
 
 void RM_RTOS_Init() {
-    print_use_uart(&huart8);
+    print_use_uart(&huart7);
     can1 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::Motor3508(can1, 0x201);
     motor1->SetTransmissionRatio(19);

@@ -115,6 +115,11 @@ void RM_RTOS_Default_Task(const void* arg) {
             imu->INS_angle[1] / PI * 180,
             imu->INS_angle[2] / PI * 180
         );
+
+        print("Accel X: %.3f m/s²\r\n", imu->INS_accel[0]);
+        print("Accel Y: %.3f m/s²\r\n", imu->INS_accel[1]);
+        print("Accel Z: %.3f m/s²\r\n", imu->INS_accel[2]);
+
         print("Is Calibrated: %s\r\n", imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
         osDelay(50);
     }
