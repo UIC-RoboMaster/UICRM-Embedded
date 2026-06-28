@@ -37,19 +37,30 @@ namespace {
     constexpr float MOTOR_TRANSMISSION_RATIO = 3.705f;
     constexpr float MAX_YAW_TARGET_SPEED = 6.0f * PI;
     constexpr float MAX_MOTOR_TARGET_SPEED = 30.0f * PI;
-    constexpr float DRIVE_FULL_YAW_ERROR = 0.08f;
-    constexpr float DRIVE_DISABLE_YAW_ERROR = 0.50f;
 
-    float CalcDriveScale(float yaw_error) {
-        yaw_error = fabsf(yaw_error);
-        if (yaw_error <= DRIVE_FULL_YAW_ERROR) {
-            return 1.0f;
-        }
-        if (yaw_error >= DRIVE_DISABLE_YAW_ERROR) {
-            return 0.0f;
-        }
-        return (DRIVE_DISABLE_YAW_ERROR - yaw_error) /
-               (DRIVE_DISABLE_YAW_ERROR - DRIVE_FULL_YAW_ERROR);
+    /*
+        Return Yaw Weight 0 ~ 1
+        Clamped exponential easing function: [Primary Yaw, Secondary Speed].
+        Overall Behaviour:
+        Yaw Error   |   Load of Yaw
+        HUGE        |   100%
+        BIG         |   95%
+        MEDIUM      |   90%
+        SMALL       |   50%
+        TINY        |   0%
+
+        k is the slope function rise from 0 to 1
+        k small:    speed weights more
+        k big:      yaw weights more
+    */
+    float CalcYawWeight(float yaw_error)
+    {
+        constexpr float k = 8.0f;
+
+        float x = fabsf(yaw_error);
+        float y = 1.0f - expf(-k * x);
+        if (y > 1.0f) y = 1.0f;
+        return y;
     }
 
     void LimitMotorSpeed(float& motor1_omega, float& motor2_omega) {
@@ -63,41 +74,7 @@ namespace {
         motor2_omega *= scale;
     }
 
-    control::ConstrainedPID::PID_Init_t MakeOmegaPIDInit() {
-        return {
-            .kp = 100,
-            .ki = 0,
-            .kd = 1,
-            .max_out = 30000,
-            .max_iout = 10000,
-            .deadband = 0,
-            .A = 3 * PI,
-            .B = 2 * PI,
-            .output_filtering_coefficient = 0.1,
-            .derivative_filtering_coefficient = 0,
-            .mode = control::ConstrainedPID::Integral_Limit |
-                    control::ConstrainedPID::OutputFilter |
-                    control::ConstrainedPID::Trapezoid_Intergral |
-                    control::ConstrainedPID::ChangingIntegralRate,
-        };
-    }
-
-    control::ConstrainedPID::PID_Init_t MakeYawPIDInit() {
-        return {
-            .kp = 10,
-            .ki = 0,
-            .kd = 1,
-            .max_out = MAX_YAW_TARGET_SPEED,
-            .max_iout = 0,
-            .deadband = 0,
-            .A = 0,
-            .B = 0,
-            .output_filtering_coefficient = 0.1,
-            .derivative_filtering_coefficient = 0,
-            .mode = control::ConstrainedPID::OutputFilter,
-        };
-    }
-
+    //TODO: SERIOUSLY, THIS IS THE CORRECT VERSION OF Wrap()
     inline float WrapToPi(float angle)
     {
         while (angle > PI)
@@ -122,7 +99,22 @@ void RM_RTOS_Init() {
     motor1 = new driver::Motor3508(can, 0x201);
     motor2 = new driver::Motor3508(can, 0x202);
 
-    const auto omega_pid_init = MakeOmegaPIDInit();
+    control::ConstrainedPID::PID_Init_t omega_pid_init({
+        .kp = 100,
+        .ki = 0,
+        .kd = 1,
+        .max_out = 30000,
+        .max_iout = 10000,
+        .deadband = 0,
+        .A = 3 * PI,
+        .B = 2 * PI,
+        .output_filtering_coefficient = 0.1,
+        .derivative_filtering_coefficient = 0,
+        .mode = control::ConstrainedPID::Integral_Limit |
+                control::ConstrainedPID::OutputFilter |
+                control::ConstrainedPID::Trapezoid_Intergral |
+                control::ConstrainedPID::ChangingIntegralRate,
+    });
     motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
     motor1->SetMode(driver::DjiMotorBase::OMEGA);
     motor1->SetTransmissionRatio(MOTOR_TRANSMISSION_RATIO);
@@ -143,7 +135,19 @@ void RM_RTOS_Default_Task(const void* args) {
     control::DifferentialSwerveWheelKinemetic solver;
     solver.Reset(motor1->GetTheta(), motor2->GetTheta());
 
-    control::ConstrainedPID yaw_pid(MakeYawPIDInit());
+    control::ConstrainedPID yaw_pid({
+            .kp = 10,
+            .ki = 0,
+            .kd = 1,
+            .max_out = MAX_YAW_TARGET_SPEED,
+            .max_iout = 0,
+            .deadband = 0,
+            .A = 0,
+            .B = 0,
+            .output_filtering_coefficient = 0.1,
+            .derivative_filtering_coefficient = 0,
+            .mode = control::ConstrainedPID::OutputFilter,
+    });
 
     bsp::GPIO key(KEY_GPIO_Port, KEY_Pin);
 
@@ -168,28 +172,19 @@ void RM_RTOS_Default_Task(const void* args) {
         const float m1 = motor1->GetCumulatedTheta();
         const float m2 = motor2->GetCumulatedTheta();
 
-        // const auto state =
-        //     solver.Update(MotorCumulatedTheta(motor1->GetCumulatedRounds(), motor1->GetTheta()),
-        //         MotorCumulatedTheta(motor2->GetCumulatedRounds(), motor2->GetTheta()),
-        //         1.0f,
-        //         1.0f);
-        const auto state = solver.Update(m1, m2, MOTOR_TRANSMISSION_RATIO, MOTOR_TRANSMISSION_RATIO);
+        const auto state = solver.Update(m1, m2, motor1->GetTransmissionRatio(), motor2->GetTransmissionRatio());
         const float yaw_error = WrapToPi(yaw_target - state.yaw_angle_raw);
         const float wrapped_yaw_target = state.yaw_angle_raw + yaw_error;
         const float yaw_speed_target = yaw_pid.ComputeOutput(wrapped_yaw_target, state.yaw_angle_raw);
-        float limited_drive_speed = driving_speed_target * CalcDriveScale(yaw_error);
-        // limited_drive_speed = 1.0f;
+        const float load_balanced_drive_speed = driving_speed_target * (1.0f - CalcYawWeight(yaw_error));
 
-        auto target = solver.InverseSolve(yaw_speed_target, limited_drive_speed);
+        auto target = solver.InverseSolve(yaw_speed_target, load_balanced_drive_speed);
         LimitMotorSpeed(target.x1, target.x2);
 
         print("\r\n");
         print("[YAW]target:%.3f | current:%.3f | err:%.3f\r\n", yaw_target, state.yaw_angle_raw,  yaw_error);
-        print("[SPD]target:%.3f | current:%.3f\r\n", limited_drive_speed, state.drive_speed);
+        print("[SPD]target:%.3f | current:%.3f\r\n", load_balanced_drive_speed, state.drive_speed);
         print("m1:%.3f m2:%.3f\r\n", m1, m2);
-        // print("%f %f", motor1->GetTheta(), motor2->GetTheta());
-        // print("yaw speed:%.3f | limited drive:%.3f\r\n", yaw_speed_target, limited_drive_speed);
-        // print("input1 omega:%.3f | input2 omega:%.3f\r\n", target.x1, target.x2);
 
         motor1->SetTarget(target.x1);
         motor2->SetTarget(target.x2);
