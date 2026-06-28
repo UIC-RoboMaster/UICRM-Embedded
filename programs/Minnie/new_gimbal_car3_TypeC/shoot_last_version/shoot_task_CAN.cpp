@@ -26,7 +26,7 @@
 static driver::Motor3508* flywheel_left = nullptr;
 static driver::Motor3508* flywheel_right = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::DjiMotorBase* steering_motor = nullptr;
 
 driver::ServoMG995* MG995 = nullptr;
 
@@ -64,7 +64,7 @@ void jam_callback(void* args) {
     }
 }
 
-bool steering_SetTarget(driver::MotorCANBase* motor, float SetTarget, float threshold,
+bool steering_SetTarget(driver::DjiMotorBase* motor, float SetTarget, float threshold,
                         bool locked_rotor = true, bool ABS = false) {
     motor->Enable();
     bool Steering_Mode = false;
@@ -306,16 +306,16 @@ void init_shoot() {
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
 
     };
-    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->ReInitPID(theta_pid_init, driver::MotorCANBase::THETA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    steering_motor->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
+    steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
-    flywheel_left->ReInitPID(flywheel_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_left->SetMode(driver::MotorCANBase::OMEGA);
+    flywheel_left->ReInitPID(flywheel_pid_init, driver::DjiMotorBase::OMEGA);
+    flywheel_left->SetMode(driver::DjiMotorBase::OMEGA);
     flywheel_left->RegisterErrorCallback(jam_callback, flywheel_left);
 
-    flywheel_right->ReInitPID(flywheel_pid_init, driver::MotorCANBase::OMEGA);
-    flywheel_right->SetMode(driver::MotorCANBase::OMEGA);
+    flywheel_right->ReInitPID(flywheel_pid_init, driver::DjiMotorBase::OMEGA);
+    flywheel_right->SetMode(driver::DjiMotorBase::OMEGA);
     flywheel_right->RegisterErrorCallback(jam_callback, flywheel_right);
 
     flywheel_left->SetTarget(0);

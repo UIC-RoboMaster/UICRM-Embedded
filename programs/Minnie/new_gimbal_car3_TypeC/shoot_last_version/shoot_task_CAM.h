@@ -17,7 +17,7 @@
 // <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "MotorPWMBase.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"

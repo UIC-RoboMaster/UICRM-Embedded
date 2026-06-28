@@ -18,7 +18,7 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DmMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
@@ -30,13 +30,13 @@
 
 // Refer to typeA datasheet for channel detail
 static bsp::CAN* can1 = nullptr;
-static driver::MotorDM4310* motor1 = nullptr;
+static driver::DMMotor4310* motor1 = nullptr;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan1, true);
-    motor1 = new driver::MotorDM4310(can1, 0x301, 0x3fe);
-    motor1->SetTransmissionRatio(1);
+    motor1 = new driver::DMMotor4310(can1, 0x009, 0x001, driver::DMMotor4310::MIT);
+    motor1->SetTransmissionRatio(10);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2,
         .ki = 0,
@@ -53,8 +53,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
+    motor1->ReInitPID(omega_pid_init, driver::DmMotorBase::OMEGA);
+    motor1->SetMode(driver::DmMotorBase::OMEGA | driver::DmMotorBase::ABSOLUTE);
     motor1->SetTarget(0);
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
@@ -76,7 +76,7 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             if (current == 0) {
                 current = 10000;
-                motor1->SetTarget(6 * PI);
+                motor1->SetTarget(2 * PI);
             } else {
                 current = 0;
                 motor1->SetTarget(0);

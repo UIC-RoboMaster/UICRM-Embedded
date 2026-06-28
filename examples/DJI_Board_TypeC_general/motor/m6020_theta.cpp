@@ -18,12 +18,15 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "main.h"
 #include "pid.h"
+#include "tim.h"
+#include "bsp_os.h"
+
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
@@ -33,6 +36,10 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor6020* motor1 = nullptr;
 
 void RM_RTOS_Init() {
+
+    bsp::SetHighresClockTimer(&htim5);
+
+
     print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::Motor6020(can1, 0x209, 0x2fe);
@@ -46,13 +53,13 @@ void RM_RTOS_Init() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .output_filtering_coefficient = 0.5,           // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    motor1->ReInitPID(theta_pid_init, driver::MotorCANBase::THETA);
+    motor1->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 200,
+        .kp = 800,
         .ki = 1,
         .kd = 0,
         .max_out = 16384,
@@ -67,9 +74,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                    driver::MotorCANBase::ABSOLUTE);
+    motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
     motor1->SetTarget(0);
     // Snail need to be run at idle throttle for some
@@ -89,11 +95,7 @@ void RM_RTOS_Default_Task(const void* args) {
             while (key.Read() == 0) {
                 osDelay(30);
             }
-            if (motor1->GetTarget() > PI) {
-                motor1->SetTarget(motor1->GetTarget() - 1.0f / 2 * PI);
-            } else {
-                motor1->SetTarget(motor1->GetTarget() + 1.0f / 2 * PI);
-            }
+            motor1->SetTarget(motor1->GetTarget() + 1.5 * PI);
             osDelay(20);
         }
         motor1->PrintData();

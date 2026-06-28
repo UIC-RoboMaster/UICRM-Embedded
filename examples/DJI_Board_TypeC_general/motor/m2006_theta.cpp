@@ -18,12 +18,15 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "main.h"
 #include "pid.h"
+#include "tim.h"
+#include "bsp_os.h"
+
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
@@ -33,8 +36,10 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor2006* motor1 = nullptr;
 
 void RM_RTOS_Init() {
+    bsp::SetHighresClockTimer(&htim5);
+
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hcan1, true);
+    can1 = new bsp::CAN(&hcan1, false);
     motor1 = new driver::Motor2006(can1, 0x203);
     motor1->SetTransmissionRatio(36);
     control::ConstrainedPID::PID_Init_t theta_pid_init = {
@@ -50,7 +55,7 @@ void RM_RTOS_Init() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    motor1->ReInitPID(theta_pid_init, driver::MotorCANBase::THETA);
+    motor1->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 1000,
         .ki = 1,
@@ -67,8 +72,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);

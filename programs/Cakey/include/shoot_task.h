@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "MotorPWMBase.h"
 #include "bsp_gpio.h"
 #include "cmsis_os2.h"
@@ -41,7 +41,7 @@ const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .tz_module = 0,
                                            .reserved = 0};
 
-extern driver::MotorCANBase* steering_motor;
+extern driver::DjiMotorBase* steering_motor;
 extern bool jam_notify_flags;
 
 extern control::ConstrainedPID::PID_Init_t steering_motor_theta_normal_pid_init;

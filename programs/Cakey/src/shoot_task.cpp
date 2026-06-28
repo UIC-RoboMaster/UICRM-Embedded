@@ -36,7 +36,7 @@
 static driver::MotorPWMBase* flywheel_left = nullptr;
 static driver::MotorPWMBase* flywheel_right = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::DjiMotorBase* steering_motor = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
@@ -221,7 +221,7 @@ void init_shoot() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
         .kp = 1000,
         .ki = 1,
@@ -240,8 +240,8 @@ void init_shoot() {
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
 
     };
-    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
 

@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_gpio.h"
 #include "cmsis_os2.h"
 #include "imu_task.h"
@@ -40,7 +40,7 @@ const osThreadAttr_t shootTaskAttribute = {.name = "shootTask",
                                            .tz_module = 0,
                                            .reserved = 0};
 
-extern driver::MotorCANBase* steering_motor;
+extern driver::DjiMotorBase* steering_motor;
 void shootTask(void* arg);
 void init_shoot();
 void kill_shoot();
