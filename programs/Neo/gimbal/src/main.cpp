@@ -34,12 +34,12 @@
 #include "remote_task.h"
 #include "shoot_task.h"
 #include "ui_task.h"
-#include "user_define.h"
 #include "usart.h"
+#include "user_define.h"
 
 // bsp::GPIO* gimbal_power = nullptr;
 void RM_RTOS_Init(void) {
-    bsp::SetHighresClockTimer(&htim5);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     print_use_uart(&BOARD_UART1, true, 921600);
     init_can();
     init_batt();
@@ -101,9 +101,10 @@ void RM_RTOS_Default_Task(const void* arg) {
         clear_screen();
 
         // Mode info
+        // print_enabled("Active:%s ", activate_states_str());
         print("Mode:%s\r\n", remote_mode_str(remote_mode));
-        print("Shoot Fric Mode:%s\r\n", shoot_fric_mode_str(shoot_flywheel_mode));
-        print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_load_mode));
+        print("Shoot Fric Mode:%s\r\n", shoot_fric_mode_str(shoot_fric_wheel_mode));
+        print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_mode));
         print("\r\n");
 
         // DBUS info
@@ -111,32 +112,56 @@ void RM_RTOS_Default_Task(const void* arg) {
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
-            dbus->timestamp);
+            dbus->ch0,
+            dbus->ch1,
+            dbus->ch2,
+            dbus->ch3,
+            dbus->ch4,
+            dbus->swl,
+            dbus->swr
+        );
         print("\r\n");
 
         // Chassis info
         print("Chassis speed %.3f %.3f %.3f\r\n", chassis_vx, chassis_vy, chassis_vt);
-        print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
-              referee->power_heat_data.chassis_current / 1000.0,
-              referee->power_heat_data.chassis_power);
+        print(
+            "Power %.3fV %.3fA %.3fW\r\n",
+            referee->power_heat_data.chassis_volt / 1000.0,
+            referee->power_heat_data.chassis_current / 1000.0,
+            referee->power_heat_data.chassis_power
+        );
+        print(
+            "Navigation Target X%.3f Y%.3f Spin%.3f\r\n",
+            minipc->robot_move.target_x,
+            minipc->robot_move.target_y,
+            minipc->robot_move.target_turn
+        );
         print("\r\n");
 
         // Gimbal info
-        print("Gimbal target P%.3f Y%.3f\r\n",
-              gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
-              gimbal->getYawTarget() - gimbal_param->yaw_offset_);
-        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", imu->INS_angle[1], imu->INS_angle[0],
-              imu->INS_angle[2]);
-        print("Vision Target: P%.3f Y%.3f [%d]\r\n", minipc->target_angle.target_pitch,
-              minipc->target_angle.target_yaw, minipc->target_angle.accuracy);
+        print(
+            "Gimbal target P%.3f Y%.3f\r\n",
+            gimbal->getPitchTarget() - gimbal_param->pitch_offset_ - (2 * PI),
+            gimbal->getYawTarget() - gimbal_param->yaw_offset_ - (2 * PI)
+        );
+        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", -imu->INS_angle[1], imu->INS_angle[0], imu->INS_angle[2]);
+        print(
+            "Vision Target: P%.3f Y%.3f Acc[%d]\r\n",
+            minipc->target_angle.target_pitch,
+            minipc->target_angle.target_yaw,
+            minipc->target_angle.accuracy
+        );
+        // auto it = time_queue.begin();
+        // if (std::find(time_queue.begin(), time_queue.end(), minipc->target_angle.time_stamp) !=
+        // time_queue.end())
+        //     print("Latency [%d]", (uint8_t)dbus->timestamp - *it);
         print("\r\n");
 
         // Shoot info
-        print("Shooter Cooling Heat: %hu\r\n",
-              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        print_enabled("MiniPC Shoot CMD", minipc->target_angle.shoot_cmd);
         print("\r\n");
 
         // Online info
@@ -154,6 +179,6 @@ void RM_RTOS_Default_Task(const void* arg) {
         print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
         print("\r\n");
 
-        osDelay(50);
+        osDelay(100);
     }
 }

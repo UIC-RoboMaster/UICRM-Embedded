@@ -30,15 +30,16 @@
 #include "string.h"
 #define RX_SIGNAL (1 << 0)
 
-const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
-                                         .attr_bits = osThreadDetached,
-                                         .cb_mem = nullptr,
-                                         .cb_size = 0,
-                                         .stack_mem = nullptr,
-                                         .stack_size = 256 * 4,
-                                         .priority = (osPriority_t)osPriorityNormal,
-                                         .tz_module = 0,
-                                         .reserved = 0};
+const osThreadAttr_t imuTaskAttribute =
+    {.name = "imuTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 osThreadId_t imuTaskHandle;
 
 class IMU : public bsp::IMU_typeC {
@@ -106,13 +107,17 @@ void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
     imu->Calibrate();
     while (true) {
-        sprintf(buffer, "# %.2f s, IMU %s", HAL_GetTick() / 1000.0,
-                imu->DataReady() ? "Ready" : "Not Ready");
+        sprintf(buffer, "# %.2f s, IMU %s", HAL_GetTick() / 1000.0, imu->DataReady() ? "Ready" : "Not Ready");
         oled->ShowString(0, 0, (unsigned char*)buffer);
         sprintf(buffer, "Temp: %.2f", imu->Temp);
         oled->ShowString(1, 0, (unsigned char*)buffer);
-        sprintf(buffer, "EAngles: %.2f, %.2f, %.2f", imu->INS_angle[0] / PI * 180,
-                imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
+        sprintf(
+            buffer,
+            "EAngles: %.2f, %.2f, %.2f",
+            imu->INS_angle[0] / PI * 180,
+            imu->INS_angle[1] / PI * 180,
+            imu->INS_angle[2] / PI * 180
+        );
         oled->ShowString(2, 0, (unsigned char*)buffer);
         oled->RefreshGram();
         osDelay(50);

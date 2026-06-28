@@ -28,8 +28,7 @@
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
-                                      REMOTE_MODE_AUTOAIM};
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED, REMOTE_MODE_AUTOAIM};
 const int8_t remote_mode_max = 2;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
@@ -240,16 +239,13 @@ void remoteTask(void* arg) {
             shoot_speed = (ShootSpeed)next_shoot_speed;
             switch (shoot_speed) {
                 case SHOOT_FREQUENCY_NORMAL:
-                    steering_motor->ReInitPID(steering_motor_theta_normal_pid_init,
-                                              driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_normal_pid_init, driver::MotorCANBase::THETA);
                     break;
                 case SHOOT_FREQUENCY_FAST:
-                    steering_motor->ReInitPID(steering_motor_theta_fast_pid_init,
-                                              driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_fast_pid_init, driver::MotorCANBase::THETA);
                     break;
                 case SHOOT_FREQUENCY_BURST:
-                    steering_motor->ReInitPID(steering_motor_theta_burst_pid_init,
-                                              driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_burst_pid_init, driver::MotorCANBase::THETA);
                     break;
                 default:
                     break;

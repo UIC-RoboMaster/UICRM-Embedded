@@ -59,14 +59,15 @@ enum ShootMode {
 };
 extern ShootMode shoot_load_mode;
 extern osThreadId_t remoteTaskHandle;
-const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 512 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t remoteTaskAttribute =
+    {.name = "remoteTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 512 * 4,
+     .priority = (osPriority_t)osPriorityHigh,
+     .tz_module = 0,
+     .reserved = 0};
 void remoteTask(void* arg);
 void init_remote();

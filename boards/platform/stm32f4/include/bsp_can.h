@@ -126,8 +126,7 @@ namespace bsp {
          *
          * @return return 0 if success, -1 if invalid std_id
          */
-        int RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback,
-                                     void* args = NULL);
+        int RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback, void* args = NULL);
 
         /**
          * @brief 发送CAN数据
@@ -211,6 +210,8 @@ namespace bsp {
         uint8_t ext_callback_count_ = 0;
 
         uint8_t ext_id_suffix_;
+
+        uint32_t id_in_tx_mailbox_[3] = {0};
 
         static std::unordered_map<CAN_HandleTypeDef*, CAN*> ptr_map;
         static CAN* FindInstance(CAN_HandleTypeDef* hcan);

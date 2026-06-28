@@ -72,11 +72,14 @@ namespace bsp {
         is_master = (hcan == &hcan1);
         ConfigureFilter(is_master);
         // activate rx interrupt
-        RM_ASSERT_HAL_OK(HAL_CAN_RegisterCallback(hcan, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
-                                                  RxFIFO0MessagePendingCallback),
-                         "Cannot register CAN rx callback");
-        RM_ASSERT_HAL_OK(HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING),
-                         "Cannot activate CAN rx message pending notification");
+        RM_ASSERT_HAL_OK(
+            HAL_CAN_RegisterCallback(hcan, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID, RxFIFO0MessagePendingCallback),
+            "Cannot register CAN rx callback"
+        );
+        RM_ASSERT_HAL_OK(
+            HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING),
+            "Cannot activate CAN rx message pending notification"
+        );
         RM_ASSERT_HAL_OK(HAL_CAN_Start(hcan), "Cannot start CAN");
 
         // save can instance as global pointer
@@ -97,8 +100,7 @@ namespace bsp {
         return 0;
     }
 
-    int CAN::RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback,
-                                      void* args) {
+    int CAN::RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback, void* args) {
         if (ext_callback_count_ >= MAX_CAN_DEVICES)
             return -1;
 
@@ -124,7 +126,19 @@ namespace bsp {
             .TransmitGlobalTime = DISABLE,
         };
 
-        uint32_t mailbox;
+        uint32_t mailbox = 0xff;
+        if (id_in_tx_mailbox_[0] == id)
+            mailbox = CAN_TX_MAILBOX0;
+        else if (id_in_tx_mailbox_[1] == id)
+            mailbox = CAN_TX_MAILBOX1;
+        else if (id_in_tx_mailbox_[2] == id)
+            mailbox = CAN_TX_MAILBOX2;
+
+        if (mailbox != 0xff) {
+            if (HAL_CAN_IsTxMessagePending(hcan_, mailbox)) {
+                HAL_CAN_AbortTxRequest(hcan_, mailbox);
+            }
+        }
 
         if (HAL_CAN_AddTxMessage(hcan_, &header, (uint8_t*)data, &mailbox) != HAL_OK)
             return -1;
@@ -150,14 +164,26 @@ namespace bsp {
             .TransmitGlobalTime = DISABLE,
         };
 
-        uint32_t mailbox;
+        uint32_t mailbox = 0xff;
+        if (id_in_tx_mailbox_[0] == id)
+            mailbox = CAN_TX_MAILBOX0;
+        else if (id_in_tx_mailbox_[1] == id)
+            mailbox = CAN_TX_MAILBOX1;
+        else if (id_in_tx_mailbox_[2] == id)
+            mailbox = CAN_TX_MAILBOX2;
+
+        if (mailbox != 0xff) {
+            if (HAL_CAN_IsTxMessagePending(hcan_, mailbox)) {
+                HAL_CAN_AbortTxRequest(hcan_, mailbox);
+            }
+        }
 
         if (HAL_CAN_AddTxMessage(hcan_, &header, (uint8_t*)data, &mailbox) != HAL_OK)
             return -1;
 
         // poll for can transmission to complete
-        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
-            ;
+        //        while (HAL_CAN_IsTxMessagePending(hcan_, mailbox))
+        //            ;
 
         return length;
     }
@@ -211,8 +237,7 @@ namespace bsp {
         else
             CAN_FilterConfigStructure.FilterBank = 14;  // Slave CAN get filter 14-27
 
-        RM_EXPECT_HAL_OK(HAL_CAN_ConfigFilter(hcan_, &CAN_FilterConfigStructure),
-                         "CAN filter configuration failed.");
+        RM_EXPECT_HAL_OK(HAL_CAN_ConfigFilter(hcan_, &CAN_FilterConfigStructure), "CAN filter configuration failed.");
     }
 
 } /* namespace bsp */

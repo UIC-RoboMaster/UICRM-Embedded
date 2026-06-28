@@ -251,7 +251,7 @@ class EdgeDetector {
      * @brief constructor
      * @param initial initial value
      */
-    EdgeDetector<T>(T initial);
+    EdgeDetector(T initial);
     /**
      * @brief 输入信号
      * @param signal 信号

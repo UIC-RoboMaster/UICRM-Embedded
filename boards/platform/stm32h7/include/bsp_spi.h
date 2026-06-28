@@ -237,11 +237,7 @@ namespace bsp {
         SPI* spi;
     } spi_master_init_t;
 
-    enum spi_master_status_e {
-        SPI_MASTER_STATUS_OK = 0,
-        SPI_MASTER_STATUS_BUSY = 1,
-        SPI_MASTER_STATUS_ERROR = 2
-    };
+    enum spi_master_status_e { SPI_MASTER_STATUS_OK = 0, SPI_MASTER_STATUS_BUSY = 1, SPI_MASTER_STATUS_ERROR = 2 };
 
     /**
      * @brief 管理SPI和连接对应设备的类
@@ -340,8 +336,7 @@ namespace bsp {
          * @param length the size of the data
          * @return Send status
          */
-        spi_master_status_e TransmitReceive(SPIDevice* device, uint8_t* tx_data, uint8_t* rx_data,
-                                            uint32_t length);
+        spi_master_status_e TransmitReceive(SPIDevice* device, uint8_t* tx_data, uint8_t* rx_data, uint32_t length);
         /**
          * @brief 设置SPI的传输模式
          * @param mode 被设置的模式

@@ -32,6 +32,9 @@ namespace remote {
         MID = 3,
     } switch_t;
 
+    // inline uint8_t operator- (const switch_t a, const switch_t b)
+    // {return static_cast<uint8_t>(a) - static_cast<uint8_t>(b);}
+
     /**
      * @brief DBUS 遥控器接收类
      * @note 用于DJI DR16接收机

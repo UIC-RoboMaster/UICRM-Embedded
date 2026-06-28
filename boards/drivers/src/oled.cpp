@@ -50,9 +50,11 @@ namespace display {
     void OLED::Init() {
         WriteByte(0xAE, OLED_CMD);  // display off
         WriteByte(0x20, OLED_CMD);  // Set Memory Addressing Mode
-        WriteByte(0x10,
-                  OLED_CMD);  // 00,Horizontal Addressing Mode;01,Vertical Addressing
-                              // Mode;10,Page Addressing Mode (RESET);11,Invalid
+        WriteByte(
+            0x10,
+            OLED_CMD
+        );  // 00,Horizontal Addressing Mode;01,Vertical Addressing
+            // Mode;10,Page Addressing Mode (RESET);11,Invalid
         WriteByte(0xb0,
                   OLED_CMD);        // Set Page Start Address for Page Addressing Mode,0-7
         WriteByte(0xc8, OLED_CMD);  // Set COM Output Scan Direction

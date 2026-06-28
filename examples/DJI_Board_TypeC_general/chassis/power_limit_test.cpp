@@ -40,15 +40,16 @@ bsp::BatteryVol* battery_vol = nullptr;
 
 void Dump(void* args);
 void callback(uint16_t voltage, int16_t current);
-const osThreadAttr_t dump_thread_attr_ = {.name = "DumpThread",
-                                          .attr_bits = osThreadDetached,
-                                          .cb_mem = nullptr,
-                                          .cb_size = 0,
-                                          .stack_mem = nullptr,
-                                          .stack_size = 256 * 4,
-                                          .priority = (osPriority_t)osPriorityNormal,
-                                          .tz_module = 0,
-                                          .reserved = 0};
+const osThreadAttr_t dump_thread_attr_ =
+    {.name = "DumpThread",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 const bsp::thread_init_t thread_init = {
     .func = Dump,
     .args = nullptr,
@@ -70,11 +71,11 @@ void RM_RTOS_Init() {
         .kd = 0,
         .max_out = 30000,
         .max_iout = 0,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.05,   // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.05,                   // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分

@@ -84,15 +84,12 @@ void chassisTask(void* arg) {
                    refereerc->vt13_packet.remote.ch4 != remote::vt13_remote_t::ROCKER_MID) {
             // 使用VT13遥控器
             const float speed_scale = 0.5;
-            car_vx =
-                (float)(refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
-                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
-            car_vy =
-                (float)(refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) /
-                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
-            car_vt =
-                (float)(refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) /
-                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vx = (float)(refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
+                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vy = (float)(refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) /
+                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vt = (float)(refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) /
+                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
@@ -134,8 +131,7 @@ void chassisTask(void* arg) {
                 chassis_vt_pid_error = 0;
             }
 
-            static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
+            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
             float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;

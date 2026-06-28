@@ -20,7 +20,7 @@
 
 #pragma once
 #include "cmsis_os2.h"
-#include "dbus.h"
+#include "dji_dbus.h"
 #include "main.h"
 #include "sbus.h"
 #include "user_define.h"
@@ -72,14 +72,15 @@ extern ShootSpeed shoot_speed;
 extern bool is_autoaim;
 
 extern osThreadId_t remoteTaskHandle;
-const osThreadAttr_t remoteTaskAttribute = {.name = "remoteTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 768 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t remoteTaskAttribute =
+    {.name = "remoteTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 768 * 4,
+     .priority = (osPriority_t)osPriorityHigh,
+     .tz_module = 0,
+     .reserved = 0};
 void remoteTask(void* arg);
 void init_remote();

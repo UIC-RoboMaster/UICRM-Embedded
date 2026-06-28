@@ -23,6 +23,7 @@
 #include "bsp_error_handler.h"
 #include "bsp_thread.h"
 #include "bsp_uart.h"
+#include "bsp_usb.h"
 #include "connection_driver.h"
 #include "dji_remote.h"
 
@@ -155,6 +156,39 @@ namespace communication {
                                                       .reserved = 0};
     };
 
+#ifndef NO_USB
+
+    class USBProtocol : public Protocol {
+      public:
+        // explicit USBProtocol(bsp::VirtualUSB* usb);
+        explicit USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize, uint32_t rxBufferSize);
+        ~USBProtocol();
+
+        package_t Transmit(int cmd_id) override;
+
+      protected:
+        bsp::VirtualUSB* usb_;
+
+      private:
+        uint8_t* read_ptr_ = nullptr;
+        uint32_t read_len_ = 0;
+        static void CallbackWrapper(void* args);
+        bsp::EventThread* callback_thread_ = nullptr;
+        static void callback_thread_func_(void* args);
+
+        const osThreadAttr_t callback_thread_attr_ = {.name = "ProtocolUpdateTask",
+                                                      .attr_bits = osThreadDetached,
+                                                      .cb_mem = nullptr,
+                                                      .cb_size = 0,
+                                                      .stack_mem = nullptr,
+                                                      .stack_size = 256 * 4,
+                                                      .priority = (osPriority_t)osPriorityHigh,
+                                                      .tz_module = 0,
+                                                      .reserved = 0};
+    };
+
+#endif
+
     /* Command for Referee */
 
     /*
@@ -206,6 +240,7 @@ namespace communication {
         STUDENT_INTERACTIVE = 0x0301,
         REMOTE_CONTROL_DATA = 0x304,
         REMOTE_CONTROL_VT13 = 0x53,
+        CUSTOM_CLIENT_DATA = 0x0306,
     } referee_cmd;
 
     /* ===== GAME_STATUS 0x0001 1Hz ===== */
@@ -288,9 +323,9 @@ namespace communication {
 
     /* ===== POWER_HEAT_DATA 0x0202 50Hz ===== */
     typedef struct {
-        uint16_t chassis_volt;
-        uint16_t chassis_current;
-        float chassis_power;
+        uint16_t chassis_volt; // reserved
+        uint16_t chassis_current; // reserved
+        float chassis_power; // reserved
         uint16_t chassis_power_buffer;
         uint16_t shooter_id1_17mm_cooling_heat;
         uint16_t shooter_id1_42mm_cooling_heat;
@@ -514,7 +549,7 @@ namespace communication {
 
     /* ===== CUSTOM_CLIENT_DATA 0x0306 ===== */
     typedef struct {
-        uint16_t key_value;
+        uint16_t key_value; // 按键值
         uint16_t x_position : 12;
         uint16_t mouse_left : 4;
         uint16_t y_position : 12;
@@ -610,11 +645,14 @@ namespace communication {
     /* Command for Host */
 
     typedef enum {
+        // Control command receive from minipc
         PACK = 0x0401,
         TARGET_ANGLE = 0x0402,
         NO_TARGET_FLAG = 0x0403,
         SHOOT_CMD = 0x0404,
         ROBOT_MOVE_SPEED = 0x0405,
+
+        // Status send to minipc
         ROBOT_POWER_HEAT_HP_UPLOAD = 0x0501,
         GIMBAL_CURRENT_STATUS = 0x0502,
         CHASSIS_CURRENT_STATUS = 0x0503,
@@ -636,6 +674,7 @@ namespace communication {
         float target_yaw;
         uint8_t accuracy;  // 置信度 0-100
         uint8_t shoot_cmd;
+        uint8_t time_stamp;
     } __packed target_angle_t;
 
     /* ===== NO_TARGET_FLAG 0x0403 ===== */
@@ -678,6 +717,7 @@ namespace communication {
         float current_imu_yaw;
         uint8_t robot_id;
         uint8_t shooter_id;
+        uint8_t time_stamp;
     } __packed gimbal_current_status_t;
 
     /* ===== CHASSIS_CURRENT_STATUS 0x0503 100Hz ===== */
@@ -774,5 +814,47 @@ namespace communication {
          */
         int ProcessDataTx(int cmd_id, uint8_t* data) final;
     };
+
+#ifndef NO_USB
+
+    // TODO: basically same with class "Host", consider multiple inheritance instead new class
+    // "HostUSB"
+    class HostUSB : public USBProtocol {
+      public:
+        HostUSB(bsp::VirtualUSB* usb, uint32_t txBufferSize, uint32_t rxBufferSize);
+        pack_t pack{};
+        target_angle_t target_angle{};
+        no_target_flag_t no_target_flag{};
+        shoot_cmd_t shoot_cmd{};
+        robot_move_t robot_move{};
+        robot_power_heat_hp_upload_t robot_power_heat_hp_upload{};
+        gimbal_current_status_t gimbal_current_status{};
+        chassis_current_status_t chassis_current_status{};
+        autoaim_enable_t autoaim_enable{};
+        robot_status_upload_t robot_status_upload{};
+
+      private:
+        /**
+         * @brief process the data for certain command and update corresponding status variables
+         *
+         * @param cmd_id    command id
+         * @param data      address for command data
+         * @param length    number of bytes in command data
+         * @return true for success; false for failure
+         */
+        bool ProcessDataRx(int cmd_id, const uint8_t* data, int length) final;
+
+        /**
+         * @brief process the information for certain command and copy it into the buffer named as
+         * data
+         *
+         * @param cmd_id
+         * @param data
+         * @return length of the data that is copied into buffer
+         */
+        int ProcessDataTx(int cmd_id, uint8_t* data) final;
+    };
+
+#endif
 
 } /* namespace communication */

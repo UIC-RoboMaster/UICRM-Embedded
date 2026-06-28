@@ -43,7 +43,7 @@ building the source code and flashing the embedded chips.
 1. Go to the [official download page](https://cmake.org/download/) for CMake.
 
 > If you are using Clion, this step is not required.
-   
+
 **Install Ninja (Windows only)**
 1. Go to the [official download page](https://ninja-build.org)
 
@@ -123,12 +123,37 @@ formatting check will fail and the code will not be merged.
 All codes are required to be formatted correctly before merging. There are several
 integrated build commands that can help you automatically format your changes.
 
-**Prerequisite**: install `clang-format`. (otherwise CMake will not create the format target)
+**Prerequisite**: install `clang-format` version 18. (otherwise CMake will not create the format target)
 
-* Linux's users can simply install it using `sudo apt install clang-format-10`.
-* For Mac and Windows users, `clang-format` is included in the LLVM toolchain, which can be downloaded from [here](https://releases.llvm.org/download.html).
-* For Windows users, `clang-format` is a single-file executable, and can be downloaded from [here](https://github.com/PolarGoose/clang-format-for-Windows).
-* You can also install `clang-format` using `pip install clang-format` if you have Python installed.
+* For Linux users:
+
+  * Recommend`sudo apt install clang-format-18`
+  
+  * LLVM released packages(fallback)
+    [x86_64 (most common)](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-22.04.tar.xz)
+    [aarch64 (ARM64)](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-aarch64-linux-gnu.tar.xz)
+    Install by:
+    ```bash
+    tar -xf clang+llvm-18.1.8-*.tar.xz
+    export PATH=$PWD/clang+llvm-18.1.8/bin:$PATH
+    ```
+    
+  
+* For Mac users:
+
+  * [x86_64 (Intel Mac)](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-apple-darwin.tar.xz)
+    [x86_64 (Apple Silicon)](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-darwin.tar.xz)
+    Install by:
+    
+    ```bash
+    tar -xf clang+llvm-18.1.8-*.tar.xz
+    export PATH=$PWD/clang+llvm-18.1.8/bin:$PATH
+    ```
+
+* For Windows users:
+
+  * [Official Installer](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/LLVM-18.1.8-win64.exe) which files are going to locate `C:\Program Files\LLVM\bin\clang-format.exe` after installation.
+
 
 **Format using CLion**
 
@@ -149,7 +174,8 @@ To debug embedded systems on a host machine, we would need a remote gdb server.
 There are 2 choices for such server, with tradeoffs of their own.
 
 * **`Clion Debugger`**
-    
+  
+
 This is the easiest way to debug. Choose the target and Directly click the `Debug` button in CLion.
 
 * **`OpenOCD`**
@@ -163,7 +189,7 @@ The main branch is protected. You need to create a new branch and make a pull re
 
 You should write a meaningful commit message like  
 `feat: add a new module to control the gimbal`.
- 
+
 The type must be one of the following:
 
 - **feat** for a new feature for the user, not a new feature for build script.

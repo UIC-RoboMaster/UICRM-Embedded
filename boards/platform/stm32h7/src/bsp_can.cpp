@@ -72,10 +72,14 @@ namespace bsp {
         RM_ASSERT_FALSE(HandleExists(hfdcan), "Repeated CAN initialization");
         ConfigureFilter(is_master);
         // activate rx interrupt
-        RM_ASSERT_HAL_OK(HAL_FDCAN_RegisterRxFifo0Callback(hfdcan, RxFIFO0MessagePendingCallback),
-                         "Cannot register CAN rx callback");
-        RM_ASSERT_HAL_OK(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0),
-                         "Cannot activate CAN rx message pending notification");
+        RM_ASSERT_HAL_OK(
+            HAL_FDCAN_RegisterRxFifo0Callback(hfdcan, RxFIFO0MessagePendingCallback),
+            "Cannot register CAN rx callback"
+        );
+        RM_ASSERT_HAL_OK(
+            HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0),
+            "Cannot activate CAN rx message pending notification"
+        );
         RM_ASSERT_HAL_OK(HAL_FDCAN_Start(hfdcan), "Cannot start CAN");
 
         // save can instance as global pointer
@@ -96,8 +100,7 @@ namespace bsp {
         return 0;
     }
 
-    int CAN::RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback,
-                                      void* args) {
+    int CAN::RegisterRxExtendCallback(uint32_t ext_id_suffix, can_rx_ext_callback_t callback, void* args) {
         if (ext_callback_count_ >= MAX_CAN_DEVICES)
             return -1;
 
@@ -117,15 +120,16 @@ namespace bsp {
         if (!IS_FDCAN_DLC(length))
             return -1;
 
-        FDCAN_TxHeaderTypeDef header = {.Identifier = id,
-                                        .IdType = FDCAN_STANDARD_ID,
-                                        .TxFrameType = FDCAN_DATA_FRAME,
-                                        .DataLength = FDCAN_DLC_BYTES_8,
-                                        .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
-                                        .BitRateSwitch = FDCAN_BRS_OFF,
-                                        .FDFormat = FDCAN_CLASSIC_CAN,
-                                        .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-                                        .MessageMarker = 0x00};
+        FDCAN_TxHeaderTypeDef header =
+            {.Identifier = id,
+             .IdType = FDCAN_STANDARD_ID,
+             .TxFrameType = FDCAN_DATA_FRAME,
+             .DataLength = FDCAN_DLC_BYTES_8,
+             .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
+             .BitRateSwitch = FDCAN_BRS_OFF,
+             .FDFormat = FDCAN_CLASSIC_CAN,
+             .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
+             .MessageMarker = 0x00};
 
         if (HAL_FDCAN_AddMessageToTxFifoQ(hfdcan_, &header, (uint8_t*)data) != HAL_OK)
             return -1;
@@ -145,15 +149,16 @@ namespace bsp {
         if (!IS_FDCAN_DLC(length))
             return -1;
 
-        FDCAN_TxHeaderTypeDef header = {.Identifier = id,
-                                        .IdType = FDCAN_EXTENDED_ID,
-                                        .TxFrameType = FDCAN_DATA_FRAME,
-                                        .DataLength = length,
-                                        .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
-                                        .BitRateSwitch = FDCAN_BRS_OFF,
-                                        .FDFormat = FDCAN_CLASSIC_CAN,
-                                        .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-                                        .MessageMarker = 0x00};
+        FDCAN_TxHeaderTypeDef header =
+            {.Identifier = id,
+             .IdType = FDCAN_EXTENDED_ID,
+             .TxFrameType = FDCAN_DATA_FRAME,
+             .DataLength = length,
+             .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
+             .BitRateSwitch = FDCAN_BRS_OFF,
+             .FDFormat = FDCAN_CLASSIC_CAN,
+             .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
+             .MessageMarker = 0x00};
 
         if (HAL_FDCAN_AddMessageToTxFifoQ(hfdcan_, &header, (uint8_t*)data) != HAL_OK)
             return -1;
@@ -206,8 +211,7 @@ namespace bsp {
         fdcan_filter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
         fdcan_filter.FilterID1 = 0x0000;
         fdcan_filter.FilterID2 = 0x0000;
-        RM_EXPECT_HAL_OK(HAL_FDCAN_ConfigFilter(hfdcan_, &fdcan_filter) != HAL_OK,
-                         "CAN filter configuration failed.");
+        RM_EXPECT_HAL_OK(HAL_FDCAN_ConfigFilter(hfdcan_, &fdcan_filter) != HAL_OK, "CAN filter configuration failed.");
 
         HAL_FDCAN_ConfigFifoWatermark(hfdcan_, FDCAN_CFG_RX_FIFO0, 1);
     }

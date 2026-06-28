@@ -164,8 +164,7 @@ namespace communication {
         } __packed data_error;
     } __packed can_bridge_data_t;
 
-    typedef void (*can_bridge_rx_callback_t)(can_bridge_ext_id_t ext_id, can_bridge_data_t data,
-                                             void* args);
+    typedef void (*can_bridge_rx_callback_t)(can_bridge_ext_id_t ext_id, can_bridge_data_t data, void* args);
 
     /**
      * @brief CAN Bridge

@@ -40,7 +40,7 @@ void chassisTask(void* arg) {
     kill_chassis();
     osDelay(1000);
 
-    while (remote_mode == REMOTE_MODE_KILL) {
+    while (!is_activate) {
         kill_chassis();
         osDelay(CHASSIS_OS_DELAY);
     }
@@ -52,9 +52,9 @@ void chassisTask(void* arg) {
     chassis->Enable();
 
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+        if (!is_activate) {
             kill_chassis();
-            while (remote_mode == REMOTE_MODE_KILL) {
+            while (!is_activate) {
                 osDelay(CHASSIS_OS_DELAY + 2);
             }
             chassis->Enable();
@@ -76,7 +76,11 @@ void chassisTask(void* arg) {
         //            car_vy = 0;
         //            car_vt = 0;
         //        } else
-        if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
+        if (remote_mode == REMOTE_MODE_AUTOPILOT) {
+            car_vy = minipc->robot_move.target_x;
+            car_vx = -minipc->robot_move.target_y;
+            car_vt = minipc->robot_move.target_turn;
+        } else if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX;
@@ -90,19 +94,19 @@ void chassisTask(void* arg) {
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
 
-        // 云台相对底盘的角度，通过云台和底盘连接的电机获取
-        //        float A = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-        //        float A = yaw_motor->GetTheta() - PI - gimbal_param->yaw_offset_
-        //        // 云台当前相对云台零点的角度，通过IMU获取
-        //        float B = imu->INS_angle[0];
-        //        // 云台目标相对云台零点的角度，直接读取gimbal class获取
-        //        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
-        //        float chassis_target_diff = C - B + A;
-        //        chassis_target_diff = -chassis_target_diff;
-        //        chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
-        // todo temporary workable feedforward
+        // // 云台相对底盘的角度，通过云台和底盘连接的电机获取
+        // float A = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        // // 云台当前相对云台零点的角度，通过IMU获取
+        // float B = imu->INS_angle[0];
+        // // 云台目标相对云台零点的角度，直接读取gimbal class获取
+        // float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
+        // float chassis_target_diff = C - B + A;
+        // chassis_target_diff = -chassis_target_diff;
+        // chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
+
+        // chassis need to move to where gimbal towards
+        // [cosθ, -sinθ; sinθ, cosθ] rotation matrix, apply offset angle to expecting speed input
         float chassis_target_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-        ;
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
@@ -133,8 +137,7 @@ void chassisTask(void* arg) {
                 chassis_vt_pid_error = 0;
             }
 
-            static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
+            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
             float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;
@@ -149,9 +152,12 @@ void chassisTask(void* arg) {
         }
 
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
-            chassis_vx = minipc->robot_move.target_x;
-            chassis_vy = minipc->robot_move.target_y;
-            chassis_vt = minipc->robot_move.target_turn;
+            // chassis_vx = minipc->robot_move.target_x;
+            // chassis_vy = minipc->robot_move.target_y;
+            // todo unaligned directions
+            // chassis_vy = minipc->robot_move.target_x;
+            // chassis_vx = -minipc->robot_move.target_y;
+            chassis_vt = car_vt;
         }
 
         // 进行缩放
@@ -159,7 +165,7 @@ void chassisTask(void* arg) {
         chassis_vy *= chassis_max_xy_speed;
         chassis_vt *= chassis_max_t_speed;
 
-        static const float move_ease_ratio = 1.8;
+        static const float move_ease_ratio = 1.0;
         static const float turn_ease_ratio = 0.9;
         static Ease chassis_ease_vx(0, move_ease_ratio);
         static Ease chassis_ease_vy(0, move_ease_ratio);
@@ -196,12 +202,12 @@ void init_chassis() {
 void kill_chassis() {
     chassis->Disable();
 }
-
-void goForward() {
-    float x = 10;
-    osDelay(1000);
-    chassis->SetSpeed(x, 0, 0);
-}
-
-void goBackward() {
-}
+//
+// void goForward() {
+//     float x = 10;
+//     osDelay(1000);
+//     chassis->SetSpeed(x, 0, 0);
+// }
+//
+// void goBackward() {
+// }

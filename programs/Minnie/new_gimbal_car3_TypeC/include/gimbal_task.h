@@ -34,15 +34,16 @@
 #include "shoot_task.h"
 #include "user_define.h"
 extern osThreadId_t gimbalTaskHandle;
-const osThreadAttr_t gimbalTaskAttribute = {.name = "gimbalTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 512 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t gimbalTaskAttribute =
+    {.name = "gimbalTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 512 * 4,
+     .priority = (osPriority_t)osPriorityHigh,
+     .tz_module = 0,
+     .reserved = 0};
 void gimbalTask(void* arg);
 extern control::Gimbal* gimbal;
 extern driver::MotorCANBase* pitch_motor;

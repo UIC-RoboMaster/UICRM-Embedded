@@ -28,15 +28,16 @@
 extern driver::Buzzer* buzzer;
 
 extern osThreadId_t buzzerTaskHandle;
-const osThreadAttr_t buzzerTaskAttribute = {.name = "buzzerTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 128 * 4,
-                                            .priority = (osPriority_t)osPriorityBelowNormal,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t buzzerTaskAttribute =
+    {.name = "buzzerTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 128 * 4,
+     .priority = (osPriority_t)osPriorityBelowNormal,
+     .tz_module = 0,
+     .reserved = 0};
 bool Buzzer_Sing(const driver::BuzzerNoteDelayed* song);
 void buzzerTask(void* arg);
 void init_buzzer();

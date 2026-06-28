@@ -28,8 +28,7 @@
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
-RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED,
-                                      REMOTE_MODE_AUTOAIM};
+RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED, REMOTE_MODE_AUTOAIM};
 const int8_t remote_mode_max = 2;
 const int8_t remote_mode_min = 1;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
@@ -82,8 +81,8 @@ void remoteTask(void* arg) {
     while (1) {
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
-        is_vt13_offline = (!refereerc->IsOnline()) ||
-                          refereerc->vt13_packet.remote.mode_sw != remote::vt13_remote_t::MODE_C;
+        is_vt13_offline =
+            (!refereerc->IsOnline()) || refereerc->vt13_packet.remote.mode_sw != remote::vt13_remote_t::MODE_C;
 #ifdef HAS_REFEREE
         // Kill Detection
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
@@ -143,8 +142,7 @@ void remoteTask(void* arg) {
         // VT13 暂停键切换模式
         vt13_pause_edge->input(refereerc->vt13_packet.remote.pause);
 
-        if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge() ||
-            vt13_pause_edge->posEdge()) {
+        if (mode_switch_edge->posEdge() || keyboard_ctrl_edge->posEdge() || vt13_pause_edge->posEdge()) {
             RemoteMode next_mode = (RemoteMode)(remote_mode + 1);
             if ((int8_t)next_mode > (int8_t)remote_mode_max) {
                 next_mode = (RemoteMode)remote_mode_min;
@@ -197,8 +195,7 @@ void remoteTask(void* arg) {
         // VT13 左键 切换摩擦轮
         vt13_left_edge->input(refereerc->vt13_packet.remote.swl);
 
-        if (flywheel_switch_edge->posEdge() || keyboard_Z_edge->posEdge() ||
-            vt13_left_edge->posEdge()) {
+        if (flywheel_switch_edge->posEdge() || keyboard_Z_edge->posEdge() || vt13_left_edge->posEdge()) {
             if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {  // 原来停止则开始转
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
                 shoot_load_mode = SHOOT_MODE_IDLE;
@@ -216,8 +213,7 @@ void remoteTask(void* arg) {
             // VT13 扳机键
             vt13_trigger_edge->input(refereerc->vt13_packet.remote.trigger);
 
-            if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge() ||
-                vt13_trigger_edge->posEdge()) {
+            if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge() || vt13_trigger_edge->posEdge()) {
                 shoot_load_mode = SHOOT_MODE_SINGLE;
                 shoot_burst_timestamp = 0;
             }
@@ -233,8 +229,7 @@ void remoteTask(void* arg) {
             }
 
             // 不发射
-            if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() ||
-                vt13_trigger_edge->negEdge()) {
+            if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() || vt13_trigger_edge->negEdge()) {
                 shoot_load_mode = SHOOT_MODE_STOP;
                 shoot_burst_timestamp = 0;
             }
@@ -259,16 +254,13 @@ void remoteTask(void* arg) {
             shoot_speed = (ShootSpeed)next_shoot_speed;
             switch (shoot_speed) {
                 case SHOOT_FREQUENCY_NORMAL:
-                    steering_motor->ReInitPID(steering_motor_theta_normal_pid_init,
-                                              driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_normal_pid_init, driver::MotorCANBase::THETA);
                     break;
                 case SHOOT_FREQUENCY_FAST:
-                    steering_motor->ReInitPID(steering_motor_theta_fast_pid_init,
-                                              driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_fast_pid_init, driver::MotorCANBase::THETA);
                     break;
                 case SHOOT_FREQUENCY_BURST:
-                    steering_motor->ReInitPID(steering_motor_theta_burst_pid_init,
-                                              driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_burst_pid_init, driver::MotorCANBase::THETA);
                     break;
                 default:
                     break;

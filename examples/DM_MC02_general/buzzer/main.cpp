@@ -56,8 +56,7 @@ using Note = driver::BuzzerNote;
 //     {Note::Silent, 0},   {Note::Finish, 0},
 // };
 
-static driver::BuzzerNoteDelayed DJI[] = {
-    {Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
+static driver::BuzzerNoteDelayed DJI[] = {{Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
 
 // static driver::BuzzerNoteDelayed Laohu[] = {
 //     {Note::Do1M, 500},  {Note::Re2M, 500},   {Note::Mi3M, 500}, {Note::Do1M, 450},

@@ -27,15 +27,16 @@
 
 #define RX_SIGNAL (1 << 0)
 
-const osThreadAttr_t imuTaskAttribute = {.name = "imuTask",
-                                         .attr_bits = osThreadDetached,
-                                         .cb_mem = nullptr,
-                                         .cb_size = 0,
-                                         .stack_mem = nullptr,
-                                         .stack_size = 256 * 4,
-                                         .priority = (osPriority_t)osPriorityNormal,
-                                         .tz_module = 0,
-                                         .reserved = 0};
+const osThreadAttr_t imuTaskAttribute =
+    {.name = "imuTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 osThreadId_t imuTaskHandle;
 
 class IMU : public bsp::IMU_typeC {
@@ -89,7 +90,7 @@ void RM_RTOS_Init(void) {
     imu_init.hdma_spi_tx = &hdma_spi1_tx;
     imu_init.Accel_INT_pin_ = INT1_ACCEL_Pin;
     imu_init.Gyro_INT_pin_ = INT1_GYRO_Pin;
-    imu = new IMU(imu_init, false);
+    imu = new IMU(imu_init, true);
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -102,17 +103,24 @@ void RM_RTOS_Default_Task(const void* arg) {
     while (true) {
         set_cursor(0, 0);
         clear_screen();
-        print("# %.2f s, IMU %s\r\n", HAL_GetTick() / 1000.0,
-              imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
+        print(
+            "# %.2f s, IMU %s\r\n",
+            HAL_GetTick() / 1000.0,
+            imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m"
+        );
         print("Temp: %.2f\r\n", imu->Temp);
-        print("Euler Angles: %.2f, %.2f, %.2f\r\n", imu->INS_angle[0] / PI * 180,
-              imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
-        print("Is Calibrated: %s\r\n",
-              imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
+        print(
+            "Euler Angles: %.2f, %.2f, %.2f\r\n",
+            imu->INS_angle[0] / PI * 180,
+            imu->INS_angle[1] / PI * 180,
+            imu->INS_angle[2] / PI * 180
+        );
+
         print("Accel X: %.3f m/s²\r\n", imu->INS_accel[0]);
         print("Accel Y: %.3f m/s²\r\n", imu->INS_accel[1]);
         print("Accel Z: %.3f m/s²\r\n", imu->INS_accel[2]);
 
+        print("Is Calibrated: %s\r\n", imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
         osDelay(50);
     }
 }

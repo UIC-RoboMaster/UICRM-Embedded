@@ -30,15 +30,16 @@
 
 extern osThreadId_t defaultTaskHandle;
 
-const osThreadAttr_t clientTaskAttribute = {.name = "clientTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 256 * 4,
-                                            .priority = (osPriority_t)osPriorityNormal,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+const osThreadAttr_t clientTaskAttribute =
+    {.name = "clientTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityNormal,
+     .tz_module = 0,
+     .reserved = 0};
 osThreadId_t clientTaskHandle;
 
 class RefereeUART : public bsp::UART {

@@ -24,6 +24,7 @@
 #include "cmsis_os2.h"
 #include "dbus.h"
 #include "debug_model.h"
+#include "dji_dbus.h"
 #include "main.h"
 #include "protocol.h"
 

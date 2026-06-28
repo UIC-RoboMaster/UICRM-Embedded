@@ -33,8 +33,7 @@ int16_t ch1 = 0;
 int16_t ch2 = 0;
 int16_t ch3 = 0;
 
-void update_channel_data(communication::can_bridge_ext_id_t ext_id,
-                         communication::can_bridge_data_t data, void* args) {
+void update_channel_data(communication::can_bridge_ext_id_t ext_id, communication::can_bridge_data_t data, void* args) {
     UNUSED(args);
     if (ext_id.data.tx_id == 0x02) {
         if (ext_id.data.type == communication::CAN_BRIDGE_TYPE_FOUR_INT16) {

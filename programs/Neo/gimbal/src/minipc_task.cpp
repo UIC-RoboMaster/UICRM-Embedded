@@ -34,15 +34,26 @@ communication::HostUSB* minipc = nullptr;
 
 bsp::Thread* minipc_thread = nullptr;
 
-const osThreadAttr_t minipc_thread_attr_ = {.name = "MiniPCTask",
-                                            .attr_bits = osThreadDetached,
-                                            .cb_mem = nullptr,
-                                            .cb_size = 0,
-                                            .stack_mem = nullptr,
-                                            .stack_size = 256 * 4,
-                                            .priority = (osPriority_t)osPriorityHigh,
-                                            .tz_module = 0,
-                                            .reserved = 0};
+uint8_t start_time_stamp;
+std::deque<uint8_t> time_queue;
+constexpr uint8_t QSIZE = 50;
+
+void limitSizePush(std::deque<uint8_t>& q, uint8_t val, uint8_t size) {
+    if (q.size() > size)
+        q.pop_front();
+    q.push_back(val);
+}
+
+const osThreadAttr_t minipc_thread_attr_ =
+    {.name = "MiniPCTask",
+     .attr_bits = osThreadDetached,
+     .cb_mem = nullptr,
+     .cb_size = 0,
+     .stack_mem = nullptr,
+     .stack_size = 256 * 4,
+     .priority = (osPriority_t)osPriorityHigh,
+     .tz_module = 0,
+     .reserved = 0};
 
 void minipc_task(void* args);
 
@@ -78,6 +89,10 @@ void minipc_task(void* args) {
             minipc->gimbal_current_status.current_imu_roll = imu->INS_angle[2];
             minipc->gimbal_current_status.robot_id = referee->game_robot_status.robot_id;
             minipc->gimbal_current_status.shooter_id = 0;
+            start_time_stamp = 0;  // todo use RTC to recover the function since remotes' timestamp
+                                   // no longer available
+            limitSizePush(time_queue, start_time_stamp, QSIZE);
+            minipc->gimbal_current_status.time_stamp = start_time_stamp;
             minipc->Transmit(communication::GIMBAL_CURRENT_STATUS);
         }
         if (i % 10 == 0) {
@@ -95,7 +110,7 @@ void minipc_task(void* args) {
             minipc->robot_status_upload.location_data[0] = 0;
             minipc->robot_status_upload.location_data[1] = 0;
             minipc->robot_status_upload.is_killed = (referee->game_robot_status.remain_HP == 0);
-            minipc->robot_status_upload.is_killed |= (remote_mode == REMOTE_MODE_KILL);
+            minipc->robot_status_upload.is_killed |= (!is_activate);
             switch (remote_mode) {
                 case REMOTE_MODE_FOLLOW:
                     minipc->robot_status_upload.robot_mode = 1;
@@ -110,7 +125,7 @@ void minipc_task(void* args) {
                     minipc->robot_status_upload.robot_mode = 0;
                     break;
             }
-            switch (shoot_flywheel_mode) {
+            switch (shoot_fric_wheel_mode) {
                 case SHOOT_FRIC_MODE_PREPARED:
                     minipc->robot_status_upload.robot_fric_mode = 1;
                     break;
@@ -118,7 +133,7 @@ void minipc_task(void* args) {
                     minipc->robot_status_upload.robot_fric_mode = 0;
                     break;
             }
-            switch (shoot_load_mode) {
+            switch (shoot_mode) {
                 case SHOOT_MODE_SINGLE:
                     // 单发状态未必会更新，并且未来可能会直接全部突突突取消单发模式
                     minipc->robot_status_upload.robot_shoot_mode = 1;
