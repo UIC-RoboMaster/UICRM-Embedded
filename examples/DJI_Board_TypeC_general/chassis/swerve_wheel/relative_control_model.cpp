@@ -17,6 +17,7 @@
  # Public License along with this program.  If not, see     #
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
+#include "Motor3508.h"
 #include "MotorCanBase.h"
 #include "bsp_dwt.h"
 #include "bsp_os.h"
@@ -29,8 +30,8 @@
 #include "bsp_gpio.h"
 
 bsp::CAN* can = nullptr;
-driver::MotorCANBase* motor1 = nullptr;
-driver::MotorCANBase* motor2 = nullptr;
+driver::Motor3508* motor1 = nullptr;
+driver::Motor3508* motor2 = nullptr;
 
 namespace {
     constexpr float MOTOR_TRANSMISSION_RATIO = 3.705f;
@@ -111,10 +112,6 @@ namespace {
 
         return angle;
     }
-
-    float MotorCumulatedTheta (int32_t round, float theta) {
-        return static_cast<float>(round) * 2 * PI + theta;
-    }
 }  // namespace
 
 void RM_RTOS_Init() {
@@ -126,12 +123,12 @@ void RM_RTOS_Init() {
     motor2 = new driver::Motor3508(can, 0x202);
 
     const auto omega_pid_init = MakeOmegaPIDInit();
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::OMEGA);
+    motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor1->SetMode(driver::DjiMotorBase::OMEGA);
     motor1->SetTransmissionRatio(MOTOR_TRANSMISSION_RATIO);
 
-    motor2->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor2->SetMode(driver::MotorCANBase::OMEGA);
+    motor2->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor2->SetMode(driver::DjiMotorBase::OMEGA);
     motor2->SetTransmissionRatio(MOTOR_TRANSMISSION_RATIO);
 
     DWT_Init(168);
@@ -168,8 +165,8 @@ void RM_RTOS_Default_Task(const void* args) {
             driving_speed_target = spd_targets[sindex++ % (sizeof(spd_targets)/sizeof(float))];
         }
 
-        const float m1 = MotorCumulatedTheta(motor1->GetCumulatedRounds(), motor1->GetTheta());
-        const float m2 = MotorCumulatedTheta(motor2->GetCumulatedRounds(), motor2->GetTheta());
+        const float m1 = motor1->GetCumulatedTheta();
+        const float m2 = motor2->GetCumulatedTheta();
 
         // const auto state =
         //     solver.Update(MotorCumulatedTheta(motor1->GetCumulatedRounds(), motor1->GetTheta()),

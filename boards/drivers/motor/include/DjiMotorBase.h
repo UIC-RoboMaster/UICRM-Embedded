@@ -53,7 +53,8 @@ struct DjiMotorState {
     // ── 角度追踪 ──
     float power_on_angle = -1;           // 上电时的编码器角度 [rad]（-1 表示未初始化）
     float relative_angle = 0;            // 编码器相对上电角度的角度 [rad]
-    float cumulated_rad = 0;             // 编码器累计圈数（2*PI/ratio 为单位）
+    float cumulated_rad = 0;             // 编码器累计圈数（2*PI/ratio 为单位） //TODO: 虽然说注释写的是编码器累计圈数，但更新时仍然除了减速比。
+    int32_t cumulated_rounds = 0;        // 内部编码器累计圈数（整数圈数）
     float output_cumulated_turns = 0;    // 输出轴累计圈数（2*PI 为单位）[rad]
     float output_relative_angle = 0;     // 输出轴当前圈内角度 [rad], 范围 [0, 2PI]
 

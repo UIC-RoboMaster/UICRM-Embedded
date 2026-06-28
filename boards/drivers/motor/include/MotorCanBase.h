@@ -62,6 +62,7 @@ class MotorCANBase : public MotorBase, public ConnectionDriver {
 
     // ── 非虚 getter（CRTP 编译期绑定）──
     float GetTheta() const { return state().theta; }
+    float GetCumulatedTheta() const { return state().cumulated_rounds * 2 * PI + state().theta; }
     float GetOmega() const { return state().omega; }
     float GetOutputShaftTheta() const { return state().output_shaft_theta; }
     float GetOutputShaftOmega() const { return state().output_shaft_omega; }
@@ -74,6 +75,7 @@ class MotorCANBase : public MotorBase, public ConnectionDriver {
     int16_t GetCurr() const { return state().raw_current; }
     uint16_t GetTemp() const { return state().raw_temperature; }
 
+    float GetTransmissionRatio() const { return state().transmission_ratio; }
     void SetTransmissionRatio(float ratio) { state().transmission_ratio = ratio; }
     void Enable() { state().enable = true; }
     void Disable() { state().enable = false; }
@@ -123,10 +125,14 @@ class MotorCANBase : public MotorBase, public ConnectionDriver {
         } else {
             inner_wrap_detector_->input(motor_state.relative_angle);
 
-            if (inner_wrap_detector_->negEdge())
+            if (inner_wrap_detector_->negEdge()) {
                 motor_state.cumulated_rad += 2 * PI / motor_state.transmission_ratio;
-            else if (inner_wrap_detector_->posEdge())
+                ++motor_state.cumulated_rounds;
+            }
+            else if (inner_wrap_detector_->posEdge()) {
                 motor_state.cumulated_rad -= 2 * PI / motor_state.transmission_ratio;
+                --motor_state.cumulated_rounds;
+            }
             motor_state.cumulated_rad =
                 wrap<float>(motor_state.cumulated_rad, 0, motor_state.transmission_ratio * 2 * PI);
 
