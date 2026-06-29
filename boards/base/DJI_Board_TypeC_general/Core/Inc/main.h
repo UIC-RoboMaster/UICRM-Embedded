@@ -61,6 +61,7 @@ void RM_RTOS_Queues_Init(void);
 void RM_RTOS_Threads_Init(void);
 void RM_RTOS_Ready(void);
 void RM_RTOS_Default_Task(const void *argument);
+void RM_RTOS_HighresClock_Init(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
