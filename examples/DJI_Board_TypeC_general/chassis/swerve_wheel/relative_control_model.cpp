@@ -55,7 +55,7 @@ namespace {
     */
     float CalcYawWeight(float yaw_error)
     {
-        constexpr float k = 8.0f;
+        constexpr float k = 2.0f;
 
         float x = fabsf(yaw_error);
         float y = 1.0f - expf(-k * x);
@@ -153,7 +153,7 @@ void RM_RTOS_Default_Task(const void* args) {
 
     uint32_t i = 1;
     short yindex = 0;
-    float yaw_targets[] = {0, PI/2, PI, 3*PI/2, 2*PI, 3*PI/2, PI, PI/2};
+    float yaw_targets[] = {0, PI/4, PI/2, 3*PI/4, PI, 3*PI/2, 2*PI, 3*PI/2, PI, PI/2};
     // const float targets[] = {0, PI/2};
     short sindex = 0;
     float spd_targets[] = {0, 5, 10, -10, 15, -20};
@@ -161,7 +161,7 @@ void RM_RTOS_Default_Task(const void* args) {
     while (true) {
         osDelay(5);
 
-        if (i++ % 500 == 0) {
+        if (i++ % 350 == 0) {
             // yaw_target += PI * 0.5f;
             yaw_target = yaw_targets[yindex++ % (sizeof(yaw_targets)/sizeof(float))];
         }
