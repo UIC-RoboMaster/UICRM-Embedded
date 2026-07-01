@@ -21,6 +21,7 @@
 #pragma once
 
 #include "MotorCanBase.h"
+#include "bsp_thread.h"
 #include "main.h"
 
 namespace driver {
@@ -41,13 +42,21 @@ typedef enum {
  * 所有字段集中在 DmMotorState 中，调试时一次展开即可看到全面信息。
  */
 struct DmMotorState {
-    // ── 编码器反馈 ──
-    float theta = 0;              // 编码器角度 [rad], 范围 [0, 2PI]
-    float omega = 0;              // 编码器角速度 [rad/s]
+    // ── 反馈物理量──
+    float theta = 0;                // POS 电机位置 [rad]
+    float omega = 0;                // VEL 电机速度 [rad/s]
+    float torque = 0;               // T 电机扭矩 [Nm]
+
 
     // ── 原始回传 ──
-    int16_t raw_current = 0;      // 原始电流反馈
-    uint8_t raw_temperature = 0;  // 原始温度
+    uint8_t id = 0;                 // ID 控制器 ID（CAN ID 低 4 位）
+    uint8_t error = 0;                // ERR 状态码
+    uint16_t raw_position = 0;      // 原始电机位置 POS [rad]
+    int16_t raw_velocity = 0;       // 原始电机速度信息 VEL [rad/s]
+    uint16_t raw_torque = 0;        // 原始电机力矩信息 T [Nm]
+    uint8_t mos_temperature = 0;    // T_MOS 驱动 MOS 平均温度 [deg C]
+    uint8_t rotor_temperature = 0;  // T_Rotor 电机线圈平均温度 [deg C]
+    
 
     // ── 输出轴 ──
     float output_shaft_theta = 0; // 输出轴累计角度 [rad]
@@ -56,7 +65,6 @@ struct DmMotorState {
     // ── 角度追踪 ──
     float power_on_angle = -1;           // 上电时的编码器角度 [rad]（-1 表示未初始化）
     float relative_angle = 0;            // 编码器相对上电角度的角度 [rad]
-    float cumulated_rad = 0;             // 编码器累计圈数（2*PI/ratio 为单位）
     float output_cumulated_angle = 0;    // 输出轴累计角度 [rad]（由回绕事件 ±2PI 累加）
     float output_relative_angle = 0;     // 输出轴当前圈内角度 [rad], 范围 [0, 2PI]
 
@@ -73,18 +81,16 @@ struct DmMotorState {
     // ── 时间戳 ──
     uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳
 
-    // ── DM 专属 ──
+    // ── DM 控制配置 ──
     dm_m4310_mode_t mode = MIT;        // 操作模式（MIT/POS_VEL/VEL）
     uint16_t tx_id_actual = 0;         // 根据模式计算的实际 CAN ID
 
-    // 反馈
-    float torque = 0;                  // 反馈扭矩 [Nm]
-    int16_t raw_pos = 0, raw_vel = 0, raw_torque = 0;
-    uint8_t raw_mos_temp = 0, raw_motor_temp = 0;
-
-    // 设定值
-    float kp_set = 0, kd_set = 0;
-    float pos_set = 0, vel_set = 0, torque_set = 0;
+    // ── MIT 控制帧设定值 ──
+    float position_setpoint = 0;        // p_des 期望位置 [rad]
+    float velocity_setpoint = 0;        // v_des 期望速度 [rad/s]
+    float kp_setpoint = 0;              // Kp 位置增益
+    float kd_setpoint = 0;              // Kd 速度增益
+    float torque_feedforward = 0;       // t_ff 前馈扭矩 [Nm]
 };
 
 /**
@@ -98,6 +104,7 @@ struct DmMotorState {
 class DmMotorBase : public MotorCANBase<DmMotorBase> {
   public:
     friend class MotorCANBase<DmMotorBase>;
+    using MotorBase::SetOutput;
     /**
      * @brief 基础构造函数
      * @param can    CAN 对象
@@ -128,6 +135,18 @@ class DmMotorBase : public MotorCANBase<DmMotorBase> {
     virtual void TransmitOutput() = 0;
 
     /**
+     * @brief 计算并传输输出（由后台线程定期调用）
+     */
+    void CalcOutput();
+
+    /**
+     * @brief 设置 DM 电机后台线程的输出频率
+     * @note 必须在首次构造 DmMotorBase 子类之前调用
+     * @param freq 频率 [Hz]，默认 1000
+     */
+    static void SetOutputFrequency(uint32_t freq = 1000);
+
+    /**
      * @brief 定点数转浮点数（DM 电机协议通用工具）
      * @param x     定点数
      * @param x_min 最小值
@@ -147,8 +166,60 @@ class DmMotorBase : public MotorCANBase<DmMotorBase> {
      */
     static float uint_to_float(int x_int, float x_min, float x_max, int bits);
 
+    /**
+     * @brief 获取电机的扭矩，单位为 [Nm]
+     */
+    float GetTorque() const;
+
+    /**
+     * @brief 设置电机的输出参数（MIT 模式）
+     * @note  手动模式使用；自动模式请用 SetTarget
+     */
+    void SetOutput(float position, float velocity, float kp, float kd, float torque);
+
+    /**
+     * @brief 设置电机的输出参数（POS_VEL 模式）
+     */
+    void SetOutput(float position, float velocity);
+
+    /**
+     * @brief 设置电机的输出参数（VEL 模式）
+     */
+    void SetOutput(float velocity);
+
+    /**
+     * @brief 设置电机目标（VEL 模式单参数快捷方式）
+     * @note  重写基类虚函数，仅在 VEL 模式下有效，否则触发断言
+     */
+    void SetTarget(float target, bool override = true) override;
+
+    /**
+     * @brief 设置电机目标（MIT 模式）
+     * @note  仅在 MIT 模式下有效，否则触发断言
+     */
+    void SetTarget(float position, float velocity, float kp, float kd, float t_ff);
+
+    /**
+     * @brief 设置电机目标（POS_VEL 模式）
+     * @note  仅在 POS_VEL 模式下有效，否则触发断言
+     */
+    void SetTarget(float position, float velocity);
+
   protected:
     DmMotorState state_;  // DM 电机全部状态数据（反馈 + 控制）
+
+  private:
+    // ── 后台线程基础设施 ──
+
+    /** @brief 后台线程入口：定时遍历所有 DM 实例并调用 CalcOutput() */
+    static void DmMotorThread(void* args);
+
+    /** @brief 全局 DM 电机实例注册表（最多 16 台） */
+    static DmMotorBase* instances_[16];
+    static uint8_t instance_count_;
+    static bool dm_thread_started_;
+    static bsp::Thread* dm_thread_;
+    static uint32_t dm_output_period_us_;
 };
 
 /**
@@ -159,8 +230,6 @@ class DmMotorBase : public MotorCANBase<DmMotorBase> {
  */
 class DMMotor4310 : public DmMotorBase {
   public:
-    using MotorBase::SetOutput;
-
     /**
      * @brief 基础构造函数
      * @param can    CAN 对象
@@ -183,37 +252,9 @@ class DMMotor4310 : public DmMotorBase {
     void TransmitOutput() override;
 
     /**
-     * @brief 获取电机的扭矩，单位为 [Nm]
-     */
-    float GetTorque() const;
-
-    /**
      * @brief 打印电机数据
      */
     void PrintData() const override;
-
-    /**
-     * @brief 设置电机的输出参数（MIT 模式）
-     * @param position 角度 [rad]
-     * @param velocity 角速度 [rad/s]
-     * @param kp       KP 值
-     * @param kd       KD 值
-     * @param torque   扭矩 [Nm]
-     */
-    void SetOutput(float position, float velocity, float kp, float kd, float torque);
-
-    /**
-     * @brief 设置电机的输出参数（POS_VEL 模式）
-     * @param position 角度 [rad]
-     * @param velocity 角速度 [rad/s]
-     */
-    void SetOutput(float position, float velocity);
-
-    /**
-     * @brief 设置电机的输出参数（VEL 模式）
-     * @param velocity 角速度 [rad/s]
-     */
-    void SetOutput(float velocity);
 
     // DM m4310 量程常量
     static constexpr float P_MIN = -12.5f;
