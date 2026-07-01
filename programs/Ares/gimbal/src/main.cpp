@@ -36,7 +36,7 @@
 void RM_RTOS_Init(void) {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
 
-    //print_use_uart(&huart1, true, 921600);
+    // print_use_uart(&huart1, true, 921600);
     print_use_rtt();
     init_can();
     // init_batt();
@@ -143,12 +143,10 @@ void RM_RTOS_Default_Task(const void* arg) {
         // }
 
         print("[UI] ");
-        if (refereerc->vt13_packet.keyboard.bit.V)
-        {
+        if (refereerc->vt13_packet.keyboard.bit.V) {
             print("UI refresh success");
         }
         print("\n");
-
 
         // print("Shoot Mode:%s\r\n", s);
         //
@@ -156,8 +154,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         //       imu->DataReady() ? "\033[1;42mReady\033[0m" : "\033[1;41mNot Ready\033[0m");
         // print("Temp: %.2f\r\n", imu->Temp);
         // print("Heater: %.2f\r\n", imu->TempPWM);
-        // print("Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0], imu->INS_angle[1] , imu->INS_angle[2]);
-        // print("Euler Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0] / PI * 180,
+        // print("Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0], imu->INS_angle[1] ,
+        // imu->INS_angle[2]); print("Euler Angles: yaw %.2f, pitch %.2f, roll %.2f\r\n", imu->INS_angle[0] / PI * 180,
         //       imu->INS_angle[1] / PI * 180, imu->INS_angle[2] / PI * 180);
         // print("Is Calibrated: %s\r\n",
         //       imu->CaliDone() ? "\033[1;42mYes\033[0m" : "\033[1;41mNo\033[0m");
@@ -166,23 +164,28 @@ void RM_RTOS_Default_Task(const void* arg) {
         print(
             "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
             "[SWR: %d] [Trig: %d]\r\n",
-            refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
-            refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
-            refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
-            refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
-            refereerc->vt13_packet.remote.trigger);
+            refereerc->vt13_packet.remote.ch0,
+            refereerc->vt13_packet.remote.ch1,
+            refereerc->vt13_packet.remote.ch2,
+            refereerc->vt13_packet.remote.ch3,
+            refereerc->vt13_packet.remote.ch4,
+            refereerc->vt13_packet.remote.mode_sw,
+            refereerc->vt13_packet.remote.swl,
+            refereerc->vt13_packet.remote.swr,
+            refereerc->vt13_packet.remote.trigger
+        );
         print("\r\n");
-        print("[Referee %s] ",
-             referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("[Referee %s] ", referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
-        print("[Referee RC %s] ",
-              refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("[Referee RC %s] ", refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
 
         // Gimbal info
-        print("Gimbal target Pitch %.3f Yaw %.3f\r\n",
-              wrap<float>(gimbal->getPitchTarget() - gimbal_param->pitch_offset_, -PI, PI),
-              wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI));
+        print(
+            "Gimbal target Pitch %.3f Yaw %.3f\r\n",
+            wrap<float>(gimbal->getPitchTarget() - gimbal_param->pitch_offset_, -PI, PI),
+            wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI)
+        );
         print("INS Angle: yaw %.3f pitch %.3f roll %.3f\r\n", pitch_curr, yaw_curr, imu->INS_angle[2]);
         print("\r\n");
 
@@ -191,7 +194,8 @@ void RM_RTOS_Default_Task(const void* arg) {
         // // print("A (yaw_motor - offset): %.4f\r\n", yaw_motor->GetTheta() - gimbal_param->yaw_offset_);
         // // print("B (IMU yaw): %.4f\r\n", imu->INS_angle[0]);
         // // print("C (gimbal target): %.4f\r\n", gimbal->getYawTarget());
-        // // print("chassis_target_diff: %.4f\r\n", gimbal->getYawTarget() - imu->INS_angle[0] + (yaw_motor->GetTheta() - gimbal_param->yaw_offset_));
+        // // print("chassis_target_diff: %.4f\r\n", gimbal->getYawTarget() - imu->INS_angle[0] + (yaw_motor->GetTheta()
+        // - gimbal_param->yaw_offset_));
         // // print("yaw_offset_: %.4f\r\n", gimbal_param->yaw_offset_);
         //
         // print_enabled("yaw", yaw_motor->IsOnline());
@@ -207,12 +211,10 @@ void RM_RTOS_Default_Task(const void* arg) {
         // print("pitch_curr  (IMU): %.4f rad / %.2f deg\r\n", pitch_curr, pitch_curr / PI * 180);
         // print("pitch_target     : %.4f rad / %.2f deg\r\n", pitch_target, pitch_target / PI * 180);
         // print("pitch_diff       : %.4f rad / %.2f deg\r\n", pitch_diff, pitch_diff / PI * 180);
-        // print("pitch motor theta: %.4f rad / %.2f deg\r\n", pitch_motor->GetTheta(), pitch_motor->GetTheta() / PI * 180);
-        // print("pitch motor omega: %.4f\r\n", pitch_motor->GetOmega());
-        // print("pitch motor curr : %.2f\r\n", pitch_motor->GetCurr());
-        // print("pitch_offset     : %.4f\r\n", gimbal_param->pitch_offset_);
-        // print("pitch_max        : %.4f\r\n", gimbal_param->pitch_max_);
-        // print("\r\n");
+        // print("pitch motor theta: %.4f rad / %.2f deg\r\n", pitch_motor->GetTheta(), pitch_motor->GetTheta() / PI *
+        // 180); print("pitch motor omega: %.4f\r\n", pitch_motor->GetOmega()); print("pitch motor curr : %.2f\r\n",
+        // pitch_motor->GetCurr()); print("pitch_offset     : %.4f\r\n", gimbal_param->pitch_offset_); print("pitch_max
+        // : %.4f\r\n", gimbal_param->pitch_max_); print("\r\n");
         //
         // // 发射供弹
         // print("flywheel_left Motor: %.2f, %.2f\r\n", flywheel_left->GetTheta(), flywheel_left->GetOmega());
@@ -237,7 +239,6 @@ void RM_RTOS_Default_Task(const void* arg) {
         //       referee->game_robot_status.max_HP);
         // print("Remain bullet %d\n", referee->bullet_remaining.bullet_remaining_num_42mm);
         // print("\n");
-
 
         osDelay(100);
     }

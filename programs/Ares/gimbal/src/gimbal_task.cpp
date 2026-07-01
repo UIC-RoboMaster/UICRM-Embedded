@@ -113,14 +113,12 @@ void gimbalTask(void* arg) {
             // DBUS离线时使用VT13：优先摇杆，否则鼠标
             if (refereerc->vt13_packet.remote.ch3 != remote::vt13_remote_t::ROCKER_MID ||
                 refereerc->vt13_packet.remote.ch2 != remote::vt13_remote_t::ROCKER_MID) {
-                pitch_ratio =
-                    (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) /
-                    remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
-                yaw_ratio =
-                    (float)(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
-                    remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
+                pitch_ratio = (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) /
+                              remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
+                yaw_ratio = (float)(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
+                            remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
             } else {
-                pitch_ratio = - refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
+                pitch_ratio = -refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
                 yaw_ratio = refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
             }
         } else {
@@ -130,7 +128,7 @@ void gimbalTask(void* arg) {
 
         // 根据遥控器输入计算目标角度，并且进行限幅
         pitch_target = pitch_ratio;
-            // clip<float>(pitch_ratio,-gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        // clip<float>(pitch_ratio,-gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
         // pitch_diff
@@ -145,8 +143,7 @@ void gimbalTask(void* arg) {
         const float offset_filter_ratio =
             0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
         static float speed_offset = 0;
-        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio +
-                       speed_offset * (1 - offset_filter_ratio);
+        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
 
         yaw_motor->SetSpeedOffset(speed_offset);
         switch (remote_mode) {
@@ -204,43 +201,42 @@ void init_gimbal() {
         .kd = 0,
         .max_out = 16383,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate | // 变速积分
+        .deadband = 0,                                                // 死区
+        .A = 1.5 * PI,                                                // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                                  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                          // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                        // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
+                control::ConstrainedPID::OutputFilter |               // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
                 control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
                 control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                         driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     /**
      * yaw motor
      */
     yaw_motor = new driver::Motor6020(can1, 0x205, 0x1FE);
     yaw_motor->SetTransmissionRatio(1);
-    control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 12,
-        .ki = 0,
-        .kd = 200,  // 再大会在前面顿一下
-        .max_out =
-            3 *
-            PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
-        .max_iout = PI / 4,
-        .deadband = PI / 180,
-        .A = 0,                                    // 变速积分所能达到的最大值为A+B
-        .B = 0,                                    // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,       // 输出滤波系数
-        .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
-                control::ConstrainedPID::Integral_Limit};
+    control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init =
+        {.kp = 12,
+         .ki = 0,
+         .kd = 200,  // 再大会在前面顿一下
+         .max_out =
+             3 *
+             PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
+         .max_iout = PI / 4,
+         .deadband = PI / 180,
+         .A = 0,                                    // 变速积分所能达到的最大值为A+B
+         .B = 0,                                    // 启动变速积分的死区
+         .output_filtering_coefficient = 0.5,       // 输出滤波系数
+         .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
+         .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
+                 control::ConstrainedPID::Integral_Limit};
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
         .kp = 5000,
@@ -263,8 +259,7 @@ void init_gimbal() {
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
     yaw_motor->SetSpeedFilter(0.1);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                       driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
 
     // 初始化云台对象
     gimbal_data.pitch_motor = pitch_motor;

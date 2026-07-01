@@ -112,16 +112,16 @@ void remoteTask(void* arg) {
         // DBUS和VT13都离线，或者机器人死亡，才进入安全模式
         if ((is_dbus_offline && is_vt13_offline) || is_robot_dead) {
             if (!is_killed) {
-                last_remote_mode = remote_mode; // store last mode
-                remote_mode = REMOTE_MODE_KILL; // killed mode
-                shoot_load_mode = SHOOT_MODE_DISABLE; // stop shoot
+                last_remote_mode = remote_mode;        // store last mode
+                remote_mode = REMOTE_MODE_KILL;        // killed mode
+                shoot_load_mode = SHOOT_MODE_DISABLE;  // stop shoot
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
                 is_killed = true;
             }
-        } else { // 复活
+        } else {  // 复活
             if (is_killed) {
-                remote_mode = last_remote_mode; // return
-                shoot_load_mode = SHOOT_MODE_STOP; // reset shoot mode
+                remote_mode = last_remote_mode;     // return
+                shoot_load_mode = SHOOT_MODE_STOP;  // reset shoot mode
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
                 is_killed = false;
             }
@@ -143,7 +143,7 @@ void remoteTask(void* arg) {
         memset(&mouse, 0, sizeof(mouse));
 
         // Update State
-        if (dbus->IsOnline()) { // DBUS
+        if (dbus->IsOnline()) {  // DBUS
             state_r = dbus->swr;
             state_l = dbus->swl;
             keyboard = dbus->keyboard;
@@ -202,7 +202,7 @@ void remoteTask(void* arg) {
             }
             remote_mode = next_mode;
         }
-        
+
         // shoot mode switch
         switch (state_l) {
             case remote::UP:
@@ -272,8 +272,9 @@ void remoteTask(void* arg) {
                 // 原来停止则开始转
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
                 shoot_load_mode = SHOOT_MODE_PREPARING;
-            } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ||
-                       shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING) {
+            } else if (
+                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED || shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING
+            ) {
                 // 原来转则停止
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
                 shoot_load_mode = SHOOT_MODE_STOP;
@@ -295,8 +296,7 @@ void remoteTask(void* arg) {
         // single mode
         if (shoot_switch) {
             shoot_switch = false;
-            if (shoot_load_mode == SHOOT_MODE_PREPARED &&
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED &&
+            if (shoot_load_mode == SHOOT_MODE_PREPARED && shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED &&
                 (is_shoot_available || SHOOT_REFEREE == 0 || turbo_shoot)) {
                 // 摩擦轮与拔弹系统准备就绪则发射子弹
                 shoot_load_mode = SHOOT_MODE_SINGLE;

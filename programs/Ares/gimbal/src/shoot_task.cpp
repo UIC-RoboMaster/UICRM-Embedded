@@ -33,7 +33,7 @@ driver::Motor2006* steering_up = nullptr;
 bool jam_notify_flags = false;
 static bool unload_cmd_latched = false;
 
-void jam_callback(void* args) { // 取消卡弹检测——
+void jam_callback(void* args) {  // 取消卡弹检测——
     UNUSED(args);
     // driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
     // jam_notify_flags = true;
@@ -133,13 +133,14 @@ void shootTask(void* arg) {
         }
         // 退弹模式
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
-            if (shoot_load_mode == SHOOT_MODE_UNLOAD)
-            {
+            if (shoot_load_mode == SHOOT_MODE_UNLOAD) {
                 if (!unload_cmd_latched) {
                     steering_motor->SetTarget(steering_motor->GetTarget() - 2 * PI / 8, true);
-                    unload_cmd_latched = true; // 只触发一次
-                } else unload_cmd_latched = false; // 退出UNLOAD后解锁，等待下次触发
-            } else steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+                    unload_cmd_latched = true;  // 只触发一次
+                } else
+                    unload_cmd_latched = false;  // 退出UNLOAD后解锁，等待下次触发
+            } else
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
         }
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
             switch (shoot_load_mode) {
@@ -155,11 +156,9 @@ void shootTask(void* arg) {
                     // 发射一枚子弹
                     if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                         if (steering_motor->IsHolding()) {
-                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 6 ,
-                                                      false);
+                            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 6, false);
                             if (steering_up->IsHolding()) {
-                                steering_up->SetTarget(steering_up->GetTarget() + 2 * PI / 4,
-                                                       true);
+                                steering_up->SetTarget(steering_up->GetTarget() + 2 * PI / 4, true);
                             }
                         }
                         shoot_load_mode = SHOOT_MODE_PREPARED;
@@ -190,11 +189,11 @@ void init_shoot() {
         .kd = 1,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -214,11 +213,11 @@ void init_shoot() {
         .kd = 0,
         .max_out = 10000,
         .max_iout = 4000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -241,7 +240,6 @@ void init_shoot() {
     steering_up->ReInitPID(enhance_theta_pid_init, driver::MotorCANBase::THETA);
     steering_up->ReInitPID(enhance_omega_pid_init, driver::MotorCANBase::OMEGA);
     steering_up->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
-
 
     steering_motor = new driver::Motor3508(can1, 0x201);
 
@@ -268,11 +266,11 @@ void init_shoot() {
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                           // 死区
+        .A = 3 * PI,                                             // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                             // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
                 control::ConstrainedPID::OutputFilter |          // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分

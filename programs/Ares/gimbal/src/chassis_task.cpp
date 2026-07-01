@@ -80,31 +80,26 @@ void chassisTask(void* arg) {
         //     car_vy = 0;
         //     car_vt = 0;
         // } else
-        if (dbus->IsOnline() &&
-            (abs(dbus->ch0) > dbus_rocker_deadband || abs(dbus->ch1) > dbus_rocker_deadband ||
-             abs(dbus->ch4) > dbus_rocker_deadband)) {
+        if (dbus->IsOnline() && (abs(dbus->ch0) > dbus_rocker_deadband || abs(dbus->ch1) > dbus_rocker_deadband ||
+                                 abs(dbus->ch4) > dbus_rocker_deadband)) {
             // 优先使用遥控器
             const float speed_scale = 0.5;
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
             car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
-        } else if (vt13_c_mode &&
-                   (abs((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) >
-                        vt13_rocker_deadband ||
-                    abs((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) >
-                        vt13_rocker_deadband ||
-                    abs((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) >
-                        vt13_rocker_deadband)) {
+        } else if (
+            vt13_c_mode &&
+            (abs((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) > vt13_rocker_deadband ||
+             abs((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) > vt13_rocker_deadband ||
+             abs((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) > vt13_rocker_deadband)
+        ) {
             const float speed_scale = 0.5;
-            car_vx =
-                (float)((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
-                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
-            car_vy =
-                (float)((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) /
-                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
-            car_vt =
-                (float)((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) /
-                remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vx = (float)((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
+                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vy = (float)((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) /
+                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vt = (float)((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) /
+                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
@@ -122,7 +117,8 @@ void chassisTask(void* arg) {
         // 目标角度：云台期望朝向（相对零点，归一化到 [-PI, PI]）
         float gimbal_target_angle = wrap<float>(gimbal->getYawTarget() - gimbal_param->yaw_offset_, -PI, PI);
         // 底盘需要跟随的角度差 = -(目标角度 - 当前角度 + 电机角度)
-        float chassis_target_diff = wrap<float>(-(gimbal_target_angle - gimbal_current_angle + gimbal_relative_angle), -PI, PI);
+        float chassis_target_diff =
+            wrap<float>(-(gimbal_target_angle - gimbal_current_angle + gimbal_relative_angle), -PI, PI);
 
         chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
@@ -148,8 +144,7 @@ void chassisTask(void* arg) {
                 chassis_vt_pid_error = 0;
             }
 
-            static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
+            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
             float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;
