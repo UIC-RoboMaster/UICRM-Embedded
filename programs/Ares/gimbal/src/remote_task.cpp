@@ -272,9 +272,8 @@ void remoteTask(void* arg) {
                 // 原来停止则开始转
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
                 shoot_load_mode = SHOOT_MODE_PREPARING;
-            } else if (
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED || shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING
-            ) {
+            } else if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ||
+                       shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING) {
                 // 原来转则停止
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
                 shoot_load_mode = SHOOT_MODE_STOP;
