@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="BrokenCar_typeC.elf" type="com.jetbrains.cidr.embedded.openocd.conf.type" factoryName="com.jetbrains.cidr.embedded.openocd.conf.factory" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="uicrm" TARGET_NAME="BrokenCar_typeC.elf" version="1" RUN_TARGET_PROJECT_NAME="uicrm" RUN_TARGET_NAME="BrokenCar_typeC.elf">
+  <configuration default="false" name="BrokenCar_typeC.elf" type="com.jetbrains.cidr.embedded.openocd.conf.type" factoryName="com.jetbrains.cidr.embedded.openocd.conf.factory" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="uicrm" TARGET_NAME="BrokenCar_typeC.elf" CONFIG_NAME="Debug" version="1" RUN_TARGET_PROJECT_NAME="uicrm" RUN_TARGET_NAME="BrokenCar_typeC.elf">
     <openocd version="1" gdb-port="3333" telnet-port="4444" board-config="$PROJECT_DIR$/openocd/stm32f4/daplink.cfg" reset-type="RUN" download-type="UPDATED_ONLY">
       <debugger kind="GDB" isBundled="true" />
     </openocd>

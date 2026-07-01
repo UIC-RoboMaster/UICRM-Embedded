@@ -255,8 +255,7 @@ namespace driver {
         last_update_time_us_ = update_time_diff;
         motor_update_time_interval = 1000;
         uint32_t times = (update_time_diff + motor_update_time_interval / 2) / motor_update_time_interval;
-        //TODO ?
-        times = 1;
+
         if (times == 0) {
             // print("Motor %x packet missing at %d\n", rx_id_, bsp::GetHighresTickMilliSec());
             return;
