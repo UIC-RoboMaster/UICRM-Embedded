@@ -9,6 +9,7 @@ build
 .idea/uicrm.iml
 .idea/.name
 .idea/.gitignore
+.idea/workspace.xml
 .idea/scopes
 .idea/codeStyles/Project.xml
 .idea/copilot.data.migration.*
