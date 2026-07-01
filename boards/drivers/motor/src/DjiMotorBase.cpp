@@ -156,6 +156,8 @@ void DjiMotorBase::CanMotorThread(void* args) {
 
 void DjiMotorBase::UpdateData(const uint8_t data[]) {
     UNUSED(data);
+    // TODO 基类模板是否可用
+    // RM_ASSERT_TRUE(false, "DjiMotorBase::UpdateData should be implemented by derived motor");
     ProcessAngleTracking();
 }
 
@@ -215,14 +217,18 @@ void DjiMotorBase::CalcOutput() {
 
     // 最新收到的 CAN 包的时间戳
     uint32_t update_time_us = GetLastUptimeMicrosec();
-        // 当前最新的CAN数据包的时间戳，和上次运行这个函数时，最新的CAN数据包的时间戳的差值
-        // diff == 0 说明自从上次运行这个函数后没有收到新的CAN数据包
-        // diff > 1500 说明收到了新的CAN数据包，但是因为丢包，距离上次收到的CAN数据包已经超过1.5ms
-        uint32_t update_time_diff = update_time_us - state_.last_update_time_us;
-        if (update_time_diff > 65535)
-            update_time_diff += 65536;
-        state_.last_update_time_us = update_time_diff;
+    // 当前最新的 CAN 数据包时间戳与上次处理的 CAN 数据包时间戳的差值
+    // diff == 0 说明自从上次运行这个函数后没有收到新的 CAN 数据包
+    // diff > 1500 说明收到新 CAN 数据包，但距离上一帧超过 1.5ms，可能存在丢包
+    uint32_t update_time_diff = update_time_us - state_.last_update_time_us;
+    // stm32 f4 为 uint16_t，stm32 f7/f1 为 uint32_t
+    if (update_time_us < state_.last_update_time_us && update_time_diff > 65535)
+        update_time_diff += 65536;
+    // 更新最后处理的 CAN 数据包时间戳
+    state_.last_update_time_us = update_time_us;
+    // 设置 can 通讯间隔
     state_.motor_update_time_interval = 1000;
+    // 计算自上次处理后收到的 CAN 数据包数量，可能存在丢包
     uint32_t times = (update_time_diff + state_.motor_update_time_interval / 2) / state_.motor_update_time_interval;
 
     if (times == 0) {

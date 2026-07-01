@@ -25,6 +25,7 @@
 namespace driver {
 
 Motor3508::Motor3508(bsp::CAN* can, uint16_t rx_id) : DjiMotorBase(can, rx_id) {
+    state_.transmission_ratio = Motor3508Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor3508Config::RATED_TORQUE_CONSTANT;
     RegisterCanCallback();
 }

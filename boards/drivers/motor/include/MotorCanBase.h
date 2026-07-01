@@ -74,10 +74,21 @@ class MotorCANBase : public MotorBase, public ConnectionDriver {
     int16_t GetCurr() const { return state().raw_current; }
     uint16_t GetTemp() const { return state().raw_temperature; }
 
-    void SetTransmissionRatio(float ratio) { state().transmission_ratio = ratio; }
-    void Enable() { state().enable = true; }
-    void Disable() { state().enable = false; }
-    bool IsEnable() const { return state().enable; }
+    void SetTransmissionRatio(float ratio) {
+        RM_ASSERT_GT(ratio, 0, "Invalid transmission ratio");
+        state().transmission_ratio = ratio;
+    }
+
+    void Enable() { 
+        state().enable = true; 
+    }
+
+    void Disable() { 
+        state().enable = false; 
+    }
+    bool IsEnable() const { 
+        return state().enable; 
+    }
     void SetAbsoluteMode(bool enable) { state().absolute_mode = enable; }
 
     // ── CAN 通信基础封装 ──
@@ -108,42 +119,56 @@ class MotorCANBase : public MotorBase, public ConnectionDriver {
 
   protected:
     /**
-     * @brief 角度追踪处理
+     * @brief 单圈绝对值编码器的角度追踪处理
      * @note 子类在 UpdateData 中解析完协议后调用此方法
+     * @warning 这是使用单圈绝对值编码器的电机的角度处理，不通用于多圈编码器
      */
     void ProcessAngleTracking() {
         auto& motor_state = state();
 
-        if (motor_state.power_on_angle < 0)
+        // 如果是第一次接收到数据，初始化 power_on_angle_
+        if (motor_state.power_on_angle < 0){
             motor_state.power_on_angle = motor_state.theta;
-
+        }
+        // 计算相对角度和输出轴角度 
         motor_state.relative_angle = motor_state.theta - motor_state.power_on_angle;
+
         if (motor_state.transmission_ratio == 1) {
             motor_state.output_relative_angle = wrap<float>(motor_state.relative_angle, 0, 2 * PI);
-        } else {
+        } 
+        // 如果有减速比，使用内层回绕检测器处理相对角度的回绕
+        else {
             inner_wrap_detector_->input(motor_state.relative_angle);
 
+            // 正向回绕：编码器从 2PI 回绕到 0，累计圈数 +1
             if (inner_wrap_detector_->negEdge())
-                motor_state.cumulated_rad += 2 * PI / motor_state.transmission_ratio;
+                cumulated_rad_ += 2 * PI / motor_state.transmission_ratio;
+            // 反向回绕：编码器从 0 回绕到 2PI，累计圈数 -1
             else if (inner_wrap_detector_->posEdge())
-                motor_state.cumulated_rad -= 2 * PI / motor_state.transmission_ratio;
-            motor_state.cumulated_rad =
-                wrap<float>(motor_state.cumulated_rad, 0, motor_state.transmission_ratio * 2 * PI);
+                cumulated_rad_ -= 2 * PI / motor_state.transmission_ratio;
 
+            // 累计角度限制在 [0, 2PI] 范围内
+            cumulated_rad_ = wrap<float>(cumulated_rad_, 0, 2 * PI);
+
+            // 得到输出轴的相对角度（减速比换算）
             motor_state.output_relative_angle = wrap<float>(
-                motor_state.cumulated_rad + motor_state.relative_angle / motor_state.transmission_ratio, 0, 2 * PI);
+                cumulated_rad_ + motor_state.relative_angle / motor_state.transmission_ratio, 0, 2 * PI);
         }
 
+        // 处理输出轴角度的回绕
         outer_wrap_detector_->input(motor_state.output_relative_angle);
 
+        // 如果是绝对模式，则不进行累计圈数的更新
+        // 如果是相对模式，则根据输出轴角度的回绕更新累计圈数
         if (!motor_state.absolute_mode) {
             if (outer_wrap_detector_->negEdge())
-                motor_state.output_cumulated_turns += 2 * PI;
+                motor_state.output_cumulated_angle += 2 * PI;
             else if (outer_wrap_detector_->posEdge())
-                motor_state.output_cumulated_turns -= 2 * PI;
+                motor_state.output_cumulated_angle -= 2 * PI;
         }
 
-        motor_state.output_shaft_theta = motor_state.output_relative_angle + motor_state.output_cumulated_turns;
+        // 得到单圈绝对值编码器对应输出轴的累计角度和角速度
+        motor_state.output_shaft_theta = motor_state.output_relative_angle + motor_state.output_cumulated_angle;
         motor_state.output_shaft_omega = motor_state.omega / motor_state.transmission_ratio;
 
         Heartbeat();
@@ -158,6 +183,9 @@ class MotorCANBase : public MotorBase, public ConnectionDriver {
 
     FloatEdgeDetector* inner_wrap_detector_;
     FloatEdgeDetector* outer_wrap_detector_;
+
+    /// 编码器回绕事件折算到输出轴的累计弧度（ProcessAngleTracking 中间量）
+    float cumulated_rad_ = 0;
 };
 
 }  // namespace driver

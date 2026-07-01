@@ -50,14 +50,16 @@ struct DjiMotorState {
     float output_shaft_theta = 0; // 输出轴累计角度 [rad]
     float output_shaft_omega = 0; // 输出轴角速度 [rad/s]
 
-    // ── 角度追踪 ──
+    // ── 编码器角度追踪 ──
     float power_on_angle = -1;           // 上电时的编码器角度 [rad]（-1 表示未初始化）
     float relative_angle = 0;            // 编码器相对上电角度的角度 [rad]
-    float cumulated_rad = 0;             // 编码器累计圈数（2*PI/ratio 为单位）
-    float output_cumulated_turns = 0;    // 输出轴累计圈数（2*PI 为单位）[rad]
+
+    // ── 输出轴角度追踪 ──
+    float output_cumulated_angle = 0;    // 输出轴累计角度 [rad]（由回绕事件 ±2PI 累加）
     float output_relative_angle = 0;     // 输出轴当前圈内角度 [rad], 范围 [0, 2PI]
 
     // ── 配置 ──
+    uint8_t mode = 0;              // 控制模式（OMEGA/THETA/ABSOLUTE/INVERTED）
     float transmission_ratio = 1;  // 减速比
     bool enable = true;            // 使能
     bool absolute_mode = false;    // 绝对模式：输出轴不累计圈数
@@ -69,15 +71,15 @@ struct DjiMotorState {
 
     // ── 时间戳 ──
     uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳
+    uint32_t motor_update_time_interval;   // CAN 回传间隔 [us]
 
     // ── DJI 专属控制字段 ──
-    uint8_t mode = 0;                      // 控制模式（OMEGA/THETA/ABSOLUTE/INVERTED）
     float target = 0;                      // 目标值：角度 [rad] 或 角速度 [rad/s]
     float speed_offset = 0;                // 前馈速度偏移
     float proximity_in = 0.05;             // 进入保持状态的临界角度差
     float proximity_out = 0.15;            // 退出保持状态的临界角度差
     bool holding = true;                   // 角度模式下是否已达目标
-    uint32_t motor_update_time_interval;   // CAN 回传间隔 [us]
+    
 };
 
 /**
@@ -306,6 +308,10 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
     static callback_t post_output_callback_;
     static void* post_output_callback_instance_;
 };
+
+
+
+
 
 /**
  * @brief DJI 2006 电机的标准类

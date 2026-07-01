@@ -26,6 +26,7 @@ namespace driver {
 
 Motor6020::Motor6020(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     : DjiMotorBase(can, rx_id, tx_id) {
+    state_.transmission_ratio = Motor6020Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor6020Config::RATED_TORQUE_CONSTANT;
     // 绝对位置电机不需要初始化 align_angle_
     state_.power_on_angle = 0;

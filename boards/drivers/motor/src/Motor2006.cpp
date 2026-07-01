@@ -25,6 +25,7 @@
 namespace driver {
 
 Motor2006::Motor2006(bsp::CAN* can, uint16_t rx_id) : DjiMotorBase(can, rx_id) {
+    state_.transmission_ratio = Motor2006Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor2006Config::RATED_TORQUE_CONSTANT;
     RegisterCanCallback();
 }
