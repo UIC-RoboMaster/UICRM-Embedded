@@ -190,6 +190,11 @@ float DmMotorBase::uint_to_float(int x_int, float x_min, float x_max, int bits) 
     return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
 }
 
+
+
+
+
+
 // ===== DMMotor4310 =====
 
 DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_mode_t mode)

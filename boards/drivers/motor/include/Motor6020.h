@@ -82,7 +82,7 @@ class Motor6020 : public DjiMotorBase {
      * @brief 由 RX_ID 自动解析 TX_ID
      * @note 在 DJI RoboMaster Assistant 中配置为电流固件控制
      * @param rx_id  RX ID = 0x204 + 电机 ID
-     * @return tx_id  电流固件中 0x205-0x208 → 0x1fe, 0x209-0x20B→0x2fe
+     * @return tx_id  电流固件中 0x205-0x208 → 0x1fe, 0x209 - 0x20B→0x2fe，非零直接使用
      */
     static constexpr uint16_t ResolveTxId(uint16_t rx_id) {
         constexpr uint16_t GROUP2_RX_START = 0x209;

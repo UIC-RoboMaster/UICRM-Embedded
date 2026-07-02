@@ -31,8 +31,6 @@ namespace driver {
  * 编码器: 8192 线/圈，增量式
  * 减速比: 36:1
  *
- * RX_ID  = 0x200 + 电机 ID
- * TX_ID 自动识别: 0x201~0x204 → 0x200, 0x205~0x208 → 0x1ff
  */
 struct Motor2006Config {
     static constexpr int16_t MAX_OUTPUT_CURRENT = 10000;          ///< 最大输出电流 [raw], ~10A
@@ -44,17 +42,16 @@ struct Motor2006Config {
 
 /**
  * @brief DJI M2006/P36 减速电机
- *
- * 搭配 C610 电调使用，支持角度/速度/力矩三种控制模式。
- * 通过 36:1 减速箱驱动输出轴，适用于 RoboMaster 拨弹机构等功能部件。
+ * @note 搭配 C610 电调使用，支持角度/速度/力矩三种控制模式。
+ *       通过 36:1 减速箱驱动输出轴，适用于 RoboMaster 拨弹机构等功能部件。
  */
 class Motor2006 : public DjiMotorBase {
   public:
     /**
      * @brief M2006 构造函数
      * @param can    CAN 对象
-     * @param rx_id  RX ID = 0x200 + 电机 ID
-     * @param tx_id  电机接收报文标识符，0x00 表示自动解析
+     * @param rx_id  RX ID = 0x200 + 电调 ID
+     * @param tx_id  电调接收报文标识符，0x00 表示自动解析
      */
     Motor2006(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
 
@@ -82,8 +79,8 @@ class Motor2006 : public DjiMotorBase {
     /**
      * @brief 由 RX_ID 自动解析 TX_ID
      * @note M2006 + C610 电调标准 CAN 协议标识符
-     * @param rx_id  RX ID = 0x200 + 电机 ID
-     * @return tx_id  0x201~0x204 → 0x200, 0x205~0x208 → 0x1ff
+     * @param rx_id  RX ID = 0x200 + 电调 ID
+     * @return tx_id  由 rx_id 决定: 0x201 - 0x204 → 0x200, 0x205 - 0x208 → 0x1ff
      */
     static constexpr uint16_t ResolveTxId(uint16_t rx_id) {
         return (rx_id >= 0x205) ? 0x1ff : 0x200;
