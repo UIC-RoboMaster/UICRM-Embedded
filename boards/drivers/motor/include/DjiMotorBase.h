@@ -66,8 +66,8 @@ struct DjiMotorState {
 
     // ── CAN 连接 ──
     bsp::CAN* can = nullptr;  // CAN 硬件对象
-    uint16_t rx_id = 0;       // 接收 CAN ID
-    uint16_t tx_id = 0;       // 发送 CAN ID
+    uint16_t rx_id = 0;       // 电机反馈报文标识符
+    uint16_t tx_id = 0;       // 电机接收报文标识符
 
     // ── 时间戳 ──
     uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳

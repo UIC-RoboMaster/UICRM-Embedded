@@ -196,15 +196,7 @@ DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_m4310
     RegisterCanCallback();
     state_.mode = mode;
     /* following the CAN id format from the m4310 V2.1 document */
-    if (mode == MIT) {
-        state_.tx_id_actual = tx_id;
-    } else if (mode == POS_VEL) {
-        state_.tx_id_actual = tx_id + 0x100;
-    } else if (mode == VEL) {
-        state_.tx_id_actual = tx_id + 0x200;
-    } else {
-        RM_EXPECT_TRUE(false, "Invalid mode number!");
-    }
+    state_.tx_id = tx_id + mode;
 }
 
 void DMMotor4310::UpdateData(const uint8_t data[]) {
@@ -264,7 +256,7 @@ void DMMotor4310::TransmitOutput() {
     } else {
         RM_EXPECT_TRUE(false, "Invalid mode number!");
     }
-    state_.can->Transmit(state_.tx_id_actual, data, 8);
+    state_.can->Transmit(state_.tx_id, data, 8);
 }
 
 void DMMotor4310::PrintData() const {
