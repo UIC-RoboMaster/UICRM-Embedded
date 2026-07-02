@@ -50,27 +50,7 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     : MotorCANBase<DjiMotorBase>(30) {
     state_.can = can;
     state_.rx_id = rx_id;
-    // 大疆的电机，自动识别 TX_ID 或使用显式指定的值
-    if (tx_id == 0x00) {
-        constexpr uint16_t GROUP_SIZE = 4;
-        constexpr uint16_t RX1_ID_START = 0x201;
-        constexpr uint16_t RX2_ID_START = 0x205;
-        constexpr uint16_t RX3_ID_START = 0x209;
-        constexpr uint16_t TX1_ID = 0x200;
-        constexpr uint16_t TX2_ID = 0x1ff;
-        constexpr uint16_t TX3_ID = 0x2ff;
-
-        RM_ASSERT_GE(rx_id, RX1_ID_START, "Invalid rx id");
-        RM_ASSERT_LT(rx_id, RX3_ID_START + GROUP_SIZE, "Invalid rx id");
-        if (rx_id >= RX3_ID_START)
-            state_.tx_id = TX3_ID;
-        else if (rx_id >= RX2_ID_START)
-            state_.tx_id = TX2_ID;
-        else
-            state_.tx_id = TX1_ID;
-    } else {
-        state_.tx_id = tx_id;
-    }
+    state_.tx_id = tx_id;
 
     // 如果是第一次初始化，需要创建一个后台线程以固定频率输出电机指令
     if (!is_init_) {

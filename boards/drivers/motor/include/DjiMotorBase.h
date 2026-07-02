@@ -121,7 +121,7 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
      * @brief 基础构造函数
      * @param can    CAN 对象
      * @param rx_id  电机使用的 CAN 接收 ID，参考电机的说明书
-     * @param tx_id  电机使用的 CAN 发送 ID，0x00 表示自动识别
+     * @param tx_id  电机使用的 CAN 发送 ID（各子类负责各自的自动识别逻辑）
      */
     DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
 
@@ -311,65 +311,6 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
 
 
 
-
-
-/**
- * @brief DJI 2006 电机的标准类
- */
-class Motor2006 : public DjiMotorBase {
-  public:
-    /* constructor wrapper over DjiMotorBase */
-    Motor2006(bsp::CAN* can, uint16_t rx_id);
-    /* implements data update callback */
-    void UpdateData(const uint8_t data[]) override final;
-    /* implements data printout */
-    void PrintData() const override final;
-    /* override base implementation with max current protection */
-    void SetOutput(int16_t val) override final;
-
-  private:
-    static const int16_t MAX_OUT = 10000;
-};
-
-/**
- * @brief DJI 3508 电机的标准类
- */
-class Motor3508 : public DjiMotorBase {
-  public:
-    /* constructor wrapper over DjiMotorBase */
-    Motor3508(bsp::CAN* can, uint16_t rx_id);
-    /* implements data update callback */
-    void UpdateData(const uint8_t data[]) override final;
-    /* implements data printout */
-    void PrintData() const override final;
-    /* override base implementation with max current protection */
-    void SetOutput(int16_t val) override final;
-
-  private:
-    static const int16_t MAX_OUT = 32767;
-};
-
-/**
- * @brief DJI 6020 电机的标准类
- */
-class Motor6020 : public DjiMotorBase {
-  public:
-    /* constructor wrapper over DjiMotorBase */
-    Motor6020(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
-    /* implements data update callback */
-    void UpdateData(const uint8_t data[]) override final;
-    /* implements data printout */
-    void PrintData() const override final;
-    /* override base implementation with max current protection */
-    void SetOutput(int16_t val) override final;
-
-    void SetSpeedFilter(float ratio);
-
-  private:
-    static const int16_t MAX_OUT = 25000;
-    static const int16_t MAX_OUT_C = 16383;
-    float input_speed_filter_ = 0.1;
-};
 
 
 /**
