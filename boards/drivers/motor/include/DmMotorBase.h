@@ -34,7 +34,7 @@ typedef enum {
     MIT = 0x000,
     POS_VEL = 0x100,
     VEL = 0x200,
-} dm_m4310_mode_t;
+} dm_mode_t;
 
 /**
  * @brief 达妙 (DM) 电机特有状态结构体
@@ -83,7 +83,7 @@ struct DmMotorState {
     uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳
 
     // ── DM 控制配置 ──
-    dm_m4310_mode_t mode = MIT;        // 操作模式（MIT/POS_VEL/VEL）
+    dm_mode_t mode;        // 操作模式（MIT/POS_VEL/VEL）
 
     // ── MIT 控制帧设定值 ──
     float position_setpoint = 0;        // p_des 期望位置 [rad]
@@ -237,7 +237,7 @@ class DMMotor4310 : public DmMotorBase {
      * @param tx_id  软件配置的 CAN ID
      * @param mode   操作模式
      */
-    DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_m4310_mode_t mode);
+    DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_mode_t mode);
 
     /**
      * @brief 更新电机的反馈数据

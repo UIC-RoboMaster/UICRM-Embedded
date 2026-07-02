@@ -43,6 +43,7 @@ DmMotorBase::DmMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     state_.rx_id = rx_id;
     state_.tx_id = tx_id;
     // DM 电机使用绝对值编码器，无需等待上电角度
+    // TODO ？？
     state_.power_on_angle = 0;
 
     // 自注册到全局实例列表
@@ -191,11 +192,11 @@ float DmMotorBase::uint_to_float(int x_int, float x_min, float x_max, int bits) 
 
 // ===== DMMotor4310 =====
 
-DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_m4310_mode_t mode)
+DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_mode_t mode)
     : DmMotorBase(can, rx_id, tx_id) {
     RegisterCanCallback();
     state_.mode = mode;
-    /* following the CAN id format from the m4310 V2.1 document */
+    // DM 电机的控制帧 CAN ID = 软件配置的 can_id + 模式偏移 
     state_.tx_id = tx_id + mode;
 }
 
