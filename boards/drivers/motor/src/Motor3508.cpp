@@ -43,9 +43,8 @@ void Motor3508::UpdateData(const uint8_t data[]) {
     state_.raw_current = data[4] << 8 | data[5];
     state_.raw_temperature = data[6];
 
-    constexpr float THETA_SCALE = 2 * PI / Motor3508Config::ENCODER_RESOLUTION;
     constexpr float OMEGA_SCALE = 2 * PI / 60;
-    state_.theta = state_.raw_theta * THETA_SCALE;
+    state_.theta = uint_to_float(state_.raw_theta, 0, 2 * PI, Motor3508Config::ENCODER_BITS);
     state_.omega = state_.raw_omega * OMEGA_SCALE;
 
     ProcessAngleTracking();

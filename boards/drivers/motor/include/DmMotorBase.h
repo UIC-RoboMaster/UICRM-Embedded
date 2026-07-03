@@ -99,7 +99,6 @@ struct DmMotorState {
  * 在 MotorCANBase 的基础上提供 DM 品牌电机共用的能力：
  * - CAN 发送 ID 管理
  * - 使能/禁用/归零命令（0xFC/0xFD/0xFE 通用协议）
- * - 定点数与浮点数转换工具
  */
 class DmMotorBase : public MotorCANBase<DmMotorBase> {
   public:
@@ -145,26 +144,6 @@ class DmMotorBase : public MotorCANBase<DmMotorBase> {
      * @param freq 频率 [Hz]，默认 1000
      */
     static void SetOutputFrequency(uint32_t freq = 1000);
-
-    /**
-     * @brief 定点数转浮点数（DM 电机协议通用工具）
-     * @param x     定点数
-     * @param x_min 最小值
-     * @param x_max 最大值
-     * @param bits  位数
-     * @return 浮点数
-     */
-    static uint16_t float_to_uint(float x, float x_min, float x_max, int bits);
-
-    /**
-     * @brief 浮点数转定点数（DM 电机协议通用工具）
-     * @param x_int 定点数
-     * @param x_min 最小值
-     * @param x_max 最大值
-     * @param bits  位数
-     * @return 浮点数
-     */
-    static float uint_to_float(int x_int, float x_min, float x_max, int bits);
 
     /**
      * @brief 获取电机的扭矩，单位为 [Nm]

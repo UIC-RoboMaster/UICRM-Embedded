@@ -556,3 +556,47 @@ inline T linear_interpolation(T src_min, T src_max, T dst_min, T dst_max, T valu
     value = clip(value, src_min, src_max);
     return dst_min + (dst_max - dst_min) * (value - src_min) / (src_max - src_min);
 }
+
+/**
+ * @brief 浮点数线性映射为定点整数
+ * @param x     浮点数值
+ * @param x_min 映射范围最小值
+ * @param x_max 映射范围最大值
+ * @param bits  定点数位宽
+ * @return 定点整数值（uint32_t 承载，按 bits 强转为 uint8_t / uint16_t 等）
+ */
+inline uint32_t float_to_uint(float x, float x_min, float x_max, int bits) {
+    float span = x_max - x_min;
+    return (uint32_t)((x - x_min) * (float)((1u << bits) - 1u) / span);
+}
+
+/**
+ * @brief 定点整数线性映射为浮点数
+ * @param x_int 定点整数值
+ * @param x_min 映射范围最小值
+ * @param x_max 映射范围最大值
+ * @param bits  定点数位宽
+ * @return 浮点数值
+ */
+inline float uint_to_float(uint32_t x_int, float x_min, float x_max, int bits) {
+    float span = x_max - x_min;
+    return (float)x_int * span / (float)((1u << bits) - 1u) + x_min;
+}
+
+/**
+ * @brief 浮点数线性映射为定点整数（显式目标类型）
+ * @tparam UIntT 目标无符号整数类型（uint8_t / uint16_t / uint32_t）
+ */
+template <typename UIntT>
+inline UIntT float_to_uint_as(float x, float x_min, float x_max, int bits) {
+    return (UIntT)float_to_uint(x, x_min, x_max, bits);
+}
+
+/**
+ * @brief 定点整数线性映射为浮点数（任意无符号整数输入）
+ * @tparam UIntT 源无符号整数类型
+ */
+template <typename UIntT>
+inline float uint_to_float_as(UIntT x_int, float x_min, float x_max, int bits) {
+    return uint_to_float((uint32_t)x_int, x_min, x_max, bits);
+}

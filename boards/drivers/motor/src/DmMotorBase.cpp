@@ -178,21 +178,7 @@ float DmMotorBase::GetTorque() const {
     return state_.torque;
 }
 
-uint16_t DmMotorBase::float_to_uint(float x, float x_min, float x_max, int bits) {
-    float span = x_max - x_min;
-    float offset = x_min;
-    return (uint16_t)((x - offset) * ((float)((1 << bits) - 1)) / span);
-}
-
-float DmMotorBase::uint_to_float(int x_int, float x_min, float x_max, int bits) {
-    float span = x_max - x_min;
-    float offset = x_min;
-    return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
-}
-
-
-
-
+// ===== DMMotor4310 =====
 
 
 // ===== DMMotor4310 =====
@@ -214,9 +200,9 @@ void DMMotor4310::UpdateData(const uint8_t data[]) {
     state_.mos_temperature = data[6];
     state_.rotor_temperature = data[7];
 
-    state_.theta = DmMotorBase::uint_to_float(state_.raw_position, P_MIN, P_MAX, 16);
-    state_.omega = DmMotorBase::uint_to_float(state_.raw_velocity, V_MIN, V_MAX, 12);
-    state_.torque = DmMotorBase::uint_to_float(state_.raw_torque, T_MIN, T_MAX, 12);
+    state_.theta = uint_to_float(state_.raw_position, P_MIN, P_MAX, 16);
+    state_.omega = uint_to_float(state_.raw_velocity, V_MIN, V_MAX, 12);
+    state_.torque = uint_to_float(state_.raw_torque, T_MIN, T_MAX, 12);
 
     // 调基类做角度追踪
     ProcessAngleTracking();
@@ -227,11 +213,11 @@ void DMMotor4310::TransmitOutput() {
     int16_t kp_tmp, kd_tmp, pos_tmp, vel_tmp, torque_tmp;
 
     if (state_.mode == MIT) {
-        kp_tmp = DmMotorBase::float_to_uint(state_.kp_setpoint, KP_MIN, KP_MAX, 12);
-        kd_tmp = DmMotorBase::float_to_uint(state_.kd_setpoint, KD_MIN, KD_MAX, 12);
-        pos_tmp = DmMotorBase::float_to_uint(state_.position_setpoint, P_MIN, P_MAX, 16);
-        vel_tmp = DmMotorBase::float_to_uint(state_.velocity_setpoint, V_MIN, V_MAX, 12);
-        torque_tmp = DmMotorBase::float_to_uint(state_.torque_feedforward, T_MIN, T_MAX, 12);
+        kp_tmp = float_to_uint(state_.kp_setpoint, KP_MIN, KP_MAX, 12);
+        kd_tmp = float_to_uint(state_.kd_setpoint, KD_MIN, KD_MAX, 12);
+        pos_tmp = float_to_uint(state_.position_setpoint, P_MIN, P_MAX, 16);
+        vel_tmp = float_to_uint(state_.velocity_setpoint, V_MIN, V_MAX, 12);
+        torque_tmp = float_to_uint(state_.torque_feedforward, T_MIN, T_MAX, 12);
         data[0] = pos_tmp >> 8;
         data[1] = pos_tmp & 0x00ff;
         data[2] = (vel_tmp >> 4) & 0x00ff;

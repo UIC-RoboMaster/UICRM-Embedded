@@ -28,14 +28,15 @@ namespace driver {
  * @brief DJI M3508/P19 减速电机配置
  *
  * C620 电调: raw_current ∈ [-16384, 16384] 对应转矩电流 ∈ [-3A, 3A]
- * 编码器: 8192 线/圈，增量式
+ * 编码器: 转子机械值 0～8191 对应机械角度 0～360°
  * 减速比: 3591:187 ≈ 19.2:1
  *
  */
 struct Motor3508Config {
     static constexpr int16_t MAX_OUTPUT_CURRENT = 12288;                   ///< 最大输出电流 [raw], ~20A
     static constexpr float CURRENT_TO_AMP = 3.0f / 16384.0f;              ///< 原始电流 → 安培 换算系数
-    static constexpr float ENCODER_RESOLUTION = 8192.0f;                   ///< 编码器分辨率 [线/圈]
+    static constexpr int ENCODER_BITS = 13;                               ///< 机械角度量化位宽，码值 0～8191
+    static constexpr uint16_t ENCODER_MAX_RAW = 8191;                     ///< 转子机械角最大值 [raw]
     static constexpr float RATED_TORQUE_CONSTANT = 250.0f;                 ///< 额定转矩常数 [mN·m/A]
     static constexpr float ORIGINAL_TRANSMISSION_RATIO = 3591.0f / 187.0f; ///< 减速比 (原始)
 };

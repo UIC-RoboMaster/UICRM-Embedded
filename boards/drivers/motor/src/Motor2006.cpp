@@ -42,9 +42,8 @@ void Motor2006::UpdateData(const uint8_t data[]) {
     state_.raw_omega = data[2] << 8 | data[3];
     state_.raw_current = data[4] << 8 | data[5];
 
-    constexpr float THETA_SCALE = 2 * PI / Motor2006Config::ENCODER_RESOLUTION;
     constexpr float OMEGA_SCALE = 2 * PI / 60;
-    state_.theta = state_.raw_theta * THETA_SCALE;
+    state_.theta = uint_to_float(state_.raw_theta, 0, 2 * PI, Motor2006Config::ENCODER_BITS);
     state_.omega = state_.raw_omega * OMEGA_SCALE;
 
     ProcessAngleTracking();
