@@ -84,17 +84,15 @@ struct DjiMotorState {
 /**
  * @brief DJI 品牌 CAN 电机的基类
  *
- * 在 MotorCANBase 的基础上添加 DJI 电机特有的能力：
+ * 在 CanMotorBase 的基础上添加 DJI 电机特有的能力：
  * - 级联 PID 控制（角度环 + 速度环）
  * - CAN 分组传输（4 电机共享 1 个 TX ID）
  * - 后台线程自动输出
  * - 堵转回调
  * - 前馈偏移
  */
-class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
+class DjiMotorBase : public CanMotorBase {
   public:
-    friend class MotorCANBase<DjiMotorBase>;
-
     enum motor_mode {
         // 未使用
         NONE = 0x00,
@@ -124,6 +122,11 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
      */
     DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
 
+    /**
+     * @brief 设置 DJI 电机后台线程的输出频率
+     * @note 必须在首次构造 DJI 电机子类之前调用
+     * @param freq 频率 [Hz]，默认 1000
+     */
     static void SetFrequency(uint32_t freq = 1000);
 
     /**
@@ -134,40 +137,110 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
     void UpdateData(const uint8_t data[]) override;
 
     /**
+     * @brief 获得电机转子角度
+     * @return 编码器角度 [rad]
+     */
+    float GetTheta() const override;
+
+    /**
+     * @brief 获得电机转子角速度
+     * @return 角速度 [rad/s]
+     */
+    float GetOmega() const override;
+
+    /**
+     * @brief 获得输出轴累计角度
+     * @return 输出轴角度 [rad]
+     */
+    float GetOutputShaftTheta() const override;
+
+    /**
+     * @brief 获得输出轴角速度
+     * @return 输出轴角速度 [rad/s]
+     */
+    float GetOutputShaftOmega() const override;
+
+    /**
+     * @brief 使能电机输出
+     */
+    void Enable() override;
+
+    /**
+     * @brief 禁用电机输出
+     */
+    void Disable() override;
+
+    /**
+     * @brief 查询电机是否使能
+     * @return true 表示已使能
+     */
+    bool IsEnable() const override;
+
+    /**
+     * @brief 获得原始电流反馈
+     * @return 原始电流值 [raw]
+     */
+    int16_t GetCurr() const;
+
+    /**
+     * @brief 获得原始温度反馈
+     * @return 原始温度
+     */
+    uint16_t GetTemp() const;
+
+    /**
+     * @brief 设置减速比
+     * @param ratio 减速比，必须大于 0
+     */
+    void SetTransmissionRatio(float ratio);
+
+    /**
+     * @brief 设置绝对模式
+     * @param enable true 表示输出轴不累计圈数
+     */
+    void SetAbsoluteMode(bool enable);
+
+    /**
+     * @brief 向 CAN 总线发送一帧数据
+     * @param data 8 字节数据帧
+     */
+    void SendPacket(const uint8_t data[8]);
+
+    /**
      * @brief 更新电机的保持状态（DJI 模式专用逻辑）
      */
-    void UpdateHoldingState() override;
+    void UpdateHoldingState();
 
     /**
      * @brief 通过电机的 pid 控制器计算电机的输出
      * @note 本函数会在电机输出进程中按照所设定的频率被自动调用，正常情况下请勿手动调用
      */
-    virtual void CalcOutput();
+    void CalcOutput();
 
     /**
      * @brief 设置目标
      * @param target 设置输出轴的目标：角度 [RAD]、累计角度 [RAD]、角速度 [RAD/S]（取决于模式）
      * @param override 电机为角度控制模式下，还未达到之前的目标时，是否覆盖旧的目标
      */
-    virtual void SetTarget(float target, bool override = true);
+    void SetTarget(float target, bool override = true) override;
 
     /**
      * @brief 读取上一次设置的目标值
      * @return 输出轴的目标：角度 [RAD]、累计角度 [RAD]、角速度 [RAD/S]（取决于模式）
      */
-    virtual float GetTarget() const;
+    float GetTarget() const;
 
     /**
      * @brief 设置电机的 PID
      * @param pid_init pid 的初始化参数
      * @param mode 所需要设置的 pid 的环，一般是速度环或者角度环
      */
-    virtual void ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode);
+    void ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode);
 
     /**
      * @brief 获取电机 PID 数值
      */
-    virtual control::ConstrainedPID::PID_State_t GetPIDState(uint8_t mode) const;
+    control::ConstrainedPID::PID_State_t GetPIDState(uint8_t mode) const;
 
     /**
      * @brief
@@ -244,12 +317,38 @@ class DjiMotorBase : public MotorCANBase<DjiMotorBase> {
     /// 转矩常数 [mN·m/A]，由各子类构造函数根据电机规格设置
     float torque_constant_ = 0;
 
+    /**
+     * @brief 完成反馈更新：角度追踪 + 心跳 + 保持状态
+     * @note 子类 UpdateData 解析完协议后调用
+     */
+    void FinishFeedbackUpdate();
+
+    /**
+     * @brief 单圈绝对值编码器的角度追踪处理
+     * @note 子类在 UpdateData 中解析完协议后调用此方法
+     * @warning 这是使用单圈绝对值编码器的电机的角度处理，不通用于多圈编码器
+     */
+    void ProcessAngleTracking();
+
+    /**
+     * @brief 注册 CAN 接收回调
+     * @note 子类构造函数中调用一次即可，自动绑定到所属 CAN 的 rx_id
+     */
+    void RegisterCanCallback();
+
   private:
     control::ConstrainedPID omega_pid_;
     control::ConstrainedPID theta_pid_;
 
     callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
     void* error_callback_instance_ = nullptr;
+
+    /**
+     * @brief CAN 接收回调，转发至虚函数 UpdateData
+     * @param ctx  指向 DjiMotorBase 实例的指针
+     * @param data 原始 CAN 数据
+     */
+    static void RxThunk(void* ctx, const uint8_t data[]);
 
     /**
      * @brief DJI CAN 电机分组结构体

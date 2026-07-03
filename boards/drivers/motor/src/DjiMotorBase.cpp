@@ -47,7 +47,7 @@ DjiMotorBase::callback_t DjiMotorBase::post_output_callback_ = [](void* args) { 
 void* DjiMotorBase::post_output_callback_instance_ = nullptr;
 
 DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
-    : MotorCANBase<DjiMotorBase>(30) {
+    : CanMotorBase(30) {
     state_.can = can;
     state_.rx_id = rx_id;
     state_.tx_id = tx_id;
@@ -134,11 +134,90 @@ void DjiMotorBase::CanMotorThread(void* args) {
     }
 }
 
+void DjiMotorBase::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<DjiMotorBase*>(ctx)->UpdateData(data);
+}
+
+void DjiMotorBase::RegisterCanCallback() {
+    CanMotorBase::RegisterCanCallback(state_.can, state_.rx_id, &DjiMotorBase::RxThunk, this);
+}
+
+void DjiMotorBase::FinishFeedbackUpdate() {
+    AngleTrackingContext ctx{
+        state_.theta,
+        state_.omega,
+        state_.output_shaft_theta,
+        state_.output_shaft_omega,
+        state_.power_on_angle,
+        state_.relative_angle,
+        state_.output_cumulated_angle,
+        state_.output_relative_angle,
+        state_.transmission_ratio,
+        state_.absolute_mode,
+    };
+    CanMotorBase::ProcessAngleTracking(ctx);
+    Heartbeat();
+    UpdateHoldingState();
+}
+
+void DjiMotorBase::ProcessAngleTracking() {
+    FinishFeedbackUpdate();
+}
+
+float DjiMotorBase::GetTheta() const {
+    return state_.theta;
+}
+
+float DjiMotorBase::GetOmega() const {
+    return state_.omega;
+}
+
+float DjiMotorBase::GetOutputShaftTheta() const {
+    return state_.output_shaft_theta;
+}
+
+float DjiMotorBase::GetOutputShaftOmega() const {
+    return state_.output_shaft_omega;
+}
+
+void DjiMotorBase::Enable() {
+    state_.enable = true;
+}
+
+void DjiMotorBase::Disable() {
+    state_.enable = false;
+}
+
+bool DjiMotorBase::IsEnable() const {
+    return state_.enable;
+}
+
+int16_t DjiMotorBase::GetCurr() const {
+    return state_.raw_current;
+}
+
+uint16_t DjiMotorBase::GetTemp() const {
+    return state_.raw_temperature;
+}
+
+void DjiMotorBase::SetTransmissionRatio(float ratio) {
+    RM_ASSERT_GT(ratio, 0, "Invalid transmission ratio");
+    state_.transmission_ratio = ratio;
+}
+
+void DjiMotorBase::SetAbsoluteMode(bool enable) {
+    state_.absolute_mode = enable;
+}
+
+void DjiMotorBase::SendPacket(const uint8_t data[8]) {
+    state_.can->Transmit(state_.tx_id, data, 8);
+}
+
 void DjiMotorBase::UpdateData(const uint8_t data[]) {
     UNUSED(data);
     // TODO 基类模板是否可用
     // RM_ASSERT_TRUE(false, "DjiMotorBase::UpdateData should be implemented by derived motor");
-    ProcessAngleTracking();
+    FinishFeedbackUpdate();
 }
 
 void DjiMotorBase::UpdateHoldingState() {
@@ -262,7 +341,7 @@ control::ConstrainedPID::PID_State_t DjiMotorBase::GetPIDState(uint8_t mode) con
 void DjiMotorBase::SetMode(uint8_t mode) {
     state_.mode = mode;
     // Sync absolute mode to base class
-    SetAbsoluteMode(mode & ABSOLUTE);
+    state_.absolute_mode = (mode & ABSOLUTE) != 0;
 }
 
 float DjiMotorBase::GetTarget() const {
