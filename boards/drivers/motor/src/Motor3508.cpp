@@ -34,7 +34,11 @@ Motor3508::Motor3508(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     }
     state_.transmission_ratio = Motor3508Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor3508Config::RATED_TORQUE_CONSTANT;
-    RegisterCanCallback();
+    CanMotorBase::RegisterCanCallback(can, rx_id, &Motor3508::RxThunk, this);
+}
+
+void Motor3508::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<Motor3508*>(ctx)->UpdateData(data);
 }
 
 void Motor3508::UpdateData(const uint8_t data[]) {
@@ -47,7 +51,7 @@ void Motor3508::UpdateData(const uint8_t data[]) {
     state_.theta = uint_to_float(state_.raw_theta, 0, 2 * PI, Motor3508Config::ENCODER_BITS);
     state_.omega = state_.raw_omega * OMEGA_SCALE;
 
-    ProcessAngleTracking();
+    FinishFeedbackUpdate();
 }
 
 void Motor3508::PrintData() const {

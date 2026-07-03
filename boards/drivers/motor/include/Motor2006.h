@@ -78,6 +78,13 @@ class Motor2006 : public DjiMotorBase {
 
   private:
     /**
+     * @brief CAN 接收回调，转发至 Motor2006::UpdateData
+     * @param ctx  指向 Motor2006 实例的指针
+     * @param data 原始 CAN 数据
+     */
+    static void RxThunk(void* ctx, const uint8_t data[]);
+
+    /**
      * @brief 由 RX_ID 自动解析 TX_ID
      * @note M2006 + C610 电调标准 CAN 协议标识符
      * @param rx_id  RX ID = 0x200 + 电调 ID

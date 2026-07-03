@@ -80,6 +80,13 @@ class Motor6020 : public DjiMotorBase {
 
   private:
     /**
+     * @brief CAN 接收回调，转发至 Motor6020::UpdateData
+     * @param ctx  指向 Motor6020 实例的指针
+     * @param data 原始 CAN 数据
+     */
+    static void RxThunk(void* ctx, const uint8_t data[]);
+
+    /**
      * @brief 由 RX_ID 自动解析 TX_ID
      * @note 在 DJI RoboMaster Assistant 中配置为电流固件控制
      * @param rx_id  RX ID = 0x204 + 电机 ID

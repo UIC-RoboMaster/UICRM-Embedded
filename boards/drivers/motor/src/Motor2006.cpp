@@ -34,7 +34,11 @@ Motor2006::Motor2006(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     }
     state_.transmission_ratio = Motor2006Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor2006Config::RATED_TORQUE_CONSTANT;
-    RegisterCanCallback();
+    CanMotorBase::RegisterCanCallback(can, rx_id, &Motor2006::RxThunk, this);
+}
+
+void Motor2006::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<Motor2006*>(ctx)->UpdateData(data);
 }
 
 void Motor2006::UpdateData(const uint8_t data[]) {
@@ -46,7 +50,7 @@ void Motor2006::UpdateData(const uint8_t data[]) {
     state_.theta = uint_to_float(state_.raw_theta, 0, 2 * PI, Motor2006Config::ENCODER_BITS);
     state_.omega = state_.raw_omega * OMEGA_SCALE;
 
-    ProcessAngleTracking();
+    FinishFeedbackUpdate();
 }
 
 void Motor2006::PrintData() const {

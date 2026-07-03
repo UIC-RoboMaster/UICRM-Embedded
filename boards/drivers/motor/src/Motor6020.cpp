@@ -34,7 +34,11 @@ Motor6020::Motor6020(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     torque_constant_ = Motor6020Config::RATED_TORQUE_CONSTANT;
     // 绝对位置电机不需要初始化 align_angle_
     state_.power_on_angle = 0;
-    RegisterCanCallback();
+    CanMotorBase::RegisterCanCallback(can, rx_id, &Motor6020::RxThunk, this);
+}
+
+void Motor6020::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<Motor6020*>(ctx)->UpdateData(data);
 }
 
 void Motor6020::UpdateData(const uint8_t data[]) {
@@ -48,7 +52,7 @@ void Motor6020::UpdateData(const uint8_t data[]) {
     state_.omega = (state_.raw_omega * OMEGA_SCALE) * input_speed_filter_
                  + state_.omega * (1 - input_speed_filter_);
 
-    ProcessAngleTracking();
+    FinishFeedbackUpdate();
 }
 
 void Motor6020::PrintData() const {
