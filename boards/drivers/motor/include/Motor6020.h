@@ -34,7 +34,7 @@ struct Motor6020Config {
     static constexpr int16_t MAX_RAW_THETA = 8191;           // 转子机械角最大值 [raw] 0->8191 对应 0~360°
     static constexpr int16_t MAX_RAW_CURRENT = 16384;           // 转矩电流反馈最大值 [raw] -16384->16384 对应 -3A~3A
     static constexpr float MAX_CURRENT = 3.0f;              // 最大转矩电流 [A]
-    static constexpr float RATED_TORQUE_CONSTANT = 100.0f;      // 额定转矩常数 [mN·m/A]
+    static constexpr float RATED_TORQUE_CONSTANT = 0.741f;      // 额定转矩常数 [mN·m/A]
     static constexpr float ORIGINAL_TRANSMISSION_RATIO = 1.0f;    // 减速比，直驱无减速箱
 };
 
@@ -98,8 +98,6 @@ class Motor6020 : public DjiMotorBase {
         return (rx_id >= GROUP2_RX_START) ? TX2_ID : TX1_ID;
     }
 
-    static const int16_t MAX_OUT = 25000;           ///< 最大输出电流 (未使用，见 Motor6020Config)
-    static const int16_t MAX_OUT_C = 16383;         ///< 最大控制电流 (未使用，见 Motor6020Config)
     float input_speed_filter_ = 0.1;                ///< 速度反馈低通滤波系数 [0, 1]
 };
 

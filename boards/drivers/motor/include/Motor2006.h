@@ -35,7 +35,7 @@ struct Motor2006Config {
     static constexpr int16_t MAX_RAW_THETA = 8191;           // 转子机械角最大值 [raw] 0->8191 对应 0~360°
     static constexpr int16_t MAX_RAW_CURRENT = 10000;        // 转矩电流反馈最大值 [raw] -10000->10000 对应 -10A~10A
     static constexpr float MAX_CURRENT = 10.0f;              // 最大转矩电流 [A]
-    static constexpr float RATED_TORQUE_CONSTANT = 180.0f;     // 额定转矩常数 [mN·m/A]
+    static constexpr float RATED_TORQUE_CONSTANT = 0.18f;     // 额定转矩常数 [mN·m/A]
     static constexpr float ORIGINAL_TRANSMISSION_RATIO = 36.0f; // 减速比 (原始)
 };
 
