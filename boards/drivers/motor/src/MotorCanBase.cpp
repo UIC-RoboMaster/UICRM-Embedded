@@ -35,10 +35,6 @@ CanMotorBase::~CanMotorBase() {
     delete outer_wrap_detector_;
 }
 
-int16_t CanMotorBase::GetOutput() {
-    return MotorBase::GetOutput();
-}
-
 void CanMotorBase::RegisterCanCallback(CAN* can, uint16_t rx_id, CanRxHandler handler, void* ctx) {
     rx_handler_ = handler;
     rx_ctx_ = ctx;

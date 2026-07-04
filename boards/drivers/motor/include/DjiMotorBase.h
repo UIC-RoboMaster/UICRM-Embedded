@@ -180,6 +180,12 @@ class DjiMotorBase : public CanMotorBase {
     bool IsEnable() const override;
 
     /**
+     * @brief 获取当前输出电流指令
+     * @return 输出电流值 [raw]
+     */
+    int16_t GetOutput() override;
+
+    /**
      * @brief 获得原始电流反馈
      * @return 原始电流值 [raw]
      */
@@ -313,6 +319,7 @@ class DjiMotorBase : public CanMotorBase {
 
   protected:
     DjiMotorState state_;  // 电机全部状态数据（反馈 + 控制）
+    int16_t output_ = 0;   // 当前输出电流指令 [raw]
 
     /// DJI CAN 协议：raw_current ∈ [-16384, 16384] 对应转矩电流 ∈ [-3A, 3A]
     static constexpr float RAW_CURRENT_TO_AMP = 3.0f / 16384.0f;

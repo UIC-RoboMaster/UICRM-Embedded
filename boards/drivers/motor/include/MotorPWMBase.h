@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "MotorBase.h"
 #include "bsp_pwm.h"
 #include "main.h"
 namespace driver {
@@ -31,7 +30,7 @@ namespace driver {
      * @brief PWM motor base class, used for general PWM motor and servomotor with
      *       20ms frame
      */
-    class MotorPWMBase : public MotorBase {
+    class MotorPWMBase {
       public:
         /**
          * @brief 基础构造函数
@@ -71,7 +70,7 @@ namespace driver {
          * @param val offset value with respect to the idle throttle pulse width, in
          * [us]
          */
-        virtual void SetOutput(int16_t val) override;
+        virtual void SetOutput(int16_t val);
 
         void Enable();
 
@@ -85,6 +84,7 @@ namespace driver {
         bsp::PWM pwm_;
         uint32_t idle_throttle_;
         bool en_;
+        int16_t output_ = 0;
     };
 
     /**

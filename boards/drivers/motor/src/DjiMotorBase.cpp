@@ -192,6 +192,10 @@ bool DjiMotorBase::IsEnable() const {
     return state_.enable;
 }
 
+int16_t DjiMotorBase::GetOutput() {
+    return output_;
+}
+
 int16_t DjiMotorBase::GetCurr() const {
     return state_.raw_current;
 }

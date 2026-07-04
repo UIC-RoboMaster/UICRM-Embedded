@@ -103,7 +103,6 @@ struct DmMotorState {
 class DmMotorBase : public MotorCANBase<DmMotorBase> {
   public:
     friend class MotorCANBase<DmMotorBase>;
-    using MotorBase::SetOutput;
     /**
      * @brief 基础构造函数
      * @param can    CAN 对象

@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "MotorBase.h"
 #include "arm_math.h"
 #include "bsp_can.h"
 #include "bsp_error_handler.h"
@@ -61,7 +60,7 @@ struct AngleTrackingContext {
  *  1. 提供 state_ 成员（包含 theta, omega, output_shaft_theta, enable, can 等字段）
  *  2. 实现 CanMotorBase 虚函数契约
  */
-class CanMotorBase : public MotorBase, public ConnectionDriver {
+class CanMotorBase : public ConnectionDriver {
   public:
     /**
      * @brief 析构函数，释放回绕检测器
@@ -119,15 +118,15 @@ class CanMotorBase : public MotorBase, public ConnectionDriver {
 
     /**
      * @brief 获取当前输出电流指令
-     * @return 输出值 [raw]，委托 MotorBase
+     * @return 输出值 [raw]
      */
-    virtual int16_t GetOutput() override;
+    virtual int16_t GetOutput() = 0;
 
     /**
      * @brief 设置输出电流指令
      * @param val 输出值 [raw]
      */
-    virtual void SetOutput(int16_t val) override = 0;
+    virtual void SetOutput(int16_t val) = 0;
 
     /**
      * @brief 更新电机的反馈数据
