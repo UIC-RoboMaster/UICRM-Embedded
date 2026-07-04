@@ -20,12 +20,12 @@
 
 #pragma once
 
-#include "arm_math.h"
 #include "bsp_can.h"
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
 #include "connection_driver.h"
 #include "utils.h"
+#include "arm_math.h"
 
 namespace driver {
 

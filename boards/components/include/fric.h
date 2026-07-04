@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "DjiMotorBase.h"
+#include "FlyWheelMotor.h"
 #include "main.h"
 
 namespace control {

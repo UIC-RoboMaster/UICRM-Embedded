@@ -25,12 +25,11 @@
 namespace driver {
 
 Motor2006::Motor2006(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
-    : DjiMotorBase(can, rx_id, tx_id) {
+    : DjiMotorBase(can, rx_id, tx_id != 0x00 ? tx_id : ResolveTxId(rx_id)) {
     // M2006 RX_ID = 0x200 + 电调 ID
-    // TX_ID 自动识别逻辑见 ResolveTxId()
+    // TX_ID 须在 DjiMotorBase 构造前解析，否则分组发送会使用错误的 CAN ID
     if (tx_id == 0x00) {
         RM_ASSERT_GE(rx_id, 0x201, "Invalid rx id for M2006");
-        state_.tx_id = ResolveTxId(rx_id);
     }
     state_.transmission_ratio = Motor2006Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor2006Config::RATED_TORQUE_CONSTANT;

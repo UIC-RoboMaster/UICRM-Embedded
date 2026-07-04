@@ -268,9 +268,12 @@ void DMMotor4310::UpdateData(const uint8_t data[]) {
     state_.mos_temperature = data[6];
     state_.rotor_temperature = data[7];
 
-    state_.theta = linear_remap(state_.raw_position, 0u, POS_MAX_RAW, P_MIN, P_MAX);
-    state_.omega = linear_remap(state_.raw_velocity, 0u, MIT_PARAM_MAX_RAW, V_MIN, V_MAX);
-    state_.torque = linear_remap(state_.raw_torque, 0u, MIT_PARAM_MAX_RAW, T_MIN, T_MAX);
+    state_.theta = linear_remap<uint16_t, float>(state_.raw_position, static_cast<uint16_t>(0), POS_MAX_RAW, P_MIN,
+                                                 P_MAX);
+    state_.omega = linear_remap<uint16_t, float>(static_cast<uint16_t>(state_.raw_velocity), static_cast<uint16_t>(0),
+                                                 MIT_PARAM_MAX_RAW, V_MIN, V_MAX);
+    state_.torque = linear_remap<uint16_t, float>(state_.raw_torque, static_cast<uint16_t>(0), MIT_PARAM_MAX_RAW,
+                                                  T_MIN, T_MAX);
 
     FinishFeedbackUpdate();
 }

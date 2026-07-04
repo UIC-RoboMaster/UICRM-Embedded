@@ -25,10 +25,9 @@
 namespace driver {
 
 Motor6020::Motor6020(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
-    : DjiMotorBase(can, rx_id, tx_id) {
+    : DjiMotorBase(can, rx_id, tx_id != 0x00 ? tx_id : ResolveTxId(rx_id)) {
     if (tx_id == 0x00) {
         RM_ASSERT_GE(rx_id, 0x205, "Invalid rx id for GM6020");
-        state_.tx_id = ResolveTxId(rx_id);
     }
     state_.transmission_ratio = Motor6020Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor6020Config::RATED_TORQUE_CONSTANT;
