@@ -147,8 +147,7 @@ void DjiMotorBase::FinishFeedbackUpdate() {
         state_.transmission_ratio,
         state_.absolute_mode,
     };
-    CanMotorBase::ProcessAngleTracking(ctx);
-    Heartbeat();
+    CanMotorBase::FinishFeedbackUpdate(ctx);
     UpdateHoldingState();
 }
 

@@ -94,4 +94,13 @@ void CanMotorBase::ProcessAngleTracking(AngleTrackingContext ctx) {
     ctx.output_shaft_omega = ctx.omega / ctx.transmission_ratio;
 }
 
+void CanMotorBase::FinishFeedbackUpdate(AngleTrackingContext ctx) {
+    ProcessAngleTracking(ctx);
+    Heartbeat();
+}
+
+void CanMotorBase::TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8]) {
+    can->Transmit(tx_id, data, 8);
+}
+
 }  // namespace driver

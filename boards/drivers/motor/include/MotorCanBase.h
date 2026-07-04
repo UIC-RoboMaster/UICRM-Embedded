@@ -174,6 +174,21 @@ class CanMotorBase : public ConnectionDriver {
      */
     void ProcessAngleTracking(AngleTrackingContext ctx);
 
+    /**
+     * @brief 完成反馈更新：角度追踪 + 心跳
+     * @param ctx 角度追踪所需的运行时状态引用包
+     * @note 子类 UpdateData 解析完协议后，组装 ctx 并调用
+     */
+    void FinishFeedbackUpdate(AngleTrackingContext ctx);
+
+    /**
+     * @brief 向 CAN 总线发送一帧标准数据
+     * @param can   CAN 硬件对象
+     * @param tx_id 发送报文标识符
+     * @param data  8 字节数据帧
+     */
+    static void TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8]);
+
     /// CAN 接收回调函数指针类型（不经 vtable）
     using CanRxHandler = void (*)(void* ctx, const uint8_t data[]);
 

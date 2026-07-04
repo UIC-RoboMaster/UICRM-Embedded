@@ -96,13 +96,12 @@ struct DmMotorState {
 /**
  * @brief 达妙 (DM) 电机的通用基类
  *
- * 在 MotorCANBase 的基础上提供 DM 品牌电机共用的能力：
+ * 在 CanMotorBase 的基础上提供 DM 品牌电机共用的能力：
  * - CAN 发送 ID 管理
  * - 使能/禁用/归零命令（0xFC/0xFD/0xFE 通用协议）
  */
-class DmMotorBase : public MotorCANBase<DmMotorBase> {
+class DmMotorBase : public CanMotorBase {
   public:
-    friend class MotorCANBase<DmMotorBase>;
     /**
      * @brief 基础构造函数
      * @param can    CAN 对象
@@ -111,26 +110,25 @@ class DmMotorBase : public MotorCANBase<DmMotorBase> {
      */
     DmMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id);
 
-    /**
-     * @brief 使能电机
-     */
-    virtual void MotorEnable();
+    float GetTheta() const override;
+    float GetOmega() const override;
+    float GetOutputShaftTheta() const override;
+    float GetOutputShaftOmega() const override;
+    void Enable() override;
+    void Disable() override;
+    bool IsEnable() const override;
+    int16_t GetOutput() override;
+    void SetOutput(int16_t val) override;
 
     /**
-     * @brief 失能电机
-     */
-    virtual void MotorDisable();
-
-    /**
-     * @brief 设置电机零点
+     * @brief 设置电机零点（DM 协议 0xFE 命令）
      */
     virtual void SetZeroPos();
 
     /**
-     * @brief 传输数据到电机
-     * @note 由具体型号实现协议打包逻辑
+     * @brief 传输数据到电机（按 mode 打包 MIT/POS_VEL/VEL 控制帧）
      */
-    virtual void TransmitOutput() = 0;
+    virtual void TransmitOutput();
 
     /**
      * @brief 计算并传输输出（由后台线程定期调用）
@@ -142,7 +140,10 @@ class DmMotorBase : public MotorCANBase<DmMotorBase> {
      * @note 必须在首次构造 DmMotorBase 子类之前调用
      * @param freq 频率 [Hz]，默认 1000
      */
-    static void SetOutputFrequency(uint32_t freq = 1000);
+    static void SetFrequency(uint32_t freq = 1000);
+
+    /** @deprecated 请使用 SetFrequency */
+    static void SetOutputFrequency(uint32_t freq = 1000) { SetFrequency(freq); }
 
     /**
      * @brief 获取电机的扭矩，单位为 [Nm]
@@ -183,8 +184,36 @@ class DmMotorBase : public MotorCANBase<DmMotorBase> {
      */
     void SetTarget(float position, float velocity);
 
+    /** @deprecated 请使用 Enable() */
+    void MotorEnable() { Enable(); }
+
+    /** @deprecated 请使用 Disable() */
+    void MotorDisable() { Disable(); }
+
   protected:
     DmMotorState state_;  // DM 电机全部状态数据（反馈 + 控制）
+
+    // DM m4310 量程常量
+    static constexpr float P_MIN = -12.5f;
+    static constexpr float P_MAX = 12.5f;
+    static constexpr float V_MIN = -45.0f;
+    static constexpr float V_MAX = 45.0f;
+    static constexpr float T_MIN = -18.0f;
+    static constexpr float T_MAX = 18.0f;
+    static constexpr float KP_MIN = 0.0f;
+    static constexpr float KP_MAX = 500.0f;
+    static constexpr float KD_MIN = 0.0f;
+    static constexpr float KD_MAX = 5.0f;
+    static constexpr int POS_BITS = 16;
+    static constexpr uint16_t POS_MAX_RAW = (1u << POS_BITS) - 1u;
+    static constexpr int MIT_PARAM_BITS = 12;
+    static constexpr uint16_t MIT_PARAM_MAX_RAW = (1u << MIT_PARAM_BITS) - 1u;
+
+    /**
+     * @brief 完成反馈更新：角度追踪 + 心跳
+     * @note 子类 UpdateData 解析完协议后调用
+     */
+    void FinishFeedbackUpdate();
 
   private:
     // ── 后台线程基础设施 ──
@@ -219,36 +248,23 @@ class DMMotor4310 : public DmMotorBase {
 
     /**
      * @brief 更新电机的反馈数据
-     * @note 仅在 CAN 回调函数中使用
-     * @param data 原始数据
+     * @note 由 CAN 接收中断调用，不应在其他上下文手动调用
+     * @param data 原始 CAN 数据
      */
-    void UpdateData(const uint8_t data[]);
+    void UpdateData(const uint8_t data[]) override final;
 
     /**
-     * @brief 传输数据到电机（根据模式打包）
+     * @brief 打印电机调试数据
      */
-    void TransmitOutput() override;
+    void PrintData() const override final;
 
+  private:
     /**
-     * @brief 打印电机数据
+     * @brief CAN 接收回调，转发至 DMMotor4310::UpdateData
+     * @param ctx  指向 DMMotor4310 实例的指针
+     * @param data 原始 CAN 数据
      */
-    void PrintData() const override;
-
-    // DM m4310 量程常量
-    static constexpr float P_MIN = -12.5f;
-    static constexpr float P_MAX = 12.5f;
-    static constexpr float V_MIN = -45.0f;
-    static constexpr float V_MAX = 45.0f;
-    static constexpr float T_MIN = -18.0f;
-    static constexpr float T_MAX = 18.0f;
-    static constexpr float KP_MIN = 0.0f;
-    static constexpr float KP_MAX = 500.0f;
-    static constexpr float KD_MIN = 0.0f;
-    static constexpr float KD_MAX = 5.0f;
-    static constexpr int POS_BITS = 16;
-    static constexpr uint16_t POS_MAX_RAW = (1u << POS_BITS) - 1u;
-    static constexpr int MIT_PARAM_BITS = 12;
-    static constexpr uint16_t MIT_PARAM_MAX_RAW = (1u << MIT_PARAM_BITS) - 1u;
+    static void RxThunk(void* ctx, const uint8_t data[]);
 };
 
 }  // namespace driver

@@ -38,7 +38,7 @@ uint32_t DmMotorBase::dm_output_period_us_ = 1000;
 // ===== DmMotorBase =====
 
 DmMotorBase::DmMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
-    : MotorCANBase<DmMotorBase>(50) {
+    : CanMotorBase(50) {
     state_.can = can;
     state_.rx_id = rx_id;
     state_.tx_id = tx_id;
@@ -67,48 +67,72 @@ DmMotorBase::DmMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
         dm_thread_ = new bsp::Thread(thread_init);
         dm_thread_->Start();
     }
+
+    RM_ASSERT_TRUE(bsp::GetHighresTickMicroSec() != 0, "Highres timer not initialized");
 }
 
-void DmMotorBase::MotorEnable() {
-    uint8_t data[8] = {0};
-    data[0] = 0xff;
-    data[1] = 0xff;
-    data[2] = 0xff;
-    data[3] = 0xff;
-    data[4] = 0xff;
-    data[5] = 0xff;
-    data[6] = 0xff;
-    data[7] = 0xfc;
-    SendPacket(data);
+void DmMotorBase::FinishFeedbackUpdate() {
+    AngleTrackingContext ctx{
+        state_.theta,
+        state_.omega,
+        state_.output_shaft_theta,
+        state_.output_shaft_omega,
+        state_.power_on_angle,
+        state_.relative_angle,
+        state_.output_cumulated_angle,
+        state_.output_relative_angle,
+        state_.transmission_ratio,
+        state_.absolute_mode,
+    };
+    CanMotorBase::FinishFeedbackUpdate(ctx);
 }
 
-void DmMotorBase::MotorDisable() {
-    uint8_t data[8] = {0};
-    data[0] = 0xff;
-    data[1] = 0xff;
-    data[2] = 0xff;
-    data[3] = 0xff;
-    data[4] = 0xff;
-    data[5] = 0xff;
-    data[6] = 0xff;
-    data[7] = 0xfd;
-    SendPacket(data);
+float DmMotorBase::GetTheta() const {
+    return state_.theta;
+}
+
+float DmMotorBase::GetOmega() const {
+    return state_.omega;
+}
+
+float DmMotorBase::GetOutputShaftTheta() const {
+    return state_.output_shaft_theta;
+}
+
+float DmMotorBase::GetOutputShaftOmega() const {
+    return state_.output_shaft_omega;
+}
+
+void DmMotorBase::Enable() {
+    state_.enable = true;
+    const uint8_t data[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc};
+    CanMotorBase::TransmitFrame(state_.can, state_.tx_id, data);
+}
+
+void DmMotorBase::Disable() {
+    state_.enable = false;
+    const uint8_t data[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfd};
+    CanMotorBase::TransmitFrame(state_.can, state_.tx_id, data);
+}
+
+bool DmMotorBase::IsEnable() const {
+    return state_.enable;
+}
+
+int16_t DmMotorBase::GetOutput() {
+    return 0;
+}
+
+void DmMotorBase::SetOutput(int16_t val) {
+    state_.velocity_setpoint = static_cast<float>(val);
 }
 
 void DmMotorBase::SetZeroPos() {
-    uint8_t data[8] = {0};
-    data[0] = 0xff;
-    data[1] = 0xff;
-    data[2] = 0xff;
-    data[3] = 0xff;
-    data[4] = 0xff;
-    data[5] = 0xff;
-    data[6] = 0xff;
-    data[7] = 0xfe;
-    SendPacket(data);
+    const uint8_t data[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe};
+    CanMotorBase::TransmitFrame(state_.can, state_.tx_id, data);
 }
 
-void DmMotorBase::SetOutputFrequency(uint32_t freq) {
+void DmMotorBase::SetFrequency(uint32_t freq) {
     RM_ASSERT_GT(freq, 0, "Frequency must be positive");
     dm_output_period_us_ = 1000000 / freq;
 }
@@ -178,37 +202,7 @@ float DmMotorBase::GetTorque() const {
     return state_.torque;
 }
 
-// ===== DMMotor4310 =====
-
-
-// ===== DMMotor4310 =====
-
-DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_mode_t mode)
-    : DmMotorBase(can, rx_id, tx_id) {
-    RegisterCanCallback();
-    state_.mode = mode;
-    // DM 电机的控制帧 CAN ID = 软件配置的 can_id + 模式偏移 
-    state_.tx_id = tx_id + mode;
-}
-
-void DMMotor4310::UpdateData(const uint8_t data[]) {
-    state_.error = data[0] >> 4;
-    state_.id = data[0] & 0x0f;
-    state_.raw_position = data[1] << 8 | data[2];
-    state_.raw_velocity = data[3] << 4 | (data[4] & 0xf0) >> 4;
-    state_.raw_torque = data[5] | (data[4] & 0x0f) << 8;
-    state_.mos_temperature = data[6];
-    state_.rotor_temperature = data[7];
-
-    state_.theta = linear_remap(state_.raw_position, 0u, POS_MAX_RAW, P_MIN, P_MAX);
-    state_.omega = linear_remap(state_.raw_velocity, 0u, MIT_PARAM_MAX_RAW, V_MIN, V_MAX);
-    state_.torque = linear_remap(state_.raw_torque, 0u, MIT_PARAM_MAX_RAW, T_MIN, T_MAX);
-
-    // 调基类做角度追踪
-    ProcessAngleTracking();
-}
-
-void DMMotor4310::TransmitOutput() {
+void DmMotorBase::TransmitOutput() {
     uint8_t data[8] = {0};
     int16_t kp_tmp, kd_tmp, pos_tmp, vel_tmp, torque_tmp;
 
@@ -248,7 +242,37 @@ void DMMotor4310::TransmitOutput() {
     } else {
         RM_EXPECT_TRUE(false, "Invalid mode number!");
     }
-    state_.can->Transmit(state_.tx_id, data, 8);
+    CanMotorBase::TransmitFrame(state_.can, state_.tx_id, data);
+}
+
+// ===== DMMotor4310 =====
+
+DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_mode_t mode)
+    : DmMotorBase(can, rx_id, tx_id) {
+    state_.mode = mode;
+    // DM 电机的控制帧 CAN ID = 软件配置的 can_id + 模式偏移
+    state_.tx_id = tx_id + mode;
+    CanMotorBase::RegisterCanCallback(can, rx_id, &DMMotor4310::RxThunk, this);
+}
+
+void DMMotor4310::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<DMMotor4310*>(ctx)->UpdateData(data);
+}
+
+void DMMotor4310::UpdateData(const uint8_t data[]) {
+    state_.error = data[0] >> 4;
+    state_.id = data[0] & 0x0f;
+    state_.raw_position = data[1] << 8 | data[2];
+    state_.raw_velocity = data[3] << 4 | (data[4] & 0xf0) >> 4;
+    state_.raw_torque = data[5] | (data[4] & 0x0f) << 8;
+    state_.mos_temperature = data[6];
+    state_.rotor_temperature = data[7];
+
+    state_.theta = linear_remap(state_.raw_position, 0u, POS_MAX_RAW, P_MIN, P_MAX);
+    state_.omega = linear_remap(state_.raw_velocity, 0u, MIT_PARAM_MAX_RAW, V_MIN, V_MAX);
+    state_.torque = linear_remap(state_.raw_torque, 0u, MIT_PARAM_MAX_RAW, T_MIN, T_MAX);
+
+    FinishFeedbackUpdate();
 }
 
 void DMMotor4310::PrintData() const {
