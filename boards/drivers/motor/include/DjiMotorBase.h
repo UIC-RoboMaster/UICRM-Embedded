@@ -380,8 +380,6 @@ class DjiMotorBase : public CanMotorBase {
      */
     static void TransmitOutput(const MotorGroup& group);
 
-    static const int16_t MAX_OUT = 32767;
-
     static bool is_init_;
 
     static bsp::Thread* can_motor_thread_;

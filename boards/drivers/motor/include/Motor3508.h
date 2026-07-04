@@ -36,7 +36,7 @@ struct Motor3508Config {
     static constexpr int16_t MAX_RAW_CURRENT = 16384;                  ///< 转矩电流反馈最大值 [raw]
     static constexpr float MAX_CURRENT = 20.0f;                    ///< 最大转矩电流 [A]
     static constexpr float RATED_TORQUE_CONSTANT = 0.3f;             ///< 额定转矩常数 [Nm/A]
-    static constexpr float ORIGINAL_TRANSMISSION_RATIO = 3591.0f / 187.0f; ///< 减速比 (原始)
+    static constexpr float ORIGINAL_TRANSMISSION_RATIO = 3591.0f / 187.0f; ///< 减速比 (根据减速箱)
 };
 
 /**

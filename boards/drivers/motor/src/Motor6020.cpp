@@ -48,7 +48,7 @@ void Motor6020::UpdateData(const uint8_t data[]) {
     state_.raw_current = (int16_t)(data[4] << 8 | data[5]);
     state_.raw_temperature = data[6];
 
-    // GM6020 转子机械角度值范围为 0~8191，对应 13 bits
+    // GM6020 转子机械角度值范围为 0~8191
     // 映射 theta 角度为 0~2PI
     state_.theta = linear_remap<int16_t, float>(state_.raw_theta, 0, Motor6020Config::MAX_RAW_THETA, 0.0f, 2 * PI);
     // GM6020 转子转速值单位为 rpm，rad/s = rpm * 2 * PI / 60
