@@ -551,52 +551,37 @@ class Ease {
     float step_;
 };
 
-template <typename T>
-inline T linear_interpolation(T src_min, T src_max, T dst_min, T dst_max, T value) {
-    value = clip(value, src_min, src_max);
-    return dst_min + (dst_max - dst_min) * (value - src_min) / (src_max - src_min);
+/**
+ * @brief 将 value 从源区间线性映射到目标区间
+ * @tparam RawT  原始值类型（整型/浮点均可）
+ * @tparam DstT  目标值类型，默认 float
+ * @param value   待映射的原始值
+ * @param src_min 源区间下界
+ * @param src_max 源区间上界
+ * @param dst_min 目标区间下界
+ * @param dst_max 目标区间上界
+ * @return 映射后的目标值
+ * @note 不钳位；value 超出 [src_min, src_max] 时结果会线性外推
+ */
+template <typename RawT, typename DstT = float>
+inline DstT linear_remap(RawT value, RawT src_min, RawT src_max, DstT dst_min, DstT dst_max) {
+    const DstT src_span = static_cast<DstT>(src_max) - static_cast<DstT>(src_min);
+    const DstT offset = static_cast<DstT>(value) - static_cast<DstT>(src_min);
+    return dst_min + (dst_max - dst_min) * offset / src_span;
 }
 
 /**
- * @brief 浮点数线性映射为定点整数
- * @param x     浮点数值
- * @param x_min 映射范围最小值
- * @param x_max 映射范围最大值
- * @param bits  定点数位宽
- * @return 定点整数值（uint32_t 承载，按 bits 强转为 uint8_t / uint16_t 等）
+ * @brief 将 value 从源区间线性映射到目标区间，并钳位在目标区间内
+ * @tparam RawT  原始值类型
+ * @tparam DstT  目标值类型，默认 float
+ * @param value   待映射的原始值
+ * @param src_min 源区间下界
+ * @param src_max 源区间上界
+ * @param dst_min 目标区间下界
+ * @param dst_max 目标区间上界
+ * @return 映射后的目标值，落在 [dst_min, dst_max] 内
  */
-inline uint32_t float_to_uint(float x, float x_min, float x_max, int bits) {
-    float span = x_max - x_min;
-    return (uint32_t)((x - x_min) * (float)((1u << bits) - 1u) / span);
-}
-
-/**
- * @brief 定点整数线性映射为浮点数
- * @param x_int 定点整数值
- * @param x_min 映射范围最小值
- * @param x_max 映射范围最大值
- * @param bits  定点数位宽
- * @return 浮点数值
- */
-inline float uint_to_float(uint32_t x_int, float x_min, float x_max, int bits) {
-    float span = x_max - x_min;
-    return (float)x_int * span / (float)((1u << bits) - 1u) + x_min;
-}
-
-/**
- * @brief 浮点数线性映射为定点整数（显式目标类型）
- * @tparam UIntT 目标无符号整数类型（uint8_t / uint16_t / uint32_t）
- */
-template <typename UIntT>
-inline UIntT float_to_uint_as(float x, float x_min, float x_max, int bits) {
-    return (UIntT)float_to_uint(x, x_min, x_max, bits);
-}
-
-/**
- * @brief 定点整数线性映射为浮点数（任意无符号整数输入）
- * @tparam UIntT 源无符号整数类型
- */
-template <typename UIntT>
-inline float uint_to_float_as(UIntT x_int, float x_min, float x_max, int bits) {
-    return uint_to_float((uint32_t)x_int, x_min, x_max, bits);
+template <typename RawT, typename DstT = float>
+inline DstT linear_remap_clip(RawT value, RawT src_min, RawT src_max, DstT dst_min, DstT dst_max) {
+    return linear_remap(clip(value, src_min, src_max), src_min, src_max, dst_min, dst_max);
 }

@@ -246,6 +246,10 @@ class DMMotor4310 : public DmMotorBase {
     static constexpr float KP_MAX = 500.0f;
     static constexpr float KD_MIN = 0.0f;
     static constexpr float KD_MAX = 5.0f;
+    static constexpr int POS_BITS = 16;
+    static constexpr uint16_t POS_MAX_RAW = (1u << POS_BITS) - 1u;
+    static constexpr int MIT_PARAM_BITS = 12;
+    static constexpr uint16_t MIT_PARAM_MAX_RAW = (1u << MIT_PARAM_BITS) - 1u;
 };
 
 }  // namespace driver

@@ -200,9 +200,9 @@ void DMMotor4310::UpdateData(const uint8_t data[]) {
     state_.mos_temperature = data[6];
     state_.rotor_temperature = data[7];
 
-    state_.theta = uint_to_float(state_.raw_position, P_MIN, P_MAX, 16);
-    state_.omega = uint_to_float(state_.raw_velocity, V_MIN, V_MAX, 12);
-    state_.torque = uint_to_float(state_.raw_torque, T_MIN, T_MAX, 12);
+    state_.theta = linear_remap(state_.raw_position, 0u, POS_MAX_RAW, P_MIN, P_MAX);
+    state_.omega = linear_remap(state_.raw_velocity, 0u, MIT_PARAM_MAX_RAW, V_MIN, V_MAX);
+    state_.torque = linear_remap(state_.raw_torque, 0u, MIT_PARAM_MAX_RAW, T_MIN, T_MAX);
 
     // 调基类做角度追踪
     ProcessAngleTracking();
@@ -213,11 +213,11 @@ void DMMotor4310::TransmitOutput() {
     int16_t kp_tmp, kd_tmp, pos_tmp, vel_tmp, torque_tmp;
 
     if (state_.mode == MIT) {
-        kp_tmp = float_to_uint(state_.kp_setpoint, KP_MIN, KP_MAX, 12);
-        kd_tmp = float_to_uint(state_.kd_setpoint, KD_MIN, KD_MAX, 12);
-        pos_tmp = float_to_uint(state_.position_setpoint, P_MIN, P_MAX, 16);
-        vel_tmp = float_to_uint(state_.velocity_setpoint, V_MIN, V_MAX, 12);
-        torque_tmp = float_to_uint(state_.torque_feedforward, T_MIN, T_MAX, 12);
+        kp_tmp = (int16_t)linear_remap(state_.kp_setpoint, KP_MIN, KP_MAX, 0.0f, (float)MIT_PARAM_MAX_RAW);
+        kd_tmp = (int16_t)linear_remap(state_.kd_setpoint, KD_MIN, KD_MAX, 0.0f, (float)MIT_PARAM_MAX_RAW);
+        pos_tmp = (int16_t)linear_remap(state_.position_setpoint, P_MIN, P_MAX, 0.0f, (float)POS_MAX_RAW);
+        vel_tmp = (int16_t)linear_remap(state_.velocity_setpoint, V_MIN, V_MAX, 0.0f, (float)MIT_PARAM_MAX_RAW);
+        torque_tmp = (int16_t)linear_remap(state_.torque_feedforward, T_MIN, T_MAX, 0.0f, (float)MIT_PARAM_MAX_RAW);
         data[0] = pos_tmp >> 8;
         data[1] = pos_tmp & 0x00ff;
         data[2] = (vel_tmp >> 4) & 0x00ff;

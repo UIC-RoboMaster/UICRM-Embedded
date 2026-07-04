@@ -28,15 +28,14 @@ namespace driver {
  * @brief DJI GM6020 云台电机配置
  *
  * 编码器: 转子机械值 0～8191 对应机械角度 0～360°
- * raw_current ∈ [-30000, 30000]
+ * raw_current ∈ [-16384, 16384] 对应转矩电流 ∈ [-3A, 3A]
  */
 struct Motor6020Config {
-    static constexpr int16_t MAX_OUTPUT_CURRENT = 30000;
-    static constexpr float CURRENT_TO_AMP = 3.0f / 16384.0f;
-    static constexpr int ENCODER_BITS = 13;                       ///< 机械角度量化位宽，码值 0～8191
-    static constexpr uint16_t ENCODER_MAX_RAW = 8191;           ///< 转子机械角最大值 [raw]
-    static constexpr float RATED_TORQUE_CONSTANT = 100.0f;  // mN·m/A
-    static constexpr float ORIGINAL_TRANSMISSION_RATIO = 1.0f;  // 直驱，无减速箱
+    static constexpr int16_t MAX_RAW_THETA = 8191;           // 转子机械角最大值 [raw] 0->8191 对应 0~360°
+    static constexpr int16_t MAX_RAW_CURRENT = 16384;           // 转矩电流反馈最大值 [raw] -16384->16384 对应 -3A~3A
+    static constexpr float MAX_CURRENT = 3.0f;              // 最大转矩电流 [A]
+    static constexpr float RATED_TORQUE_CONSTANT = 100.0f;      // 额定转矩常数 [mN·m/A]
+    static constexpr float ORIGINAL_TRANSMISSION_RATIO = 1.0f;    // 减速比，直驱无减速箱
 };
 
 /**

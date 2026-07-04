@@ -140,7 +140,6 @@ class CanMotorBase : public MotorBase, public ConnectionDriver {
      */
     virtual void PrintData() const = 0;
 
-    // ── 非虚 getter（基于虚函数，零额外虚表开销）──
 
     /**
      * @brief 获得转子角度与目标角度的差值
@@ -165,6 +164,7 @@ class CanMotorBase : public MotorBase, public ConnectionDriver {
      * @brief 构造 CAN 电机基类
      * @param online_threshold 连接离线判定阈值（单位：心跳周期数）
      */
+    // TODO online_threshold 时间不对
     explicit CanMotorBase(uint32_t online_threshold = 30);
 
     /**

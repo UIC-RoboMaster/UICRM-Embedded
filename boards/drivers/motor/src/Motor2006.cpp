@@ -44,11 +44,18 @@ void Motor2006::RxThunk(void* ctx, const uint8_t data[]) {
 void Motor2006::UpdateData(const uint8_t data[]) {
     state_.raw_theta = data[0] << 8 | data[1];
     state_.raw_omega = data[2] << 8 | data[3];
-    state_.raw_current = data[4] << 8 | data[5];
+    state_.raw_current = (int16_t)(data[4] << 8 | data[5]);
 
-    constexpr float OMEGA_SCALE = 2 * PI / 60;
-    state_.theta = uint_to_float(state_.raw_theta, 0, 2 * PI, Motor2006Config::ENCODER_BITS);
-    state_.omega = state_.raw_omega * OMEGA_SCALE;
+    // M2006 转子机械角度值范围为 0~8191
+    // 映射 theta 角度为 0~2PI
+    state_.theta = linear_remap<int16_t, float>(state_.raw_theta, 0, Motor2006Config::MAX_RAW_THETA, 0.0f, 2 * PI);
+    // 转子转速值单位为 rpm，rad/s = rpm * 2 * PI / 60
+    // 映射 omega 角速度为 rad/s
+    state_.omega = state_.raw_omega * 2 * PI / 60;
+    // C610 转矩电流反馈 raw_current ∈ [-10000, 10000] 对应 [-10A, 10A]
+    state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor2006Config::MAX_RAW_CURRENT,
+                                                  Motor2006Config::MAX_RAW_CURRENT, -Motor2006Config::MAX_CURRENT,
+                                                  Motor2006Config::MAX_CURRENT);
 
     FinishFeedbackUpdate();
 }
@@ -63,8 +70,7 @@ void Motor2006::PrintData() const {
 }
 
 void Motor2006::SetOutput(int16_t val) {
-    output_ = clip<int16_t>(val, -Motor2006Config::MAX_OUTPUT_CURRENT,
-                            Motor2006Config::MAX_OUTPUT_CURRENT);
+    output_ = clip<int16_t>(val, -Motor2006Config::MAX_RAW_CURRENT, Motor2006Config::MAX_RAW_CURRENT);
 }
 
 }  // namespace driver

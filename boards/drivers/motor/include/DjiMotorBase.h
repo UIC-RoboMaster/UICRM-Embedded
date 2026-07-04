@@ -38,6 +38,8 @@ struct DjiMotorState {
     // ── 编码器反馈 ──
     float theta = 0;              // 编码器角度 [rad], 范围 [0, 2PI]
     float omega = 0;              // 编码器角速度 [rad/s]
+    float current = 0;            // 电机电流 [A]
+    float temperature = 0;        // 电机温度 [°C]
 
     // ── 电机原始回传 ──
     int16_t raw_theta = 0;        // 转子机械角度（原始编码器角度）

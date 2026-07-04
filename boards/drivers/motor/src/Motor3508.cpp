@@ -44,12 +44,17 @@ void Motor3508::RxThunk(void* ctx, const uint8_t data[]) {
 void Motor3508::UpdateData(const uint8_t data[]) {
     state_.raw_theta = data[0] << 8 | data[1];
     state_.raw_omega = data[2] << 8 | data[3];
-    state_.raw_current = data[4] << 8 | data[5];
+    state_.raw_current = (int16_t)(data[4] << 8 | data[5]);
     state_.raw_temperature = data[6];
 
-    constexpr float OMEGA_SCALE = 2 * PI / 60;
-    state_.theta = uint_to_float(state_.raw_theta, 0, 2 * PI, Motor3508Config::ENCODER_BITS);
-    state_.omega = state_.raw_omega * OMEGA_SCALE;
+    state_.theta = linear_remap<int16_t, float>(state_.raw_theta, 0, Motor3508Config::MAX_RAW_THETA, 0.0f, 2 * PI);
+    // 转子转速值单位为 rpm，rad/s = rpm * 2 * PI / 60
+    // 映射 omega 角速度为 rad/s
+    state_.omega = state_.raw_omega * 2 * PI / 60;
+    // C620 转矩电流反馈 raw_current ∈ [-16384, 16384] 对应 [-20A, 20A]
+    state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor3508Config::MAX_RAW_CURRENT,
+                                                  Motor3508Config::MAX_RAW_CURRENT, -Motor3508Config::MAX_CURRENT,
+                                                  Motor3508Config::MAX_CURRENT);
 
     FinishFeedbackUpdate();
 }
@@ -65,8 +70,7 @@ void Motor3508::PrintData() const {
 }
 
 void Motor3508::SetOutput(int16_t val) {
-    output_ = clip<int16_t>(val, -Motor3508Config::MAX_OUTPUT_CURRENT,
-                            Motor3508Config::MAX_OUTPUT_CURRENT);
+    output_ = clip<int16_t>(val, -Motor3508Config::MAX_RAW_CURRENT, Motor3508Config::MAX_RAW_CURRENT);
 }
 
 }  // namespace driver

@@ -291,7 +291,7 @@ namespace control {
         float max_current = power_limit_.max_watt / power_limit_.voltage;
 
         // 根据缓冲区剩余能量，使用线性插值，计算最大电流。
-        max_current = max_current * linear_interpolation<int>(20, 80, 80, 150, power_limit_.buffer_percent) / 100;
+        max_current = max_current * linear_remap_clip(power_limit_.buffer_percent, 20, 80, 80.0f, 150.0f) / 100;
 
         // 获取数据
         int16_t turn_current[FourWheel::motor_num];
