@@ -134,7 +134,7 @@ class DjiMotorBase : public CanMotorBase {
 
     /**
      * @brief 更新电机的反馈数据
-     * @note 仅在 CAN 回调函数中使用，不要在其他地方调用
+     * @note 仅由子类实现；在 CAN 接收回调中调用，不要在其他地方调用
      * @param data[]  原始数据
      */
     void UpdateData(const uint8_t data[]) override;
@@ -208,12 +208,6 @@ class DjiMotorBase : public CanMotorBase {
      * @param enable true 表示输出轴不累计圈数
      */
     void SetAbsoluteMode(bool enable);
-
-    /**
-     * @brief 向 CAN 总线发送一帧数据
-     * @param data 8 字节数据帧
-     */
-    void SendPacket(const uint8_t data[8]);
 
     /**
      * @brief 更新电机的保持状态（DJI 模式专用逻辑）
@@ -333,32 +327,12 @@ class DjiMotorBase : public CanMotorBase {
      */
     void FinishFeedbackUpdate();
 
-    /**
-     * @brief 单圈绝对值编码器的角度追踪处理
-     * @note 子类在 UpdateData 中解析完协议后调用此方法
-     * @warning 这是使用单圈绝对值编码器的电机的角度处理，不通用于多圈编码器
-     */
-    void ProcessAngleTracking();
-
-    /**
-     * @brief 注册 CAN 接收回调
-     * @note 子类构造函数中调用一次即可，自动绑定到所属 CAN 的 rx_id
-     */
-    void RegisterCanCallback();
-
   private:
     control::ConstrainedPID omega_pid_;
     control::ConstrainedPID theta_pid_;
 
     callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
     void* error_callback_instance_ = nullptr;
-
-    /**
-     * @brief CAN 接收回调，转发至虚函数 UpdateData
-     * @param ctx  指向 DjiMotorBase 实例的指针
-     * @param data 原始 CAN 数据
-     */
-    static void RxThunk(void* ctx, const uint8_t data[]);
 
     /**
      * @brief DJI CAN 电机分组结构体

@@ -134,14 +134,6 @@ void DjiMotorBase::CanMotorThread(void* args) {
     }
 }
 
-void DjiMotorBase::RxThunk(void* ctx, const uint8_t data[]) {
-    static_cast<DjiMotorBase*>(ctx)->UpdateData(data);
-}
-
-void DjiMotorBase::RegisterCanCallback() {
-    CanMotorBase::RegisterCanCallback(state_.can, state_.rx_id, &DjiMotorBase::RxThunk, this);
-}
-
 void DjiMotorBase::FinishFeedbackUpdate() {
     AngleTrackingContext ctx{
         state_.theta,
@@ -158,10 +150,6 @@ void DjiMotorBase::FinishFeedbackUpdate() {
     CanMotorBase::ProcessAngleTracking(ctx);
     Heartbeat();
     UpdateHoldingState();
-}
-
-void DjiMotorBase::ProcessAngleTracking() {
-    FinishFeedbackUpdate();
 }
 
 float DjiMotorBase::GetTheta() const {
@@ -213,15 +201,9 @@ void DjiMotorBase::SetAbsoluteMode(bool enable) {
     state_.absolute_mode = enable;
 }
 
-void DjiMotorBase::SendPacket(const uint8_t data[8]) {
-    state_.can->Transmit(state_.tx_id, data, 8);
-}
-
 void DjiMotorBase::UpdateData(const uint8_t data[]) {
     UNUSED(data);
-    // TODO 基类模板是否可用
-    // RM_ASSERT_TRUE(false, "DjiMotorBase::UpdateData should be implemented by derived motor");
-    FinishFeedbackUpdate();
+    RM_ASSERT_TRUE(false, "DjiMotorBase::UpdateData must be implemented by derived motor");
 }
 
 void DjiMotorBase::UpdateHoldingState() {
