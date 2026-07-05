@@ -79,9 +79,6 @@ struct DmMotorState {
     uint16_t rx_id = 0;       // 反馈帧 电机内设定的 Master ID
     uint16_t tx_id = 0;       // 控制帧 电机内设定的 CAN ID
 
-    // ── 时间戳 ──
-    uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳
-
     volatile bool feedback_pending = false;  // 是否收到新的反馈
 
     // ── DM 控制配置 ──
