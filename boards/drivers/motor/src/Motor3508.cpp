@@ -55,7 +55,7 @@ void Motor3508::UpdateData(const uint8_t data[]) {
                                                   Motor3508Config::MAX_RAW_CURRENT, -Motor3508Config::MAX_CURRENT,
                                                   Motor3508Config::MAX_CURRENT);
 
-    FinishFeedbackUpdate();
+    state_.feedback_pending = true;
 }
 
 void Motor3508::PrintData() const {

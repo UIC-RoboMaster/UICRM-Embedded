@@ -56,7 +56,7 @@ void Motor2006::UpdateData(const uint8_t data[]) {
                                                   Motor2006Config::MAX_RAW_CURRENT, -Motor2006Config::MAX_CURRENT,
                                                   Motor2006Config::MAX_CURRENT);
 
-    FinishFeedbackUpdate();
+    state_.feedback_pending = true;
 }
 
 void Motor2006::PrintData() const {

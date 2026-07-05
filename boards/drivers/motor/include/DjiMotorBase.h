@@ -75,6 +75,8 @@ struct DjiMotorState {
     uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳
     uint32_t motor_update_time_interval;   // CAN 回传间隔 [us]
 
+    volatile bool feedback_pending = false;  // 是否收到新的反馈
+
     // ── DJI 专属控制字段 ──
     float target = 0;                      // 目标值：角度 [rad] 或 角速度 [rad/s]
     float speed_offset = 0;                // 前馈速度偏移
@@ -323,7 +325,7 @@ class DjiMotorBase : public CanMotorBase {
 
     /**
      * @brief 完成反馈更新：角度追踪 + 心跳 + 保持状态
-     * @note 子类 UpdateData 解析完协议后调用
+     * @note CalcOutput 开头在 feedback_pending 时调用；ISR 内 UpdateData 仅置位 pending
      */
     void FinishFeedbackUpdate();
 

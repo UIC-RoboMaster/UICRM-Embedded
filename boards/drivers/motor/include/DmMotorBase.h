@@ -82,6 +82,8 @@ struct DmMotorState {
     // ── 时间戳 ──
     uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳
 
+    volatile bool feedback_pending = false;  // 是否收到新的反馈
+
     // ── DM 控制配置 ──
     dm_mode_t mode;        // 操作模式（MIT/POS_VEL/VEL）
 
@@ -211,7 +213,7 @@ class DmMotorBase : public CanMotorBase {
 
     /**
      * @brief 完成反馈更新：角度追踪 + 心跳
-     * @note 子类 UpdateData 解析完协议后调用
+     * @note CalcOutput 开头在 feedback_pending 时调用；ISR 内 UpdateData 仅置位 pending
      */
     void FinishFeedbackUpdate();
 

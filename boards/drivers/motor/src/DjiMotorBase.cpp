@@ -240,6 +240,11 @@ void DjiMotorBase::SetTarget(float target, bool override) {
 }
 
 void DjiMotorBase::CalcOutput() {
+    if (state_.feedback_pending) {
+        FinishFeedbackUpdate();
+        state_.feedback_pending = false;
+    }
+
     if (!state_.enable) {
         // 如果电机被禁用，则清空 PID 积分项并输出 0
         SetOutput(0);

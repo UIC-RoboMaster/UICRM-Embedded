@@ -58,7 +58,7 @@ void Motor6020::UpdateData(const uint8_t data[]) {
     state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor6020Config::MAX_RAW_CURRENT, Motor6020Config::MAX_RAW_CURRENT,
                                   -Motor6020Config::MAX_CURRENT, Motor6020Config::MAX_CURRENT);
 
-    FinishFeedbackUpdate();
+    state_.feedback_pending = true;
 }
 
 void Motor6020::PrintData() const {

@@ -154,6 +154,11 @@ void DmMotorBase::DmMotorThread(void* args) {
 }
 
 void DmMotorBase::CalcOutput() {
+    if (state_.feedback_pending) {
+        FinishFeedbackUpdate();
+        state_.feedback_pending = false;
+    }
+
     if (!state_.enable) {
         return;
     }
@@ -275,7 +280,7 @@ void DMMotor4310::UpdateData(const uint8_t data[]) {
     state_.torque = linear_remap<uint16_t, float>(state_.raw_torque, static_cast<uint16_t>(0), MIT_PARAM_MAX_RAW,
                                                   T_MIN, T_MAX);
 
-    FinishFeedbackUpdate();
+    state_.feedback_pending = true;
 }
 
 void DMMotor4310::PrintData() const {
