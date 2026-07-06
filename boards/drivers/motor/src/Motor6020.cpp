@@ -31,8 +31,9 @@ Motor6020::Motor6020(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     }
     state_.transmission_ratio = Motor6020Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor6020Config::RATED_TORQUE_CONSTANT;
-    // 绝对位置电机不需要初始化 align_angle_
-    // TODO ??
+    max_current_amp_ = Motor6020Config::MAX_CURRENT;
+    max_raw_current_ = Motor6020Config::MAX_RAW_CURRENT;
+    // GM6020 使用绝对值编码器，直接将上电角度初始化为 0
     state_.power_on_angle = 0;
     CanMotorBase::RegisterCanCallback(can, rx_id, &Motor6020::RxThunk, this);
 }

@@ -80,6 +80,7 @@ struct DjiMotorState {
     // ── DJI 专属控制字段 ──
     float target = 0;                      // 目标值：角度 [rad] 或 角速度 [rad/s]
     float speed_offset = 0;                // 前馈速度偏移
+    float target_torque = 0;              // EFFORT 模式下趋近目标角的力矩幅值 [N·m]
     float proximity_in = 0.05;             // 进入保持状态的临界角度差
     float proximity_out = 0.15;            // 退出保持状态的临界角度差
     bool holding = true;                   // 角度模式下是否已达目标
@@ -107,6 +108,8 @@ class DjiMotorBase : public CanMotorBase {
         OMEGA = 0x02,
         // 启用角度环控制
         THETA = 0x04,
+        // 恒力矩趋近目标角；到位后自动切 THETA|OMEGA PID 保持。须与 THETA 联用
+        EFFORT = 0x08,
         // 反转电机方向
         INVERTED = 0x40,
         // ABSOLUTE 模式下，认为输出轴只有一圈。电机输出轴角度不会累计，被限制在 [0,
@@ -300,16 +303,15 @@ class DjiMotorBase : public CanMotorBase {
     void SetSpeedOffset(float offset);
 
     /**
-     * @brief 设置电机扭矩（力矩控制模式）
-     * @note 需先通过 SetMode(CURRENT) 切换到力矩控制模式
-     * @param torque_nm 目标扭矩 [N·m]，内部换算：raw = torque_nm * 1000 / (torque_constant_ * RAW_CURRENT_TO_AMP)
-     * @param override 是否覆盖之前的目标
+     * @brief 设置目标力矩 [N·m]
+     * @note CURRENT 模式：带符号恒力矩，直接输出；须 SetMode(CURRENT)
+     * @note EFFORT 模式：力矩幅值（取绝对值），方向由角度误差决定；须 SetMode(THETA | EFFORT) + SetTarget
+     * @param override 仅 CURRENT 模式有效
      */
     void SetTorque(float torque_nm, bool override = true);
 
     /**
-     * @brief 获取当前电机扭矩
-     * @return 当前扭矩 [N·m]，换算公式：raw_current * RAW_CURRENT_TO_AMP * torque_constant_ / 1000
+     * @brief 获取反馈力矩 [N·m]
      */
     float GetTorque() const;
 
@@ -317,11 +319,12 @@ class DjiMotorBase : public CanMotorBase {
     DjiMotorState state_;  // 电机全部状态数据（反馈 + 控制）
     int16_t output_ = 0;   // 当前输出电流指令 [raw]
 
-    /// DJI CAN 协议：raw_current ∈ [-16384, 16384] 对应转矩电流 ∈ [-3A, 3A]
-    static constexpr float RAW_CURRENT_TO_AMP = 3.0f / 16384.0f;
-
-    /// 转矩常数 [mN·m/A]，由各子类构造函数根据电机规格设置
+    /// 转矩常数 [N·m/A]，由各子类构造函数根据电机规格设置
     float torque_constant_ = 0;
+
+    /// 电流物理量程 [A]、原始码值量程 [raw]，用于力矩↔电流 raw 换算
+    float max_current_amp_ = 0;
+    int16_t max_raw_current_ = 0;
 
     /**
      * @brief 完成反馈更新：角度追踪 + 心跳 + 保持状态

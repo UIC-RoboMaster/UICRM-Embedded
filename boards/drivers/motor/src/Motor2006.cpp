@@ -33,6 +33,8 @@ Motor2006::Motor2006(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     }
     state_.transmission_ratio = Motor2006Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor2006Config::RATED_TORQUE_CONSTANT;
+    max_current_amp_ = Motor2006Config::MAX_CURRENT;
+    max_raw_current_ = Motor2006Config::MAX_RAW_CURRENT;
     CanMotorBase::RegisterCanCallback(can, rx_id, &Motor2006::RxThunk, this);
 }
 

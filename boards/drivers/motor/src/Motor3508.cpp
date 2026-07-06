@@ -33,6 +33,8 @@ Motor3508::Motor3508(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     }
     state_.transmission_ratio = Motor3508Config::ORIGINAL_TRANSMISSION_RATIO;
     torque_constant_ = Motor3508Config::RATED_TORQUE_CONSTANT;
+    max_current_amp_ = Motor3508Config::MAX_CURRENT;
+    max_raw_current_ = Motor3508Config::MAX_RAW_CURRENT;
     CanMotorBase::RegisterCanCallback(can, rx_id, &Motor3508::RxThunk, this);
 }
 

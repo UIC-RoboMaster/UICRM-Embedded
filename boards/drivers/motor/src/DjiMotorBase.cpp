@@ -262,6 +262,28 @@ void DjiMotorBase::CalcOutput() {
         return;
     }
 
+    // 恒力矩趋近目标角；到位后去掉 EFFORT、启用 OMEGA，落入下方 PID 保持
+    if (state_.mode & EFFORT) {
+        UpdateHoldingState();
+
+        // 如果电机没有在 hold 状态，则输出目标力矩
+        if (!state_.holding) {
+            float diff = state_.target - GetOutputShaftTheta();
+
+            // 如果电机处于绝对模式，则将差值限制在 -PI 到 PI 之间
+            if (state_.mode & ABSOLUTE)
+                diff = wrap<float>(diff, -PI, PI);
+            
+            float target_current = (diff >= 0.0f ? state_.target_torque : -state_.target_torque) / torque_constant_;
+            SetOutput((int16_t)linear_remap(target_current, -max_current_amp_, max_current_amp_,
+                                            (float)-max_raw_current_, (float)max_raw_current_));
+            return;
+        }
+        
+        // 以恒力矩趋近目标角，到位后去掉 EFFORT、启用 OMEGA，用 PID 精细修正
+        state_.mode = (state_.mode & ~EFFORT) | OMEGA;
+    }
+
     float target = state_.target;
 
     // 最新收到的 CAN 包的时间戳
@@ -354,14 +376,19 @@ void DjiMotorBase::SetSpeedOffset(float offset) {
 
 void DjiMotorBase::SetTorque(float torque_nm, bool override) {
     RM_ASSERT_TRUE(torque_constant_ > 0, "Torque constant not set for this motor");
-    // torque_nm [N·m] → Amp → raw_current
-    float raw_current = torque_nm * 1000.0f / (torque_constant_ * RAW_CURRENT_TO_AMP);
-    SetTarget(raw_current, override);
+    if (state_.mode & CURRENT) {
+        RM_ASSERT_TRUE(max_current_amp_ > 0, "Current range not configured for this motor");
+        float current_a = torque_nm / torque_constant_;
+        SetTarget((float)(int16_t)linear_remap(current_a, -max_current_amp_, max_current_amp_,
+                                               (float)-max_raw_current_, (float)max_raw_current_),
+                  override);
+    } else {
+        state_.target_torque = fabsf(torque_nm);
+    }
 }
 
 float DjiMotorBase::GetTorque() const {
-    // raw_current → Amp → N·m
-    return state_.raw_current * RAW_CURRENT_TO_AMP * torque_constant_ / 1000.0f;
+    return state_.current * torque_constant_;
 }
 
 void DjiMotorBase::RegisterErrorCallback(DjiMotorBase::callback_t callback, void* instance) {
