@@ -99,8 +99,8 @@ void CanMotorBase::FinishFeedbackUpdate(AngleTrackingContext ctx) {
     Heartbeat();
 }
 
-void CanMotorBase::TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8]) {
-    can->Transmit(tx_id, data, 8);
+void CanMotorBase::TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8], uint8_t dlc) {
+    can->Transmit(tx_id, data, dlc);
 }
 
 }  // namespace driver

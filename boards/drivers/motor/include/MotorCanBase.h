@@ -185,9 +185,10 @@ class CanMotorBase : public ConnectionDriver {
      * @brief 向 CAN 总线发送一帧标准数据
      * @param can   CAN 硬件对象
      * @param tx_id 发送报文标识符
-     * @param data  8 字节数据帧
+     * @param data  数据缓冲区（至少 dlc 字节有效）
+     * @param dlc   数据长度 [字节]，默认 8
      */
-    static void TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8]);
+    static void TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8], uint8_t dlc = 8);
 
     /// CAN 接收回调函数指针类型（不经 vtable）
     using CanRxHandler = void (*)(void* ctx, const uint8_t data[]);

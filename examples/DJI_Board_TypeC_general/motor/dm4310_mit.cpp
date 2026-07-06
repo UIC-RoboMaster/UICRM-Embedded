@@ -43,10 +43,10 @@ void RM_RTOS_Init() {
 
     can1 = new bsp::CAN(&hcan1, true);
     // MIT 模式：电机内部运行位置-速度-力矩控制器
-    motor1 = new driver::DMMotor4310(can1, 0x009, 0x001, driver::MIT);
+    motor1 = new driver::DMMotor4310(can1, 0x009, 0x001, driver::DmControlMode::MIT);
 
     // DM4310 需要显式发送使能命令后才能接受运行时控制帧
-    motor1->MotorEnable();
+    motor1->Enable();
     HAL_Delay(100);
 
     // 设置初始目标：保持当前位置，速度为 0

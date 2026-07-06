@@ -27,110 +27,195 @@
 namespace driver {
 
 /**
- * @brief 达妙电机的控制模式
- * @note 该枚举值对应 DM 电机的 CAN 控制帧 ID 偏移量，详见 m4310 文档。
+ * @brief 达妙电机传统模式控制方式
+ * @note 枚举值对应 CAN 控制帧 ID 偏移量：tx_id = motor_can_id + mode
  */
-typedef enum {
-    MIT = 0x000,
-    POS_VEL = 0x100,
-    VEL = 0x200,
-} dm_mode_t;
-
-/**
- * @brief 达妙 (DM) 电机特有状态结构体
- *
- * 存放 DM 品牌独有的回传数据与设定值。
- * 所有字段集中在 DmMotorState 中，调试时一次展开即可看到全面信息。
- */
-struct DmMotorState {
-    // ── 反馈物理量──
-    float theta = 0;                // POS 电机位置 [rad]
-    float omega = 0;                // VEL 电机速度 [rad/s]
-    float torque = 0;               // T 电机扭矩 [Nm]
-
-
-    // ── 原始回传 ──
-    uint8_t id = 0;                 // ID 控制器 ID（CAN ID 低 4 位）
-    uint8_t error = 0;                // ERR 状态码
-    uint16_t raw_position = 0;      // 原始电机位置 POS [rad]
-    int16_t raw_velocity = 0;       // 原始电机速度信息 VEL [rad/s]
-    uint16_t raw_torque = 0;        // 原始电机力矩信息 T [Nm]
-    uint8_t mos_temperature = 0;    // T_MOS 驱动 MOS 平均温度 [deg C]
-    uint8_t rotor_temperature = 0;  // T_Rotor 电机线圈平均温度 [deg C]
-    
-
-    // ── 输出轴 ──
-    float output_shaft_theta = 0; // 输出轴累计角度 [rad]
-    float output_shaft_omega = 0; // 输出轴角速度 [rad/s]
-
-    // ── 角度追踪 ──
-    float power_on_angle = -1;           // 上电时的编码器角度 [rad]（-1 表示未初始化）
-    float relative_angle = 0;            // 编码器相对上电角度的角度 [rad]
-    float output_cumulated_angle = 0;    // 输出轴累计角度 [rad]（由回绕事件 ±2PI 累加）
-    float output_relative_angle = 0;     // 输出轴当前圈内角度 [rad], 范围 [0, 2PI]
-
-    // ── 配置 ──
-    float transmission_ratio = 1;  // 减速比
-    bool enable = true;            // 使能
-    bool absolute_mode = false;    // 绝对模式：输出轴不累计圈数
-
-    // ── CAN 连接 ──
-    bsp::CAN* can = nullptr;  // CAN 硬件对象
-    uint16_t rx_id = 0;       // 反馈帧 电机内设定的 Master ID
-    uint16_t tx_id = 0;       // 控制帧 电机内设定的 CAN ID
-
-    volatile bool feedback_pending = false;  // 是否收到新的反馈
-
-    // ── DM 控制配置 ──
-    dm_mode_t mode;        // 操作模式（MIT/POS_VEL/VEL）
-
-    // ── MIT 控制帧设定值 ──
-    float position_setpoint = 0;        // p_des 期望位置 [rad]
-    float velocity_setpoint = 0;        // v_des 期望速度 [rad/s]
-    float kp_setpoint = 0;              // Kp 位置增益
-    float kd_setpoint = 0;              // Kd 速度增益
-    float torque_feedforward = 0;       // t_ff 前馈扭矩 [Nm]
+enum class DmControlMode : uint16_t {
+    MIT = 0x000,      ///< MIT 模式，8 字节位域打包
+    POS_VEL = 0x100,  ///< 位置速度模式，float 位置 + float 速度
+    VEL = 0x200,      ///< 速度模式，float 速度，DLC=4
+    EMIT = 0x300,     ///< 协议保留，驱动未实现
 };
 
 /**
- * @brief 达妙 (DM) 电机的通用基类
+ * @brief 达妙电机传统模式反馈状态（反馈帧 Byte0 高 4 位）
+ */
+enum class DmControlStatus : uint8_t {
+    DISABLE = 0x0,          ///< 未使能
+    ENABLE = 0x1,           ///< 正常运行
+    OVERVOLTAGE = 0x8,      ///< 过压
+    UNDERVOLTAGE = 0x9,     ///< 欠压
+    OVERCURRENT = 0xA,      ///< 过流
+    MOS_OVERTEMP = 0xB,     ///< MOS 过温
+    ROTOR_OVERTEMP = 0xC,   ///< 线圈过温
+    LOSE_CONNECTION = 0xD,  ///< 失联
+    MOS_OVERLOAD = 0xE,     ///< MOS 过载
+};
+
+/**
+ * @brief 达妙电机传统模式反馈（CAN 8 字节解码后的 plain 字段）
+ *
+ * 布局与 RoboWalker Struct_Motor_DM_CAN_Rx_Data_Normal 一致；
+ * 由 DmRxFeedback::Load 从原始字节显式解析，非 bitfield memcpy。
+ */
+struct DmRxFeedback {
+    uint8_t motor_id;              ///< 电机 CAN ID 低 4 位
+    DmControlStatus status;          ///< 控制状态
+    uint16_t encoder;              ///< 16-bit 编码器 raw（大端已解码）
+    uint16_t omega;                ///< 12-bit 速度 raw（已拼好）
+    uint16_t torque;               ///< 12-bit 力矩 raw（已拼好）
+    uint8_t mos_temp;              ///< MOS 温度 [deg C]
+    uint8_t rotor_temp;            ///< 线圈温度 [deg C]
+
+    /**
+     * @brief 从 CAN 接收缓冲区载入报文
+     * @param data 8 字节 CAN 载荷
+     */
+    void Load(const uint8_t data[8]);
+};
+
+/**
+ * @brief 达妙电机传统模式 MIT 控制帧（8 字节）
+ */
+struct DmTxFrameMit {
+    /**
+     * @brief 物理 setpoint + 量程 → 8 字节 MIT 帧
+     * @note  发送前内部 clip；位置大端，12-bit 参数位域交织
+     */
+    static void Pack(uint8_t data[8], float pos, float vel, float kp, float kd, float torque, float angle_max,
+                     float omega_max, float torque_max, float kp_max, float kd_max, uint16_t pos_max_raw,
+                     uint16_t mit_param_max_raw);
+};
+
+/**
+ * @brief 达妙电机传统模式位置速度控制帧（8 字节）
+ */
+struct DmTxFramePosVel {
+    /**
+     * @brief float 位置 + float 速度 → 8 字节帧
+     */
+    static void Pack(uint8_t data[8], float pos, float vel, float angle_max, float omega_max);
+};
+
+/**
+ * @brief 达妙电机传统模式速度控制帧（4 字节）
+ */
+struct DmTxFrameVel {
+    /**
+     * @brief float 速度 → 4 字节帧
+     */
+    static void Pack(uint8_t data[4], float vel, float omega_max);
+};
+
+/**
+ * @brief 达妙 (DM) 电机运行时状态
+ *
+ * 解析后的物理量、角度追踪、控制设定与同步标志；原始反馈见 rx。
+ */
+struct DmMotorState {
+    DmRxFeedback rx;  ///< 最近一次反馈（raw 整数域）
+
+    // ── 反馈物理量 ──
+    float theta = 0;   ///< 电机位置 [rad]
+    float omega = 0;   ///< 电机速度 [rad/s]
+    float torque = 0;  ///< 电机力矩 [N·m]
+
+    // ── 输出轴 ──
+    float output_shaft_theta = 0;  ///< 输出轴角度 [rad]
+    float output_shaft_omega = 0;  ///< 输出轴角速度 [rad/s]
+
+    // ── 角度追踪 ──
+    float power_on_angle = -1;        ///< 上电编码器角 [rad]（-1 未初始化）
+    float relative_angle = 0;         ///< 相对上电角 [rad]
+    float output_cumulated_angle = 0; ///< 输出轴累计角 [rad]
+    float output_relative_angle = 0;  ///< 输出轴圈内角 [rad]，[0, 2π]
+
+    // ── 配置 ──
+    float transmission_ratio = 1;  ///< 减速比
+    bool enable = true;          ///< 软件使能
+    bool absolute_mode = false;  ///< 绝对模式（输出轴不累计圈数）
+
+    volatile bool feedback_pending = false;  ///< ISR 置位，CalcOutput 消费
+
+    // ── 控制 ──
+    DmControlMode mode = DmControlMode::MIT;
+    float position_setpoint = 0;
+    float velocity_setpoint = 0;
+    float kp_setpoint = 0;
+    float kd_setpoint = 0;
+    float torque_setpoint = 0;
+};
+
+/**
+ * @brief 达妙 (DM) 电机传统模式通用基类
  *
  * 在 CanMotorBase 的基础上提供 DM 品牌电机共用的能力：
- * - CAN 发送 ID 管理
- * - 使能/禁用/归零命令（0xFC/0xFD/0xFE 通用协议）
+ * - 控制模式与 tx_id 管理（MIT / POS_VEL / VEL）
+ * - 管理帧：使能、禁用、归零、清错（发往 motor_can_id）
+ * - 后台线程周期性调用 CalcOutput() 完成反馈解析与控制帧发送
  */
 class DmMotorBase : public CanMotorBase {
   public:
-    /**
-     * @brief 基础构造函数
-     * @param can    CAN 对象
-     * @param rx_id  主控接收 ID
-     * @param tx_id  CAN 发送 ID（软件配置的 ID，非实际线路 ID）
-     */
-    DmMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id);
-
     float GetTheta() const override;
     float GetOmega() const override;
     float GetOutputShaftTheta() const override;
     float GetOutputShaftOmega() const override;
+
+    /**
+     * @brief 使能电机（DM 管理帧 0xFC，发往 motor_can_id）
+     */
     void Enable() override;
+
+    /**
+     * @brief 禁用电机（DM 管理帧 0xFD，发往 motor_can_id）
+     */
     void Disable() override;
+
     bool IsEnable() const override;
+
+    /**
+     * @brief 满足 CanMotorBase 虚接口；DM 无 DJI 式电流 raw 输出
+     * @return 恒为 0（功率限制等场景请用 DJI 电机接口）
+     */
     int16_t GetOutput() override;
+
+    /**
+     * @brief 不支持；DM 请使用 SetTarget() 或 SetOutput(float)
+     * @note  仅为满足 CanMotorBase 纯虚接口，调用将触发断言
+     */
     void SetOutput(int16_t val) override;
 
     /**
-     * @brief 设置电机零点（DM 协议 0xFE 命令）
+     * @brief 设置电机零点（DM 管理帧 0xFE，发往 motor_can_id）
      */
     virtual void SetZeroPos();
 
     /**
-     * @brief 传输数据到电机（按 mode 打包 MIT/POS_VEL/VEL 控制帧）
+     * @brief 清除电机错误状态（DM 管理帧 0xFB，发往 motor_can_id）
+     * @note  CalcOutput 在过压/过流/过温等错误态时自动调用
+     */
+    virtual void ClearError();
+
+    /**
+     * @brief 按当前控制模式打包并发送控制帧（发往 tx_id）
+     *
+     * MIT：16-bit 位置 + 12-bit 速度/力矩/Kp/Kd 位域交织，发送前 clip 并做 0x7ff 零点映射
+     * POS_VEL：float 位置 + float 速度，DLC=8
+     * VEL：float 速度，DLC=4
      */
     virtual void TransmitOutput();
 
     /**
-     * @brief 计算并传输输出（由后台线程定期调用）
+     * @brief 后台线程周期任务：解析反馈并按 control_status 发送控制/管理帧
+     *
+     * 反馈 pending 时调用 ParseFeedbackNormal + FinishFeedbackUpdate（含 Heartbeat）。
+     * 软件 enable 为 false 时不发送。
+     * 否则按电机反馈 control_status 分支：
+     * - ENABLE → TransmitOutput()
+     * - DISABLE → Enable() 重试使能
+     * - 错误态（过压/过流/过温/失联等）→ ClearError() 后 Enable()
+     *
+     * @note IsOnline() 由 Heartbeat 维护；control_status 为 DM 协议层状态，两者并存。
      */
     void CalcOutput();
 
@@ -150,63 +235,112 @@ class DmMotorBase : public CanMotorBase {
     float GetTorque() const;
 
     /**
-     * @brief 设置电机的输出参数（MIT 模式）
-     * @note  手动模式使用；自动模式请用 SetTarget
+     * @brief 获取电机反馈状态
+     */
+    DmControlStatus GetControlStatus() const;
+
+    /**
+     * @brief 设置控制模式，并更新控制帧 tx_id
+     * @param mode 控制模式（MIT/POS_VEL/VEL）
+     */
+    void SetMode(DmControlMode mode);
+
+    /**
+     * @brief 设置 MIT 模式控制量（直接写 setpoint，不校验模式）
+     * @param position 期望位置 [rad]
+     * @param velocity 期望速度 [rad/s]
+     * @param kp       位置增益
+     * @param kd       速度增益
+     * @param torque   前馈力矩 [N·m]
+     * @note  闭环控制请用 SetTarget；TransmitOutput 发送前会 clip 到量程
      */
     void SetOutput(float position, float velocity, float kp, float kd, float torque);
 
     /**
-     * @brief 设置电机的输出参数（POS_VEL 模式）
+     * @brief 设置 POS_VEL 模式控制量
+     * @param position 期望位置 [rad]
+     * @param velocity 期望速度 [rad/s]
      */
     void SetOutput(float position, float velocity);
 
     /**
-     * @brief 设置电机的输出参数（VEL 模式）
+     * @brief 设置 VEL 模式控制量
+     * @param velocity 期望速度 [rad/s]
      */
     void SetOutput(float velocity);
 
     /**
-     * @brief 设置电机目标（VEL 模式单参数快捷方式）
-     * @note  重写基类虚函数，仅在 VEL 模式下有效，否则触发断言
+     * @brief 设置 VEL 模式目标速度
+     * @param target   期望速度 [rad/s]
+     * @param override 保留参数，与基类接口一致
+     * @note  仅在 VEL 模式下有效，否则触发断言
      */
     void SetTarget(float target, bool override = true) override;
 
     /**
-     * @brief 设置电机目标（MIT 模式）
+     * @brief 设置 MIT 模式目标
+     * @param position 期望位置 [rad]
+     * @param velocity 期望速度 [rad/s]
+     * @param kp       位置增益
+     * @param kd       速度增益
+     * @param t_ff     前馈力矩 [N·m]
      * @note  仅在 MIT 模式下有效，否则触发断言
      */
     void SetTarget(float position, float velocity, float kp, float kd, float t_ff);
 
     /**
-     * @brief 设置电机目标（POS_VEL 模式）
+     * @brief 设置 POS_VEL 模式目标
+     * @param position 期望位置 [rad]
+     * @param velocity 期望速度 [rad/s]
      * @note  仅在 POS_VEL 模式下有效，否则触发断言
      */
     void SetTarget(float position, float velocity);
 
-    /** @deprecated 请使用 Enable() */
-    void MotorEnable() { Enable(); }
-
-    /** @deprecated 请使用 Disable() */
-    void MotorDisable() { Disable(); }
-
   protected:
-    DmMotorState state_;  // DM 电机全部状态数据（反馈 + 控制）
+    /**
+     * @brief 基础构造函数
+     * @param can           CAN 对象
+     * @param master_id     主控接收 ID（Master ID）
+     * @param motor_can_id  电机本体 CAN ID
+     * @param mode          控制模式
+     * @param angle_max     最大位置 [rad]，与上位机 PMAX 一致
+     * @param omega_max     最大速度 [rad/s]，与上位机 VMAX 一致
+     * @param torque_max    最大扭矩 [N·m]，与上位机 TMAX 一致
+     * @param kp_max        MIT 模式 Kp 上限
+     * @param kd_max        MIT 模式 Kd 上限
+     * @param pos_max_raw   位置 raw 满量程
+     * @param mit_param_max_raw  MIT 12-bit 参数满量程
+     */
+    DmMotorBase(bsp::CAN* can, uint16_t master_id, uint16_t motor_can_id, DmControlMode mode,
+                float angle_max, float omega_max, float torque_max, float kp_max, float kd_max,
+                uint16_t pos_max_raw, uint16_t mit_param_max_raw);
 
-    // DM m4310 量程常量
-    static constexpr float P_MIN = -12.5f;
-    static constexpr float P_MAX = 12.5f;
-    static constexpr float V_MIN = -45.0f;
-    static constexpr float V_MAX = 45.0f;
-    static constexpr float T_MIN = -18.0f;
-    static constexpr float T_MAX = 18.0f;
-    static constexpr float KP_MIN = 0.0f;
-    static constexpr float KP_MAX = 500.0f;
-    static constexpr float KD_MIN = 0.0f;
-    static constexpr float KD_MAX = 5.0f;
-    static constexpr int POS_BITS = 16;
-    static constexpr uint16_t POS_MAX_RAW = (1u << POS_BITS) - 1u;
-    static constexpr int MIT_PARAM_BITS = 12;
-    static constexpr uint16_t MIT_PARAM_MAX_RAW = (1u << MIT_PARAM_BITS) - 1u;
+    DmMotorState state_;
+
+    bsp::CAN* can_ = nullptr;       ///< CAN 硬件对象
+    uint16_t rx_id_ = 0;            ///< 反馈帧 Master ID
+    uint16_t motor_can_id_ = 0;     ///< 电机本体 CAN ID（管理帧目标）
+    uint16_t tx_id_ = 0;            ///< 控制帧 CAN ID = motor_can_id + 模式偏移
+
+    float angle_max_ = 0;   ///< 最大位置 [rad]
+    float omega_max_ = 0;   ///< 最大速度 [rad/s]
+    float torque_max_ = 0;  ///< 最大扭矩 [N·m]
+    float kp_max_ = 0;      ///< MIT Kp 上限
+    float kd_max_ = 0;      ///< MIT Kd 上限
+    uint16_t pos_max_raw_ = 0;
+    uint16_t mit_param_max_raw_ = 0;
+
+    /// 传统模式 16-bit MIT 位置命令零点（达妙协议 0x7fff）
+    static constexpr uint16_t MIT_POS_ZERO_RAW = 0x7fff;
+
+    /// 传统模式 12-bit 速度/力矩/Kp/Kd 零点（反馈与 MIT 发送共用 0x7ff）
+    static constexpr uint16_t FEEDBACK_PARAM_ZERO_RAW = 0x7ff;
+
+    /**
+     * @brief 传统模式反馈解析：raw → 物理量
+     * @note CalcOutput 在 feedback_pending 时调用，再进入 FinishFeedbackUpdate
+     */
+    void ParseFeedbackNormal();
 
     /**
      * @brief 完成反馈更新：角度追踪 + 心跳
@@ -229,6 +363,25 @@ class DmMotorBase : public CanMotorBase {
 };
 
 /**
+ * @brief DM M4310 电机配置
+ *
+ * 传统模式量程默认值，与上位机 PMAX/VMAX/TMAX 及 J4310 默认参数一致。
+ */
+struct DmMotor4310Config {
+    static constexpr float ANGLE_MAX = 12.5f;           ///< 最大位置 [rad]
+    static constexpr float OMEGA_MAX = 45.0f;           ///< 最大速度 [rad/s]
+    static constexpr float TORQUE_MAX = 18.0f;          ///< 最大扭矩 [N·m]
+    static constexpr float KP_MAX = 500.0f;             ///< MIT Kp 上限
+    static constexpr float KD_MAX = 5.0f;               ///< MIT Kd 上限
+    static constexpr float TRANSMISSION_RATIO = 1.0f;   ///< 减速比，直驱无减速箱
+
+    static constexpr int POS_BITS = 16;
+    static constexpr uint16_t POS_MAX_RAW = (1u << POS_BITS) - 1u;
+    static constexpr int MIT_PARAM_BITS = 12;
+    static constexpr uint16_t MIT_PARAM_MAX_RAW = (1u << MIT_PARAM_BITS) - 1u;
+};
+
+/**
  * @brief 达妙 4310 电机的标准类
  *
  * @note DM 4310 电机使用 MIT/POS_VEL/VEL 三种模式，
@@ -238,12 +391,13 @@ class DMMotor4310 : public DmMotorBase {
   public:
     /**
      * @brief 基础构造函数
-     * @param can    CAN 对象
-     * @param rx_id  主控接收 ID
-     * @param tx_id  软件配置的 CAN ID
-     * @param mode   操作模式
+     * @param can           CAN 对象
+     * @param master_id     主控接收 ID（Master ID）
+     * @param motor_can_id  电机本体 CAN ID（上位机 CAN_ID）
+     * @param mode          操作模式
      */
-    DMMotor4310(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id, dm_mode_t mode);
+    DMMotor4310(bsp::CAN* can, uint16_t master_id, uint16_t motor_can_id,
+                DmControlMode mode = DmControlMode::MIT);
 
     /**
      * @brief 更新电机的反馈数据
