@@ -12,3 +12,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_oled
 uicrm_add_arm_executable(${PROJECT_NAME}_usb
         TARGET ${BOARD_NAME}
         SOURCES typeC_usb.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_vofa
+        TARGET ${BOARD_NAME}
+        SOURCES typeC_vofa.cpp)
