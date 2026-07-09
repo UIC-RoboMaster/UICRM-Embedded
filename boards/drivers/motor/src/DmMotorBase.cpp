@@ -29,77 +29,63 @@
 
 namespace driver {
 
-namespace {
+// ===== DmRxFrame =====
 
-/// 传统模式 16-bit MIT 位置命令零点（达妙协议 0x7fff）
-constexpr uint16_t MIT_POS_ZERO_RAW = 0x7fff;
-
-/// 传统模式 12-bit 速度/力矩/Kp/Kd 零点（反馈与 MIT 发送共用 0x7ff）
-constexpr uint16_t PARAM_12BIT_ZERO_RAW = 0x7ff;
-
-/**
- * @brief 浮点物理量映射为整型 raw（与 RoboWalker Math_Float_To_Int 一致）
- */
-uint16_t DmFloatToRaw(float x, float float_min, float float_max, int32_t int_min, int32_t int_max) {
-    float tmp = (x - float_min) / (float_max - float_min);
-    auto out = static_cast<int32_t>(tmp * static_cast<float>(int_max - int_min) + static_cast<float>(int_min));
-    return static_cast<uint16_t>(out);
-}
-
-}  // namespace
-
-// ===== DmRxFeedback =====
-
-void DmRxFeedback::Load(const uint8_t data[8]) {
+void DmRxFrame::Load(const uint8_t data[8]) {
     motor_id = data[0] & 0x0f;
     status = static_cast<DmControlStatus>(data[0] >> 4);
-    encoder = static_cast<uint16_t>((static_cast<uint16_t>(data[1]) << 8) | data[2]);
-    omega = static_cast<uint16_t>((static_cast<uint16_t>(data[3]) << 4) | (data[4] >> 4));
-    torque = static_cast<uint16_t>(((data[4] & 0x0f) << 8) | data[5]);
-    mos_temp = data[6];
-    rotor_temp = data[7];
+    raw_theta = static_cast<uint16_t>((static_cast<uint16_t>(data[1]) << 8) | data[2]);
+    raw_omega = static_cast<uint16_t>((static_cast<uint16_t>(data[3]) << 4) | (data[4] >> 4));
+    raw_torque = static_cast<uint16_t>(((data[4] & 0x0f) << 8) | data[5]);
+    raw_mos_temp = data[6];
+    raw_rotor_temp = data[7];
 }
 
-// ===== DmTxFrameMit / PosVel / Vel =====
+// ===== DmTxFrame =====
 
-void DmTxFrameMit::Pack(uint8_t data[8], float pos, float vel, float kp, float kd, float torque, float angle_max,
-                        float omega_max, float torque_max, float kp_max, float kd_max, uint16_t pos_max_raw,
-                        uint16_t mit_param_max_raw) {
-    pos = clip(pos, -angle_max, angle_max);
-    vel = clip(vel, -omega_max, omega_max);
-    torque = clip(torque, -torque_max, torque_max);
-    kp = clip(kp, 0.0f, kp_max);
-    kd = clip(kd, 0.0f, kd_max);
+uint8_t DmTxFrame::Pack(uint8_t data[8], DmControlMode mode, float angle_max, float omega_max, float torque_max,
+                        float kp_max, float kd_max) const {
+    switch (mode) {
+    case DmControlMode::MIT: {
+        const float pos = clip(p_des, -angle_max, angle_max);
+        const float vel = clip(v_des, -omega_max, omega_max);
+        const float torque = clip(t_ff, -torque_max, torque_max);
+        const float kp_clamped = clip(kp, 0.0f, kp_max);
+        const float kd_clamped = clip(kd, 0.0f, kd_max);
 
-    const uint16_t pos_raw =
-        DmFloatToRaw(pos, 0.0f, angle_max, MIT_POS_ZERO_RAW, static_cast<int32_t>(pos_max_raw));
-    const uint16_t vel_raw =
-        DmFloatToRaw(vel, 0.0f, omega_max, PARAM_12BIT_ZERO_RAW, static_cast<int32_t>(mit_param_max_raw));
-    const uint16_t torque_raw =
-        DmFloatToRaw(torque, 0.0f, torque_max, PARAM_12BIT_ZERO_RAW, static_cast<int32_t>(mit_param_max_raw));
-    const uint16_t kp_raw = DmFloatToRaw(kp, 0.0f, kp_max, 0, static_cast<int32_t>(mit_param_max_raw));
-    const uint16_t kd_raw = DmFloatToRaw(kd, 0.0f, kd_max, 0, static_cast<int32_t>(mit_param_max_raw));
+        // 
+        const uint16_t target_pos = signed_linear_remap(pos, 0x7FFF, 0xFFFF, angle_max);
+        const uint16_t target_vel = signed_linear_remap(vel, 0x7FF, 0xFFF, omega_max);
+        const uint16_t target_torque = signed_linear_remap(torque, 0x7FF, 0xFFF, torque_max);
+        const uint16_t target_kp = static_cast<uint16_t>(linear_remap(kp_clamped, 0.0f, kp_max, 0.0f, 4095.0f));
+        const uint16_t target_kd = static_cast<uint16_t>(linear_remap(kd_clamped, 0.0f, kd_max, 0.0f, 4095.0f));
 
-    data[0] = static_cast<uint8_t>((pos_raw >> 8) & 0xff);
-    data[1] = static_cast<uint8_t>(pos_raw & 0xff);
-    data[2] = static_cast<uint8_t>((vel_raw >> 4) & 0xff);
-    data[3] = static_cast<uint8_t>(((vel_raw & 0x000f) << 4) | ((kp_raw >> 8) & 0x000f));
-    data[4] = static_cast<uint8_t>(kp_raw & 0xff);
-    data[5] = static_cast<uint8_t>((kd_raw >> 4) & 0xff);
-    data[6] = static_cast<uint8_t>(((kd_raw & 0x000f) << 4) | ((torque_raw >> 8) & 0x000f));
-    data[7] = static_cast<uint8_t>(torque_raw & 0xff);
-}
-
-void DmTxFramePosVel::Pack(uint8_t data[8], float pos, float vel, float angle_max, float omega_max) {
-    const float control_angle = clip(pos, -angle_max, angle_max);
-    const float control_omega = clip(vel, -omega_max, omega_max);
-    memcpy(data, &control_angle, sizeof(control_angle));
-    memcpy(data + 4, &control_omega, sizeof(control_omega));
-}
-
-void DmTxFrameVel::Pack(uint8_t data[4], float vel, float omega_max) {
-    const float control_omega = clip(vel, -omega_max, omega_max);
-    memcpy(data, &control_omega, sizeof(control_omega));
+        data[0] = static_cast<uint8_t>((target_pos >> 8) & 0xff);
+        data[1] = static_cast<uint8_t>(target_pos & 0xff);
+        data[2] = static_cast<uint8_t>((target_vel >> 4) & 0xff);
+        data[3] = static_cast<uint8_t>(((target_vel & 0x000f) << 4) | ((target_kp >> 8) & 0x000f));
+        data[4] = static_cast<uint8_t>(target_kp & 0xff);
+        data[5] = static_cast<uint8_t>((target_kd >> 4) & 0xff);
+        data[6] = static_cast<uint8_t>(((target_kd & 0x000f) << 4) | ((target_torque >> 8) & 0x000f));
+        data[7] = static_cast<uint8_t>(target_torque & 0xff);
+        return 8;
+    }
+    case DmControlMode::POS_VEL: {
+        const float control_angle = clip(p_des, -angle_max, angle_max);
+        const float control_omega = clip(v_des, -omega_max, omega_max);
+        memcpy(data, &control_angle, sizeof(control_angle));
+        memcpy(data + 4, &control_omega, sizeof(control_omega));
+        return 8;
+    }
+    case DmControlMode::VEL: {
+        const float control_omega = clip(v_des, -omega_max, omega_max);
+        memcpy(data, &control_omega, sizeof(control_omega));
+        return 4;
+    }
+    case DmControlMode::EMIT:
+    default:
+        return 0;
+    }
 }
 
 // ===== Static member definitions =====
@@ -113,22 +99,13 @@ uint32_t DmMotorBase::dm_output_period_us_ = 1000;
 // ===== DmMotorBase =====
 
 DmMotorBase::DmMotorBase(bsp::CAN* can, uint16_t master_id, uint16_t motor_can_id, DmControlMode mode,
-                         float angle_max, float omega_max, float torque_max, float kp_max, float kd_max,
-                         uint16_t pos_max_raw, uint16_t mit_param_max_raw)
-    : CanMotorBase(50) {
+                         const DmMotorConfig& config)
+    : CanMotorBase(30) {
     can_ = can;
     rx_id_ = master_id;
-    motor_can_id_ = motor_can_id;
+    tx_id_ = motor_can_id;
     state_.mode = mode;
-    tx_id_ = motor_can_id + static_cast<uint16_t>(mode);
-
-    angle_max_ = angle_max;
-    omega_max_ = omega_max;
-    torque_max_ = torque_max;
-    kp_max_ = kp_max;
-    kd_max_ = kd_max;
-    pos_max_raw_ = pos_max_raw;
-    mit_param_max_raw_ = mit_param_max_raw;
+    config_ = config;
 
     // DM 电机 16-bit 编码器映射为单圈 [0, 2π]，多圈由 CanMotorBase::ProcessAngleTracking 累计
     state_.power_on_angle = -1;
@@ -156,15 +133,22 @@ DmMotorBase::DmMotorBase(bsp::CAN* can, uint16_t master_id, uint16_t motor_can_i
     }
 
     RM_ASSERT_TRUE(bsp::GetHighresTickMicroSec() != 0, "Highres timer not initialized");
+
+    CanMotorBase::RegisterCanCallback(can, master_id, &DmMotorBase::RxThunk, this);
 }
 
-void DmMotorBase::ParseFeedbackNormal() {
-    state_.theta = linear_remap<uint16_t, float>(state_.rx.encoder, static_cast<uint16_t>(0), pos_max_raw_, 0.0f,
-                                                 2 * PI);
-    state_.omega = (state_.rx.omega - FEEDBACK_PARAM_ZERO_RAW) / static_cast<float>(FEEDBACK_PARAM_ZERO_RAW) *
-                   omega_max_;
-    state_.torque = (static_cast<int16_t>(state_.rx.torque) - FEEDBACK_PARAM_ZERO_RAW) /
-                    static_cast<float>(FEEDBACK_PARAM_ZERO_RAW) * torque_max_;
+void DmMotorBase::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<DmMotorBase*>(ctx)->UpdateData(data);
+}
+
+void DmMotorBase::UpdateData(const uint8_t data[]) {
+    state_.rx.Load(data);
+    if (state_.rx.motor_id != (tx_id_ & 0x0f)) {
+        return;
+    }
+    state_.theta = signed_linear_remap(state_.rx.raw_theta, 0x7FFF, 0xFFFF, config_.angle_max);
+    state_.omega = signed_linear_remap(state_.rx.raw_omega, 0x7FF, 0xFFF, config_.omega_max);
+    state_.torque = signed_linear_remap(state_.rx.raw_torque, 0x7FF, 0xFFF, config_.torque_max);    state_.feedback_pending = true;
 }
 
 void DmMotorBase::FinishFeedbackUpdate() {
@@ -180,7 +164,7 @@ void DmMotorBase::FinishFeedbackUpdate() {
         state_.output_relative_angle,
         state_.output_cumulated_turns,
         state_.output_cumulated_angle,
-        state_.transmission_ratio,
+        config_.transmission_ratio,
         state_.absolute_mode,
     };
     CanMotorBase::FinishFeedbackUpdate(ctx);
@@ -205,13 +189,13 @@ float DmMotorBase::GetOutputShaftOmega() const {
 void DmMotorBase::Enable() {
     state_.enable = true;
     const uint8_t data[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc};
-    CanMotorBase::TransmitFrame(can_, motor_can_id_, data);
+    CanMotorBase::TransmitFrame(can_, tx_id_, data);
 }
 
 void DmMotorBase::Disable() {
     state_.enable = false;
     const uint8_t data[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfd};
-    CanMotorBase::TransmitFrame(can_, motor_can_id_, data);
+    CanMotorBase::TransmitFrame(can_, tx_id_, data);
 }
 
 bool DmMotorBase::IsEnable() const {
@@ -229,12 +213,12 @@ void DmMotorBase::SetOutput(int16_t val) {
 
 void DmMotorBase::SetZeroPos() {
     const uint8_t data[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe};
-    CanMotorBase::TransmitFrame(can_, motor_can_id_, data);
+    CanMotorBase::TransmitFrame(can_, tx_id_, data);
 }
 
 void DmMotorBase::ClearError() {
     const uint8_t data[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfb};
-    CanMotorBase::TransmitFrame(can_, motor_can_id_, data);
+    CanMotorBase::TransmitFrame(can_, tx_id_, data);
 }
 
 void DmMotorBase::SetFrequency(uint32_t freq) {
@@ -244,7 +228,7 @@ void DmMotorBase::SetFrequency(uint32_t freq) {
 
 void DmMotorBase::SetMode(DmControlMode mode) {
     state_.mode = mode;
-    tx_id_ = motor_can_id_ + static_cast<uint16_t>(mode);
+    tx_id_ = tx_id_ + static_cast<uint16_t>(mode);
 }
 
 DmControlStatus DmMotorBase::GetControlStatus() const {
@@ -269,7 +253,6 @@ void DmMotorBase::DmMotorThread(void* args) {
 
 void DmMotorBase::CalcOutput() {
     if (state_.feedback_pending) {
-        ParseFeedbackNormal();
         FinishFeedbackUpdate();
         state_.feedback_pending = false;
     }
@@ -292,42 +275,20 @@ void DmMotorBase::CalcOutput() {
     }
 }
 
-void DmMotorBase::SetOutput(float position, float velocity, float kp, float kd, float torque) {
-    state_.kp_setpoint = kp;
-    state_.kd_setpoint = kd;
-    state_.position_setpoint = position;
-    state_.velocity_setpoint = velocity;
-    state_.torque_setpoint = torque;
-}
-
-void DmMotorBase::SetOutput(float position, float velocity) {
-    state_.position_setpoint = position;
-    state_.velocity_setpoint = velocity;
-}
-
-void DmMotorBase::SetOutput(float velocity) {
-    state_.velocity_setpoint = velocity;
-}
-
 void DmMotorBase::SetTarget(float target, bool override) {
     (void)override;
     RM_ASSERT_TRUE(state_.mode == DmControlMode::VEL, "SetTarget(float) only valid in VEL mode");
-    state_.velocity_setpoint = target;
+    state_.tx.SetVel(target);
 }
 
 void DmMotorBase::SetTarget(float position, float velocity, float kp, float kd, float t_ff) {
     RM_ASSERT_TRUE(state_.mode == DmControlMode::MIT, "SetTarget(5 args) only valid in MIT mode");
-    state_.kp_setpoint = kp;
-    state_.kd_setpoint = kd;
-    state_.position_setpoint = position;
-    state_.velocity_setpoint = velocity;
-    state_.torque_setpoint = t_ff;
+    state_.tx.SetMit(position, velocity, kp, kd, t_ff);
 }
 
 void DmMotorBase::SetTarget(float position, float velocity) {
     RM_ASSERT_TRUE(state_.mode == DmControlMode::POS_VEL, "SetTarget(2 args) only valid in POS_VEL mode");
-    state_.position_setpoint = position;
-    state_.velocity_setpoint = velocity;
+    state_.tx.SetPosVel(position, velocity);
 }
 
 float DmMotorBase::GetTorque() const {
@@ -336,23 +297,9 @@ float DmMotorBase::GetTorque() const {
 
 void DmMotorBase::TransmitOutput() {
     uint8_t data[8] = {0};
-    uint8_t dlc = 8;
-
-    switch (state_.mode) {
-    case DmControlMode::MIT:
-        DmTxFrameMit::Pack(data, state_.position_setpoint, state_.velocity_setpoint, state_.kp_setpoint,
-                           state_.kd_setpoint, state_.torque_setpoint, angle_max_, omega_max_, torque_max_, kp_max_,
-                           kd_max_, pos_max_raw_, mit_param_max_raw_);
-        break;
-    case DmControlMode::POS_VEL:
-        DmTxFramePosVel::Pack(data, state_.position_setpoint, state_.velocity_setpoint, angle_max_, omega_max_);
-        break;
-    case DmControlMode::VEL:
-        dlc = 4;
-        DmTxFrameVel::Pack(data, state_.velocity_setpoint, omega_max_);
-        break;
-    case DmControlMode::EMIT:
-    default:
+    const uint8_t dlc = state_.tx.Pack(data, state_.mode, config_.angle_max, config_.omega_max, config_.torque_max,
+                                       config_.kp_max, config_.kd_max);
+    if (dlc == 0) {
         RM_EXPECT_TRUE(false, "Unsupported DM control mode");
         return;
     }
@@ -363,24 +310,7 @@ void DmMotorBase::TransmitOutput() {
 // ===== DMMotor4310 =====
 
 DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t master_id, uint16_t motor_can_id, DmControlMode mode)
-    : DmMotorBase(can, master_id, motor_can_id, mode, DmMotor4310Config::ANGLE_MAX, DmMotor4310Config::OMEGA_MAX,
-                  DmMotor4310Config::TORQUE_MAX, DmMotor4310Config::KP_MAX, DmMotor4310Config::KD_MAX,
-                  DmMotor4310Config::POS_MAX_RAW, DmMotor4310Config::MIT_PARAM_MAX_RAW) {
-    state_.transmission_ratio = DmMotor4310Config::TRANSMISSION_RATIO;
-    CanMotorBase::RegisterCanCallback(can, master_id, &DMMotor4310::RxThunk, this);
-}
-
-void DMMotor4310::RxThunk(void* ctx, const uint8_t data[]) {
-    static_cast<DMMotor4310*>(ctx)->UpdateData(data);
-}
-
-void DMMotor4310::UpdateData(const uint8_t data[]) {
-    state_.rx.Load(data);
-    if (state_.rx.motor_id != (motor_can_id_ & 0x0f)) {
-        return;
-    }
-    state_.feedback_pending = true;
-}
+    : DmMotorBase(can, master_id, motor_can_id, mode, DmMotor4310Config::J4310_Config) {}
 
 void DMMotor4310::PrintData() const {
     set_cursor(0, 0);
@@ -388,7 +318,7 @@ void DMMotor4310::PrintData() const {
     print("Position: % .4f ", GetTheta());
     print("Velocity: % .4f ", GetOmega());
     print("Torque: % .4f ", GetTorque());
-    print("Rotor temp: % .4f \r\n", state_.rx.rotor_temp);
+    print("Rotor temp: % .4f \r\n", state_.rx.raw_rotor_temp);
 }
 
 }  // namespace driver

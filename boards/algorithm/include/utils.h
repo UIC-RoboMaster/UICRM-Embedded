@@ -585,3 +585,45 @@ template <typename RawT, typename DstT = float>
 inline DstT linear_remap_clip(RawT value, RawT src_min, RawT src_max, DstT dst_min, DstT dst_max) {
     return linear_remap(clip(value, src_min, src_max), src_min, src_max, dst_min, dst_max);
 }
+
+/**
+ * @brief DM 电机有符号零点偏移编码的线性映射（raw → 物理值）
+ *
+ * DM 编码采用零点偏移的有符号编码方案：
+ * - zero_raw 对应物理零点 0
+ * - 0 对应 -max_val
+ * - max_raw 对应 +max_val
+ *
+ * 负半轴 0..zero_raw 共 zero_raw 步，正半轴 zero_raw..max_raw 共 (max_raw - zero_raw) 步，
+ * 分段按各自步长缩放以精确保证零点。
+ *
+ * @tparam FloatT 目标浮点类型
+ * @param raw       原始 raw 值（16-bit 或 12-bit，放入 uint16_t）
+ * @param zero_raw  零点 raw 值（16-bit: 0x7FFF, 12-bit: 0x7FF）
+ * @param max_raw   满量程 raw 值（16-bit: 0xFFFF, 12-bit: 0xFFF）
+ * @param max_val   正/负满量程物理值 [rad] / [rad/s] / [N·m]
+ * @return 映射后的物理值，落在 [-max_val, +max_val]
+ */
+template <typename FloatT = float>
+inline FloatT signed_linear_remap(uint16_t raw, uint16_t zero_raw, uint16_t max_raw, FloatT max_val) {
+    const int32_t offset = static_cast<int32_t>(raw) - static_cast<int32_t>(zero_raw);
+    const FloatT scale = static_cast<FloatT>(offset >= 0 ? (max_raw - zero_raw) : zero_raw);
+    return static_cast<FloatT>(offset) / scale * max_val;
+}
+
+/**
+ * @brief DM 电机有符号零点偏移编码的逆映射（物理值 → raw）
+ *
+ * signed_linear_remap 的逆运算，用于控制帧打包。
+ *
+ * @param value     物理值，落在 [-max_val, +max_val]
+ * @param zero_raw  零点 raw 值（16-bit: 0x7FFF, 12-bit: 0x7FF）
+ * @param max_raw   满量程 raw 值（16-bit: 0xFFFF, 12-bit: 0xFFF）
+ * @param max_val   正/负满量程物理值
+ * @return raw 值，落在 [0, max_raw]
+ */
+template <typename FloatT = float>
+inline uint16_t signed_linear_remap(FloatT value, uint16_t zero_raw, uint16_t max_raw, FloatT max_val) {
+    const FloatT scale = static_cast<FloatT>(value >= 0 ? (max_raw - zero_raw) : zero_raw);
+    return static_cast<uint16_t>(static_cast<int32_t>(value / max_val * scale) + zero_raw);
+}
