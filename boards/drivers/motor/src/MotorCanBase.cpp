@@ -52,45 +52,38 @@ void CanMotorBase::ProcessAngleTracking(AngleTrackingContext ctx) {
     if (ctx.power_on_angle < 0) {
         ctx.power_on_angle = ctx.theta;
     }
-    // 计算相对角度和输出轴角度 
-    ctx.relative_angle = ctx.theta - ctx.power_on_angle;
 
-    if (ctx.transmission_ratio == 1) {
-        ctx.output_relative_angle = wrap<float>(ctx.relative_angle, 0, 2 * PI);
-    }
-    // 如果有减速比，使用内层回绕检测器处理相对角度的回绕
-    else {
-        inner_wrap_detector_->input(ctx.relative_angle);
+    // 编码器单圈内角度 [0, 2π]（相对上电位置）
+    ctx.encoder_relative_angle = wrap<float>(ctx.theta - ctx.power_on_angle, 0, 2 * PI);
 
-        // 正向回绕：编码器从 2PI 回绕到 0，累计圈数 +1
-        if (inner_wrap_detector_->negEdge())
-            cumulated_rad_ += 2 * PI / ctx.transmission_ratio;
-        // 反向回绕：编码器从 0 回绕到 2PI，累计圈数 -1
-        else if (inner_wrap_detector_->posEdge())
-            cumulated_rad_ -= 2 * PI / ctx.transmission_ratio;
+    // 在 raw theta 上检测 2π↔0 回绕，累计编码器圈数
+    inner_wrap_detector_->input(ctx.theta);
+    // 正向回绕：编码器从 2π 回绕到 0，累计圈数 +1
+    if (inner_wrap_detector_->negEdge())
+        ctx.encoder_cumulated_turns += 1;
+    // 反向回绕：编码器从 0 回绕到 2π，累计圈数 -1
+    else if (inner_wrap_detector_->posEdge())
+        ctx.encoder_cumulated_turns -= 1;
 
-        // 累计角度限制在 [0, 2PI] 范围内
-        cumulated_rad_ = wrap<float>(cumulated_rad_, 0, 2 * PI);
+    // 编码器累计角度 = 累计圈数 × 2π + 圈内角，连续无跳变
+    ctx.encoder_cumulated_angle = ctx.encoder_cumulated_turns * 2 * PI + ctx.encoder_relative_angle;
 
-        // 得到输出轴的相对角度（减速比换算）
-        ctx.output_relative_angle = wrap<float>(
-            cumulated_rad_ + ctx.relative_angle / ctx.transmission_ratio, 0, 2 * PI);
-    }
+    // 输出轴圈内角 [0, 2π]（由编码器累计角度经减速比换算）
+    ctx.output_relative_angle =
+        wrap<float>(ctx.encoder_cumulated_angle / ctx.transmission_ratio, 0, 2 * PI);
 
-    // 处理输出轴角度的回绕
+    // 输出轴回绕检测，累计输出轴圈数
     outer_wrap_detector_->input(ctx.output_relative_angle);
+    if (outer_wrap_detector_->negEdge())
+        ctx.output_cumulated_turns += 1;
+    else if (outer_wrap_detector_->posEdge())
+        ctx.output_cumulated_turns -= 1;
 
-    // 如果是绝对模式，则不进行累计圈数的更新
-    // 如果是相对模式，则根据输出轴角度的回绕更新累计圈数
-    if (!ctx.absolute_mode) {
-        if (outer_wrap_detector_->negEdge())
-            ctx.output_cumulated_angle += 2 * PI;
-        else if (outer_wrap_detector_->posEdge())
-            ctx.output_cumulated_angle -= 2 * PI;
-    }
+    // 输出轴多圈累计角度（内部状态，absolute 模式下仍持续累计）
+    ctx.output_cumulated_angle = ctx.output_cumulated_turns * 2 * PI + ctx.output_relative_angle;
 
-    // 得到单圈绝对值编码器对应输出轴的累计角度和角速度
-    ctx.output_shaft_theta = ctx.output_relative_angle + ctx.output_cumulated_angle;
+    // absolute 模式：对外输出限制在 [0, 2π]；相对模式：输出多圈累计角
+    ctx.output_shaft_theta = ctx.absolute_mode ? ctx.output_relative_angle : ctx.output_cumulated_angle;
     ctx.output_shaft_omega = ctx.omega / ctx.transmission_ratio;
 }
 

@@ -113,29 +113,34 @@ struct DmTxFrameVel {
  * 解析后的物理量、角度追踪、控制设定与同步标志；原始反馈见 rx。
  */
 struct DmMotorState {
-    DmRxFeedback rx;  ///< 最近一次反馈（raw 整数域）
+    DmRxFeedback rx;  // 最近一次反馈（raw 整数域）
 
     // ── 反馈物理量 ──
-    float theta = 0;   ///< 电机位置 [rad]
-    float omega = 0;   ///< 电机速度 [rad/s]
-    float torque = 0;  ///< 电机力矩 [N·m]
+    float theta = 0;   // 电机位置 [rad]
+    float omega = 0;   // 电机速度 [rad/s]
+    float torque = 0;  // 电机力矩 [N·m]
 
     // ── 输出轴 ──
-    float output_shaft_theta = 0;  ///< 输出轴角度 [rad]
-    float output_shaft_omega = 0;  ///< 输出轴角速度 [rad/s]
+    float output_shaft_theta = 0;  // 输出轴角度 [rad]
+    float output_shaft_omega = 0;  // 输出轴角速度 [rad/s]
 
-    // ── 角度追踪 ──
-    float power_on_angle = -1;        ///< 上电编码器角 [rad]（-1 未初始化）
-    float relative_angle = 0;         ///< 相对上电角 [rad]
-    float output_cumulated_angle = 0; ///< 输出轴累计角 [rad]
-    float output_relative_angle = 0;  ///< 输出轴圈内角 [rad]，[0, 2π]
+    // ── 编码器角度追踪 ──
+    float power_on_angle = -1;         // 上电编码器角 [rad]（-1 未初始化）
+    float encoder_relative_angle = 0;  // 编码器圈内角 [rad]，[0, 2π]
+    float encoder_cumulated_turns = 0; // 编码器累计圈数 [turns]
+    float encoder_cumulated_angle = 0; // 编码器累计角 [rad] = turns × 2π + encoder_relative
+
+    // ── 输出轴角度追踪 ──
+    float output_relative_angle = 0;   // 输出轴圈内角 [rad]，[0, 2π]
+    float output_cumulated_turns = 0;  // 输出轴累计圈数 [turns]
+    float output_cumulated_angle = 0;  // 输出轴多圈累计角 [rad] = turns × 2π + output_relative
 
     // ── 配置 ──
-    float transmission_ratio = 1;  ///< 减速比
-    bool enable = true;          ///< 软件使能
-    bool absolute_mode = false;  ///< 绝对模式（输出轴不累计圈数）
+    float transmission_ratio = 1;  // 减速比
+    bool enable = true;          // 软件使能
+    bool absolute_mode = false;  // 绝对模式：内部仍累计圈数，output_shaft_theta 限制在 [0, 2π]
 
-    volatile bool feedback_pending = false;  ///< ISR 置位，CalcOutput 消费
+    volatile bool feedback_pending = false;  // ISR 置位，CalcOutput 消费
 
     // ── 控制 ──
     DmControlMode mode = DmControlMode::MIT;

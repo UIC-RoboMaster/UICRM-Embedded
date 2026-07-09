@@ -40,9 +40,12 @@ struct AngleTrackingContext {
     float& output_shaft_theta;
     float& output_shaft_omega;
     float& power_on_angle;
-    float& relative_angle;
-    float& output_cumulated_angle;
+    float& encoder_relative_angle;
+    float& encoder_cumulated_turns;
+    float& encoder_cumulated_angle;
     float& output_relative_angle;
+    float& output_cumulated_turns;
+    float& output_cumulated_angle;
     float& transmission_ratio;
     bool& absolute_mode;
 };
@@ -170,6 +173,7 @@ class CanMotorBase : public ConnectionDriver {
      * @brief 单圈绝对值编码器的角度追踪处理
      * @param ctx 角度追踪所需的运行时状态引用包
      * @note 子类在 UpdateData 中解析完协议后，经 FinishFeedbackUpdate 调用此方法
+     * @note absolute_mode 下内部仍累计圈数，output_shaft_theta 对外限制在 [0, 2π]
      * @warning 这是使用单圈绝对值编码器的电机的角度处理，不通用于多圈编码器
      */
     void ProcessAngleTracking(AngleTrackingContext ctx);
@@ -203,11 +207,10 @@ class CanMotorBase : public ConnectionDriver {
      */
     void RegisterCanCallback(bsp::CAN* can, uint16_t rx_id, CanRxHandler handler, void* ctx);
 
+    /// 编码器 raw theta [0, 2π] 回绕检测（2π↔0）
     FloatEdgeDetector* inner_wrap_detector_;
+    /// 输出轴圈内角 [0, 2π] 回绕检测
     FloatEdgeDetector* outer_wrap_detector_;
-
-    /// 编码器回绕事件折算到输出轴的累计弧度（ProcessAngleTracking 中间量）
-    float cumulated_rad_ = 0;
 
   private:
     /**

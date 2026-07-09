@@ -53,18 +53,21 @@ struct DjiMotorState {
     float output_shaft_omega = 0; // 输出轴角速度 [rad/s]
 
     // ── 编码器角度追踪 ──
-    float power_on_angle = -1;           // 上电时的编码器角度 [rad]（-1 表示未初始化）
-    float relative_angle = 0;            // 编码器相对上电角度的角度 [rad]
+    float power_on_angle = -1;         // 上电时的编码器角度 [rad]（-1 表示未初始化）
+    float encoder_relative_angle = 0;  // 编码器当前圈内角度 [rad], 范围 [0, 2π]
+    float encoder_cumulated_turns = 0; // 编码器累计圈数 [turns]
+    float encoder_cumulated_angle = 0; // 编码器累计角度 [rad] = turns × 2π + encoder_relative
 
     // ── 输出轴角度追踪 ──
-    float output_cumulated_angle = 0;    // 输出轴累计角度 [rad]（由回绕事件 ±2PI 累加）
-    float output_relative_angle = 0;     // 输出轴当前圈内角度 [rad], 范围 [0, 2PI]
+    float output_relative_angle = 0;   // 输出轴当前圈内角度 [rad], 范围 [0, 2π]
+    float output_cumulated_turns = 0;  // 输出轴累计圈数 [turns]
+    float output_cumulated_angle = 0;  // 输出轴多圈累计角度 [rad] = turns × 2π + output_relative
 
     // ── 配置 ──
     uint8_t mode = 0;              // 控制模式（OMEGA/THETA/ABSOLUTE/INVERTED）
     float transmission_ratio = 1;  // 减速比
     bool enable = true;            // 使能
-    bool absolute_mode = false;    // 绝对模式：输出轴不累计圈数
+    bool absolute_mode = false;    // 绝对模式：内部仍累计圈数，output_shaft_theta 限制在 [0, 2π]
 
     // ── CAN 连接 ──
     bsp::CAN* can = nullptr;  // CAN 硬件对象
@@ -112,8 +115,8 @@ class DjiMotorBase : public CanMotorBase {
         EFFORT = 0x08,
         // 反转电机方向
         INVERTED = 0x40,
-        // ABSOLUTE 模式下，认为输出轴只有一圈。电机输出轴角度不会累计，被限制在 [0,
-        // 2PI] 之间，如果目标在相反的半圈，则从另一侧绕过去
+        // ABSOLUTE 模式下，对外输出轴角度限制在 [0, 2π]；内部仍累计圈数，
+        // 若目标在相反半圈则从另一侧绕过去
         ABSOLUTE = 0x80,
     };
 
@@ -210,7 +213,7 @@ class DjiMotorBase : public CanMotorBase {
 
     /**
      * @brief 设置绝对模式
-     * @param enable true 表示输出轴不累计圈数
+     * @param enable true 表示对外输出限制在 [0, 2π]（内部仍累计圈数）
      */
     void SetAbsoluteMode(bool enable);
 
