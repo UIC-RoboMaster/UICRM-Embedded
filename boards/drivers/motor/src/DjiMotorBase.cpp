@@ -213,7 +213,12 @@ void DjiMotorBase::UpdateHoldingState() {
         float diff = state_.target - GetOutputShaftTheta();
         if (state_.mode & ABSOLUTE)
             diff = wrap<float>(diff, -PI, PI);
-        state_.holding = abs(diff) < state_.proximity_in;
+        const float abs_diff = fabsf(diff);
+        // 如果当前角度差小于接近阈值，则认为电机到位
+        if (!state_.holding && abs_diff < state_.proximity_in)
+            state_.holding = true;
+        if (state_.holding && abs_diff > state_.proximity_out)
+            state_.holding = false;
     }
 }
 
