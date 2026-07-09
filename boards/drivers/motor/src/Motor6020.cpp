@@ -58,6 +58,7 @@ void Motor6020::UpdateData(const uint8_t data[]) {
     // GM6020 转矩电流反馈 raw_current ∈ [-16384, 16384] 对应 [-3A, 3A]
     state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor6020Config::MAX_RAW_CURRENT, Motor6020Config::MAX_RAW_CURRENT,
                                   -Motor6020Config::MAX_CURRENT, Motor6020Config::MAX_CURRENT);
+    state_.torque = state_.current * torque_constant_;
 
     state_.feedback_pending = true;
 }

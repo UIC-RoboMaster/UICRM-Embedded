@@ -20,9 +20,9 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m3508_theta
         TARGET ${BOARD_NAME}
         SOURCES m3508_theta.cpp)
 
-uicrm_add_arm_executable(${PROJECT_NAME}_m3508_effort
+uicrm_add_arm_executable(${PROJECT_NAME}_m3508_torque_ff
         TARGET ${BOARD_NAME}
-        SOURCES m3508_effort.cpp)
+        SOURCES m3508_torque_ff.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_m3508_flywheel
         TARGET ${BOARD_NAME}

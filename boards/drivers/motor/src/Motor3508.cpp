@@ -56,6 +56,7 @@ void Motor3508::UpdateData(const uint8_t data[]) {
     state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor3508Config::MAX_RAW_CURRENT,
                                                   Motor3508Config::MAX_RAW_CURRENT, -Motor3508Config::MAX_CURRENT,
                                                   Motor3508Config::MAX_CURRENT);
+    state_.torque = state_.current * torque_constant_;
 
     state_.feedback_pending = true;
 }

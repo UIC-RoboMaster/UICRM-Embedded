@@ -41,7 +41,7 @@ struct Motor3508Config {
 
 /**
  * @brief DJI M3508/P19 减速电机
- * @note 搭配 C620 电调使用，支持角度/速度/力矩三种控制模式。
+ * @note 搭配 C620 电调使用，支持角度/速度级联控制及力矩前馈、开环电流指令。
  *       通过 19.2:1 减速箱驱动输出轴，适用于 RoboMaster 底盘与云台。
  */
 class Motor3508 : public DjiMotorBase {

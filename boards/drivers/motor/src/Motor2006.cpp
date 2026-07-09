@@ -57,6 +57,7 @@ void Motor2006::UpdateData(const uint8_t data[]) {
     state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor2006Config::MAX_RAW_CURRENT,
                                                   Motor2006Config::MAX_RAW_CURRENT, -Motor2006Config::MAX_CURRENT,
                                                   Motor2006Config::MAX_CURRENT);
+    state_.torque = state_.current * torque_constant_;
 
     state_.feedback_pending = true;
 }

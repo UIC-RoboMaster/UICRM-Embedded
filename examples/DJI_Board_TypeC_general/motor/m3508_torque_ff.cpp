@@ -27,16 +27,26 @@
 #include "main.h"
 #include "pid.h"
 #include "tim.h"
+#include "utils.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
 
-// EFFORT 趋近阶段使用的力矩幅值 [N·m]，方向由角度误差自动决定
-static constexpr float TARGET_TORQUE_NM = 2.5f;
+// 趋近目标角时叠加的恒力矩前馈幅值 [N·m]，方向随角度误差符号变化
+static constexpr float ASSIST_TORQUE_NM = 2.5f;
 static constexpr float STEP_ANGLE = PI / 3.0f;  // 每次按键转 60°
 
 static bsp::CAN* can2 = nullptr;
 static driver::Motor3508* motor1 = nullptr;
+
+static void UpdateTorqueFeedforward() {
+    float diff = motor1->GetTarget() - motor1->GetOutputShaftTheta();
+    if (motor1->IsHolding() || fabsf(diff) < 0.01f) {
+        motor1->SetTorqueFeedforward(0.0f);
+        return;
+    }
+    motor1->SetTorqueFeedforward((diff > 0.0f ? 1.0f : -1.0f) * ASSIST_TORQUE_NM);
+}
 
 void RM_RTOS_Init() {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
@@ -46,7 +56,6 @@ void RM_RTOS_Init() {
     motor1 = new driver::Motor3508(can2, 0x201);
     motor1->SetTransmissionRatio(71);
 
-    // 到位后 THETA|OMEGA PID 保持用的角度环 / 速度环
     control::ConstrainedPID::PID_Init_t theta_pid_init = {
         .kp = 20,
         .ki = 0,
@@ -78,9 +87,9 @@ void RM_RTOS_Init() {
     };
     motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
 
-    motor1->SetTorque(TARGET_TORQUE_NM);
-    motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::EFFORT);
+    motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
     motor1->SetTarget(0.0f);
+    UpdateTorqueFeedforward();
 
     HAL_Delay(1000);
 }
@@ -101,16 +110,15 @@ void RM_RTOS_Default_Task(const void* args) {
                 osDelay(30);
             }
 
-            // 每按一次，目标角增加 60°，重新进入恒力矩趋近
-            motor1->SetTorque(TARGET_TORQUE_NM);
-            motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::EFFORT);
             motor1->SetTarget(motor1->GetTarget() + STEP_ANGLE, true);
             osDelay(20);
         }
 
-        print("EFFORT demo (M3508 ID1)\r\n");
+        UpdateTorqueFeedforward();
+
+        print("Torque feedforward demo (M3508 ID1)\r\n");
         print("KEY: +60 deg per press\r\n");
-        print("target_torque: %.2f Nm  holding: %s\r\n", TARGET_TORQUE_NM,
+        print("assist_torque: %.2f Nm  holding: %s\r\n", ASSIST_TORQUE_NM,
               motor1->IsHolding() ? "yes" : "no");
         print("shaft_theta: % .4f  target: % .4f\r\n", motor1->GetOutputShaftTheta(),
               motor1->GetTarget());

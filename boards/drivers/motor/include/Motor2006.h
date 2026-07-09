@@ -41,7 +41,7 @@ struct Motor2006Config {
 
 /**
  * @brief DJI M2006/P36 减速电机
- * @note 搭配 C610 电调使用，支持角度/速度/力矩三种控制模式。
+ * @note 搭配 C610 电调使用，支持角度/速度级联控制及力矩前馈、开环电流指令。
  *       通过 36:1 减速箱驱动输出轴，适用于 RoboMaster 拨弹机构等功能部件。
  */
 class Motor2006 : public DjiMotorBase {

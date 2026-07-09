@@ -170,6 +170,10 @@ float DjiMotorBase::GetOutputShaftOmega() const {
     return state_.output_shaft_omega;
 }
 
+float DjiMotorBase::GetTorque() const {
+    return state_.torque;
+}
+
 void DjiMotorBase::Enable() {
     state_.enable = true;
 }
@@ -186,6 +190,10 @@ int16_t DjiMotorBase::GetOutput() {
     return output_;
 }
 
+float DjiMotorBase::GetTarget() const {
+    return state_.target;
+}
+
 int16_t DjiMotorBase::GetCurr() const {
     return state_.raw_current;
 }
@@ -194,9 +202,41 @@ uint16_t DjiMotorBase::GetTemp() const {
     return state_.raw_temperature;
 }
 
+bool DjiMotorBase::IsHolding() const {
+    return state_.holding;
+}
+
+void DjiMotorBase::Hold(bool override) {
+    if (!IsHolding() && state_.mode & THETA) {
+        SetTarget(GetOutputShaftTheta(), override);
+    }
+}
+
+void DjiMotorBase::SetSpeedOffset(float offset) {
+    state_.speed_offset = offset;
+}
+
+void DjiMotorBase::SetTorqueFeedforward(float torque_nm) {
+    state_.torque_feedforward = torque_nm;
+}
+
+void DjiMotorBase::SetTorque(float torque_nm, bool override) {
+    RM_ASSERT_TRUE(torque_constant_ > 0, "Torque constant not set for this motor");
+    RM_ASSERT_TRUE(max_current_amp_ > 0, "Current range not configured for this motor");
+    RM_ASSERT_TRUE(state_.mode & CURRENT, "SetTorque requires CURRENT mode; use SetTorqueFeedforward in cascade control");
+    SetTarget(linear_remap(torque_nm / torque_constant_, -max_current_amp_, max_current_amp_,
+                           static_cast<float>(-max_raw_current_), static_cast<float>(max_raw_current_)),
+              override);
+}
+
 void DjiMotorBase::SetTransmissionRatio(float ratio) {
     RM_ASSERT_GT(ratio, 0, "Invalid transmission ratio");
     state_.transmission_ratio = ratio;
+}
+
+void DjiMotorBase::SetMode(uint8_t mode) {
+    state_.mode = mode;
+    state_.absolute_mode = (mode & ABSOLUTE) != 0;
 }
 
 void DjiMotorBase::SetAbsoluteMode(bool enable) {
@@ -264,32 +304,10 @@ void DjiMotorBase::CalcOutput() {
         return;
     }
 
-    // 力矩控制模式：旁路角度/速度 PID，直接输出目标电流值
+    // 开环电流/力矩：旁路角度/速度 PID，直接输出 setpoint
     if (state_.mode & CURRENT) {
-        SetOutput((int16_t)state_.target);
+        SetOutput(static_cast<int16_t>(state_.target));
         return;
-    }
-
-    // 恒力矩趋近目标角；到位后去掉 EFFORT、启用 OMEGA，落入下方 PID 保持
-    if (state_.mode & EFFORT) {
-        UpdateHoldingState();
-
-        // 如果电机没有在 hold 状态，则输出目标力矩
-        if (!state_.holding) {
-            float diff = state_.target - GetOutputShaftTheta();
-
-            // 如果电机处于绝对模式，则将差值限制在 -PI 到 PI 之间
-            if (state_.mode & ABSOLUTE)
-                diff = wrap<float>(diff, -PI, PI);
-            
-            float target_current = (diff >= 0.0f ? state_.target_torque : -state_.target_torque) / torque_constant_;
-            SetOutput((int16_t)linear_remap(target_current, -max_current_amp_, max_current_amp_,
-                                            (float)-max_raw_current_, (float)max_raw_current_));
-            return;
-        }
-        
-        // 以恒力矩趋近目标角，到位后去掉 EFFORT、启用 OMEGA，用 PID 精细修正
-        state_.mode = (state_.mode & ~EFFORT) | OMEGA;
     }
 
     float target = state_.target;
@@ -330,14 +348,19 @@ void DjiMotorBase::CalcOutput() {
     // 对速度加上偏移量，前馈时使用
     target += state_.speed_offset;
 
-    // 处理速度环 PID，输入速度差，输出电流值
+    // 处理速度环 PID，输出反馈电流；再叠加力矩前馈
     if (state_.mode & OMEGA) {
         target = omega_pid_.ComputeOutput(target, GetOutputShaftOmega());
     }
 
-    // 输出
     if (state_.mode != NONE) {
-        SetOutput((int16_t)target);
+        // 叠加力矩前馈
+        if (state_.mode & OMEGA && state_.torque_feedforward != 0.0f) {
+            target += linear_remap(state_.torque_feedforward / torque_constant_, -max_current_amp_,
+                                        max_current_amp_, static_cast<float>(-max_raw_current_),
+                                        static_cast<float>(max_raw_current_));
+        }
+        SetOutput(static_cast<int16_t>(target));
     }
 }
 
@@ -356,47 +379,6 @@ control::ConstrainedPID::PID_State_t DjiMotorBase::GetPIDState(uint8_t mode) con
         return theta_pid_.State();
     }
     return control::ConstrainedPID::PID_State_t();
-}
-
-void DjiMotorBase::SetMode(uint8_t mode) {
-    state_.mode = mode;
-    // Sync absolute mode to base class
-    state_.absolute_mode = (mode & ABSOLUTE) != 0;
-}
-
-float DjiMotorBase::GetTarget() const {
-    return state_.target;
-}
-
-bool DjiMotorBase::IsHolding() const {
-    return state_.holding;
-}
-
-void DjiMotorBase::Hold(bool override) {
-    if (!IsHolding() && state_.mode & THETA) {
-        SetTarget(GetOutputShaftTheta(), override);
-    }
-}
-
-void DjiMotorBase::SetSpeedOffset(float offset) {
-    state_.speed_offset = offset;
-}
-
-void DjiMotorBase::SetTorque(float torque_nm, bool override) {
-    RM_ASSERT_TRUE(torque_constant_ > 0, "Torque constant not set for this motor");
-    if (state_.mode & CURRENT) {
-        RM_ASSERT_TRUE(max_current_amp_ > 0, "Current range not configured for this motor");
-        float current_a = torque_nm / torque_constant_;
-        SetTarget((float)(int16_t)linear_remap(current_a, -max_current_amp_, max_current_amp_,
-                                               (float)-max_raw_current_, (float)max_raw_current_),
-                  override);
-    } else {
-        state_.target_torque = fabsf(torque_nm);
-    }
-}
-
-float DjiMotorBase::GetTorque() const {
-    return state_.current * torque_constant_;
 }
 
 void DjiMotorBase::RegisterErrorCallback(DjiMotorBase::callback_t callback, void* instance) {

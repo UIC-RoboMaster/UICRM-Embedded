@@ -82,8 +82,8 @@ struct DjiMotorState {
 
     // ── DJI 专属控制字段 ──
     float target = 0;                      // 目标值：角度 [rad] 或 角速度 [rad/s]
-    float speed_offset = 0;                // 前馈速度偏移
-    float target_torque = 0;              // EFFORT 模式下趋近目标角的力矩幅值 [N·m]
+    float speed_offset = 0;                // 前馈速度偏移 [rad/s]，叠加到 ω 环设定
+    float torque_feedforward = 0;          // 前馈力矩 [N·m]，叠加到 ω 环电流输出
     float proximity_in = 0.05;             // 进入保持状态的临界角度差
     float proximity_out = 0.15;            // 退出保持状态的临界角度差
     bool holding = true;                   // 角度模式下是否已达目标
@@ -105,14 +105,12 @@ class DjiMotorBase : public CanMotorBase {
     enum motor_mode {
         // 未使用
         NONE = 0x00,
-        // 未使用
+        // 开环电流指令：state_.target 为 raw 电流 setpoint，旁路 PID
         CURRENT = 0x01,
         // 启用速度环控制
         OMEGA = 0x02,
         // 启用角度环控制
         THETA = 0x04,
-        // 恒力矩趋近目标角；到位后自动切 THETA|OMEGA PID 保持。须与 THETA 联用
-        EFFORT = 0x08,
         // 反转电机方向
         INVERTED = 0x40,
         // ABSOLUTE 模式下，对外输出轴角度限制在 [0, 2π]；内部仍累计圈数，
@@ -140,51 +138,30 @@ class DjiMotorBase : public CanMotorBase {
      */
     static void SetFrequency(uint32_t freq = 1000);
 
-    /**
-     * @brief 更新电机的反馈数据
-     * @note 仅由子类实现；在 CAN 接收回调中调用，不要在其他地方调用
-     * @param data[]  原始数据
-     */
-    void UpdateData(const uint8_t data[]) override;
-
-    /**
-     * @brief 获得电机转子角度
-     * @return 编码器角度 [rad]
-     */
+    /** @brief 获得电机转子角度 [rad] */
     float GetTheta() const override;
 
-    /**
-     * @brief 获得电机转子角速度
-     * @return 角速度 [rad/s]
-     */
+    /** @brief 获得电机转子角速度 [rad/s] */
     float GetOmega() const override;
 
-    /**
-     * @brief 获得输出轴累计角度
-     * @return 输出轴角度 [rad]
-     */
+    /** @brief 获得输出轴累计角度 [rad] */
     float GetOutputShaftTheta() const override;
 
-    /**
-     * @brief 获得输出轴角速度
-     * @return 输出轴角速度 [rad/s]
-     */
+    /** @brief 获得输出轴角速度 [rad/s] */
     float GetOutputShaftOmega() const override;
 
     /**
-     * @brief 使能电机输出
+     * @brief 获取反馈力矩 [N·m]（由电流反馈 × Kt 得到）
      */
+    float GetTorque() const;
+
+    /** @brief 使能电机输出 */
     void Enable() override;
 
-    /**
-     * @brief 禁用电机输出
-     */
+    /** @brief 禁用电机输出 */
     void Disable() override;
 
-    /**
-     * @brief 查询电机是否使能
-     * @return true 表示已使能
-     */
+    /** @brief 查询电机是否使能 */
     bool IsEnable() const override;
 
     /**
@@ -192,6 +169,12 @@ class DjiMotorBase : public CanMotorBase {
      * @return 输出电流值 [raw]
      */
     int16_t GetOutput() override;
+
+    /**
+     * @brief 读取上一次设置的目标值
+     * @return 输出轴的目标：角度 [RAD]、累计角度 [RAD]、角速度 [RAD/S]（取决于模式）
+     */
+    float GetTarget() const;
 
     /**
      * @brief 获得原始电流反馈
@@ -206,10 +189,47 @@ class DjiMotorBase : public CanMotorBase {
     uint16_t GetTemp() const;
 
     /**
+     * @brief 在角度控制模式下，是否已经达到目标角度。
+     */
+    bool IsHolding() const;
+
+    /**
+     * @brief 在角度控制模式下，使电机停止在当前位置。
+     * @param override 应为 true
+     */
+    void Hold(bool override = true);
+
+    /**
+     * @brief 在 ω 环设定值上叠加前馈角速度
+     * @note 用于底盘同步等速度前馈；力矩前馈请用 SetTorqueFeedforward
+     */
+    void SetSpeedOffset(float offset);
+
+    /**
+     * @brief 在 ω 环电流输出上叠加前馈力矩 [N·m]
+     * @note 须启用 OMEGA；I_cmd = PID_ω(...) + τ_ff/Kt，C620 内环负责跟踪电流
+     */
+    void SetTorqueFeedforward(float torque_nm);
+
+    /**
+     * @brief 开环力矩指令 [N·m]，旁路 PID
+     * @note 须 SetMode(CURRENT)；级联控制下的力矩前馈请用 SetTorqueFeedforward
+     * @param override 同 SetTarget
+     */
+    void SetTorque(float torque_nm, bool override = true);
+
+    /**
      * @brief 设置减速比
      * @param ratio 减速比，必须大于 0
      */
     void SetTransmissionRatio(float ratio);
+
+    /**
+     * @brief
+     * 设置电机的工作模式，工作模式由若干个 bool 值组成，请参考电机模式的定义，启动多个模式的情况需要使用或运算
+     * @param mode 电机的工作模式
+     */
+    void SetMode(uint8_t mode);
 
     /**
      * @brief 设置绝对模式
@@ -218,15 +238,16 @@ class DjiMotorBase : public CanMotorBase {
     void SetAbsoluteMode(bool enable);
 
     /**
+     * @brief 更新电机的反馈数据
+     * @note 仅由子类实现；在 CAN 接收回调中调用，不要在其他地方调用
+     * @param data[]  原始数据
+     */
+    void UpdateData(const uint8_t data[]) override;
+
+    /**
      * @brief 更新电机的保持状态（DJI 模式专用逻辑）
      */
     void UpdateHoldingState();
-
-    /**
-     * @brief 通过电机的 pid 控制器计算电机的输出
-     * @note 本函数会在电机输出进程中按照所设定的频率被自动调用，正常情况下请勿手动调用
-     */
-    void CalcOutput();
 
     /**
      * @brief 设置目标
@@ -236,10 +257,10 @@ class DjiMotorBase : public CanMotorBase {
     void SetTarget(float target, bool override = true) override;
 
     /**
-     * @brief 读取上一次设置的目标值
-     * @return 输出轴的目标：角度 [RAD]、累计角度 [RAD]、角速度 [RAD/S]（取决于模式）
+     * @brief 通过电机的 pid 控制器计算电机的输出
+     * @note 本函数会在电机输出进程中按照所设定的频率被自动调用，正常情况下请勿手动调用
      */
-    float GetTarget() const;
+    void CalcOutput();
 
     /**
      * @brief 设置电机的 PID
@@ -252,13 +273,6 @@ class DjiMotorBase : public CanMotorBase {
      * @brief 获取电机 PID 数值
      */
     control::ConstrainedPID::PID_State_t GetPIDState(uint8_t mode) const;
-
-    /**
-     * @brief
-     * 设置电机的工作模式，工作模式由若干个 bool 值组成，请参考电机模式的定义，启动多个模式的情况需要使用或运算
-     * @param mode 电机的工作模式
-     */
-    void SetMode(uint8_t mode);
 
     /**
      * @brief 设置 ServoMotor 为 DjiMotorBase 的友元，因为它们需要使用 DjiMotorBase 的许多私有参数。
@@ -287,36 +301,6 @@ class DjiMotorBase : public CanMotorBase {
      * @brief 设置在执行输出数据后的回调函数，一般用于垃圾清理等
      */
     static void RegisterPostOutputCallback(callback_t callback, void* instance);
-
-    /**
-     * @brief 在角度控制模式下，是否已经达到目标角度。
-     */
-    bool IsHolding() const;
-
-    /**
-     * @brief 在角度控制模式下，使电机停止在当前位置。
-     * @param override 应为 true
-     */
-    void Hold(bool override = true);
-
-    /**
-     * @brief 在电机目标速度（角度环 PID 的输出）上加上一个偏移量
-     * @note 用于实现前馈
-     */
-    void SetSpeedOffset(float offset);
-
-    /**
-     * @brief 设置目标力矩 [N·m]
-     * @note CURRENT 模式：带符号恒力矩，直接输出；须 SetMode(CURRENT)
-     * @note EFFORT 模式：力矩幅值（取绝对值），方向由角度误差决定；须 SetMode(THETA | EFFORT) + SetTarget
-     * @param override 仅 CURRENT 模式有效
-     */
-    void SetTorque(float torque_nm, bool override = true);
-
-    /**
-     * @brief 获取反馈力矩 [N·m]
-     */
-    float GetTorque() const;
 
   protected:
     DjiMotorState state_;  // 电机全部状态数据（反馈 + 控制）
@@ -396,9 +380,5 @@ class DjiMotorBase : public CanMotorBase {
     static callback_t post_output_callback_;
     static void* post_output_callback_instance_;
 };
-
-
-
-
 
 }  // namespace driver
