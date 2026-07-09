@@ -22,6 +22,7 @@
 
 #include "cmsis_os.h"
 #include "task.h"
+#include "tim.h"
 
 static TIM_HandleTypeDef* htim_os = nullptr;
 
@@ -65,3 +66,7 @@ namespace bsp {
     }
 
 } /* namespace bsp */
+
+extern "C" void RM_RTOS_SYS_HighresClock_Init() {
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
+}

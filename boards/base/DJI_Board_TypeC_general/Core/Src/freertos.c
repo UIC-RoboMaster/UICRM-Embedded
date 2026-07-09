@@ -107,6 +107,7 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+    RM_RTOS_SYS_HighresClock_Init();
     RM_RTOS_Init();
 
   /* USER CODE END Init */

@@ -45,7 +45,8 @@ extern TIM_HandleTypeDef htim23;
 extern TIM_HandleTypeDef htim24;
 
 /* USER CODE BEGIN Private defines */
-
+// TODO 有待商议
+#define BOARD_TIM_SYS htim24
 /* USER CODE END Private defines */
 
 void MX_TIM1_Init(void);

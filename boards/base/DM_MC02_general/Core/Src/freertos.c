@@ -109,6 +109,7 @@ __weak void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTask
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+  RM_RTOS_HighresClock_Init();
   RM_RTOS_Init();
   /* USER CODE END Init */
 

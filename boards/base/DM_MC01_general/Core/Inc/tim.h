@@ -43,7 +43,8 @@ extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim8;
 
 /* USER CODE BEGIN Private defines */
-
+// TODO 有待商议
+#define BOARD_TIM_SYS htim5
 /* USER CODE END Private defines */
 
 void MX_TIM1_Init(void);
