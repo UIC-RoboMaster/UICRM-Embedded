@@ -25,30 +25,34 @@
 namespace driver {
 
 /**
- * @brief DJI M2006/P36 减速电机配置
- *
- * C610 电调: raw_current ∈ [-10000, 10000] 对应转矩电流 ∈ [-10A, 10A]
- * 编码器: 转子机械值 0～8191 对应机械角度 0～360°
- * 减速比: 36:1
+ * @brief DJI M2006/P36 减速电机默认配置
+ * @details 本结构体包含了电机编码器、电调电流映射、减速比以及转矩常数等核心物理参数
+ * - **电调映射**：-10000 ~ 10000 对应 -10A ~ 10A
+ * - **编码器**：0 ~ 8191 对应 0 ~ 360°
+ * - **减速比**：36:1
  */
 struct Motor2006Config {
-    static constexpr int16_t MAX_RAW_THETA = 8191;           // 转子机械角最大值 [raw] 0->8191 对应 0~360°
-    static constexpr int16_t MAX_RAW_CURRENT = 10000;        // 转矩电流反馈最大值 [raw] -10000->10000 对应 -10A~10A
-    static constexpr float MAX_CURRENT = 10.0f;              // 最大转矩电流 [A]
-    static constexpr float RATED_TORQUE_CONSTANT = 0.18f;     // 额定转矩常数 [mN·m/A]
-    static constexpr float ORIGINAL_TRANSMISSION_RATIO = 36.0f; // 减速比 (原始)
+    static constexpr int16_t MAX_RAW_THETA = 8191;           ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+    static constexpr int16_t MAX_RAW_CURRENT = 10000;        ///< 转矩电流反馈最大值（对应实际电流 -10A ~ 10A）
+    static constexpr float MAX_CURRENT = 10.0f;              ///< 最大转矩电流 [A]
+    static constexpr float RATED_TORQUE_CONSTANT = 0.18f;     ///< 额定转矩常数 [mN·m/A]
+    static constexpr float ORIGINAL_TRANSMISSION_RATIO = 36.0f; ///< 默认减速比 (36:1)
 };
 
 /**
- * @brief DJI M2006/P36 减速电机
- * @note 搭配 C610 电调使用，支持角度/速度级联控制及力矩前馈、开环电流指令。
- *       通过 36:1 减速箱驱动输出轴，适用于 RoboMaster 拨弹机构等功能部件。
+ * @class DJI M2006/P36 减速电机类
+ * @brief 实现 DJI M2006/P36 减速电机的基本功能
+ * @details 本类继承自 DjiMotorBase，实现了 DJI M2006/P36 减速电机的基本功能
+ * - **构造函数**：初始化 CAN 通信和电机状态
+ * - **CAN 数据更新回调**：由 CAN 接收中断调用，不应在其他上下文手动调用
+ * - **打印电机调试数据**：输出在线状态、角度、角速度、原始电流值
+ * - **设置电机输出电流**：自动钳位到 [-MAX_RAW_CURRENT, MAX_RAW_CURRENT]
  */
 class Motor2006 : public DjiMotorBase {
   public:
     /**
      * @brief M2006 构造函数
-     * @param can    CAN 对象
+     * @param can    硬件 CAN 对象
      * @param rx_id  RX ID = 0x200 + 电调 ID
      * @param tx_id  电调接收报文标识符，0x00 表示自动解析
      */

@@ -25,31 +25,35 @@
 namespace driver {
 
 /**
- * @brief DJI M3508/P19 减速电机配置
- *
- * C620 电调: raw_current ∈ [-16384, 16384] 对应转矩电流 ∈ [-20A, 20A]
- * 编码器: 转子机械值 0～8191 对应机械角度 0～360°
- * 减速比: 3591:187 ≈ 19.2:1
+ * @brief DJI M3508/P19 减速电机默认配置
+ * @details 本结构体包含了电机编码器、电调电流映射、减速比以及转矩常数等核心物理参数
+ * - **电调映射**：-16384 ~ 16384 对应 -20A ~ 20A
+ * - **编码器**：0 ~ 8191 对应 0 ~ 360°
+ * - **减速比**：3591:187 ≈ 19.2:1
  */
 struct Motor3508Config {
-    static constexpr int16_t MAX_RAW_THETA = 8191;                     ///< 转子机械角最大值 [raw]
-    static constexpr int16_t MAX_RAW_CURRENT = 16384;                  ///< 转矩电流反馈最大值 [raw]
-    static constexpr float MAX_CURRENT = 20.0f;                    ///< 最大转矩电流 [A]
-    static constexpr float RATED_TORQUE_CONSTANT = 0.3f;             ///< 额定转矩常数 [Nm/A]
-    static constexpr float ORIGINAL_TRANSMISSION_RATIO = 3591.0f / 187.0f; ///< 减速比 (根据减速箱)
+    static constexpr int16_t MAX_RAW_THETA = 8191;                     ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+    static constexpr int16_t MAX_RAW_CURRENT = 16384;                  ///< 转矩电流反馈最大值 [raw] -16384->16384 对应 -20A~20A
+    static constexpr float MAX_CURRENT = 20.0f;                        ///< 最大转矩电流 [A]
+    static constexpr float RATED_TORQUE_CONSTANT = 0.3f;               ///< 额定转矩常数 [mN·m/A]
+    static constexpr float ORIGINAL_TRANSMISSION_RATIO = 3591.0f / 187.0f; ///< 默认减速比 (19.2:1)
 };
 
 /**
- * @brief DJI M3508/P19 减速电机
- * @note 搭配 C620 电调使用，支持角度/速度级联控制及力矩前馈、开环电流指令。
- *       通过 19.2:1 减速箱驱动输出轴，适用于 RoboMaster 底盘与云台。
+ * @class DJI M3508/P19 减速电机类
+ * @brief 实现 DJI M3508/P19 减速电机的基本功能
+ * @details 本类继承自 DjiMotorBase，实现了 DJI M3508/P19 减速电机的基本功能
+ * - **构造函数**：初始化 CAN 通信和电机状态
+ * - **CAN 数据更新回调**：由 CAN 接收中断调用，不应在其他上下文手动调用
+ * - **打印电机调试数据**：输出在线状态、角度、角速度、原始电流值
+ * - **设置电机输出电流**：自动钳位到 [-MAX_RAW_CURRENT, MAX_RAW_CURRENT]
  */
 class Motor3508 : public DjiMotorBase {
   public:
     /**
      * @brief M3508 构造函数
-     * @param can    CAN 对象
-     * @param rx_id  RX ID = 0x200 + 电调 ID
+     * @param can    硬件 CAN 对象
+     * @param rx_id  RX ID = 0x200 + 电机 ID
      * @param tx_id  电调接收报文标识符，0x00 表示自动解析
      */
     Motor3508(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
@@ -91,8 +95,6 @@ class Motor3508 : public DjiMotorBase {
     static constexpr uint16_t ResolveTxId(uint16_t rx_id) {
         return (rx_id >= 0x205) ? 0x1ff : 0x200;
     }
-
-    static const int16_t MAX_OUT = 32767;  ///< 最大输出电流 (未使用，见 Motor3508Config)
 };
 
 }  // namespace driver
