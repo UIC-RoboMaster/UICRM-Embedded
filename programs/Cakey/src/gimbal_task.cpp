@@ -196,7 +196,7 @@ void init_gimbal() {
         .mode = control::ConstrainedPID::OutputFilter |  // 输出滤波
                 control::ConstrainedPID::Integral_Limit  // 积分限幅
     };
-    pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::DjiMotorBase::THETA);
 
     // 速度环
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {

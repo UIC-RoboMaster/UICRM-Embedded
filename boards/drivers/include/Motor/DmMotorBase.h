@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "MotorCanBase.h"
+#include "CanMotorBase.h"
 #include "bsp_thread.h"
 #include "main.h"
 

@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "CanMotorBase.h"
 
 using namespace bsp;
 

@@ -21,7 +21,7 @@
 #pragma once
 #include <unordered_map>
 
-#include "MotorCanBase.h"
+#include "CanMotorBase.h"
 #include "bsp_thread.h"
 #include "pid.h"
 #include "utils.h"
