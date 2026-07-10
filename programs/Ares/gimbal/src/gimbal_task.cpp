@@ -138,14 +138,13 @@ void gimbalTask(void* arg) {
         //            pitch_diff = 0;
         //        }
 
-        const float offset_ratio =
-            0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
-        const float offset_filter_ratio =
-            0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
-        static float speed_offset = 0;
-        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
-
-        yaw_motor->SetSpeedOffset(speed_offset);
+        // const float offset_ratio =
+        //     0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
+        // const float offset_filter_ratio =
+        //     0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
+        // static float speed_offset = 0;
+        // speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
+        // yaw_motor->SetSpeedOffset(speed_offset);
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
