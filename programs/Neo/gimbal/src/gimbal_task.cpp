@@ -20,7 +20,7 @@
 
 #include "gimbal_task.h"
 
-#include "MotorPWMBase.h"
+#include "PWMMotorBase.h"
 #include "chassis_task.h"
 #include "minipc_task.h"
 
@@ -30,7 +30,7 @@ driver::Motor6020* pitch_motor = nullptr;
 driver::Motor6020* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
-driver::MotorPWMBase* bulletCap = nullptr;
+driver::PWMMotorBase* bulletCap = nullptr;
 float pitch_diff, yaw_diff;
 void gimbalTask(void* arg) {
     UNUSED(arg);
@@ -288,7 +288,7 @@ void init_gimbal() {
     gimbal_param = gimbal->GetData();
 
     // init cap
-    bulletCap = new driver::MotorPWMBase(&htim1, 1, 1000000, 50, 1440);  // 1435
+    bulletCap = new driver::PWMMotorBase(&htim1, 1, 1000000, 50, 1440);  // 1435
 }
 void kill_gimbal() {
     yaw_motor->Disable();

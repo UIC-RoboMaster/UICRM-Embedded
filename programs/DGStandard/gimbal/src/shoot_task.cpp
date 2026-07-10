@@ -20,8 +20,8 @@
 
 #include "shoot_task.h"
 
-static driver::MotorPWMBase* flywheel_left = nullptr;
-static driver::MotorPWMBase* flywheel_right = nullptr;
+static driver::PWMMotorBase* flywheel_left = nullptr;
+static driver::PWMMotorBase* flywheel_right = nullptr;
 
 driver::DjiMotorBase* steering_motor = nullptr;
 
@@ -181,8 +181,8 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::MotorPWMBase(&htim1, 1, 1000000, 500, 1000);
-    flywheel_right = new driver::MotorPWMBase(&htim1, 4, 1000000, 500, 1000);
+    flywheel_left = new driver::PWMMotorBase(&htim1, 1, 1000000, 500, 1000);
+    flywheel_right = new driver::PWMMotorBase(&htim1, 4, 1000000, 500, 1000);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
 

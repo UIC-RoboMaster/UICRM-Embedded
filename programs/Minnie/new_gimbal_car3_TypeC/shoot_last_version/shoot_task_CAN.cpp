@@ -20,8 +20,8 @@
 
 #include "shoot_task_CAM.h"
 
-// static driver::MotorPWMBase* flywheel_left = nullptr;
-// static driver::MotorPWMBase* flywheel_right = nullptr;
+// static driver::PWMMotorBase* flywheel_left = nullptr;
+// static driver::PWMMotorBase* flywheel_right = nullptr;
 
 static driver::Motor3508* flywheel_left = nullptr;
 static driver::Motor3508* flywheel_right = nullptr;

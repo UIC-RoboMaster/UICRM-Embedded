@@ -33,7 +33,7 @@
 #include "referee_task.h"
 #include "remote_task.h"
 // #include "shoot_task_CAM.h"
-#include "MotorPWMBase.h"
+#include "PWMMotorBase.h"
 #include "shoot_task.h"
 #include "tinyML.h"
 #include "ui_task.h"
@@ -43,7 +43,7 @@
  */
 //
 // static ::GPIO* gimbal_power = nullptr;
-static driver::MotorPWMBase* Laser = nullptr;
+static driver::PWMMotorBase* Laser = nullptr;
 
 void RM_Car_main_remote_mode() {
     char s[20];

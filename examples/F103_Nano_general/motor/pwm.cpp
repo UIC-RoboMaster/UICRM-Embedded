@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "MotorPWMBase.h"
+#include "PWMMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
@@ -31,11 +31,11 @@
 #define TIM_CLOCK_FREQ 1000000
 #define MOTOR_OUT_FREQ 500
 
-driver::MotorPWMBase* motor1;
+driver::PWMMotorBase* motor1;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart1);
-    motor1 = new driver::MotorPWMBase(&htim2, 1, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, 0);
+    motor1 = new driver::PWMMotorBase(&htim2, 1, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, 0);
 
     motor1->SetOutput(1000);
     HAL_Delay(3000);

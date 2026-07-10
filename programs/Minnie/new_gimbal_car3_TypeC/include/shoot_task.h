@@ -20,7 +20,7 @@
 
 #pragma once
 #include "DjiMotorBase.h"
-#include "MotorPWMBase.h"
+#include "PWMMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "cmsis_os2.h"
