@@ -54,7 +54,7 @@ ServoMotor::ServoMotor(servo_t data, float align_angle, float proximity_in,
     omega_pid_.Reinit(data.omega_pid_param, data.max_iout, data.max_out);
     hold_pid_.Reinit(data.hold_pid_param, data.hold_max_iout, data.hold_max_out);
 
-    data.motor->state_.can->RegisterRxCallback(data.motor->state_.rx_id, servomotor_callback, this);
+    data.motor->can_->RegisterRxCallback(data.motor->rx_id_, servomotor_callback, this);
 
     jam_callback_ = nullptr;
     detect_head_ = -1;

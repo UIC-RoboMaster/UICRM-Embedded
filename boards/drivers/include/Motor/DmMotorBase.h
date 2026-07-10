@@ -280,31 +280,26 @@ class DmMotorBase : public CanMotorBase {
     void SetMode(DmControlMode mode);
 
     /**
-     * @brief 设置 VEL 模式目标速度
-     * @param target   期望速度 [rad/s]
+     * @brief 设置目标值（与 DJI 电机 SetTarget 语义对齐）
+     * @param target   VEL 模式：期望速度 [rad/s]；MIT / POS_VEL 模式：期望位置 [rad]
      * @param override 保留参数，与基类接口一致
-     * @note  仅在 VEL 模式下有效，否则触发断言
      */
     void SetTarget(float target, bool override = true) override;
 
     /**
-     * @brief 设置 MIT 模式目标
-     * @param position 期望位置 [rad]
+     * @brief POS_VEL 模式：设置期望速度 [rad/s]
+     * @note  与 DJI 的 SetSpeedOffset 命名一致，便于云台等上层统一调用
+     */
+    void SetPosParams(float velocity);
+
+    /**
+     * @brief MIT 模式：设置速度、增益与前馈力矩
      * @param velocity 期望速度 [rad/s]
      * @param kp       位置增益
      * @param kd       速度增益
      * @param t_ff     前馈力矩 [N·m]
-     * @note  仅在 MIT 模式下有效，否则触发断言
      */
-    void SetTarget(float position, float velocity, float kp, float kd, float t_ff);
-
-    /**
-     * @brief 设置 POS_VEL 模式目标
-     * @param position 期望位置 [rad]
-     * @param velocity 期望速度 [rad/s]
-     * @note  仅在 POS_VEL 模式下有效，否则触发断言
-     */
-    void SetTarget(float position, float velocity);
+    void SetMitParams(float velocity, float kp, float kd, float t_ff);
 
   protected:
     /**

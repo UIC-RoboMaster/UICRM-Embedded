@@ -24,7 +24,6 @@
 #include "cmsis_os.h"
 #include "main.h"
 #include "pid.h"
-#include "Motor3508.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin

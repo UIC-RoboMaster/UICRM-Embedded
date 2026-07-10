@@ -26,8 +26,6 @@
 #include "pid.h"
 #include "utils.h"
 
-#define M3508P19_MAX_OUTPUT 12000.0f
-
 namespace driver {
 
 /**
@@ -68,11 +66,6 @@ struct DjiMotorState {
     float transmission_ratio = 1;  // 减速比
     bool enable = true;            // 使能
     bool absolute_mode = false;    // 绝对模式：内部仍累计圈数，output_shaft_theta 限制在 [0, 2π]
-
-    // ── CAN 连接 ──
-    bsp::CAN* can = nullptr;  // CAN 硬件对象
-    uint16_t rx_id = 0;       // 电机反馈报文标识符
-    uint16_t tx_id = 0;       // 电机接收报文标识符
 
     // ── 时间戳 ──
     uint32_t last_update_time_us = 0;  // 最近 CAN 包时间戳
@@ -304,6 +297,11 @@ class DjiMotorBase : public CanMotorBase {
 
   protected:
     DjiMotorState state_;  // 电机全部状态数据（反馈 + 控制）
+
+    bsp::CAN* can_ = nullptr;  // CAN 硬件对象
+    uint16_t rx_id_ = 0;       // 电机反馈报文标识符
+    uint16_t tx_id_ = 0;       // 电机控制报文标识符
+
     int16_t output_ = 0;   // 当前输出电流指令 [raw]
 
     /// 转矩常数 [N·m/A]，由各子类构造函数根据电机规格设置
@@ -379,6 +377,247 @@ class DjiMotorBase : public CanMotorBase {
     static void* pre_output_callback_instance_;
     static callback_t post_output_callback_;
     static void* post_output_callback_instance_;
+};
+
+
+// ===== Motor3508 =====
+
+/**
+ * @brief DJI M3508/P19 减速电机默认配置
+ * @details 本结构体包含了电机编码器、电调电流映射、减速比以及转矩常数等核心物理参数
+ * - **电调映射**：-16384 ~ 16384 对应 -20A ~ 20A
+ * - **编码器**：0 ~ 8191 对应 0 ~ 360°
+ * - **减速比**：3591:187 ≈ 19.2:1
+ */
+ struct Motor3508Config {
+  static constexpr int16_t MAX_RAW_THETA = 8191;                     ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+  static constexpr int16_t MAX_RAW_CURRENT = 16384;                  ///< 转矩电流反馈最大值 [raw] -16384->16384 对应 -20A~20A
+  static constexpr float MAX_CURRENT = 20.0f;                        ///< 最大转矩电流 [A]
+  static constexpr float RATED_TORQUE_CONSTANT = 0.3f;               ///< 额定转矩常数 [mN·m/A]
+  static constexpr float ORIGINAL_TRANSMISSION_RATIO = 3591.0f / 187.0f; ///< 默认减速比 (19.2:1)
+};
+
+/**
+* @class DJI M3508/P19 减速电机类
+* @brief 实现 DJI M3508/P19 减速电机的基本功能
+* @details 本类继承自 DjiMotorBase，实现了 DJI M3508/P19 减速电机的基本功能
+* - **构造函数**：初始化 CAN 通信和电机状态
+* - **CAN 数据更新回调**：由 CAN 接收中断调用，不应在其他上下文手动调用
+* - **打印电机调试数据**：输出在线状态、角度、角速度、原始电流值
+* - **设置电机输出电流**：自动钳位到 [-MAX_RAW_CURRENT, MAX_RAW_CURRENT]
+*/
+class Motor3508 : public DjiMotorBase {
+public:
+  /**
+   * @brief M3508 构造函数
+   * @param can    硬件 CAN 对象
+   * @param rx_id  RX ID = 0x200 + 电机 ID
+   * @param tx_id  电调接收报文标识符，0x00 表示自动解析
+   */
+  Motor3508(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
+
+  /**
+   * @brief CAN 数据更新回调
+   * @note 由 CAN 接收中断调用，不应在其他上下文手动调用
+   * @param data 8 字节 CAN 数据帧 [Theta_H, Theta_L, Omega_H, Omega_L, Curr_H, Curr_L, Temp, _]
+   */
+  void UpdateData(const uint8_t data[]) override final;
+
+  /**
+   * @brief 打印电机调试数据
+   * @note 输出在线状态、角度、角速度、温度、原始电流值
+   */
+  void PrintData() const override final;
+
+  /**
+   * @brief 设置电机输出电流
+   * @note 自动钳位到 [-MAX_RAW_CURRENT, MAX_RAW_CURRENT]
+   * @param val 原始电流值 [raw], raw_current ∈ [-16384, 16384] 对应转矩电流 ∈ [-20A, 20A]
+   */
+  void SetOutput(int16_t val) override final;
+
+private:
+  /**
+   * @brief CAN 接收回调，转发至 Motor3508::UpdateData
+   * @param ctx  指向 Motor3508 实例的指针
+   * @param data 原始 CAN 数据
+   */
+  static void RxThunk(void* ctx, const uint8_t data[]);
+
+  /**
+   * @brief 由 RX_ID 自动解析 TX_ID
+   * @note M3508 + C620 电调标准 CAN 协议标识符
+   * @param rx_id  RX ID = 0x200 + 电调 ID
+   * @return tx_id  由 rx_id 决定: 0x201 - 0x204 → 0x200, 0x205 - 0x208 → 0x1ff
+   */
+  static constexpr uint16_t ResolveTxId(uint16_t rx_id) {
+      return (rx_id >= 0x205) ? 0x1ff : 0x200;
+  }
+};
+
+
+// ===== Motor6020 =====
+
+/**
+ * @brief DJI GM6020 云台电机默认配置
+ * @details 本结构体包含了电机编码器、电调电流映射、减速比以及转矩常数等核心物理参数
+ * - **电调映射**：-16384 ~ 16384 对应 -3A ~ 3A
+ * - **编码器**：0 ~ 8191 对应 0 ~ 360°
+ * - **减速比**：1:1
+ */
+ struct Motor6020Config {
+  static constexpr int16_t MAX_RAW_THETA = 8191;           ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+  static constexpr int16_t MAX_RAW_CURRENT = 16384;         ///< 转矩电流反馈最大值 [raw] -16384->16384 对应 -3A~3A
+  static constexpr float MAX_CURRENT = 3.0f;                ///< 最大转矩电流 [A]
+  static constexpr float RATED_TORQUE_CONSTANT = 0.741f;    ///< 额定转矩常数 [mN·m/A]
+  static constexpr float ORIGINAL_TRANSMISSION_RATIO = 1.0f; ///< 默认减速比 (1:1)
+};
+
+/**
+* @class DJI GM6020 云台电机类
+* @brief 实现 DJI GM6020 云台电机的基本功能
+* @details 本类继承自 DjiMotorBase，实现了 DJI GM6020 云台电机的基本功能
+* - **构造函数**：初始化 CAN 通信和电机状态
+* - **CAN 数据更新回调**：由 CAN 接收中断调用，不应在其他上下文手动调用
+* - **打印电机调试数据**：输出在线状态、角度、角速度、温度、原始电流值
+* - **设置电机输出电流**：自动钳位到 [-MAX_RAW_CURRENT, MAX_RAW_CURRENT]
+* - **设置速度反馈的低通滤波系数**：设置速度反馈的低通滤波系数
+*/
+class Motor6020 : public DjiMotorBase {
+public:
+  /**
+   * @brief GM6020 构造函数
+   * @param can    硬件 CAN 对象
+   * @param rx_id  RX ID = 0x204 + 电机 ID
+   * @param tx_id  电机接收报文标识符，0x00 表示自动解析
+   */
+  Motor6020(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
+
+  /**
+   * @brief CAN 数据更新回调
+   * @note 由 CAN 接收中断调用，不应在其他上下文手动调用
+   * @param data 8 字节 CAN 数据帧 [Theta_H, Theta_L, Omega_H, Omega_L, Curr_H, Curr_L, Temp, _]
+   */
+  void UpdateData(const uint8_t data[]) override final;
+
+  /**
+   * @brief 打印电机调试数据
+   * @note 输出在线状态、角度、角速度、温度、原始电流值
+   */
+  void PrintData() const override final;
+
+  /**
+   * @brief 设置电机输出电流
+   * @note 自动钳位到 [-MAX_OUTPUT_CURRENT, MAX_OUTPUT_CURRENT]
+   * @param val 原始电流值 [raw], raw_current ∈ [-16384, 16384] 对应转矩电流 ∈ [-3A, 3A]
+   */
+  void SetOutput(int16_t val) override final;
+
+  /**
+   * @brief 设置速度反馈的低通滤波系数
+   * @param ratio 滤波系数 [0, 1]，越小滤波越强，默认 0.1
+   */
+  void SetSpeedFilter(float ratio);
+
+private:
+  /**
+   * @brief CAN 接收回调，转发至 Motor6020::UpdateData
+   * @param ctx  指向 Motor6020 实例的指针
+   * @param data 原始 CAN 数据
+   */
+  static void RxThunk(void* ctx, const uint8_t data[]);
+
+  /**
+   * @brief 由 RX_ID 自动解析 TX_ID
+   * @note 在 DJI RoboMaster Assistant 中配置为电流固件控制
+   * @param rx_id  RX ID = 0x204 + 电机 ID
+   * @return tx_id  电流固件中 0x205-0x208 → 0x1fe, 0x209 - 0x20B→0x2fe，非零直接使用
+   */
+  static constexpr uint16_t ResolveTxId(uint16_t rx_id) {
+      constexpr uint16_t GROUP2_RX_START = 0x209;
+      constexpr uint16_t TX1_ID = 0x1fe;
+      constexpr uint16_t TX2_ID = 0x2fe;
+      return (rx_id >= GROUP2_RX_START) ? TX2_ID : TX1_ID;
+  }
+
+  float input_speed_filter_ = 0.1;                ///< 速度反馈低通滤波系数 [0, 1]
+};
+
+
+// ===== Motor2006 =====
+
+/**
+ * @brief DJI M2006/P36 减速电机默认配置
+ * @details 本结构体包含了电机编码器、电调电流映射、减速比以及转矩常数等核心物理参数
+ * - **电调映射**：-10000 ~ 10000 对应 -10A ~ 10A
+ * - **编码器**：0 ~ 8191 对应 0 ~ 360°
+ * - **减速比**：36:1
+ */
+ struct Motor2006Config {
+  static constexpr int16_t MAX_RAW_THETA = 8191;           ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+  static constexpr int16_t MAX_RAW_CURRENT = 10000;        ///< 转矩电流反馈最大值（对应实际电流 -10A ~ 10A）
+  static constexpr float MAX_CURRENT = 10.0f;              ///< 最大转矩电流 [A]
+  static constexpr float RATED_TORQUE_CONSTANT = 0.18f;     ///< 额定转矩常数 [mN·m/A]
+  static constexpr float ORIGINAL_TRANSMISSION_RATIO = 36.0f; ///< 默认减速比 (36:1)
+};
+
+/**
+* @class DJI M2006/P36 减速电机类
+* @brief 实现 DJI M2006/P36 减速电机的基本功能
+* @details 本类继承自 DjiMotorBase，实现了 DJI M2006/P36 减速电机的基本功能
+* - **构造函数**：初始化 CAN 通信和电机状态
+* - **CAN 数据更新回调**：由 CAN 接收中断调用，不应在其他上下文手动调用
+* - **打印电机调试数据**：输出在线状态、角度、角速度、原始电流值
+* - **设置电机输出电流**：自动钳位到 [-MAX_RAW_CURRENT, MAX_RAW_CURRENT]
+*/
+class Motor2006 : public DjiMotorBase {
+public:
+  /**
+   * @brief M2006 构造函数
+   * @param can    硬件 CAN 对象
+   * @param rx_id  RX ID = 0x200 + 电调 ID
+   * @param tx_id  电调接收报文标识符，0x00 表示自动解析
+   */
+  Motor2006(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
+
+  /**
+   * @brief CAN 数据更新回调
+   * @note 由 CAN 接收中断调用，不应在其他上下文手动调用
+   * @param data 8 字节 CAN 数据帧 [Theta_H, Theta_L, Omega_H, Omega_L, Curr_H, Curr_L, _, _]
+   */
+  void UpdateData(const uint8_t data[]) override final;
+
+  /**
+   * @brief 打印电机调试数据
+   * @note 输出在线状态、角度、角速度、原始电流值
+   */
+  void PrintData() const override final;
+
+  /**
+   * @brief 设置电机输出电流
+   * @note 自动钳位到 [-MAX_RAW_CURRENT, MAX_RAW_CURRENT]
+   * @param val 原始电流值 [raw], raw_current ∈ [-10000, 10000] 对应转矩电流 ∈ [-10A, 10A]
+   */
+  void SetOutput(int16_t val) override final;
+
+private:
+  /**
+   * @brief CAN 接收回调，转发至 Motor2006::UpdateData
+   * @param ctx  指向 Motor2006 实例的指针
+   * @param data 原始 CAN 数据
+   */
+  static void RxThunk(void* ctx, const uint8_t data[]);
+
+  /**
+   * @brief 由 RX_ID 自动解析 TX_ID
+   * @note M2006 + C610 电调标准 CAN 协议标识符
+   * @param rx_id  RX ID = 0x200 + 电调 ID
+   * @return tx_id  由 rx_id 决定: 0x201 - 0x204 → 0x200, 0x205 - 0x208 → 0x1ff
+   */
+  static constexpr uint16_t ResolveTxId(uint16_t rx_id) {
+      return (rx_id >= 0x205) ? 0x1ff : 0x200;
+  }
+
 };
 
 }  // namespace driver

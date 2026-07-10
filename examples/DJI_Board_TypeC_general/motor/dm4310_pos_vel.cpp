@@ -42,7 +42,8 @@ void RM_RTOS_Init() {
 
     motor1->Enable();
     HAL_Delay(100);
-    motor1->SetTarget(0.0f, 0.0f);
+    motor1->SetTarget(0.0f);
+    motor1->SetPosParams(0.0f);
     HAL_Delay(1000);
 }
 
@@ -65,9 +66,11 @@ void RM_RTOS_Default_Task(const void* args) {
             }
             toggled = !toggled;
             if (toggled) {
-                motor1->SetTarget(motor1->GetTheta() + PI / 2, POS_VEL_OMEGA);
+                motor1->SetTarget(motor1->GetTheta() + PI / 2);
+                motor1->SetPosParams(POS_VEL_OMEGA);
             } else {
-                motor1->SetTarget(0.0f, 0.0f);
+                motor1->SetTarget(0.0f);
+    motor1->SetPosParams(0.0f);
             }
             osDelay(20);
         }

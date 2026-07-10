@@ -146,7 +146,9 @@ void DmMotorBase::UpdateData(const uint8_t data[]) {
     if (state_.rx.motor_id != (tx_id_ & 0x0f)) {
         return;
     }
-    state_.theta = signed_linear_remap(state_.rx.raw_theta, 0x7FFF, 0xFFFF, config_.angle_max);
+    //state_.theta = signed_linear_remap(state_.rx.raw_theta, 0x7FFF, 0xFFFF, config_.angle_max);
+    state_.theta = linear_remap<uint16_t, float>(state_.rx.raw_theta, 0, 65535, 0.0f, 2 * PI);
+
     state_.omega = signed_linear_remap(state_.rx.raw_omega, 0x7FF, 0xFFF, config_.omega_max);
     state_.torque = signed_linear_remap(state_.rx.raw_torque, 0x7FF, 0xFFF, config_.torque_max);    state_.feedback_pending = true;
 }
@@ -277,18 +279,31 @@ void DmMotorBase::CalcOutput() {
 
 void DmMotorBase::SetTarget(float target, bool override) {
     (void)override;
-    RM_ASSERT_TRUE(state_.mode == DmControlMode::VEL, "SetTarget(float) only valid in VEL mode");
-    state_.tx.SetVel(target);
+    switch (state_.mode) {
+    case DmControlMode::VEL:
+        state_.tx.SetVel(target);
+        break;
+    case DmControlMode::MIT:
+    case DmControlMode::POS_VEL:
+        state_.tx.p_des = target;
+        break;
+    default:
+        RM_ASSERT_TRUE(false, "SetTarget not supported in current DM control mode");
+        break;
+    }
 }
 
-void DmMotorBase::SetTarget(float position, float velocity, float kp, float kd, float t_ff) {
-    RM_ASSERT_TRUE(state_.mode == DmControlMode::MIT, "SetTarget(5 args) only valid in MIT mode");
-    state_.tx.SetMit(position, velocity, kp, kd, t_ff);
+void DmMotorBase::SetPosParams(float velocity) {
+    RM_ASSERT_TRUE(state_.mode == DmControlMode::POS_VEL, "SetSpeedOffset only valid in POS_VEL mode");
+    state_.tx.v_des = velocity;
 }
 
-void DmMotorBase::SetTarget(float position, float velocity) {
-    RM_ASSERT_TRUE(state_.mode == DmControlMode::POS_VEL, "SetTarget(2 args) only valid in POS_VEL mode");
-    state_.tx.SetPosVel(position, velocity);
+void DmMotorBase::SetMitParams(float velocity, float kp, float kd, float t_ff) {
+    RM_ASSERT_TRUE(state_.mode == DmControlMode::MIT, "SetMitParams only valid in MIT mode");
+    state_.tx.v_des = velocity;
+    state_.tx.kp = kp;
+    state_.tx.kd = kd;
+    state_.tx.t_ff = t_ff;
 }
 
 float DmMotorBase::GetTorque() const {
@@ -312,13 +327,35 @@ void DmMotorBase::TransmitOutput() {
 DMMotor4310::DMMotor4310(bsp::CAN* can, uint16_t master_id, uint16_t motor_can_id, DmControlMode mode)
     : DmMotorBase(can, master_id, motor_can_id, mode, DmMotor4310Config::J4310_Config) {}
 
+    
 void DMMotor4310::PrintData() const {
     set_cursor(0, 0);
     clear_screen();
-    print("Position: % .4f ", GetTheta());
-    print("Velocity: % .4f ", GetOmega());
-    print("Torque: % .4f ", GetTorque());
-    print("Rotor temp: % .4f \r\n", state_.rx.raw_rotor_temp);
+
+    print("=== DM4310 ===\r\n");
+    print("online:%d enable:%d abs:%d pending:%d\r\n", IsOnline(), state_.enable, state_.absolute_mode,
+          state_.feedback_pending);
+    print("mode:%u status:%u rx_id:0x%03X tx_id:0x%03X last_us:%u\r\n", static_cast<uint16_t>(state_.mode),
+          static_cast<uint8_t>(GetControlStatus()), rx_id_, tx_id_, last_uptime_microsec_);
+
+    print("--- RX raw ---\r\n");
+    print("motor_id:%u raw_theta:%u raw_omega:%u raw_torque:%u\r\n", state_.rx.motor_id, state_.rx.raw_theta,
+          state_.rx.raw_omega, state_.rx.raw_torque);
+    print("mos_temp:%u rotor_temp:%u\r\n", state_.rx.raw_mos_temp, state_.rx.raw_rotor_temp);
+
+    print("--- Feedback ---\r\n");
+    print("theta:% .4f omega:% .4f torque:% .4f\r\n", GetTheta(), GetOmega(), GetTorque());
+    print("out_theta:% .4f out_omega:% .4f\r\n", GetOutputShaftTheta(), GetOutputShaftOmega());
+
+    print("--- Angle track ---\r\n");
+    print("pwr_on:% .4f enc_rel:% .4f enc_turns:% .2f enc_cum:% .4f\r\n", state_.power_on_angle,
+          state_.encoder_relative_angle, state_.encoder_cumulated_turns, state_.encoder_cumulated_angle);
+    print("out_rel:% .4f out_turns:% .2f out_cum:% .4f\r\n", state_.output_relative_angle,
+          state_.output_cumulated_turns, state_.output_cumulated_angle);
+
+    print("--- TX target ---\r\n");
+    print("p_des:% .4f v_des:% .4f kp:% .2f kd:% .2f t_ff:% .4f\r\n", state_.tx.p_des, state_.tx.v_des,
+          state_.tx.kp, state_.tx.kd, state_.tx.t_ff);
 }
 
 }  // namespace driver

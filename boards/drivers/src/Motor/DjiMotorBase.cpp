@@ -48,9 +48,9 @@ void* DjiMotorBase::post_output_callback_instance_ = nullptr;
 
 DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     : CanMotorBase(30) {
-    state_.can = can;
-    state_.rx_id = rx_id;
-    state_.tx_id = tx_id;
+    can_ = can;
+    rx_id_ = rx_id;
+    tx_id_ = tx_id;
 
     // 如果是第一次初始化，需要创建一个后台线程以固定频率输出电机指令
     if (!is_init_) {
@@ -65,7 +65,7 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     }
     // 在已有 group 中查找 (tx_id, can) 匹配的组
     for (uint8_t i = 0; i < 10; i++) {
-        if (groups_[i].occupied && groups_[i].tx_id == state_.tx_id && groups_[i].can == state_.can) {
+        if (groups_[i].occupied && groups_[i].tx_id == tx_id_ && groups_[i].can == can_) {
             RM_ASSERT_LT(groups_[i].count, 4, "Exceeding maximum of 4 motor commands per CAN message");
             groups_[i].motors[groups_[i].count++] = this;
             break;
@@ -73,8 +73,8 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
         // 如果没有找到匹配的组，则占用一个新的槽位
         if (!groups_[i].occupied) {
             groups_[i].occupied = true;
-            groups_[i].tx_id = state_.tx_id;
-            groups_[i].can = state_.can;
+            groups_[i].tx_id = tx_id_;
+            groups_[i].can = can_;
             groups_[i].motors[0] = this;
             groups_[i].count = 1;
             group_count_++;
@@ -103,7 +103,7 @@ void DjiMotorBase::TransmitOutput(const MotorGroup& group) {
 
     for (uint8_t i = 0; i < group.count; ++i) {
         // 计算电机在数据帧中的索引位置
-        const uint8_t motor_idx = (group.motors[i]->state_.rx_id - 1) % 4;
+        const uint8_t motor_idx = (group.motors[i]->rx_id_ - 1) % 4;
         // 获取电机的电流输出值
         const int16_t output = group.motors[i]->output_;
         // 将电流输出值拆分为高字节和低字节，并放入数据帧中
@@ -412,5 +412,172 @@ void DjiMotorBase::RegisterPostOutputCallback(DjiMotorBase::callback_t callback,
     post_output_callback_instance_ = instance;
 }
 
+
+// ===== Motor3508 =====
+
+Motor3508::Motor3508(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
+    : DjiMotorBase(can, rx_id, tx_id != 0x00 ? tx_id : ResolveTxId(rx_id)) {
+    // M3508 RX_ID = 0x200 + 电机 ID
+    // TX_ID 须在 DjiMotorBase 构造前解析，否则分组发送会使用错误的 CAN ID
+    if (tx_id == 0x00) {
+        RM_ASSERT_GE(rx_id, 0x201, "Invalid rx id for M3508");
+    }
+    state_.transmission_ratio = Motor3508Config::ORIGINAL_TRANSMISSION_RATIO;
+    torque_constant_ = Motor3508Config::RATED_TORQUE_CONSTANT;
+    max_current_amp_ = Motor3508Config::MAX_CURRENT;
+    max_raw_current_ = Motor3508Config::MAX_RAW_CURRENT;
+    CanMotorBase::RegisterCanCallback(can, rx_id, &Motor3508::RxThunk, this);
+}
+
+void Motor3508::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<Motor3508*>(ctx)->UpdateData(data);
+}
+
+void Motor3508::UpdateData(const uint8_t data[]) {
+    state_.raw_theta = data[0] << 8 | data[1];
+    state_.raw_omega = data[2] << 8 | data[3];
+    state_.raw_current = (int16_t)(data[4] << 8 | data[5]);
+    state_.raw_temperature = data[6];
+
+    state_.theta = linear_remap<int16_t, float>(state_.raw_theta, 0, Motor3508Config::MAX_RAW_THETA, 0.0f, 2 * PI);
+    // 转子转速值单位为 rpm，rad/s = rpm * 2 * PI / 60
+    // 映射 omega 角速度为 rad/s
+    state_.omega = state_.raw_omega * 2 * PI / 60;
+    // C620 转矩电流反馈 raw_current ∈ [-16384, 16384] 对应 [-20A, 20A]
+    state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor3508Config::MAX_RAW_CURRENT,
+                                                  Motor3508Config::MAX_RAW_CURRENT, -Motor3508Config::MAX_CURRENT,
+                                                  Motor3508Config::MAX_CURRENT);
+    state_.torque = state_.current * torque_constant_;
+
+    state_.feedback_pending = true;
+}
+
+void Motor3508::PrintData() const {
+    print("online: %s ", (IsOnline() ? "true" : "false"));
+    print("theta: % .4f ", GetTheta());
+    print("output shaft theta: % .4f ", GetOutputShaftTheta());
+    print("omega: % .4f ", GetOmega());
+    print("output shaft omega: % .4f ", GetOutputShaftOmega());
+    print("raw temperature: %3d ", state_.raw_temperature);
+    print("raw current get: % d \r\n", state_.raw_current);
+}
+
+void Motor3508::SetOutput(int16_t val) {
+    output_ = clip<int16_t>(val, -Motor3508Config::MAX_RAW_CURRENT, Motor3508Config::MAX_RAW_CURRENT);
+}
+
+
+// ===== Motor6020 =====
+
+Motor6020::Motor6020(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
+    : DjiMotorBase(can, rx_id, tx_id != 0x00 ? tx_id : ResolveTxId(rx_id)) {
+    if (tx_id == 0x00) {
+        RM_ASSERT_GE(rx_id, 0x205, "Invalid rx id for GM6020");
+    }
+    state_.transmission_ratio = Motor6020Config::ORIGINAL_TRANSMISSION_RATIO;
+    torque_constant_ = Motor6020Config::RATED_TORQUE_CONSTANT;
+    max_current_amp_ = Motor6020Config::MAX_CURRENT;
+    max_raw_current_ = Motor6020Config::MAX_RAW_CURRENT;
+    // GM6020 使用绝对值编码器，直接将上电角度初始化为 0
+    state_.power_on_angle = 0;
+    CanMotorBase::RegisterCanCallback(can, rx_id, &Motor6020::RxThunk, this);
+}
+
+void Motor6020::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<Motor6020*>(ctx)->UpdateData(data);
+}
+
+void Motor6020::UpdateData(const uint8_t data[]) {
+    state_.raw_theta = data[0] << 8 | data[1];
+    state_.raw_omega = data[2] << 8 | data[3];
+    state_.raw_current = (int16_t)(data[4] << 8 | data[5]);
+    state_.raw_temperature = data[6];
+
+    // GM6020 转子机械角度值范围为 0~8191
+    // 映射 theta 角度为 0~2PI
+    state_.theta = linear_remap<int16_t, float>(state_.raw_theta, 0, Motor6020Config::MAX_RAW_THETA, 0.0f, 2 * PI);
+    // GM6020 转子转速值单位为 rpm，rad/s = rpm * 2 * PI / 60
+    // 映射 omega 角速度为 rad/s
+    state_.omega = (state_.raw_omega * 2 * PI / 60) * input_speed_filter_
+                 + state_.omega * (1 - input_speed_filter_);
+    // GM6020 转矩电流反馈 raw_current ∈ [-16384, 16384] 对应 [-3A, 3A]
+    state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor6020Config::MAX_RAW_CURRENT, Motor6020Config::MAX_RAW_CURRENT,
+                                  -Motor6020Config::MAX_CURRENT, Motor6020Config::MAX_CURRENT);
+    state_.torque = state_.current * torque_constant_;
+
+    state_.feedback_pending = true;
+}
+
+void Motor6020::PrintData() const {
+    print("online: %s ", (IsOnline() ? "true" : "false"));
+    print("theta: % .4f ", GetTheta());
+    print("output shaft theta: % .4f ", GetOutputShaftTheta());
+    print("omega: % .4f ", GetOmega());
+    print("output shaft omega: % .4f ", GetOutputShaftOmega());
+    print("raw temperature: %3d ", state_.raw_temperature);
+    print("raw current get: % d \r\n", state_.raw_current);
+}
+
+void Motor6020::SetOutput(int16_t val) {
+    output_ = clip<int16_t>(val, -Motor6020Config::MAX_RAW_CURRENT, Motor6020Config::MAX_RAW_CURRENT);
+}
+
+void Motor6020::SetSpeedFilter(float ratio) {
+    input_speed_filter_ = ratio;
+}
+
+
+// ===== Motor6020 =====
+
+Motor2006::Motor2006(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
+    : DjiMotorBase(can, rx_id, tx_id != 0x00 ? tx_id : ResolveTxId(rx_id)) {
+    // M2006 RX_ID = 0x200 + 电调 ID
+    // TX_ID 须在 DjiMotorBase 构造前解析，否则分组发送会使用错误的 CAN ID
+    if (tx_id == 0x00) {
+        RM_ASSERT_GE(rx_id, 0x201, "Invalid rx id for M2006");
+    }
+    state_.transmission_ratio = Motor2006Config::ORIGINAL_TRANSMISSION_RATIO;
+    torque_constant_ = Motor2006Config::RATED_TORQUE_CONSTANT;
+    max_current_amp_ = Motor2006Config::MAX_CURRENT;
+    max_raw_current_ = Motor2006Config::MAX_RAW_CURRENT;
+    CanMotorBase::RegisterCanCallback(can, rx_id, &Motor2006::RxThunk, this);
+}
+
+void Motor2006::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<Motor2006*>(ctx)->UpdateData(data);
+}
+
+void Motor2006::UpdateData(const uint8_t data[]) {
+    state_.raw_theta = data[0] << 8 | data[1];
+    state_.raw_omega = data[2] << 8 | data[3];
+    state_.raw_current = (int16_t)(data[4] << 8 | data[5]);
+
+    // M2006 转子机械角度值范围为 0~8191
+    // 映射 theta 角度为 0~2PI
+    state_.theta = linear_remap<int16_t, float>(state_.raw_theta, 0, Motor2006Config::MAX_RAW_THETA, 0.0f, 2 * PI);
+    // 转子转速值单位为 rpm，rad/s = rpm * 2 * PI / 60
+    // 映射 omega 角速度为 rad/s
+    state_.omega = state_.raw_omega * 2 * PI / 60;
+    // C610 转矩电流反馈 raw_current ∈ [-10000, 10000] 对应 [-10A, 10A]
+    state_.current = linear_remap<int16_t, float>(state_.raw_current, -Motor2006Config::MAX_RAW_CURRENT,
+                                                  Motor2006Config::MAX_RAW_CURRENT, -Motor2006Config::MAX_CURRENT,
+                                                  Motor2006Config::MAX_CURRENT);
+    state_.torque = state_.current * torque_constant_;
+
+    state_.feedback_pending = true;
+}
+
+void Motor2006::PrintData() const {
+    print("online: %s ", (IsOnline() ? "true" : "false"));
+    print("theta: % .4f ", GetTheta());
+    print("output shaft theta: % .4f ", GetOutputShaftTheta());
+    print("omega: % .4f ", GetOmega());
+    print("output shaft omega: % .4f ", GetOutputShaftOmega());
+    print("raw current get: % d \r\n", state_.raw_current);
+}
+
+void Motor2006::SetOutput(int16_t val) {
+    output_ = clip<int16_t>(val, -Motor2006Config::MAX_RAW_CURRENT, Motor2006Config::MAX_RAW_CURRENT);
+}
 
 }  // namespace driver
