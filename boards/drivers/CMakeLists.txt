@@ -2,14 +2,12 @@
 file(GLOB_RECURSE CRC_CHECK_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/crc_check/src/*.c)
 
 file(GLOB_RECURSE DRIVER_SOURCES_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
-file(GLOB_RECURSE MOTOR_SOURCES_FILES ${CMAKE_CURRENT_SOURCE_DIR}/motor/src/*.*)
 set(DRIVER_SOURCES
         ${DRIVER_SOURCES_FILES}
-        ${MOTOR_SOURCES_FILES}
         ${CRC_CHECK_SOURCES})
 set(DRIVER_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/motor/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Motor
         ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/crc_check/include)
 
 file(GLOB_RECURSE DJI_Board_TypeC_Specific_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/DJI_Board_TypeC/src/*.*)
