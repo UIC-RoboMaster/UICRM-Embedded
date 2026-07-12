@@ -53,7 +53,6 @@ uint8_t DmTxFrame::Pack(uint8_t data[8], DmControlMode mode, float angle_max, fl
         const float kp_clamped = clip(kp, 0.0f, kp_max);
         const float kd_clamped = clip(kd, 0.0f, kd_max);
 
-        // 
         const uint16_t target_pos = signed_linear_remap(pos, 0x7FFF, 0xFFFF, angle_max);
         const uint16_t target_vel = signed_linear_remap(vel, 0x7FF, 0xFFF, omega_max);
         const uint16_t target_torque = signed_linear_remap(torque, 0x7FF, 0xFFF, torque_max);
@@ -107,9 +106,6 @@ DmMotorBase::DmMotorBase(bsp::CAN* can, uint16_t master_id, uint16_t motor_can_i
     state_.mode = mode;
     config_ = config;
 
-    // DM 电机 16-bit 编码器映射为单圈 [0, 2π]，多圈由 CanMotorBase::ProcessAngleTracking 累计
-    state_.power_on_angle = -1;
-
     // 自注册到全局实例列表
     RM_ASSERT_LT(instance_count_, 16, "Too many DM motor instances");
     instances_[instance_count_++] = this;
@@ -146,30 +142,21 @@ void DmMotorBase::UpdateData(const uint8_t data[]) {
     if (state_.rx.motor_id != (tx_id_ & 0x0f)) {
         return;
     }
-    //state_.theta = signed_linear_remap(state_.rx.raw_theta, 0x7FFF, 0xFFFF, config_.angle_max);
-    state_.theta = linear_remap<uint16_t, float>(state_.rx.raw_theta, 0, 65535, 0.0f, 2 * PI);
-
+    // DM 位置反馈是 [-PMAX, PMAX] 内的绝对位置
+    state_.theta = signed_linear_remap(state_.rx.raw_theta, 0x7FFF, 0xFFFF, config_.angle_max);
     state_.omega = signed_linear_remap(state_.rx.raw_omega, 0x7FF, 0xFFF, config_.omega_max);
-    state_.torque = signed_linear_remap(state_.rx.raw_torque, 0x7FF, 0xFFF, config_.torque_max);    state_.feedback_pending = true;
+    state_.torque = signed_linear_remap(state_.rx.raw_torque, 0x7FF, 0xFFF, config_.torque_max);
+    state_.feedback_pending = true;
 }
 
-void DmMotorBase::FinishFeedbackUpdate() {
-    AngleTrackingContext ctx{
-        state_.theta,
-        state_.omega,
-        state_.output_shaft_theta,
-        state_.output_shaft_omega,
-        state_.power_on_angle,
-        state_.encoder_relative_angle,
-        state_.encoder_cumulated_turns,
-        state_.encoder_cumulated_angle,
-        state_.output_relative_angle,
-        state_.output_cumulated_turns,
-        state_.output_cumulated_angle,
-        config_.transmission_ratio,
-        state_.absolute_mode,
-    };
-    CanMotorBase::FinishFeedbackUpdate(ctx);
+void DmMotorBase::AngleTracking() {
+    state_.output_shaft_theta = state_.theta / config_.transmission_ratio;
+    state_.output_shaft_omega = state_.omega / config_.transmission_ratio;
+}
+
+void DmMotorBase::FeedbackUpdate() {
+    AngleTracking();
+    Heartbeat();
 }
 
 float DmMotorBase::GetTheta() const {
@@ -255,7 +242,7 @@ void DmMotorBase::DmMotorThread(void* args) {
 
 void DmMotorBase::CalcOutput() {
     if (state_.feedback_pending) {
-        FinishFeedbackUpdate();
+        FeedbackUpdate();
         state_.feedback_pending = false;
     }
 
@@ -333,8 +320,7 @@ void DMMotor4310::PrintData() const {
     clear_screen();
 
     print("=== DM4310 ===\r\n");
-    print("online:%d enable:%d abs:%d pending:%d\r\n", IsOnline(), state_.enable, state_.absolute_mode,
-          state_.feedback_pending);
+    print("online:%d enable:%d pending:%d\r\n", IsOnline(), state_.enable, state_.feedback_pending);
     print("mode:%u status:%u rx_id:0x%03X tx_id:0x%03X last_us:%u\r\n", static_cast<uint16_t>(state_.mode),
           static_cast<uint8_t>(GetControlStatus()), rx_id_, tx_id_, last_uptime_microsec_);
 
@@ -346,12 +332,6 @@ void DMMotor4310::PrintData() const {
     print("--- Feedback ---\r\n");
     print("theta:% .4f omega:% .4f torque:% .4f\r\n", GetTheta(), GetOmega(), GetTorque());
     print("out_theta:% .4f out_omega:% .4f\r\n", GetOutputShaftTheta(), GetOutputShaftOmega());
-
-    print("--- Angle track ---\r\n");
-    print("pwr_on:% .4f enc_rel:% .4f enc_turns:% .2f enc_cum:% .4f\r\n", state_.power_on_angle,
-          state_.encoder_relative_angle, state_.encoder_cumulated_turns, state_.encoder_cumulated_angle);
-    print("out_rel:% .4f out_turns:% .2f out_cum:% .4f\r\n", state_.output_relative_angle,
-          state_.output_cumulated_turns, state_.output_cumulated_angle);
 
     print("--- TX target ---\r\n");
     print("p_des:% .4f v_des:% .4f kp:% .2f kd:% .2f t_ff:% .4f\r\n", state_.tx.p_des, state_.tx.v_des,

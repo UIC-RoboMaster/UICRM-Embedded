@@ -134,14 +134,17 @@ struct DmMotorState {
     float output_shaft_omega = 0;  // 输出轴角速度 [rad/s]
 
     // ── 编码器角度追踪 ──
-    float power_on_angle = -1;         // 上电编码器角 [rad]（-1 未初始化）
-    float encoder_relative_angle = 0;  // 编码器圈内角 [rad]，[0, 2π]
-    float encoder_cumulated_turns = 0; // 编码器累计圈数 [turns]
+    bool power_on_angle_initialized = false;  // 上电编码器角是否已初始化
+    float power_on_angle = 0;         // 上电编码器角 [rad]，[-max, max]
+    uint16_t power_on_num = 0;        // 上电编码器读数 [0 - 65536]
+    int64_t encoder_cumulated_num = 0;   // 编码器累计转动数量
+    float encoder_relative_angle = 0;  // 编码器圈内角 [rad]，[-max, max]
+    int16_t encoder_cumulated_turns = 0; // 编码器累计圈数 0-65536 [turns]
     float encoder_cumulated_angle = 0; // 编码器累计角 [rad] = turns × 2π + encoder_relative
 
     // ── 输出轴角度追踪 ──
-    float output_relative_angle = 0;   // 输出轴圈内角 [rad]，[0, 2π]
-    float output_cumulated_turns = 0;  // 输出轴累计圈数 [turns]
+    float output_relative_angle = 0;   // 输出轴圈内角 [rad]，[0, 2π)
+    int16_t output_cumulated_turns = 0;  // 输出轴累计圈数 [turns]
     float output_cumulated_angle = 0;  // 输出轴多圈累计角 [rad] = turns × 2π + output_relative
 
     // ── 配置 ──
@@ -238,7 +241,7 @@ class DmMotorBase : public CanMotorBase {
     /**
      * @brief 后台线程周期任务：解析反馈并按 control_status 发送控制/管理帧
      *
-     * 反馈 pending 时调用 FinishFeedbackUpdate（含 Heartbeat）。
+     * 反馈 pending 时调用 FeedbackUpdate（含 Heartbeat）。
      * 软件 enable 为 false 时不发送。
      * 否则按电机反馈 control_status 分支：
      * - ENABLE → TransmitOutput()
@@ -322,16 +325,21 @@ class DmMotorBase : public CanMotorBase {
     DmMotorConfig config_ = {};  ///< 型号量程配置（由子类传入）
 
     /**
-     * @brief 传统模式反馈解析：raw → 物理量
-     * @note UpdateData 在 ISR 内调用；解析后置位 feedback_pending，由 CalcOutput 消费
+     * @brief 解包 DM 周期性位置通信窗口并追踪连续位置
+     * @note [-PMAX, PMAX] 是长度 2*PMAX 的通信窗口；其边界回绕不等于 2π 机械转角
      */
-    void ParseFeedbackNormal();
+    void AngleTracking();
+
+    /// 编码器 raw theta  回绕检测（2π↔0）
+    FloatEdgeDetector* inner_wrap_detector_;
+    /// 输出轴圈内角 [0, 2π] 回绕检测
+    FloatEdgeDetector* outer_wrap_detector_;
 
     /**
      * @brief 完成反馈更新：角度追踪 + 心跳
      * @note CalcOutput 在 feedback_pending 时调用；UpdateData 仅解析 raw 并置位 pending
      */
-    void FinishFeedbackUpdate();
+    void FeedbackUpdate();
 
     /** @brief CAN 接收回调，转发至 DmMotorBase::UpdateData */
     static void RxThunk(void* ctx, const uint8_t data[]);

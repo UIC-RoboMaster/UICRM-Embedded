@@ -32,37 +32,33 @@ static bsp::CAN* can1 = nullptr;
 static driver::DMMotor4310* motor1 = nullptr;
 
 // MIT 模式下的控制参数
-// Kp: 位置刚度，值越大电机"越硬"，对位置偏差响应越强
+// Kp: 位置刚度，值越大电机"越硬"，对位置偏差响应越强（必须 > 0 才有位置保持能力）
 // Kd: 速度阻尼，值越大电机转动阻力越大，可抑制振荡
-static constexpr float MIT_KP = 2.0f;
-static constexpr float MIT_KD = 0;
+static constexpr float MIT_KP = 10.0f;
+static constexpr float MIT_KD = 1.5f;
 
 void RM_RTOS_Init() {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     print_use_uart(&huart1);
 
     can1 = new bsp::CAN(&hcan1, true);
-    // MIT 模式：电机内部运行位置-速度-力矩控制器
     motor1 = new driver::DMMotor4310(can1, 0x00, 0x01, driver::DmControlMode::MIT);
 
     // DM4310 需要显式发送使能命令后才能接受运行时控制帧
     motor1->Enable();
     HAL_Delay(100);
 
-    // 设置初始目标：保持当前位置，速度为 0
+    // 上电后使能电机，Kp > 0 让电机保持在当前位置
     // MIT 模式下后台线程自动以 1kHz 发送控制帧
     motor1->SetTarget(0.0f);
     motor1->SetMitParams(0.0f, MIT_KP, MIT_KD, 0.0f);
-    motor1->SetZeroPos();
+    //motor1->SetZeroPos();
     HAL_Delay(1000);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-
-    bool toggled = false;
-    const float target_positions[] = {5 * PI, -PI * 5};
 
     while (true) {
         set_cursor(0, 0);
@@ -76,9 +72,9 @@ void RM_RTOS_Default_Task(const void* args) {
             while (key.Read() == 0) {
                 osDelay(30);
             }
-            toggled = !toggled;
-            motor1->SetTarget(target_positions[toggled]);
-            motor1->SetMitParams(1.0f, MIT_KP, MIT_KD, 0.0f);
+            // 相对当前反馈位置增加 1 rad，v_des=0 纯位置控制
+            motor1->SetTarget(motor1->GetTheta() + 1.0f);
+            motor1->SetMitParams(0.0f, MIT_KP, MIT_KD, 0.0f);
             osDelay(20);
         }
 
