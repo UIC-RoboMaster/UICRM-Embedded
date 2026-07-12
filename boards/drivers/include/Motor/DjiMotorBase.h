@@ -124,6 +124,8 @@ class DjiMotorBase : public CanMotorBase {
      */
     DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id = 0x00);
 
+    ~DjiMotorBase() override;
+
     /**
      * @brief 设置 DJI 电机后台线程的输出频率
      * @note 必须在首次构造 DJI 电机子类之前调用
@@ -312,10 +314,23 @@ class DjiMotorBase : public CanMotorBase {
     int16_t max_raw_current_ = 0;
 
     /**
+     * @brief 单圈绝对值编码器的角度追踪处理
+     * @note 子类在 UpdateData 中解析完协议后，经 FeedbackUpdate 调用此方法
+     * @note absolute_mode 下内部仍累计圈数，output_shaft_theta 对外限制在 [0, 2π]
+     * @warning 这是使用单圈绝对值编码器的电机的角度处理，不通用于多圈编码器
+     */
+    void AngleTracking();
+
+    /**
      * @brief 完成反馈更新：角度追踪 + 心跳 + 保持状态
      * @note CalcOutput 开头在 feedback_pending 时调用；ISR 内 UpdateData 仅置位 pending
      */
-    void FinishFeedbackUpdate();
+    void FeedbackUpdate();
+
+    /// 编码器 raw theta [0, 2π] 回绕检测（2π↔0）
+    FloatEdgeDetector* inner_wrap_detector_;
+    /// 输出轴圈内角 [0, 2π] 回绕检测
+    FloatEdgeDetector* outer_wrap_detector_;
 
   private:
     control::ConstrainedPID omega_pid_;

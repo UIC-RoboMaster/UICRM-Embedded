@@ -30,27 +30,6 @@
 namespace driver {
 
 /**
- * @brief 角度追踪算法所需的运行时状态引用包
- *
- * 由品牌基类从各自的 state_ 组装，传入 ProcessAngleTracking。
- */
-struct AngleTrackingContext {
-    float& theta;
-    float& omega;
-    float& output_shaft_theta;
-    float& output_shaft_omega;
-    float& power_on_angle;
-    float& encoder_relative_angle;
-    float& encoder_cumulated_turns;
-    float& encoder_cumulated_angle;
-    float& output_relative_angle;
-    float& output_cumulated_turns;
-    float& output_cumulated_angle;
-    float& transmission_ratio;
-    bool& absolute_mode;
-};
-
-/**
  * @brief CAN 通信电机的抽象基类
  *
  * 提供所有 CAN 总线电机共用的能力：
@@ -65,10 +44,7 @@ struct AngleTrackingContext {
  */
 class CanMotorBase : public ConnectionDriver {
   public:
-    /**
-     * @brief 析构函数，释放回绕检测器
-     */
-    virtual ~CanMotorBase();
+    virtual ~CanMotorBase() = default;
 
     // ── 组件契约 ──
 
@@ -170,22 +146,6 @@ class CanMotorBase : public ConnectionDriver {
     explicit CanMotorBase(uint32_t online_threshold = 30);
 
     /**
-     * @brief 单圈绝对值编码器的角度追踪处理
-     * @param ctx 角度追踪所需的运行时状态引用包
-     * @note 子类在 UpdateData 中解析完协议后，经 FinishFeedbackUpdate 调用此方法
-     * @note absolute_mode 下内部仍累计圈数，output_shaft_theta 对外限制在 [0, 2π]
-     * @warning 这是使用单圈绝对值编码器的电机的角度处理，不通用于多圈编码器
-     */
-    void ProcessAngleTracking(AngleTrackingContext ctx);
-
-    /**
-     * @brief 完成反馈更新：角度追踪 + 心跳
-     * @param ctx 角度追踪所需的运行时状态引用包
-     * @note 子类 UpdateData 解析完协议后，组装 ctx 并调用
-     */
-    void FinishFeedbackUpdate(AngleTrackingContext ctx);
-
-    /**
      * @brief 向 CAN 总线发送一帧标准数据
      * @param can   CAN 硬件对象
      * @param tx_id 发送报文标识符
@@ -206,11 +166,6 @@ class CanMotorBase : public ConnectionDriver {
      * @note 子类构造函数中调用一次即可，自动绑定到所属 CAN 的 rx_id
      */
     void RegisterCanCallback(bsp::CAN* can, uint16_t rx_id, CanRxHandler handler, void* ctx);
-
-    /// 编码器 raw theta [0, 2π] 回绕检测（2π↔0）
-    FloatEdgeDetector* inner_wrap_detector_;
-    /// 输出轴圈内角 [0, 2π] 回绕检测
-    FloatEdgeDetector* outer_wrap_detector_;
 
   private:
     /**

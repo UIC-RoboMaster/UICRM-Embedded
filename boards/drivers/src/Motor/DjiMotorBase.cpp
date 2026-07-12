@@ -52,6 +52,10 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
     rx_id_ = rx_id;
     tx_id_ = tx_id;
 
+    // 角度追踪器，用于检测角度是否超过一圈
+    inner_wrap_detector_ = new FloatEdgeDetector(0, PI);
+    outer_wrap_detector_ = new FloatEdgeDetector(0, PI);
+
     // 如果是第一次初始化，需要创建一个后台线程以固定频率输出电机指令
     if (!is_init_) {
         is_init_ = true;
@@ -88,6 +92,11 @@ DjiMotorBase::DjiMotorBase(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
 
     // Check if the high resolution timer is initialized
     RM_ASSERT_TRUE(bsp::GetHighresTickMicroSec() != 0, "Highres timer not initialized");
+}
+
+DjiMotorBase::~DjiMotorBase() {
+    delete inner_wrap_detector_;
+    delete outer_wrap_detector_;
 }
 
 void DjiMotorBase::SetFrequency(uint32_t freq) {
@@ -134,23 +143,52 @@ void DjiMotorBase::CanMotorThread(void* args) {
     }
 }
 
-void DjiMotorBase::FinishFeedbackUpdate() {
-    AngleTrackingContext ctx{
-        state_.theta,
-        state_.omega,
-        state_.output_shaft_theta,
-        state_.output_shaft_omega,
-        state_.power_on_angle,
-        state_.encoder_relative_angle,
-        state_.encoder_cumulated_turns,
-        state_.encoder_cumulated_angle,
-        state_.output_relative_angle,
-        state_.output_cumulated_turns,
-        state_.output_cumulated_angle,
-        state_.transmission_ratio,
-        state_.absolute_mode,
-    };
-    CanMotorBase::FinishFeedbackUpdate(ctx);
+void DjiMotorBase::AngleTracking() {
+    // 如果是第一次接收到数据，初始化 power_on_angle_
+    if (state_.power_on_angle < 0) {
+        state_.power_on_angle = state_.theta;
+    }
+
+    // 编码器单圈内角度 [0, 2π]（相对上电位置）
+    state_.encoder_relative_angle = wrap<float>(state_.theta - state_.power_on_angle, 0, 2 * PI);
+
+    // 在 raw theta 上检测 2π↔0 回绕，累计编码器圈数
+    inner_wrap_detector_->input(state_.theta);
+    // 正向回绕：编码器从 2π 回绕到 0，累计圈数 +1
+    if (inner_wrap_detector_->negEdge())
+        state_.encoder_cumulated_turns += 1;
+    // 反向回绕：编码器从 0 回绕到 2π，累计圈数 -1
+    else if (inner_wrap_detector_->posEdge())
+        state_.encoder_cumulated_turns -= 1;
+
+    // 编码器累计角度 = 累计圈数 × 2π + 圈内角，连续无跳变
+    state_.encoder_cumulated_angle =
+        state_.encoder_cumulated_turns * 2 * PI + state_.encoder_relative_angle;
+
+    // 输出轴圈内角 [0, 2π]（由编码器累计角度经减速比换算）
+    state_.output_relative_angle =
+        wrap<float>(state_.encoder_cumulated_angle / state_.transmission_ratio, 0, 2 * PI);
+
+    // 输出轴回绕检测，累计输出轴圈数
+    outer_wrap_detector_->input(state_.output_relative_angle);
+    if (outer_wrap_detector_->negEdge())
+        state_.output_cumulated_turns += 1;
+    else if (outer_wrap_detector_->posEdge())
+        state_.output_cumulated_turns -= 1;
+
+    // 输出轴多圈累计角度（内部状态，absolute 模式下仍持续累计）
+    state_.output_cumulated_angle =
+        state_.output_cumulated_turns * 2 * PI + state_.output_relative_angle;
+
+    // absolute 模式：对外输出限制在 [0, 2π]；相对模式：输出多圈累计角
+    state_.output_shaft_theta =
+        state_.absolute_mode ? state_.output_relative_angle : state_.output_cumulated_angle;
+    state_.output_shaft_omega = state_.omega / state_.transmission_ratio;
+}
+
+void DjiMotorBase::FeedbackUpdate() {
+    AngleTracking();
+    Heartbeat();
     UpdateHoldingState();
 }
 
@@ -289,7 +327,7 @@ void DjiMotorBase::SetTarget(float target, bool override) {
 
 void DjiMotorBase::CalcOutput() {
     if (state_.feedback_pending) {
-        FinishFeedbackUpdate();
+        FeedbackUpdate();
         state_.feedback_pending = false;
     }
 
