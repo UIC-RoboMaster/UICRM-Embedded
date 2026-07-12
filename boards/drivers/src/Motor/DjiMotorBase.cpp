@@ -618,4 +618,59 @@ void Motor2006::SetOutput(int16_t val) {
     output_ = clip<int16_t>(val, -Motor2006Config::MAX_RAW_CURRENT, Motor2006Config::MAX_RAW_CURRENT);
 }
 
+
+// ===== Dm1to4 =====
+
+Dm1to4::Dm1to4(bsp::CAN* can, uint16_t rx_id, uint16_t tx_id)
+    : DjiMotorBase(can, rx_id, tx_id != 0x00 ? tx_id : ResolveTxId(rx_id)) {
+    // Dm1to4 RX_ID = 0x300 + 电机 ID
+    // TX_ID 须在 DjiMotorBase 构造前解析，否则分组发送会使用错误的 CAN ID
+    if (tx_id == 0x00) {
+        RM_ASSERT_GE(rx_id, 0x301, "Invalid rx id for Dm1to4");
+    }
+    state_.transmission_ratio = Dm1to4Config::ORIGINAL_TRANSMISSION_RATIO;
+    torque_constant_ = Dm1to4Config::RATED_TORQUE_CONSTANT;
+    max_current_amp_ = Dm1to4Config::MAX_CURRENT;
+    max_raw_current_ = Dm1to4Config::MAX_RAW_CURRENT;
+    CanMotorBase::RegisterCanCallback(can, rx_id, &Dm1to4::RxThunk, this);
+}
+
+void Dm1to4::RxThunk(void* ctx, const uint8_t data[]) {
+    static_cast<Dm1to4*>(ctx)->UpdateData(data);
+}
+
+void Dm1to4::UpdateData(const uint8_t data[]) {
+    state_.raw_theta = data[0] << 8 | data[1];
+    state_.raw_omega = data[2] << 8 | data[3];
+    state_.raw_current = (int16_t)(data[4] << 8 | data[5]);
+    state_.raw_temperature = data[6];
+    // 
+
+    state_.theta = linear_remap<int16_t, float>(state_.raw_theta, 0, Dm1to4Config::MAX_RAW_THETA, 0.0f, 2 * PI);
+    // 转子转速值单位为 rpm，rad/s = rpm * 2 * PI / 60
+    // 映射 omega 角速度为 rad/s
+    state_.omega = state_.raw_omega / 100 * 2 * PI / 60;
+    // C620 转矩电流反馈 raw_current ∈ [-16384, 16384] 对应 [-20.5A, 20.5A]
+    state_.current = linear_remap<int16_t, float>(state_.raw_current, -Dm1to4Config::MAX_RAW_CURRENT,
+                                                  Dm1to4Config::MAX_RAW_CURRENT, -Dm1to4Config::MAX_CURRENT,
+                                                  Dm1to4Config::MAX_CURRENT);
+    state_.torque = state_.current * torque_constant_;
+
+    state_.feedback_pending = true;
+}
+
+void Dm1to4::PrintData() const {
+    print("online: %s ", (IsOnline() ? "true" : "false"));
+    print("theta: % .4f ", GetTheta());
+    print("output shaft theta: % .4f ", GetOutputShaftTheta());
+    print("omega: % .4f ", GetOmega());
+    print("output shaft omega: % .4f ", GetOutputShaftOmega());
+    print("raw temperature: %3d ", state_.raw_temperature);
+    print("raw current get: % d \r\n", state_.raw_current);
+}
+
+void Dm1to4::SetOutput(int16_t val) {
+    output_ = clip<int16_t>(val, -Dm1to4Config::MAX_RAW_CURRENT, Dm1to4Config::MAX_RAW_CURRENT);
+}
+
 }  // namespace driver

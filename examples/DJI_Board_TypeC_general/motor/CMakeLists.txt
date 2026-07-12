@@ -53,6 +53,10 @@ uicrm_add_arm_executable(${PROJECT_NAME}_dm4310_pos_vel
         TARGET ${BOARD_NAME}
         SOURCES dm4310_pos_vel.cpp)
 
+uicrm_add_arm_executable(${PROJECT_NAME}_J4310_1to4
+        TARGET ${BOARD_NAME}
+        SOURCES J4310_1to4.cpp)
+
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
         TARGET ${BOARD_NAME}
         SOURCES servo_m2006.cpp)
