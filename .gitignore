@@ -27,6 +27,10 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+### Local Cache
+.cache/
+**/.cache/
+
 ### C template
 # Prerequisites
 *.d
