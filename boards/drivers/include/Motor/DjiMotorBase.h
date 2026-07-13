@@ -136,11 +136,17 @@ class DjiMotorBase : public CanMotorBase {
     /** @brief 获得电机转子角度 [rad] */
     float GetTheta() const override;
 
+    /** @brief 获取编码器累计角度 [rad]（多圈累计，无回绕） */
+    float GetEncoderCumulatedTheta() const;
+
     /** @brief 获得电机转子角速度 [rad/s] */
     float GetOmega() const override;
 
     /** @brief 获得输出轴累计角度 [rad] */
     float GetOutputShaftTheta() const override;
+
+    /** @brief 获取输出轴累计角度 [rad]（多圈累计，无回绕） */
+    float GetOutputShaftCumulatedTheta() const;
 
     /** @brief 获得输出轴角速度 [rad/s] */
     float GetOutputShaftOmega() const override;
@@ -212,6 +218,9 @@ class DjiMotorBase : public CanMotorBase {
      * @param override 同 SetTarget
      */
     void SetTorque(float torque_nm, bool override = true);
+
+    /** @brief 获取减速比 */
+    float GetTransmissionRatio() const;
 
     /**
      * @brief 设置减速比

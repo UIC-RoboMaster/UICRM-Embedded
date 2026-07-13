@@ -196,12 +196,20 @@ float DjiMotorBase::GetTheta() const {
     return state_.theta;
 }
 
+float DjiMotorBase::GetEncoderCumulatedTheta() const {
+    return state_.encoder_cumulated_angle;
+}
+
 float DjiMotorBase::GetOmega() const {
     return state_.omega;
 }
 
 float DjiMotorBase::GetOutputShaftTheta() const {
     return state_.output_shaft_theta;
+}
+
+float DjiMotorBase::GetOutputShaftCumulatedTheta() const {
+    return state_.output_cumulated_angle;
 }
 
 float DjiMotorBase::GetOutputShaftOmega() const {
@@ -265,6 +273,10 @@ void DjiMotorBase::SetTorque(float torque_nm, bool override) {
     SetTarget(linear_remap(torque_nm / torque_constant_, -max_current_amp_, max_current_amp_,
                            static_cast<float>(-max_raw_current_), static_cast<float>(max_raw_current_)),
               override);
+}
+
+float DjiMotorBase::GetTransmissionRatio() const {
+    return state_.transmission_ratio;
 }
 
 void DjiMotorBase::SetTransmissionRatio(float ratio) {
