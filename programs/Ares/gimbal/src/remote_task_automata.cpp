@@ -55,6 +55,8 @@ void remoteTask(void* arg) {
     remote::mouse_t mouse{};
     BoolEdgeDetector turbo_edge{false};
 
+    // clang-format off
+
     // 使/失能（上/下电）
     auto tranlogic_active_condition = TRANLOGIC {
         const auto& referee_cmd_dead = COMPONENT(0);
@@ -137,6 +139,7 @@ void remoteTask(void* arg) {
         .transition<SHOOT_MODE_STOP, SHOOT_MODE_SINGLE>(tranlogic_shooting_condition)
         .build<SHOOT_MODE_STOP>();
 
+    // clang-format on
 
     while (true) {
         const bool is_dbus_offline = (!dbus->IsOnline()) || (dbus->swr == remote::DOWN);
