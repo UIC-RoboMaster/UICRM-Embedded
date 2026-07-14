@@ -38,12 +38,12 @@ enum ActivateStates {
 };
 inline const char* activate_states_str(ActivateStates state) {
     switch (state) {
-    case KILLED:
-        return "KILLED";
-    case ACTIVE:
-        return "ACTIVE";
-    default:
-        return "UNKNOWN";
+        case KILLED:
+            return "KILLED";
+        case ACTIVE:
+            return "ACTIVE";
+        default:
+            return "UNKNOWN";
     }
 }
 

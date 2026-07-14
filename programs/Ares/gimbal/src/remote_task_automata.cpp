@@ -145,15 +145,14 @@ void remoteTask(void* arg) {
         const bool is_dbus_offline = (!dbus->IsOnline()) || (dbus->swr == remote::DOWN);
         // VT13必须在线且处于C模式才算可控
         const bool is_vt13_offline =
-            !(refereerc->IsOnline() &&
-            (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C));
+            !(refereerc->IsOnline() && (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C));
 
         is_controller_online = !is_dbus_offline || !is_vt13_offline;
 #ifdef HAS_REFEREE
         is_referee_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_referee_shoot_available = (referee->game_robot_status.shooter_heat_limit -
-                              referee->power_heat_data.shooter_id1_42mm_cooling_heat) >= 100 &&
-                             imu->CaliDone();
+                                      referee->power_heat_data.shooter_id1_42mm_cooling_heat) >= 100 &&
+                                     imu->CaliDone();
 #else
         is_referee_robot_dead = false;
         is_referee_shoot_available = true;
@@ -179,8 +178,7 @@ void remoteTask(void* arg) {
         memset(&mouse, 0, sizeof(mouse));
 
         const bool vt13_c_mode =
-            refereerc->IsOnline() &&
-            (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C);
+            refereerc->IsOnline() && (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C);
 
         if (dbus->IsOnline()) {  // DBUS
             state_r = dbus->swr;
@@ -197,28 +195,35 @@ void remoteTask(void* arg) {
             turbo_shoot = !turbo_shoot;
         }
 
-        const bool shoot_permitted =
-            is_referee_shoot_available || SHOOT_REFEREE == 0 || turbo_shoot;
+        const bool shoot_permitted = is_referee_shoot_available || SHOOT_REFEREE == 0 || turbo_shoot;
 
-        remote_mode_aut.input(std::make_tuple(
-            state_r,
-            static_cast<bool>(keyboard.bit.SHIFT),
-            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.pause)));
+        remote_mode_aut.input(
+            std::make_tuple(
+                state_r,
+                static_cast<bool>(keyboard.bit.SHIFT),
+                vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.pause)
+            )
+        );
         remote_mode = remote_mode_aut.state();
 
-        fric_wheel_aut.input(std::make_tuple(
-            state_l,
-            static_cast<bool>(keyboard.bit.Z),
-            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.swl)));
+        fric_wheel_aut.input(
+            std::make_tuple(
+                state_l,
+                static_cast<bool>(keyboard.bit.Z),
+                vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.swl)
+            )
+        );
         shoot_flywheel_mode = fric_wheel_aut.state();
 
-        shoot_aut.input(std::make_tuple(
-            state_l,
-            shoot_flywheel_mode,
-            shoot_permitted,
-            static_cast<bool>(mouse.l),
-            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.trigger)
-        ));
+        shoot_aut.input(
+            std::make_tuple(
+                state_l,
+                shoot_flywheel_mode,
+                shoot_permitted,
+                static_cast<bool>(mouse.l),
+                vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.trigger)
+            )
+        );
         shoot_load_mode = shoot_aut.state();
 
         osDelay(REMOTE_OS_DELAY);

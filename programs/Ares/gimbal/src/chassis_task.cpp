@@ -87,12 +87,12 @@ void chassisTask(void* arg) {
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
             car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
-        } else if (vt13_c_mode && (abs((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) >
-                                       vt13_rocker_deadband ||
-                                   abs((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) >
-                                       vt13_rocker_deadband ||
-                                   abs((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) >
-                                       vt13_rocker_deadband)) {
+        } else if (
+            vt13_c_mode &&
+            (abs((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) > vt13_rocker_deadband ||
+             abs((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) > vt13_rocker_deadband ||
+             abs((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) > vt13_rocker_deadband)
+        ) {
             const float speed_scale = 0.5;
             car_vx = (float)((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
                      remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
