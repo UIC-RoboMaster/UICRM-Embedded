@@ -32,6 +32,21 @@ extern bool turbo_shoot;
  */
 void init_dbus();
 
+enum ActivateStates {
+    KILLED = 0,
+    ACTIVE = 1,
+};
+inline const char* activate_states_str(ActivateStates state) {
+    switch (state) {
+    case KILLED:
+        return "KILLED";
+    case ACTIVE:
+        return "ACTIVE";
+    default:
+        return "UNKNOWN";
+    }
+}
+
 enum RemoteMode {
     REMOTE_MODE_PREPARE = -2,
     REMOTE_MODE_KILL = -1,
@@ -60,6 +75,7 @@ enum ShootMode {
     SHOOT_MODE_UNLOAD = 5,  // 退弹
 };
 extern ShootMode shoot_load_mode;
+
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute =
     {.name = "remoteTask",
