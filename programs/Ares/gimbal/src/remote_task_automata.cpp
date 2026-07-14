@@ -197,33 +197,27 @@ void remoteTask(void* arg) {
 
         const bool shoot_permitted = is_referee_shoot_available || SHOOT_REFEREE == 0 || turbo_shoot;
 
-        remote_mode_aut.input(
-            std::make_tuple(
-                state_r,
-                static_cast<bool>(keyboard.bit.SHIFT),
-                vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.pause)
-            )
-        );
+        remote_mode_aut.input(std::make_tuple(
+            state_r,
+            static_cast<bool>(keyboard.bit.SHIFT),
+            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.pause)
+        ));
         remote_mode = remote_mode_aut.state();
 
-        fric_wheel_aut.input(
-            std::make_tuple(
-                state_l,
-                static_cast<bool>(keyboard.bit.Z),
-                vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.swl)
-            )
-        );
+        fric_wheel_aut.input(std::make_tuple(
+            state_l,
+            static_cast<bool>(keyboard.bit.Z),
+            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.swl)
+        ));
         shoot_flywheel_mode = fric_wheel_aut.state();
 
-        shoot_aut.input(
-            std::make_tuple(
-                state_l,
-                shoot_flywheel_mode,
-                shoot_permitted,
-                static_cast<bool>(mouse.l),
-                vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.trigger)
-            )
-        );
+        shoot_aut.input(std::make_tuple(
+            state_l,
+            shoot_flywheel_mode,
+            shoot_permitted,
+            static_cast<bool>(mouse.l),
+            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.trigger)
+        ));
         shoot_load_mode = shoot_aut.state();
 
         osDelay(REMOTE_OS_DELAY);
