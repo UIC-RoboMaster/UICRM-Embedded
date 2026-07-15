@@ -141,7 +141,7 @@ class CanMotorBase : public ConnectionDriver {
     /**
      * @brief 构造 CAN 电机基类
      * @param online_threshold 连接离线判定阈值（单位：ms）
-     * @note 大多电机反馈频率默认为 1000 Hz，即 1 ms/帧，若连续 30 帧未收到反馈，则判定为离线
+     * @note 大多电机反馈频率默认为 1000 Hz，即 1 ms/帧，默认若连续 30 帧未收到反馈，则判定为离线
      */
     explicit CanMotorBase(uint32_t online_threshold = 30);
 

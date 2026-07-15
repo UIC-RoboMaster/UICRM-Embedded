@@ -264,6 +264,7 @@ class DmMotorBase : public CanMotorBase {
     /**
      * @brief 设置控制模式，并更新控制帧 tx_id
      * @param mode 控制模式（MIT/POS_VEL/VEL）
+     * @note 达妙电机仅允许在 dmtool 上位机中切换模式，软件层仅提供接口以便上位机同步
      */
     void SetMode(DmControlMode mode);
 
