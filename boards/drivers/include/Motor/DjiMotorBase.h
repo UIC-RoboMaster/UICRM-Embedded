@@ -336,7 +336,7 @@ namespace driver {
          */
         void FeedbackUpdate();
 
-        /// 编码器 raw theta [0, 2π] 回绕检测（2π↔0）
+        /// 编码器圈内角 [0, 2π] 回绕检测
         FloatEdgeDetector* inner_wrap_detector_;
         /// 输出轴圈内角 [0, 2π] 回绕检测
         FloatEdgeDetector* outer_wrap_detector_;

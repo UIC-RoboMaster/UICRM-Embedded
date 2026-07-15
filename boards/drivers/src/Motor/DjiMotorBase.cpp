@@ -150,12 +150,11 @@ namespace driver {
         // 编码器单圈内角度 [0, 2π]（相对上电位置）
         state_.encoder_relative_angle = wrap<float>(state_.theta - state_.power_on_angle, 0, 2 * PI);
 
-        // 在 raw theta 上检测 2π↔0 回绕，累计编码器圈数
-        inner_wrap_detector_->input(state_.theta);
-        // 正向回绕：编码器从 2π 回绕到 0，累计圈数 +1
+        inner_wrap_detector_->input(state_.encoder_relative_angle);
+        // 正向回绕：relative 从 2π 回到 0，累计圈数 +1
         if (inner_wrap_detector_->negEdge())
             state_.encoder_cumulated_turns += 1;
-        // 反向回绕：编码器从 0 回绕到 2π，累计圈数 -1
+        // 反向回绕：relative 从 0 跳到 2π，累计圈数 -1
         else if (inner_wrap_detector_->posEdge())
             state_.encoder_cumulated_turns -= 1;
 
@@ -164,7 +163,7 @@ namespace driver {
 
         // 输出轴圈内角 [0, 2π]（由编码器累计角度经减速比换算）
         state_.output_relative_angle =
-            wrap<float>(state_.encoder_cumulated_angle / state_.transmission_ratio, 0, 2 * PI);
+            wrapc<float>(state_.encoder_cumulated_angle / state_.transmission_ratio, 0, 2 * PI);
 
         // 输出轴回绕检测，累计输出轴圈数
         outer_wrap_detector_->input(state_.output_relative_angle);
@@ -318,7 +317,7 @@ namespace driver {
         if (state_.mode & THETA) {
             float diff = state_.target - GetOutputShaftTheta();
             if (state_.mode & ABSOLUTE)
-                diff = wrap<float>(diff, -PI, PI);
+                diff = wrapc<float>(diff, -PI, PI);
             const float abs_diff = fabsf(diff);
             // 如果当前角度差小于接近阈值，则认为电机到位
             if (!state_.holding && abs_diff < state_.proximity_in)
@@ -344,9 +343,9 @@ namespace driver {
         }
         state_.target = target;
 
-        // ABSOLUTE 模式下，认为输出轴只有一圈。
-        if ((state_.mode & THETA) && (state_.mode & ABSOLUTE)) {
-            state_.target = wrap<float>(state_.target, -PI, PI);
+        // ABSOLUTE 模式下，认为输出轴只有一圈；目标空间与反馈一致，均为 [0, 2π]
+        if ((state_.mode & THETA) && state_.mode & ABSOLUTE) {
+            state_.target = wrapc<float>(state_.target, 0, 2 * PI);
         }
 
         // 重新计算是否 Holding
@@ -401,14 +400,14 @@ namespace driver {
 
         // 处理角度环 PID，输入角度差，输出速度值
         if (state_.mode & THETA) {
+            float measure = state_.output_shaft_theta;
             if (state_.mode & ABSOLUTE) {
-                // 在 ABSOLUTE 模式下，如果输出轴到目标要转动大于半圈，则从另一侧转过去
-                if (target - state_.output_shaft_theta > PI)
-                    target = target - 2 * PI;
-                if (target - state_.output_shaft_theta < -PI)
-                    target = target + 2 * PI;
+                // ABSOLUTE 对外角度在 [0, 2π] 跳变，但 PID 计算需要连续。
+                // 用多圈累计角作为 measure；目标映射到距当前最近的等价角（最短路径）。
+                measure = state_.output_cumulated_angle;
+                target = measure + wrapc<float>(target - state_.output_relative_angle, -PI, PI);
             }
-            target = theta_pid_.ComputeOutput(target, state_.output_shaft_theta);
+            target = theta_pid_.ComputeOutput(target, measure);
         }
 
         // 速度前馈
