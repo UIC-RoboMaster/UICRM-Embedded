@@ -23,6 +23,12 @@
 #include "DjiMotorBase.h"
 #include "pid.h"
 
+/**
+ * @brief DJI 减速电机的减速比例，具体数值请参考电机说明书
+ */
+#define M3508P19_RATIO (3591.0 / 187) /* Transmission ratio of M3508P19 */
+#define M2006P36_RATIO 36             /* Transmission ratio of M2006P36 */
+
 namespace driver {
 
     /**
