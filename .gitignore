@@ -15,6 +15,10 @@ build
 .idea/codeStyles/Project.xml
 .idea/copilot.data.migration.*
 
+### VScode Config
+.vscode
+.settings
+
 ### CMake template
 CMakeLists.txt.user
 CMakeCache.txt
