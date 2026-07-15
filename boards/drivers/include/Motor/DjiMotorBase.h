@@ -659,7 +659,7 @@ private:
  struct Dm1to4Config {
   static constexpr int16_t MAX_RAW_THETA = 8191;                     ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
   static constexpr int16_t MAX_RAW_CURRENT = 16384;                  ///< 转矩电流反馈最大值 [raw] -16384->16384 对应 -20.5A~20.5A
-  static constexpr float MAX_CURRENT = 20.5f;                        ///< 最大转矩电流 [A]
+  static constexpr float MAX_CURRENT = 10.5f;                        ///< 最大转矩电流 [A]
   static constexpr float RATED_TORQUE_CONSTANT = 0;                  ///< 未知 额定转矩常数 [mN·m/A] 
   static constexpr float ORIGINAL_TRANSMISSION_RATIO = 1;            ///< 默认减速比 
 };
@@ -720,6 +720,8 @@ private:
   static constexpr uint16_t ResolveTxId(uint16_t rx_id) {
       return (rx_id >= 0x305) ? 0x3fe : 0x4fe;
   }
+
+  uint8_t error_ = 0;  ///< 反馈帧 Byte7 原始 error
 };
 
 }  // namespace driver
