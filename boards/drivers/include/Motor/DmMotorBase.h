@@ -67,10 +67,10 @@ enum class DmControlStatus : uint8_t {
  */
 inline const char* name_of(DmControlStatus status) {
     switch (status) {
-#define DM_CTRL_STATUS_NAME(name, val) 
-        case DmControlStatus::name: 
-            return #name;
-    DM_CONTROL_STATUS_LIST(DM_CTRL_STATUS_NAME)
+#define DM_CTRL_STATUS_NAME(name, val) \
+    case DmControlStatus::name:        \
+        return #name;
+        DM_CONTROL_STATUS_LIST(DM_CTRL_STATUS_NAME)
 #undef DM_CTRL_STATUS_NAME
     default:
         return "UNKNOWN";
