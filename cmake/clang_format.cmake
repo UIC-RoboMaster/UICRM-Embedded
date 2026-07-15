@@ -1,7 +1,4 @@
 # use clang-format to enforce coding styles
-# NOTE: This project requires clang-format 18.
-#   macOS:  brew install clang-format@18
-#   Ubuntu: sudo apt install clang-format-18
 find_program(CLANG_FORMAT_EXE NAMES clang-format)
 # log the detected clang-format version and path
 if (CLANG_FORMAT_EXE)
@@ -9,8 +6,8 @@ if (CLANG_FORMAT_EXE)
             OUTPUT_VARIABLE CLANG_FORMAT_VERSION
             OUTPUT_STRIP_TRAILING_WHITESPACE)
     message(STATUS "Using clang-format: ${CLANG_FORMAT_EXE} (${CLANG_FORMAT_VERSION})")
-    if (NOT CLANG_FORMAT_VERSION MATCHES "version 18")
-        message(WARNING "clang-format version 18 is required to match CI. Detected: ${CLANG_FORMAT_VERSION}")
+    if (NOT CLANG_FORMAT_VERSION MATCHES "version 18.1.8")
+        message(WARNING "clang-format version 18.1.8 is required to match CI. Detected: ${CLANG_FORMAT_VERSION}")
     endif()
 endif()
 # gather all source code
