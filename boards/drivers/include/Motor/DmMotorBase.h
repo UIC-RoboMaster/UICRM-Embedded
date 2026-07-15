@@ -133,23 +133,8 @@ struct DmMotorState {
     float output_shaft_theta = 0;  // 输出轴角度 [rad]
     float output_shaft_omega = 0;  // 输出轴角速度 [rad/s]
 
-    // ── 编码器角度追踪 ──
-    bool power_on_angle_initialized = false;  // 上电编码器角是否已初始化
-    float power_on_angle = 0;         // 上电编码器角 [rad]，[-max, max]
-    uint16_t power_on_num = 0;        // 上电编码器读数 [0 - 65536]
-    int64_t encoder_cumulated_num = 0;   // 编码器累计转动数量
-    float encoder_relative_angle = 0;  // 编码器圈内角 [rad]，[-max, max]
-    int16_t encoder_cumulated_turns = 0; // 编码器累计圈数 0-65536 [turns]
-    float encoder_cumulated_angle = 0; // 编码器累计角 [rad] = turns × 2π + encoder_relative
-
-    // ── 输出轴角度追踪 ──
-    float output_relative_angle = 0;   // 输出轴圈内角 [rad]，[0, 2π)
-    int16_t output_cumulated_turns = 0;  // 输出轴累计圈数 [turns]
-    float output_cumulated_angle = 0;  // 输出轴多圈累计角 [rad] = turns × 2π + output_relative
-
     // ── 配置 ──
     bool enable = true;          // 软件使能
-    bool absolute_mode = false;  // 绝对模式：内部仍累计圈数，output_shaft_theta 限制在 [0, 2π]
 
     volatile bool feedback_pending = false;  // ISR 置位，CalcOutput 消费
 
@@ -325,15 +310,10 @@ class DmMotorBase : public CanMotorBase {
     DmMotorConfig config_ = {};  ///< 型号量程配置（由子类传入）
 
     /**
-     * @brief 解包 DM 周期性位置通信窗口并追踪连续位置
-     * @note [-PMAX, PMAX] 是长度 2*PMAX 的通信窗口；其边界回绕不等于 2π 机械转角
+     * @brief DM 电机角度换算：直接按减速比换算输出轴角度/速度
+     * @note DM 编码器本身是多圈绝对值编码器，不需要回绕检测
      */
     void AngleTracking();
-
-    /// 编码器 raw theta  回绕检测（2π↔0）
-    FloatEdgeDetector* inner_wrap_detector_;
-    /// 输出轴圈内角 [0, 2π] 回绕检测
-    FloatEdgeDetector* outer_wrap_detector_;
 
     /**
      * @brief 完成反馈更新：角度追踪 + 心跳

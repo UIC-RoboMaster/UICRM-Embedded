@@ -658,11 +658,12 @@ void Dm1to4::UpdateData(const uint8_t data[]) {
     state_.raw_omega = data[2] << 8 | data[3];
     state_.raw_current = (int16_t)(data[4] << 8 | data[5]);
     state_.raw_temperature = data[6];
-    // 
+    // TODO data[7]
 
     state_.theta = linear_remap<int16_t, float>(state_.raw_theta, 0, Dm1to4Config::MAX_RAW_THETA, 0.0f, 2 * PI);
     // 转子转速值单位为 rpm，rad/s = rpm * 2 * PI / 60
     // 映射 omega 角速度为 rad/s
+    // 达妙电机返回值被放大了 100 倍，需要 / 100
     state_.omega = state_.raw_omega / 100 * 2 * PI / 60;
     // C620 转矩电流反馈 raw_current ∈ [-16384, 16384] 对应 [-20.5A, 20.5A]
     state_.current = linear_remap<int16_t, float>(state_.raw_current, -Dm1to4Config::MAX_RAW_CURRENT,
