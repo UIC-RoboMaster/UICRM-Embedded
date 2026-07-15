@@ -12,22 +12,26 @@ jobs:
     steps:
     # checkout
     - uses: actions/checkout@v3
-    # cached ARM toolchain
+    # cached ARM toolchain (12.3.Rel1)
     - name: cache ARM toolchain
       id: cache-arm
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
-        path: ~/arm-toolchain-v10-3
-        key: ${{ runner.os }}-arm-toolchain
-    # download ARM toolchain
+        path: ${{ runner.temp }}/arm-toolchain
+        key: ${{ runner.os }}-arm-toolchain-12.3.rel1
     - name: download ARM toolchain
       if: steps.cache-arm.outputs.cache-hit != 'true'
       run: |
-        wget -O ~/gcc-arm-none-eabi.tar.xz https://developer.arm.com/-/media/Files/downloads/gnu/12.3.rel1/binrel/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi.tar.xz
-        mkdir ~/arm-toolchain-v10-3
-        tar -xf ~/gcc-arm-none-eabi.tar.xz --directory ~/arm-toolchain-v10-3 --strip-components=1
-    - name: add system path
-      run: echo "~/arm-toolchain-v10-3/bin" >> $GITHUB_PATH  # set environment variable
+        # Prefer Azure Blob URL; developer.arm.com redirect can be flaky in CI.
+        curl -fsSL -o "$RUNNER_TEMP/gcc-arm-none-eabi.tar.xz" \
+          "https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/12.3.rel1/binrel/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi.tar.xz"
+        mkdir -p "$RUNNER_TEMP/arm-toolchain"
+        tar -xf "$RUNNER_TEMP/gcc-arm-none-eabi.tar.xz" -C "$RUNNER_TEMP/arm-toolchain" --strip-components=1
+    - name: add ARM toolchain to PATH
+      # GITHUB_PATH must be absolute; quoted "~/..." is written literally and never expands.
+      run: |
+        echo "$RUNNER_TEMP/arm-toolchain/bin" >> "$GITHUB_PATH"
+        "$RUNNER_TEMP/arm-toolchain/bin/arm-none-eabi-gcc" --version
     # Pin exact patch version to match Homebrew / README (18.1.8).
     # Ubuntu apt clang-format-18 is 18.1.3 and formats some macros differently.
     - name: install clang-format 18.1.8
