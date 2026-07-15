@@ -523,6 +523,8 @@ namespace bsp {
 
         float INS_quat[4] = {0.0f, 0.0f, 0.0f, 0.0f};  // qw, qx, qy, qz
         float INS_angle[3] = {0.0f, 0.0f, 0.0f};       // yaw, pitch, roll
+        float INS_accel[3] = {0.0f, 0.0f, 0.0f};       // 添加加速度计
+        float INS_gyro[3] = {0.0f, 0.0f, 0.0f};        // 添加陀螺仪
         float Temp = 0;
         float TempPWM = 0;
 
