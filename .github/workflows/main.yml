@@ -28,6 +28,11 @@ jobs:
         tar -xf ~/gcc-arm-none-eabi.tar.xz --directory ~/arm-toolchain-v10-3 --strip-components=1
     - name: add system path
       run: echo "~/arm-toolchain-v10-3/bin" >> $GITHUB_PATH  # set environment variable
+    - name: install clang-format-18
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-format-18
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-18 100
     - name: cmake
       run: |
         mkdir build && cd build
