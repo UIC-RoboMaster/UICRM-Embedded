@@ -117,12 +117,9 @@ void RM_RTOS_Default_Task(const void* args) {
 
         print("Torque feedforward demo (M3508 ID1)\r\n");
         print("KEY: +60 deg per press\r\n");
-        print("assist_torque: %.2f Nm  holding: %s\r\n", ASSIST_TORQUE_NM,
-              motor1->IsHolding() ? "yes" : "no");
-        print("shaft_theta: % .4f  target: % .4f\r\n", motor1->GetOutputShaftTheta(),
-              motor1->GetTarget());
-        print("feedback_torque: % .4f Nm  output_raw: % d\r\n", motor1->GetTorque(),
-              motor1->GetOutput());
+        print("assist_torque: %.2f Nm  holding: %s\r\n", ASSIST_TORQUE_NM, motor1->IsHolding() ? "yes" : "no");
+        print("shaft_theta: % .4f  target: % .4f\r\n", motor1->GetOutputShaftTheta(), motor1->GetTarget());
+        print("feedback_torque: % .4f Nm  output_raw: % d\r\n", motor1->GetTorque(), motor1->GetOutput());
         motor1->PrintData();
         osDelay(50);
     }

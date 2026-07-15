@@ -27,7 +27,6 @@
 #include "tim.h"
 #include "bsp_os.h"
 
-
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
 

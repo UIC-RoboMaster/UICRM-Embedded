@@ -25,67 +25,67 @@
 
 namespace driver {
 
-SteeringMotor::SteeringMotor(steering_t data) {
-    servo_t servo_data;
-    servo_data.motor = data.motor;
-    servo_data.max_speed = data.max_speed;
-    servo_data.max_acceleration = data.max_acceleration;
-    servo_data.transmission_ratio = data.transmission_ratio;
-    servo_data.omega_pid_param = data.omega_pid_param;
-    servo_data.max_iout = data.max_iout;
-    servo_data.max_out = data.max_out;
-    servo_ = new ServoMotor(servo_data, data.offset_angle);
+    SteeringMotor::SteeringMotor(steering_t data) {
+        servo_t servo_data;
+        servo_data.motor = data.motor;
+        servo_data.max_speed = data.max_speed;
+        servo_data.max_acceleration = data.max_acceleration;
+        servo_data.transmission_ratio = data.transmission_ratio;
+        servo_data.omega_pid_param = data.omega_pid_param;
+        servo_data.max_iout = data.max_iout;
+        servo_data.max_out = data.max_out;
+        servo_ = new ServoMotor(servo_data, data.offset_angle);
 
-    test_speed_ = data.test_speed;
-    align_detect_func = data.align_detect_func;
-    calibrate_offset = data.calibrate_offset;
-    align_angle_ = 0;
-    align_detector = new BoolEdgeDetector(false);
-    align_complete_ = false;
-}
-
-float SteeringMotor::GetRawTheta() const {
-    return servo_->GetTheta();
-}
-
-void SteeringMotor::PrintData() const {
-    print("Str-align: %10.5f ", align_angle_);
-    servo_->PrintData();
-}
-
-void SteeringMotor::TurnRelative(float angle) {
-    servo_->SetTarget(servo_->GetTarget() + angle, true);
-}
-
-void SteeringMotor::TurnAbsolute(float angle) {
-    servo_->SetTarget(angle);
-}
-
-bool SteeringMotor::AlignUpdate() {
-    if (align_complete_) {
-        servo_->SetTarget(align_angle_, true);
-        servo_->CalcOutput();
-        return true;
-    } else if (align_detect_func()) {
-        float current_theta = servo_->motor_->GetTheta();
-        float offset = wrap<float>(servo_->align_angle_ - current_theta, -PI, PI);
-        float current =
-            (current_theta + offset - servo_->align_angle_) / servo_->transmission_ratio_ +
-            servo_->offset_angle_ + servo_->cumulated_angle_;
-        align_angle_ = current + calibrate_offset;
-        align_complete_ = true;
-        servo_->SetTarget(align_angle_, true);
-        servo_->CalcOutput();
-        return true;
-    } else {
-        servo_->motor_->SetOutput(servo_->omega_pid_.ComputeConstrainedOutput(
-            servo_->motor_->GetOmegaDelta(test_speed_ * servo_->transmission_ratio_)));
+        test_speed_ = data.test_speed;
+        align_detect_func = data.align_detect_func;
+        calibrate_offset = data.calibrate_offset;
+        align_angle_ = 0;
+        align_detector = new BoolEdgeDetector(false);
+        align_complete_ = false;
     }
-    return false;
-}
 
-void SteeringMotor::Update() {
-    servo_->CalcOutput();
-}
+    float SteeringMotor::GetRawTheta() const {
+        return servo_->GetTheta();
+    }
+
+    void SteeringMotor::PrintData() const {
+        print("Str-align: %10.5f ", align_angle_);
+        servo_->PrintData();
+    }
+
+    void SteeringMotor::TurnRelative(float angle) {
+        servo_->SetTarget(servo_->GetTarget() + angle, true);
+    }
+
+    void SteeringMotor::TurnAbsolute(float angle) {
+        servo_->SetTarget(angle);
+    }
+
+    bool SteeringMotor::AlignUpdate() {
+        if (align_complete_) {
+            servo_->SetTarget(align_angle_, true);
+            servo_->CalcOutput();
+            return true;
+        } else if (align_detect_func()) {
+            float current_theta = servo_->motor_->GetTheta();
+            float offset = wrap<float>(servo_->align_angle_ - current_theta, -PI, PI);
+            float current = (current_theta + offset - servo_->align_angle_) / servo_->transmission_ratio_ +
+                            servo_->offset_angle_ + servo_->cumulated_angle_;
+            align_angle_ = current + calibrate_offset;
+            align_complete_ = true;
+            servo_->SetTarget(align_angle_, true);
+            servo_->CalcOutput();
+            return true;
+        } else {
+            servo_->motor_->SetOutput(servo_->omega_pid_.ComputeConstrainedOutput(
+                servo_->motor_->GetOmegaDelta(test_speed_ * servo_->transmission_ratio_)
+            ));
+        }
+        return false;
+    }
+
+    void SteeringMotor::Update() {
+        servo_->CalcOutput();
+    }
 
 }  // namespace driver

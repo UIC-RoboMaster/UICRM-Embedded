@@ -24,22 +24,23 @@ using namespace bsp;
 
 namespace driver {
 
-CanMotorBase::CanMotorBase(uint32_t online_threshold) : ConnectionDriver(online_threshold) {}
+    CanMotorBase::CanMotorBase(uint32_t online_threshold) : ConnectionDriver(online_threshold) {
+    }
 
-void CanMotorBase::RegisterCanCallback(CAN* can, uint16_t rx_id, CanRxHandler handler, void* ctx) {
-    rx_handler_ = handler;
-    rx_ctx_ = ctx;
-    can->RegisterRxCallback(rx_id, &CanMotorBase::BspRxThunk, this);
-}
+    void CanMotorBase::RegisterCanCallback(CAN* can, uint16_t rx_id, CanRxHandler handler, void* ctx) {
+        rx_handler_ = handler;
+        rx_ctx_ = ctx;
+        can->RegisterRxCallback(rx_id, &CanMotorBase::BspRxThunk, this);
+    }
 
-void CanMotorBase::BspRxThunk(const uint8_t data[], void* args) {
-    auto* self = static_cast<CanMotorBase*>(args);
-    RM_ASSERT_TRUE(self->rx_handler_ != nullptr, "CAN RX handler not set");
-    self->rx_handler_(self->rx_ctx_, data);
-}
+    void CanMotorBase::BspRxThunk(const uint8_t data[], void* args) {
+        auto* self = static_cast<CanMotorBase*>(args);
+        RM_ASSERT_TRUE(self->rx_handler_ != nullptr, "CAN RX handler not set");
+        self->rx_handler_(self->rx_ctx_, data);
+    }
 
-void CanMotorBase::TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8], uint8_t dlc) {
-    can->Transmit(tx_id, data, dlc);
-}
+    void CanMotorBase::TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8], uint8_t dlc) {
+        can->Transmit(tx_id, data, dlc);
+    }
 
 }  // namespace driver

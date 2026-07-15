@@ -70,7 +70,7 @@ void RM_RTOS_Default_Task(const void* args) {
                 motor1->SetPosParams(POS_VEL_OMEGA);
             } else {
                 motor1->SetTarget(0.0f);
-    motor1->SetPosParams(0.0f);
+                motor1->SetPosParams(0.0f);
             }
             osDelay(20);
         }

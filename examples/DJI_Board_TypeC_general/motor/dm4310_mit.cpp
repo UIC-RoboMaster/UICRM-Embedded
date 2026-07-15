@@ -52,7 +52,7 @@ void RM_RTOS_Init() {
     // MIT 模式下后台线程自动以 1kHz 发送控制帧
     motor1->SetTarget(0.0f);
     motor1->SetMitParams(0.0f, MIT_KP, MIT_KD, 0.0f);
-    //motor1->SetZeroPos();
+    // motor1->SetZeroPos();
     HAL_Delay(1000);
 }
 

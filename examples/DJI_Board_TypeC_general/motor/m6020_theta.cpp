@@ -27,7 +27,6 @@
 #include "tim.h"
 #include "bsp_os.h"
 
-
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
 
@@ -36,9 +35,7 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor6020* motor1 = nullptr;
 
 void RM_RTOS_Init() {
-
     bsp::SetHighresClockTimer(&htim5);
-
 
     print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan1, true);

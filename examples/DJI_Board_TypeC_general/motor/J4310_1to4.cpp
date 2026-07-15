@@ -38,7 +38,7 @@ void RM_RTOS_Init() {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     print_use_uart(&huart1);
     can1 = new bsp::CAN(&hcan1, true);
-    motor1 = new driver::Dm1to4(can1, 0x301,0x3fe);
+    motor1 = new driver::Dm1to4(can1, 0x301, 0x3fe);
     motor1->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2,
