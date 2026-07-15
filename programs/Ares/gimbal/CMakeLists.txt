@@ -10,11 +10,12 @@ uicrm_add_arm_executable(${PROJECT_NAME}_typeC
         src/gimbal_task.cpp
         #src/minipc_task.cpp
         src/shoot_task.cpp
-        src/remote_task.cpp
+        #src/remote_task.cpp
+        src/remote_task_automata.cpp
         src/chassis_task.cpp
         src/referee_task.cpp
         src/ui_task.cpp
         src/buzzer_task.cpp
         INCLUDES include
-        DEFINES HAS_REFEREE
+        #DEFINES HAS_REFEREE
 )
