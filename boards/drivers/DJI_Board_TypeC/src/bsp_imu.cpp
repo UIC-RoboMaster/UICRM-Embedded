@@ -689,7 +689,6 @@ namespace bsp {
             INS_gyro[1] = BMI088_real_data_.gyro[1];
             INS_gyro[2] = BMI088_real_data_.gyro[2];
 
-
             accel_fliter_1[0] = accel_fliter_2[0];
             accel_fliter_2[0] = accel_fliter_3[0];
             accel_fliter_3[0] = accel_fliter_2[0] * fliter_num[0] + accel_fliter_1[0] * fliter_num[1] +
