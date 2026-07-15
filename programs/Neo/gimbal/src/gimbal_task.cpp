@@ -167,7 +167,7 @@ void gimbalTask(void* arg) {
             0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
         static float speed_offset = 0;
         speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
-        yaw_motor->SetSpeedOffset(speed_offset);
+        yaw_motor->SetSpeedFeedforward(speed_offset);
 
         // float pitch_speed_offset = pitch_ratio;
         // pitch_motor->SetSpeedOffset(pitch_speed_offset);

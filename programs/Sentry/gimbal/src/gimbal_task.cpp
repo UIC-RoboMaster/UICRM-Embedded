@@ -131,7 +131,7 @@ void gimbalTask(void* arg) {
         // 根据运动模式选择不同的控制方式
         const float ratio = 0.1875;
         float speed_offset = chassis_vt * ratio;
-        yaw_motor->SetSpeedOffset(speed_offset);
+        yaw_motor->SetSpeedFeedforward(speed_offset);
         if (is_autoaim && minipc->IsOnline()) {
             gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
             gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);

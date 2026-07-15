@@ -73,10 +73,12 @@ struct DjiMotorState {
 
     volatile bool feedback_pending = false;  // 是否收到新的反馈
 
-    // ── DJI 专属控制字段 ──
+    // ── 前馈控制 ──
+    float speed_feedforward = 0;         // 速度前馈 [rad/s]，叠加到 ω 环设定值
+    float torque_feedforward = 0;        // 力矩前馈 [raw]，叠加到 ω 环 PID 输出
+
+    // ── 角度控制 ──
     float target = 0;                      // 目标值：角度 [rad] 或 角速度 [rad/s]
-    float speed_offset = 0;                // 前馈速度偏移 [rad/s]，叠加到 ω 环设定
-    float torque_feedforward = 0;          // 前馈力矩 [N·m]，叠加到 ω 环电流输出
     float proximity_in = 0.05;             // 进入保持状态的临界角度差
     float proximity_out = 0.15;            // 退出保持状态的临界角度差
     bool holding = true;                   // 角度模式下是否已达目标
@@ -201,14 +203,14 @@ class DjiMotorBase : public CanMotorBase {
     void Hold(bool override = true);
 
     /**
-     * @brief 在 ω 环设定值上叠加前馈角速度
-     * @note 用于底盘同步等速度前馈；力矩前馈请用 SetTorqueFeedforward
+     * @brief 设置速度前馈 [rad/s]，叠加到 ω 环设定值
+     * @note 用于底盘跟踪等场景；与 SetTorqueFeedforward 独立、可同时生效
      */
-    void SetSpeedOffset(float offset);
+    void SetSpeedFeedforward(float offset);
 
     /**
-     * @brief 在 ω 环电流输出上叠加前馈力矩 [N·m]
-     * @note 须启用 OMEGA；I_cmd = PID_ω(...) + τ_ff/Kt，C620 内环负责跟踪电流
+     * @brief 设置力矩前馈 [N·m]，转换为 raw current 后叠加到 ω 环 PID 输出
+     * @note 与 SetSpeedOffset 独立、可同时生效
      */
     void SetTorqueFeedforward(float torque_nm);
 

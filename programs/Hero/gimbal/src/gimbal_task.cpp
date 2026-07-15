@@ -130,8 +130,8 @@ void gimbalTask(void* arg) {
         //        }
         float yaw_speed_offset = actural_chassis_turn_speed + yaw_ratio;
         float pitch_speed_offset = pitch_ratio;
-        yaw_motor->SetSpeedOffset(yaw_speed_offset);
-        pitch_motor->SetSpeedOffset(pitch_speed_offset);
+        yaw_motor->SetSpeedFeedforward(yaw_speed_offset);
+        pitch_motor->SetSpeedFeedforward(pitch_speed_offset);
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:

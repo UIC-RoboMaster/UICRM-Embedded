@@ -258,12 +258,18 @@ void DjiMotorBase::Hold(bool override) {
     }
 }
 
-void DjiMotorBase::SetSpeedOffset(float offset) {
-    state_.speed_offset = offset;
+void DjiMotorBase::SetSpeedFeedforward(float speed) {
+    state_.speed_feedforward = speed;
 }
 
 void DjiMotorBase::SetTorqueFeedforward(float torque_nm) {
-    state_.torque_feedforward = torque_nm;
+    if (torque_constant_ > 0 && max_current_amp_ > 0) {
+        state_.torque_feedforward = linear_remap(torque_nm / torque_constant_, -max_current_amp_, max_current_amp_,
+                                          static_cast<float>(-max_raw_current_), static_cast<float>(max_raw_current_));
+    } else {
+        // 如果没有设置扭矩常数或最大电流，则直接将力矩前馈设置为原始电流值
+        state_.torque_feedforward = torque_nm;
+    }
 }
 
 void DjiMotorBase::SetTorque(float torque_nm, bool override) {
@@ -395,21 +401,17 @@ void DjiMotorBase::CalcOutput() {
         target = theta_pid_.ComputeOutput(target, state_.output_shaft_theta);
     }
 
-    // 对速度加上偏移量，前馈时使用
-    target += state_.speed_offset;
+    // 速度前馈
+    target += state_.speed_feedforward;
 
-    // 处理速度环 PID，输出反馈电流；再叠加力矩前馈
+    // 处理速度环 PID，输出反馈电流
     if (state_.mode & OMEGA) {
         target = omega_pid_.ComputeOutput(target, GetOutputShaftOmega());
+        // 力矩前馈
+        target += state_.torque_feedforward;
     }
 
     if (state_.mode != NONE) {
-        // 叠加力矩前馈
-        if (state_.mode & OMEGA && state_.torque_feedforward != 0.0f) {
-            target += linear_remap(state_.torque_feedforward / torque_constant_, -max_current_amp_,
-                                        max_current_amp_, static_cast<float>(-max_raw_current_),
-                                        static_cast<float>(max_raw_current_));
-        }
         SetOutput(static_cast<int16_t>(target));
     }
 }
