@@ -123,33 +123,30 @@ formatting check will fail and the code will not be merged.
 All codes are required to be formatted correctly before merging. There are several
 integrated build commands that can help you automatically format your changes.
 
-**Prerequisite**: install `clang-format` version 18. (otherwise CMake will not create the format target)
+**Prerequisite**: install `clang-format` **18.1.8**. CMake will not create the format target if `clang-format` is missing.
 
 * For Linux users:
 
-  * Recommend`sudo apt install clang-format-18`
-  
-  * LLVM released packages(fallback)
-    [x86_64 (most common)](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-22.04.tar.xz)
-    [aarch64 (ARM64)](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-aarch64-linux-gnu.tar.xz)
-    Install by:
+  * Prefer the pinned LLVM binary (matches CI / macOS Homebrew `18.1.8`):
+    [x86_64](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz)
+    [aarch64](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-aarch64-linux-gnu.tar.xz)
     ```bash
     tar -xf clang+llvm-18.1.8-*.tar.xz
-    export PATH=$PWD/clang+llvm-18.1.8/bin:$PATH
+    export PATH=$PWD/clang+llvm-18.1.8-*/bin:$PATH
     ```
-    
+  * Or: `pip install clang-format==18.1.8`
+  * Avoid `apt install clang-format-18` on Ubuntu 24.04 — that package is **18.1.3**, not 18.1.8.
   
 * For Mac users:
 
-  * [x86_64 (Intel Mac)](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-apple-darwin.tar.xz)
-    [x86_64 (Apple Silicon)](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-darwin.tar.xz)
-    Install by:
-    
+  * Recommend: `brew install llvm@18` then ensure `clang-format` 18.1.8 is on `PATH`
+  * Or official package:
+    [Apple Silicon](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-macos11.tar.xz)
     ```bash
-    tar -xf clang+llvm-18.1.8-*.tar.xz
-    export PATH=$PWD/clang+llvm-18.1.8/bin:$PATH
+    tar -xf clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
+    export PATH=$PWD/clang+llvm-18.1.8-arm64-apple-macos11/bin:$PATH
     ```
-
+  * Or: `pip install clang-format==18.1.8`
 * For Windows users:
 
   * [Official Installer](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/LLVM-18.1.8-win64.exe) which files are going to locate `C:\Program Files\LLVM\bin\clang-format.exe` after installation.
