@@ -321,8 +321,9 @@ void DMMotor4310::PrintData() const {
 
     print("=== DM4310 ===\r\n");
     print("online:%d enable:%d pending:%d\r\n", IsOnline(), state_.enable, state_.feedback_pending);
-    print("mode:%u status:%u rx_id:0x%03X tx_id:0x%03X last_us:%u\r\n", static_cast<uint16_t>(state_.mode),
-          static_cast<uint8_t>(GetControlStatus()), rx_id_, tx_id_, last_uptime_microsec_);
+    print("mode:%u status:%s(0x%X) rx_id:0x%03X tx_id:0x%03X last_us:%u\r\n", static_cast<uint16_t>(state_.mode),
+          name_of(GetControlStatus()), static_cast<uint8_t>(GetControlStatus()), rx_id_, tx_id_,
+          last_uptime_microsec_);
 
     print("--- RX raw ---\r\n");
     print("motor_id:%u raw_theta:%u raw_omega:%u raw_torque:%u\r\n", state_.rx.motor_id, state_.rx.raw_theta,

@@ -34,23 +34,48 @@ enum class DmControlMode : uint16_t {
     MIT = 0x000,      ///< MIT 模式，8 字节位域打包
     POS_VEL = 0x100,  ///< 位置速度模式，float 位置 + float 速度
     VEL = 0x200,      ///< 速度模式，float 速度，DLC=4
-    EMIT = 0x300,     ///< 协议保留，驱动未实现
+    EMIT = 0x300,     ///< 力位混控模式，未实现
 };
 
 /**
- * @brief 达妙电机传统模式反馈状态（反馈帧 Byte0 高 4 位）
+ * @brief 达妙电机传统模式反馈状态表（反馈帧 Byte0 高 4 位 ERR）
+ * @note 单一数据源：同时展开为 DmControlStatus 与 name_of()
  */
+#define DM_CONTROL_STATUS_LIST(X)                    \
+    X(DISABLE, 0x0)                   /* 失能 */      \
+    X(ENABLE, 0x1)                    /* 使能 */      \
+    X(MOTOR_UNIDENTIFIED, 0x2)        /* 电机侧未识别 */ \
+    X(OUTPUT_SHAFT_UNIDENTIFIED, 0x3) /* 输出轴未识别 */ \
+    X(ENCODER_ERROR, 0x5)             /* 读取编码器错误 */ \
+    X(ENCODER_ERROR_ALT, 0x7)         /* 读取编码器错误 */ \
+    X(OVERVOLTAGE, 0x8)               /* 超压 */      \
+    X(UNDERVOLTAGE, 0x9)              /* 欠压 */      \
+    X(OVERCURRENT, 0xA)               /* 过电流 */    \
+    X(MOS_OVERTEMP, 0xB)              /* MOS 过温 */  \
+    X(ROTOR_OVERTEMP, 0xC)            /* 电机线圈过温 */ \
+    X(LOSE_CONNECTION, 0xD)           /* 通讯丢失 */  \
+    X(OVERLOAD, 0xE)                  /* 过载 */
+
 enum class DmControlStatus : uint8_t {
-    DISABLE = 0x0,          ///< 未使能
-    ENABLE = 0x1,           ///< 正常运行
-    OVERVOLTAGE = 0x8,      ///< 过压
-    UNDERVOLTAGE = 0x9,     ///< 欠压
-    OVERCURRENT = 0xA,      ///< 过流
-    MOS_OVERTEMP = 0xB,     ///< MOS 过温
-    ROTOR_OVERTEMP = 0xC,   ///< 线圈过温
-    LOSE_CONNECTION = 0xD,  ///< 失联
-    MOS_OVERLOAD = 0xE,     ///< MOS 过载
+#define DM_CTRL_STATUS_ENUM(name, val) name = val,
+    DM_CONTROL_STATUS_LIST(DM_CTRL_STATUS_ENUM)
+#undef DM_CTRL_STATUS_ENUM
 };
+
+/**
+ * @brief 调试用：获取 ERR 状态名
+ */
+inline const char* name_of(DmControlStatus status) {
+    switch (status) {
+#define DM_CTRL_STATUS_NAME(name, val) 
+        case DmControlStatus::name: 
+            return #name;
+    DM_CONTROL_STATUS_LIST(DM_CTRL_STATUS_NAME)
+#undef DM_CTRL_STATUS_NAME
+    default:
+        return "UNKNOWN";
+    }
+}
 
 /**
  * @brief 达妙电机传统模式反馈（CAN 8 字节解码后的 plain 字段）
@@ -342,7 +367,7 @@ class DmMotorBase : public CanMotorBase {
 /**
  * @brief DM M4310 电机配置
  *
- * 传统模式量程默认值，与上位机 PMAX/VMAX/TMAX 及 J4310 默认参数一致。
+ * @note 传统模式量程默认值，与上位机 PMAX/VMAX/TMAX 及 J4310 默认参数一致。
  */
 struct DmMotor4310Config {
     static constexpr DmMotorConfig J4310_Config{
