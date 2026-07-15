@@ -43,15 +43,15 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m6020_theta
 
 uicrm_add_arm_executable(${PROJECT_NAME}_dm4310_mit
         TARGET ${BOARD_NAME}
-        SOURCES dm4310_mit.cpp)
+        SOURCES J4310_mit.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_dm4310_vel
         TARGET ${BOARD_NAME}
-        SOURCES dm4310_vel.cpp)
+        SOURCES J4310_vel.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_dm4310_pos_vel
         TARGET ${BOARD_NAME}
-        SOURCES dm4310_pos_vel.cpp)
+        SOURCES J4310_pos_vel.cpp)
 
 uicrm_add_arm_executable(${PROJECT_NAME}_J4310_1to4
         TARGET ${BOARD_NAME}

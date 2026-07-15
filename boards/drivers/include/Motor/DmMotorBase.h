@@ -79,9 +79,6 @@ namespace driver {
 
     /**
      * @brief 达妙电机传统模式反馈（CAN 8 字节解码后的 plain 字段）
-     *
-     * 布局与 RoboWalker Struct_Motor_DM_CAN_Rx_Data_Normal 一致；
-     * 由 DmRxFrame::Load 从原始字节显式解析，非 bitfield memcpy。
      */
     struct DmRxFrame {
         uint8_t motor_id;        ///< 电机 CAN ID 低 4 位
@@ -107,10 +104,10 @@ namespace driver {
      * - VEL：仅 v_des
      */
     struct DmTxFrame {
-        float p_des = 0;  ///< 期望位置
-        float v_des = 0;  ///< 期望速度
-        float kp = 0;     ///<
-        float kd = 0;     ///<
+        float p_des = 0;  ///< 期望位置 [rad]
+        float v_des = 0;  ///< 期望速度 [rad/s]
+        float kp = 0;     ///< kp
+        float kd = 0;     ///< kd
         float t_ff = 0;   ///< 前馈力矩 [N·m]
 
         /** @brief MIT 模式：更新全部字段 */
@@ -150,9 +147,7 @@ namespace driver {
 
     /**
      * @brief 达妙 (DM) 电机运行时状态
-     *
-     * 解析后的物理量、角度追踪、控制设定与同步标志；原始反馈见 rx。
-     */
+    */
     struct DmMotorState {
         DmRxFrame rx;  // 最近一次反馈（raw 整数域）
 
@@ -168,7 +163,7 @@ namespace driver {
         // ── 配置 ──
         bool enable = true;  // 软件使能
 
-        volatile bool feedback_pending = false;  // ISR 置位，CalcOutput 消费
+        volatile bool feedback_pending = false;  // ISR 置位，CalcOutput 是否变动
 
         // ── 控制 ──
         DmControlMode mode = DmControlMode::MIT;
@@ -177,12 +172,12 @@ namespace driver {
 
     /**
      * @brief DM 电机量程配置
-     * @note 由 Dm 上位机设定
+     * @note 由 Dm 上位机设定，设置和上位机一样填入
      */
     struct DmMotorConfig {
-        float angle_max;           ///< 最大位置 [rad]，与上位机 PMAX 一致
-        float omega_max;           ///< 最大速度 [rad/s]，与上位机 VMAX 一致
-        float torque_max;          ///< 最大扭矩 [N·m]，与上位机 TMAX 一致
+        float angle_max;           ///< 最大位置 [rad]
+        float omega_max;           ///< 最大速度 [rad/s]
+        float torque_max;          ///< 最大扭矩 [N·m]
         float kp_max;              ///< MIT Kp 上限
         float kd_max;              ///< MIT Kd 上限
         float transmission_ratio;  ///< 减速比
@@ -339,13 +334,13 @@ namespace driver {
 
         bsp::CAN* can_ = nullptr;  ///< CAN 硬件对象
         uint16_t rx_id_ = 0;       ///< 反馈帧 Master ID
-        uint16_t tx_id_ = 0;  ///< 控制帧 CAN ID = motor_can_id + 模式偏移 电机本体 CAN ID（管理帧目标
+        uint16_t tx_id_ = 0;  ///< 控制帧 CAN ID = motor_can_id + 模式偏移
 
         DmMotorConfig config_ = {};  ///< 型号量程配置（由子类传入）
 
         /**
          * @brief DM 电机角度换算：直接按减速比换算输出轴角度/速度
-         * @note DM 编码器本身是多圈绝对值编码器，不需要回绕检测
+         * @note DM 编码器本身是多圈绝对值编码器
          */
         void AngleTracking();
 
