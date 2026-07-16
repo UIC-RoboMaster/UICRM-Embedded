@@ -2,126 +2,134 @@
 
 ![arm](https://github.com/UIC-RoboMaster/UICRM-Embedded/workflows/arm%20build/badge.svg)
 
-Embedded system development @ BNU-HKBU UIC RoboMaster
+**UICRM-Embedded** is the STM32 embedded firmware repository for the BNBU-UIC RoboMaster team.  It contains general board-level drivers, algorithms and components, hardware examples, and robot programs. The project is built using C/C++, CMake, and the GNU Arm Embedded Toolchain.
+
+---
 
 ## User Guide
 
 You can follow the instructions below to set up the necessary environments for
 building the source code and flashing the embedded chips.
 
-### Set Up Environment
+### Setting Up the Environment
 
-**Install ARM Toolchain (manual)**
+**Install Arm GNU Toolchain**
 
-1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for ARM Toolchain.
-2. Download the pre-built toolchain according to your operating system.
-3. Decompress it to some directory and find an absolute path to the `bin` directory.
+1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for the Arm GNU Toolchain.
+2. Download the pre-built toolchain for your operating system.
+3. Extract it to a directory of your choice and note the path to the `bin` folder.
 
-    In my case: `/Users/yry0008/gcc-arm-none-eabi-10.3-2021.10/bin`.
+    For example: `/Users/yry0008/gcc-arm-none-eabi-10.3-2021.10/bin`.
 
-4. For Windows users, add the following line (replace `<path>` with the actual binary path found in step 3) to `PATH` environment variable.
+4. Add the `bin` directory to your `PATH` environment variable:
 
-    For Linux / Mac users, add the following line (replace `<path>` with the actual binary path found in step 3) to `~/.bashrc` for bash users or `~/.zshrc` for zsh users.
+    - **Windows**: Add `<path>` to the system `PATH` environment variable.
+    - **Linux / macOS**: Add the following line to `~/.bashrc` (bash) or `~/.zshrc` (zsh):
 
     ```sh
     export PATH=<path>:$PATH
     ```
 
-**Install OpenOCD (manual)**
-1. Go to the [official download page](https://gnutoolchains.com/arm-eabi/openocd/) for OpenOCD.
-2. Download the pre-built toolchain according to your operating system.
-3. Decompress it to some directory and find an absolute path to the `bin` directory.
+**Install OpenOCD**
 
-    In my case: `/Users/yry0008/openocd-0.11.0-2021.10/bin`.
-4. For Windows users, add the following line (replace `<path>` with the actual binary path found in step 3) to `PATH` environment variable. For Linux / Mac users, add the following line (replace `<path>` with the actual binary path found in step 3) to `~/.bashrc` for bash users or `~/.zshrc` for zsh users.
+1. Go to the [official download page](https://gnutoolchains.com/arm-eabi/openocd/) for OpenOCD.
+2. Download the pre-built binary for your operating system.
+3. Extract it to a directory of your choice and note the path to the `bin` folder.
+
+    For example: `/Users/yry0008/openocd-0.11.0-2021.10/bin`.
+
+4. Add the `bin` directory to your `PATH` environment variable:
+
+    - **Windows**: Add `<path>` to the system `PATH` environment variable.
+    - **Linux / macOS**: Add the following line to `~/.bashrc` (bash) or `~/.zshrc` (zsh):
 
     ```sh
     export PATH=<path>:$PATH
     ```
 
 **Install CMake**
-1. Go to the [official download page](https://cmake.org/download/) for CMake.
 
-> If you are using Clion, this step is not required.
+1. Download CMake from the [official download page](https://cmake.org/download/).
+
+> If you are using CLion, CMake is bundled — you can skip this step.
 
 **Install Ninja (Windows only)**
-1. Go to the [official download page](https://ninja-build.org)
+
+1. Download Ninja from the [official website](https://ninja-build.org).
 
 ### Compile Project
 
 **With CLion (Recommended)**
 
-You can directly open the project in CLion and build it.
-You need to set the path of the embedded toolchain in the CLion settings.
+You can open the project directly in CLion and build it.
+Set the path of the Arm GNU Toolchain in **Settings → Build, Execution, Deployment → CMake**.
 
-    In Windows, you should open `Settings`, `Build, Execution, Deployment`, `CMake`, then set the `Generator` to Ninja.
+> **Windows users**: Go to **Settings → Build, Execution, Deployment → CMake** and set **Generator** to `Ninja`.
 
-**Compile manually**
+**Building Manually**
 
-1. Go to your project root directory in a terminal.
-2. Run the following command to build the entire project.
+1. Open a terminal in the project root directory.
+2. Run the following commands to configure and build:
 
     ```sh
     mkdir build && cd build
     cmake -DCMAKE_BUILD_TYPE=Release ..
     make -j
     ```
-    In Windows, you should add the option to let cmake use ninja to build.
-    ```sh
-    cmake -DCMAKE_BUILD_TYPE=Release ... -G "Ninja"
-    ```
-    Using ninja to build.
-    ```sh
-    ninja -j
-    ```
-   
-    Change build type to `Debug` or `RelWithDebInfo` in order to debug with `gdb`. Note that `Debug` build could be much slower than the other two due to lack of compiler optimizations.
 
-### Flash Binary to Chip
+> **Windows users**: Use the `Ninja` generator:
+> ```sh
+> cmake -DCMAKE_BUILD_TYPE=Release .. -G "Ninja"
+> ninja -j
+> ```
 
-**Flash using CLion**
+Use `Debug` or `RelWithDebInfo` build types for GDB debugging. Note that `Debug` builds may be significantly slower due to disabled compiler optimizations.
 
-Choose the target you want to flash and click the `Run` button.
+### Flashing Firmware
 
-The default configuration is for CMSIS-DAP debugger. If you are using ST-LINK,
-you need to change the configuration in the CLion settings.
+**Flashing with CLion**
 
-**Flash using OpenOCD**
-TODO
+Select the target you want to flash and click the **Run** button.
 
-### Generate document
+The default configuration uses a CMSIS-DAP debugger. If you are using ST-LINK, update the debugger settings in the CLion run configuration.
+
+**Flashing with OpenOCD**
+
+You can also flash manually using OpenOCD. The repository includes OpenOCD
+configuration files in the `openocd/` directory for each MCU family.
+Refer to the [OpenOCD documentation](https://openocd.org/doc/html/Flash-Commands.html) for details.
+
+### Generating Documentation
 
 You will need [Doxygen](https://www.doxygen.nl/index.html).
 
-1. For Mac users, `brew install doxygen` could be a shortcut.
-2. For Ubuntu users, `sudo apt install doxygen` could be a shortcut.
-3. For Arch users, `sudo pacman -S doxygen` could be a shortcut.
-4. For Linux users, either use prebuilt binaries, or build from source following their compile manual.
+- **macOS**: `brew install doxygen`
+- **Ubuntu**: `sudo apt install doxygen`
+- **Arch**: `sudo pacman -S doxygen`
+- **Other Linux**: Use prebuilt binaries or build from source following the [compile manual](https://www.doxygen.nl/manual/install.html).
 
-To generate documentations after compiling the project.
+To generate documentation after building the project:
 
 - Run `make doc` in the `build/` directory
-- In windows, you need to run `ninja doc` in the `build/` directory
+- On Windows, run `ninja doc` in the `build/` directory
 
-To view the generated document:
+To view the generated documentation:
 
 - Run `firefox docs/html/index.html`, or
 - Open `docs/html/index.html` in your browser.
 
 ## Developer Guide
 
-Use the following guide when making contributions to this repo.
+Follow the guidelines below when contributing to this repository.
 
-### Edit the code
-You can use any editor you like, but we recommend using [CLion](https://www.jetbrains.com/clion/).
+### Editing the Code
 
-### Format Code
+You can use any editor, but we recommend [CLion](https://www.jetbrains.com/clion/).
 
-The continuous integration system will check the source code against
-a specific coding style. If the code does not follow the style, the
-formatting check will fail and the code will not be merged.
-All codes are required to be formatted correctly before merging. There are several
-integrated build commands that can help you automatically format your changes.
+### Formatting Code
+
+The continuous integration system will check the source code against a specific coding style. If the code does not follow the style, the formatting check will fail and the code will not be merged.
+All codes are required to be formatted correctly before merging. There are several integrated build commands that can help you automatically format your changes.
 
 **Prerequisite**: install `clang-format` **18.1.8**. CMake will not create the format target if `clang-format` is missing.
 
@@ -152,34 +160,30 @@ integrated build commands that can help you automatically format your changes.
   * [Official Installer](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/LLVM-18.1.8-win64.exe) which files are going to locate `C:\Program Files\LLVM\bin\clang-format.exe` after installation.
 
 
-**Format using CLion**
+**Formatting with CLion**
 
-Choose the CMake target and compile it. CLion will automatically format the code for you.
+Select the formatting CMake target and build it. CLion will automatically format the code.
 1. `check-format`: Check `diff` between current source and formatted source (without modifying any source file)
 2. `format`: Format all source files (**Modifies** file in place)
 
-**Format manually**
+**Formatting Manually**
 
 You can run the following commands inside `build/` to format your changes.
 
 1. `make check-format`: Check `diff` between current source and formatted source (without modifying any source file)
 2. `make format`: Format all source files (**Modifies** file in place)
 
-### Debug with `gdb`
+### Debugging with GDB
 
-To debug embedded systems on a host machine, we would need a remote gdb server.
-There are 2 choices for such server, with tradeoffs of their own.
+Debugging an embedded target requires a remote GDB server. There are two options:
 
-* **`Clion Debugger`**
-  
+- **CLion Debugger** — The easiest approach. Select the target and click the **Debug** button in CLion.
 
-This is the easiest way to debug. Choose the target and Directly click the `Debug` button in CLion.
+- **OpenOCD** — Although directly using OpenOCD is possible, it is only recommended for advanced users.
 
-* **`OpenOCD`**
+---
 
-Thought directly using `openocd` is possible, but it is only recommended for advanced users.
-
-### Contribute to this repo
+### Contributing
 
 The main branch is protected. You need to create a new branch and make a pull request to merge your changes. You need to
 <u>pass the CI check (formatting check and build check)</u> before merging.
