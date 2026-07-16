@@ -53,15 +53,11 @@ namespace communication {
 
                 if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN) {
                     int DATA_LENGTH = bufferRx[2] << BYTE | bufferRx[1];
-                    if (rx_state.idx >=
-                        FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
+                    if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
                         if (VerifyHeader(bufferRx, FRAME_HEADER_LEN) &&
-                            VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH +
-                                                  FRAME_TAIL_LEN)) {
-                            int cmd_id =
-                                bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
-                            ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN,
-                                          DATA_LENGTH);
+                            VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN)) {
+                            int cmd_id = bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
+                            ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN, DATA_LENGTH);
                         }
                         rx_state.mode = rx_state.WAITING_FOR_SOF;
                         rx_state.idx = 0;
@@ -133,8 +129,7 @@ namespace communication {
 
     void UARTProtocol::callback_thread_func_(void* args) {
         UARTProtocol* uart_protocol_ = reinterpret_cast<UARTProtocol*>(args);
-        uart_protocol_->Receive(
-            communication::package_t{uart_protocol_->read_ptr_, (int)uart_protocol_->read_len_});
+        uart_protocol_->Receive(communication::package_t{uart_protocol_->read_ptr_, (int)uart_protocol_->read_len_});
     }
 
     UARTProtocol::~UARTProtocol() {
@@ -149,8 +144,7 @@ namespace communication {
 
 #ifndef NO_USB
 
-    USBProtocol::USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200,
-                             uint32_t rxBufferSize = 200)
+    USBProtocol::USBProtocol(bsp::VirtualUSB* usb, uint32_t txBufferSize = 200, uint32_t rxBufferSize = 200)
         : Protocol() {
         usb_ = usb;
         usb_->SetupTx(txBufferSize);
@@ -172,8 +166,9 @@ namespace communication {
 
     void USBProtocol::callback_thread_func_(void* args) {
         USBProtocol* usb_protocol_ = reinterpret_cast<USBProtocol*>(args);
-        usb_protocol_->Receive(communication::package_t{
-            usb_protocol_->read_ptr_, static_cast<int>(usb_protocol_->read_len_)});
+        usb_protocol_->Receive(
+            communication::package_t{usb_protocol_->read_ptr_, static_cast<int>(usb_protocol_->read_len_)}
+        );
     }
 
     USBProtocol::~USBProtocol() {

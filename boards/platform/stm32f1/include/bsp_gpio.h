@@ -35,7 +35,7 @@ namespace bsp {
      * @details used for GPIO input and output
      */
     class GPIO {
-    public:
+      public:
         /**
          * @brief 构造函数，用于通用GPIO（非中断）
          *
@@ -87,7 +87,7 @@ namespace bsp {
          */
         uint8_t Read();
 
-    private:
+      private:
         GPIO_TypeDef* group_;
         uint16_t pin_;
         uint8_t state_;
@@ -104,7 +104,7 @@ namespace bsp {
      * @details used for general purpose interrupt pin management
      */
     class GPIT {
-    public:
+      public:
         /**
          * @brief 构造函数，用于通用中断引脚
          *
@@ -150,16 +150,14 @@ namespace bsp {
          */
         static void IntCallback(uint16_t pin);
 
-    private:
+      private:
         static int GetGPIOIndex(uint16_t pin);
 
         static GPIT* gpits[NUM_GPITS];
 
         uint16_t pin_;
 
-        gpit_callback_t callback_ = [](void* args) {
-            UNUSED(args);
-        };
+        gpit_callback_t callback_ = [](void* args) { UNUSED(args); };
 
         void* args_ = nullptr;
     };
