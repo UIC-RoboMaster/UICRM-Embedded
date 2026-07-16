@@ -1,7 +1,11 @@
-#  BNBU-UIC RoboMaster Embedded
+<div align="center">
+
+# BNBU-UIC RoboMaster Embedded
 
 ![arm](https://github.com/UIC-RoboMaster/UICRM-Embedded/workflows/arm%20build/badge.svg)
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
+
+</div>
 
 **UICRM-Embedded** is the STM32 embedded firmware repository for the BNBU-UIC RoboMaster team.  It contains general board-level drivers, algorithms and components, hardware examples, and robot programs. The project is built using C/C++, CMake, and the GNU Arm Embedded Toolchain.
 
@@ -41,7 +45,7 @@ uicrm/
 
 You can follow the instructions below to set up the necessary environments for building the source code and flashing the embedded chips.
 
-### 1. Requirement
+### 1. Requirements
 
 | Tool | Required | Note |
 |---|---|---|
@@ -52,7 +56,7 @@ You can follow the instructions below to set up the necessary environments for b
 | CLion | ⭐ Recommended | IDE with integrated build, flash & debug |
 
 
-**Install Arm GNU Toolchain**
+#### Install Arm GNU Toolchain**
 
 1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for the Arm GNU Toolchain.
 2. Download the pre-built toolchain for your operating system.
@@ -69,36 +73,19 @@ You can follow the instructions below to set up the necessary environments for b
     export PATH=<path>:$PATH
     ```
 
-**Install OpenOCD**
-
-1. Go to the [official download page](https://gnutoolchains.com/arm-eabi/openocd/) for OpenOCD.
-2. Download the pre-built binary for your operating system.
-3. Extract it to a directory of your choice and note the path to the `bin` folder.
-
-    For example: `/Users/yry0008/openocd-0.11.0-2021.10/bin`.
-
-4. Add the `bin` directory to your `PATH` environment variable:
-
-    - **Windows**: Add `<path>` to the system `PATH` environment variable.
-    - **Linux / macOS**: Add the following line to `~/.bashrc` (bash) or `~/.zshrc` (zsh):
-
-      ```sh
-      export PATH=<path-to-bin>:$PATH
-      ```
-
-**Install CMake**
+#### Install CMake
 
 > Skip this step if you are using **CLion** — it bundles CMake.
 
 Download and install CMake from [cmake.org/download](https://cmake.org/download/).
 
-**Install Ninja (Windows only)**
+#### Install Ninja (Windows only)
 
 > Skip this step if you are using **CLion** — it bundles Ninja.
 
 Download Ninja from [ninja-build.org](https://ninja-build.org) and place it on your `PATH`.
 
-**Install OpenOCD**
+#### Install OpenOCD
 
 1. Download the pre-built binary from [gnutoolchains.com/arm-eabi/openocd](https://gnutoolchains.com/arm-eabi/openocd/).
 2. Extract the archive and note the path to the `bin` folder — for example:
@@ -109,7 +96,7 @@ Download Ninja from [ninja-build.org](https://ninja-build.org) and place it on y
 
 3. Add the `bin` directory to your `PATH` (same procedure as the toolchain above).
 
-Verify your setup by running these commands in a terminal:
+**Verify your setup by running these commands in a terminal:**
 
 ```sh
 arm-none-eabi-gcc --version
@@ -119,14 +106,14 @@ openocd --version
 
 ### 2. Building the Project
 
-**Option A — CLion (Recommended)**
+#### Option A — CLion (Recommended)
 
 1. Open the project root in CLion.
 2. Go to **Settings → Build, Execution, Deployment → CMake** and set the Arm GNU Toolchain path.
 3. On **Windows**, also set **Generator** to `Ninja`.
 4. Select a build target from the toolbar and click **Build**.
 
-**Option B — Command Line**
+#### Option B — Command Line
 
 ```sh
 cd uicrm-embedded
@@ -146,13 +133,13 @@ Note that `Debug` builds run significantly slower due to disabled optimizations.
 
 ### 3. Flashing Firmware
 
-**Option A — CLion (Recommended)**
+#### Option A — CLion (Recommended)
 
 Select your target and click the **Run** button (or **Debug** for step-through debugging).
 
 The default configuration assumes a **CMSIS-DAP** debugger. If you are using **ST-LINK**, change the debug probe in the CLion run configuration.
 
-**Option B — Command Line (OpenOCD)**
+#### Option B — Command Line (OpenOCD)
 
 The repository provides OpenOCD configuration files in `openocd/` for each MCU family. 
 For example, to flash a DJI_Board_TypeC (STM32F4):
