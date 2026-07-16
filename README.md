@@ -1,138 +1,208 @@
-# UIC RoboMaster Embedded
+<div align="center">
+
+# BNBU-UIC RoboMaster Embedded
 
 ![arm](https://github.com/UIC-RoboMaster/UICRM-Embedded/workflows/arm%20build/badge.svg)
+![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
-Embedded system development @ BNU-HKBU UIC RoboMaster
+[English](README.md) | [简体中文](README.zh-CN.md)
+
+</div>
+
+**UICRM-Embedded** is the STM32 embedded firmware repository for the BNBU-UIC RoboMaster team.  It contains general board-level drivers, algorithms and components, hardware examples, and robot programs. The project is built using C/C++, CMake, and the GNU Arm Embedded Toolchain.
+
+[Architecture](#architecture) · [User Guide](#user-guide) · [Developer Guide](#developer-guide) · [Contributing](#contributing)
+
+---
+
+## Architecture
+
+```
+uicrm/
+├── boards/                  Shared libraries
+│   ├── base/                Board support packages (STM32CubeMX HAL) for 6 MCU boards
+│   ├── platform/            RTOS & HAL abstraction (stm32f1 / stm32f4 / stm32h7)
+│   ├── algorithm/           Control algorithms — PID, AHRS, Quaternion EKF, CRC, power limiting...
+│   ├── drivers/             Peripheral drivers — IMU, motors, DBUS/SBUS, OLED, RGB LED, Supercap...
+│   ├── components/          Robot subsystems — gimbal, chassis, shooter, referee UI
+│   └── third_party/         External libraries — MahonyAHRS, QuaternionEKF, SEGGER RTT...
+├── cmake/                   CMake modules — toolchain, build helpers, clang-format, Doxygen
+├── examples/                Standalone peripheral examples
+├── openocd/                 OpenOCD configs (stm32f1 / stm32f4 / stm32h7)
+├── programs/                Complete Robot firmware
+└── scripts/                 Utility scripts (launch.json generation, RTT viewer, formatting)
+```
+
+### Supported Hardware
+
+| MCU Family | Core | Boards |
+|---|---|---|
+| STM32F1 | Cortex-M3 | `F103_Nano_general`, `BulletExchanger_F103` |
+| STM32F4 | Cortex-M4 | `DJI_Board_TypeC_general` (F407), `DJI_Board_TypeA_general` (F427), `DM_MC01_general` (F446) |
+| STM32H7 | Cortex-M7 | `DM_MC02_general` (H723) |
+
+---
 
 ## User Guide
 
-You can follow the instructions below to set up the necessary environments for
-building the source code and flashing the embedded chips.
+You can follow the instructions below to set up the necessary environments for building the source code and flashing the embedded chips.
 
-### Set Up Environment
+### 1. Requirements
 
-**Install ARM Toolchain (manual)**
+| Tool | Required | Note |
+|---|---|---|
+| Arm GNU Toolchain | ✅ | Cross-compiler for STM32 (GCC 10.3+) |
+| CMake (≥3.8) | ✅ | Build system; bundled with CLion |
+| Ninja | ✅ | Build backend on Windows |
+| OpenOCD | ✅ | Debug & flash via CMSIS-DAP / ST-LINK |
+| CLion | ⭐ Recommended | IDE with integrated build, flash & debug |
 
-1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for ARM Toolchain.
-2. Download the pre-built toolchain according to your operating system.
-3. Decompress it to some directory and find an absolute path to the `bin` directory.
 
-    In my case: `/Users/yry0008/gcc-arm-none-eabi-10.3-2021.10/bin`.
+#### Install Arm GNU Toolchain
 
-4. For Windows users, add the following line (replace `<path>` with the actual binary path found in step 3) to `PATH` environment variable.
+- **macOS**: `brew install --cask gcc-arm-embedded`
+- **Linux / Windows**: download from the [Arm GNU downloads page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads).
 
-    For Linux / Mac users, add the following line (replace `<path>` with the actual binary path found in step 3) to `~/.bashrc` for bash users or `~/.zshrc` for zsh users.
+  Extract the archive and note the path to the `bin` folder — for example:
 
-    ```sh
-    export PATH=<path>:$PATH
-    ```
+  ```
+  /Users/yourname/gcc-arm-none-eabi-10.3-2021.10/bin
+  ```
 
-**Install OpenOCD (manual)**
-1. Go to the [official download page](https://gnutoolchains.com/arm-eabi/openocd/) for OpenOCD.
-2. Download the pre-built toolchain according to your operating system.
-3. Decompress it to some directory and find an absolute path to the `bin` directory.
+  Add the `bin` directory to your `PATH` (add to `~/.bashrc` or `~/.zshrc`):
 
-    In my case: `/Users/yry0008/openocd-0.11.0-2021.10/bin`.
-4. For Windows users, add the following line (replace `<path>` with the actual binary path found in step 3) to `PATH` environment variable. For Linux / Mac users, add the following line (replace `<path>` with the actual binary path found in step 3) to `~/.bashrc` for bash users or `~/.zshrc` for zsh users.
+  ```sh
+  export PATH=<path-to-bin>:$PATH
+  ```
 
-    ```sh
-    export PATH=<path>:$PATH
-    ```
+#### Install CMake
 
-**Install CMake**
-1. Go to the [official download page](https://cmake.org/download/) for CMake.
+> Skip this step if you are using **CLion** — it bundles CMake.
 
-> If you are using Clion, this step is not required.
+- **macOS**: `brew install cmake`
+- **Linux**: `sudo apt install cmake` (Ubuntu) / `sudo pacman -S cmake` (Arch)
+- **Windows**: download from [cmake.org/download](https://cmake.org/download/)
 
-**Install Ninja (Windows only)**
-1. Go to the [official download page](https://ninja-build.org)
+#### Install Ninja
 
-### Compile Project
+> Skip this step if you are using **CLion** — it bundles Ninja.
 
-**With CLion (Recommended)**
+- **macOS**: `brew install ninja`
+- **Linux**: `sudo apt install ninja-build` (Ubuntu) / `sudo pacman -S ninja` (Arch)
+- **Windows**: download from [ninja-build.org](https://ninja-build.org) and place it on your `PATH`
 
-You can directly open the project in CLion and build it.
-You need to set the path of the embedded toolchain in the CLion settings.
+#### Install OpenOCD
 
-    In Windows, you should open `Settings`, `Build, Execution, Deployment`, `CMake`, then set the `Generator` to Ninja.
+- **macOS**: `brew install open-ocd`
+- **Linux / Windows**: download from [gnutoolchains.com/arm-eabi/openocd](https://gnutoolchains.com/arm-eabi/openocd/).
 
-**Compile manually**
+  Extract the archive and note the path to the `bin` folder — for example:
 
-1. Go to your project root directory in a terminal.
-2. Run the following command to build the entire project.
+  ```
+  /Users/yourname/openocd-0.12.0/bin
+  ```
 
-    ```sh
-    mkdir build && cd build
-    cmake -DCMAKE_BUILD_TYPE=Release ..
-    make -j
-    ```
-    In Windows, you should add the option to let cmake use ninja to build.
-    ```sh
-    cmake -DCMAKE_BUILD_TYPE=Release ... -G "Ninja"
-    ```
-    Using ninja to build.
-    ```sh
-    ninja -j
-    ```
-   
-    Change build type to `Debug` or `RelWithDebInfo` in order to debug with `gdb`. Note that `Debug` build could be much slower than the other two due to lack of compiler optimizations.
+  Add the `bin` directory to your `PATH` (same procedure as the toolchain above).
 
-### Flash Binary to Chip
+**Verify your setup by running these commands in a terminal:**
 
-**Flash using CLion**
+```sh
+arm-none-eabi-gcc --version
+cmake --version
+openocd --version
+```
 
-Choose the target you want to flash and click the `Run` button.
+### 2. Building the Project
 
-The default configuration is for CMSIS-DAP debugger. If you are using ST-LINK,
-you need to change the configuration in the CLion settings.
+#### Option A — CLion (Recommended)
 
-**Flash using OpenOCD**
-TODO
+1. Open the project root in CLion.
+2. Go to **Settings → Build, Execution, Deployment → CMake** and set the Arm GNU Toolchain path.
+3. On **Windows**, also set **Generator** to `Ninja`.
+4. Select a build target from the toolbar and click **Build**.
 
-### Generate document
+#### Option B — Command Line
 
-You will need [Doxygen](https://www.doxygen.nl/index.html).
+```sh
+cd uicrm-embedded
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j$(nproc)
+```
 
-1. For Mac users, `brew install doxygen` could be a shortcut.
-2. For Ubuntu users, `sudo apt install doxygen` could be a shortcut.
-3. For Arch users, `sudo pacman -S doxygen` could be a shortcut.
-4. For Linux users, either use prebuilt binaries, or build from source following their compile manual.
+> **Windows**: Use the `Ninja` generator:
+> ```sh
+> cmake -DCMAKE_BUILD_TYPE=Release .. -G "Ninja"
+> ninja -j
+> ```
 
-To generate documentations after compiling the project.
+Use `Debug` or `RelWithDebInfo` instead of `Release` when you need GDB debugging.
+Note that `Debug` builds run significantly slower due to disabled optimizations.
 
-- Run `make doc` in the `build/` directory
-- In windows, you need to run `ninja doc` in the `build/` directory
+### 3. Flashing Firmware
 
-To view the generated document:
+#### Option A — CLion (Recommended)
 
-- Run `firefox docs/html/index.html`, or
-- Open `docs/html/index.html` in your browser.
+Select your target and click the **Run** button (or **Debug** for step-through debugging).
+
+The default configuration assumes a **CMSIS-DAP** debugger. If you are using **ST-LINK**, change the debug probe in the CLion run configuration.
+
+#### Option B — Command Line (OpenOCD)
+
+The repository provides OpenOCD configuration files in `openocd/` for each MCU family. 
+For example, to flash a DJI_Board_TypeC (STM32F4):
+
+```sh
+openocd -f openocd/stm32f4/daplink.cfg
+```
+
+See [OpenOCD Flash Commands](https://openocd.org/doc/html/Flash-Commands.html) for details.
+
+
+### 4. Generating Documentation
+
+Install [Doxygen](https://www.doxygen.nl/index.html):
+
+- **macOS**: `brew install doxygen`
+- **Ubuntu**: `sudo apt install doxygen`
+- **Arch**: `sudo pacman -S doxygen`
+
+Then build the docs:
+
+```sh
+cd build
+make doc
+# or: ninja doc (Windows)
+```
+
+Open `docs/html/index.html` in your browser to view the result.
+
+---
 
 ## Developer Guide
 
-Use the following guide when making contributions to this repo.
+Follow the guidelines below when contributing to this repository.
 
-### Edit the code
-You can use any editor you like, but we recommend using [CLion](https://www.jetbrains.com/clion/).
+### Editing the Code
 
-### Format Code
+You can use any editor, but we recommend [CLion](https://www.jetbrains.com/clion/).
 
-The continuous integration system will check the source code against
-a specific coding style. If the code does not follow the style, the
-formatting check will fail and the code will not be merged.
-All codes are required to be formatted correctly before merging. There are several
-integrated build commands that can help you automatically format your changes.
+### Formatting Code
+
+The continuous integration system will check the source code against a specific coding style. If the code does not follow the style, the formatting check will fail and the code will not be merged.
+All codes are required to be formatted correctly before merging. There are several integrated build commands that can help you automatically format your changes.
 
 **Prerequisite**: install `clang-format` **18.1.8**. CMake will not create the format target if `clang-format` is missing.
 
 * For Linux users:
 
-  * Prefer the pinned LLVM binary (matches CI / macOS Homebrew `18.1.8`):
+  * Prefer the pinned LLVM binary:
     [x86_64](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz)
     [aarch64](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-aarch64-linux-gnu.tar.xz)
     ```bash
     tar -xf clang+llvm-18.1.8-*.tar.xz
-    export PATH=$PWD/clang+llvm-18.1.8-*/bin:$PATH
+    cp clang+llvm-18.1.8-*/bin/clang-format /usr/local/bin/
+    clang-format --version
     ```
   * Or: `pip install clang-format==18.1.8`
   * Avoid `apt install clang-format-18` on Ubuntu 24.04 — that package is **18.1.3**, not 18.1.8.
@@ -144,7 +214,8 @@ integrated build commands that can help you automatically format your changes.
     [Apple Silicon](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-macos11.tar.xz)
     ```bash
     tar -xf clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
-    export PATH=$PWD/clang+llvm-18.1.8-arm64-apple-macos11/bin:$PATH
+    cp clang+llvm-18.1.8-arm64-apple-macos11/bin/clang-format /usr/local/bin/
+    clang-format --version
     ```
   * Or: `pip install clang-format==18.1.8`
 * For Windows users:
@@ -152,34 +223,30 @@ integrated build commands that can help you automatically format your changes.
   * [Official Installer](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/LLVM-18.1.8-win64.exe) which files are going to locate `C:\Program Files\LLVM\bin\clang-format.exe` after installation.
 
 
-**Format using CLion**
+**Formatting with CLion**
 
-Choose the CMake target and compile it. CLion will automatically format the code for you.
+Select the formatting CMake target and build it. CLion will automatically format the code.
 1. `check-format`: Check `diff` between current source and formatted source (without modifying any source file)
 2. `format`: Format all source files (**Modifies** file in place)
 
-**Format manually**
+**Formatting Manually**
 
 You can run the following commands inside `build/` to format your changes.
 
 1. `make check-format`: Check `diff` between current source and formatted source (without modifying any source file)
 2. `make format`: Format all source files (**Modifies** file in place)
 
-### Debug with `gdb`
+### Debugging with GDB
 
-To debug embedded systems on a host machine, we would need a remote gdb server.
-There are 2 choices for such server, with tradeoffs of their own.
+Debugging an embedded target requires a remote GDB server. There are two options:
 
-* **`Clion Debugger`**
-  
+- **CLion Debugger** — The easiest approach. Select the target and click the **Debug** button in CLion.
 
-This is the easiest way to debug. Choose the target and Directly click the `Debug` button in CLion.
+- **OpenOCD** — Although directly using OpenOCD is possible, it is only recommended for advanced users.
 
-* **`OpenOCD`**
+---
 
-Thought directly using `openocd` is possible, but it is only recommended for advanced users.
-
-### Contribute to this repo
+## Contributing
 
 The main branch is protected. You need to create a new branch and make a pull request to merge your changes. You need to
 <u>pass the CI check (formatting check and build check)</u> before merging.
