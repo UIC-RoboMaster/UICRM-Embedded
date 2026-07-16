@@ -51,12 +51,12 @@ You can follow the instructions below to set up the necessary environments for b
 |---|---|---|
 | Arm GNU Toolchain | ✅ | Cross-compiler for STM32 (GCC 10.3+) |
 | CMake (≥3.8) | ✅ | Build system; bundled with CLion |
-| Ninja | ✅ (Windows) | Build backend on Windows |
+| Ninja | ✅ | Build backend on Windows |
 | OpenOCD | ✅ | Debug & flash via CMSIS-DAP / ST-LINK |
 | CLion | ⭐ Recommended | IDE with integrated build, flash & debug |
 
 
-#### Install Arm GNU Toolchain**
+#### Install Arm GNU Toolchain
 
 1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for the Arm GNU Toolchain.
 2. Download the pre-built toolchain for your operating system.
@@ -79,7 +79,7 @@ You can follow the instructions below to set up the necessary environments for b
 
 Download and install CMake from [cmake.org/download](https://cmake.org/download/).
 
-#### Install Ninja (Windows only)
+#### Install Ninja
 
 > Skip this step if you are using **CLion** — it bundles Ninja.
 
@@ -188,12 +188,13 @@ All codes are required to be formatted correctly before merging. There are sever
 
 * For Linux users:
 
-  * Prefer the pinned LLVM binary (matches CI / macOS Homebrew `18.1.8`):
+  * Prefer the pinned LLVM binary:
     [x86_64](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz)
     [aarch64](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-aarch64-linux-gnu.tar.xz)
     ```bash
     tar -xf clang+llvm-18.1.8-*.tar.xz
-    export PATH=$PWD/clang+llvm-18.1.8-*/bin:$PATH
+    cp clang+llvm-18.1.8-*/bin/clang-format /usr/local/bin/
+    clang-format --version
     ```
   * Or: `pip install clang-format==18.1.8`
   * Avoid `apt install clang-format-18` on Ubuntu 24.04 — that package is **18.1.3**, not 18.1.8.
@@ -205,7 +206,8 @@ All codes are required to be formatted correctly before merging. There are sever
     [Apple Silicon](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-macos11.tar.xz)
     ```bash
     tar -xf clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
-    export PATH=$PWD/clang+llvm-18.1.8-arm64-apple-macos11/bin:$PATH
+    cp clang+llvm-18.1.8-arm64-apple-macos11/bin/clang-format /usr/local/bin/
+    clang-format --version
     ```
   * Or: `pip install clang-format==18.1.8`
 * For Windows users:
