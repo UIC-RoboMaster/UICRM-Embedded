@@ -147,7 +147,7 @@ namespace driver {
 
     /**
      * @brief 达妙 (DM) 电机运行时状态
-    */
+     */
     struct DmMotorState {
         DmRxFrame rx;  // 最近一次反馈（raw 整数域）
 
@@ -334,7 +334,7 @@ namespace driver {
 
         bsp::CAN* can_ = nullptr;  ///< CAN 硬件对象
         uint16_t rx_id_ = 0;       ///< 反馈帧 Master ID
-        uint16_t tx_id_ = 0;  ///< 控制帧 CAN ID = motor_can_id + 模式偏移
+        uint16_t tx_id_ = 0;       ///< 控制帧 CAN ID = motor_can_id + 模式偏移
 
         DmMotorConfig config_ = {};  ///< 型号量程配置（由子类传入）
 
