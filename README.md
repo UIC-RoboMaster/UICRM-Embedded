@@ -6,6 +6,34 @@
 
 ---
 
+## Architecture
+
+```
+uicrm/
+├── boards/                  Shared libraries
+│   ├── base/                Board support packages (STM32CubeMX HAL) for 6 MCU boards
+│   ├── platform/            RTOS & HAL abstraction (stm32f1 / stm32f4 / stm32h7)
+│   ├── algorithm/           Control algorithms — PID, AHRS, Quaternion EKF, CRC, power limiting...
+│   ├── drivers/             Peripheral drivers — IMU, motors, DBUS/SBUS, OLED, RGB LED, Supercap...
+│   ├── components/          Robot subsystems — gimbal, chassis, shooter, referee UI
+│   └── third_party/         External libraries — MahonyAHRS, QuaternionEKF, SEGGER RTT...
+├── cmake/                   CMake modules — toolchain, build helpers, clang-format, Doxygen
+├── examples/                Standalone peripheral examples
+├── openocd/                 OpenOCD configs (stm32f1 / stm32f4 / stm32h7)
+├── programs/                Complete Robot firmware
+└── scripts/                 Utility scripts (launch.json generation, RTT viewer, formatting)
+```
+
+### Supported Hardware
+
+| MCU Family | Core | Boards |
+|---|---|---|
+| STM32F1 | Cortex-M3 | `F103_Nano_general`, `BulletExchanger_F103` |
+| STM32F4 | Cortex-M4 | `DJI_Board_TypeC_general` (F407), `DJI_Board_TypeA_general` (F427), `DM_MC01_general` (F446) |
+| STM32H7 | Cortex-M7 | `DM_MC02_general` (H723) |
+
+---
+
 ## User Guide
 
 You can follow the instructions below to set up the necessary environments for
