@@ -5,6 +5,8 @@
 ![arm](https://github.com/UIC-RoboMaster/UICRM-Embedded/workflows/arm%20build/badge.svg)
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 </div>
 
 **UICRM-Embedded** is the STM32 embedded firmware repository for the BNBU-UIC RoboMaster team.  It contains general board-level drivers, algorithms and components, hardware examples, and robot programs. The project is built using C/C++, CMake, and the GNU Arm Embedded Toolchain.
