@@ -36,10 +36,18 @@ uicrm/
 
 ## User Guide
 
-You can follow the instructions below to set up the necessary environments for
-building the source code and flashing the embedded chips.
+You can follow the instructions below to set up the necessary environments for building the source code and flashing the embedded chips.
 
-### Setting Up the Environment
+### 1. Requirement
+
+| Tool | Required | Note |
+|---|---|---|
+| Arm GNU Toolchain | ✅ | Cross-compiler for STM32 (GCC 10.3+) |
+| CMake (≥3.8) | ✅ | Build system; bundled with CLion |
+| Ninja | ✅ (Windows) | Build backend on Windows |
+| OpenOCD | ✅ | Debug & flash via CMSIS-DAP / ST-LINK |
+| CLion | ⭐ Recommended | IDE with integrated build, flash & debug |
+
 
 **Install Arm GNU Toolchain**
 
@@ -71,80 +79,107 @@ building the source code and flashing the embedded chips.
     - **Windows**: Add `<path>` to the system `PATH` environment variable.
     - **Linux / macOS**: Add the following line to `~/.bashrc` (bash) or `~/.zshrc` (zsh):
 
-    ```sh
-    export PATH=<path>:$PATH
-    ```
+      ```sh
+      export PATH=<path-to-bin>:$PATH
+      ```
 
 **Install CMake**
 
-1. Download CMake from the [official download page](https://cmake.org/download/).
+> Skip this step if you are using **CLion** — it bundles CMake.
 
-> If you are using CLion, CMake is bundled — you can skip this step.
+Download and install CMake from [cmake.org/download](https://cmake.org/download/).
 
 **Install Ninja (Windows only)**
 
-1. Download Ninja from the [official website](https://ninja-build.org).
+> Skip this step if you are using **CLion** — it bundles Ninja.
 
-### Compile Project
+Download Ninja from [ninja-build.org](https://ninja-build.org) and place it on your `PATH`.
 
-**With CLion (Recommended)**
+**Install OpenOCD**
 
-You can open the project directly in CLion and build it.
-Set the path of the Arm GNU Toolchain in **Settings → Build, Execution, Deployment → CMake**.
+1. Download the pre-built binary from [gnutoolchains.com/arm-eabi/openocd](https://gnutoolchains.com/arm-eabi/openocd/).
+2. Extract the archive and note the path to the `bin` folder — for example:
 
-> **Windows users**: Go to **Settings → Build, Execution, Deployment → CMake** and set **Generator** to `Ninja`.
-
-**Building Manually**
-
-1. Open a terminal in the project root directory.
-2. Run the following commands to configure and build:
-
-    ```sh
-    mkdir build && cd build
-    cmake -DCMAKE_BUILD_TYPE=Release ..
-    make -j
+    ```
+    /Users/yourname/openocd-0.12.0/bin
     ```
 
-> **Windows users**: Use the `Ninja` generator:
+3. Add the `bin` directory to your `PATH` (same procedure as the toolchain above).
+
+Verify your setup by running these commands in a terminal:
+
+```sh
+arm-none-eabi-gcc --version
+cmake --version
+openocd --version
+```
+
+### 2. Building the Project
+
+**Option A — CLion (Recommended)**
+
+1. Open the project root in CLion.
+2. Go to **Settings → Build, Execution, Deployment → CMake** and set the Arm GNU Toolchain path.
+3. On **Windows**, also set **Generator** to `Ninja`.
+4. Select a build target from the toolbar and click **Build**.
+
+**Option B — Command Line**
+
+```sh
+cd uicrm-embedded
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j$(nproc)
+```
+
+> **Windows**: Use the `Ninja` generator:
 > ```sh
 > cmake -DCMAKE_BUILD_TYPE=Release .. -G "Ninja"
 > ninja -j
 > ```
 
-Use `Debug` or `RelWithDebInfo` build types for GDB debugging. Note that `Debug` builds may be significantly slower due to disabled compiler optimizations.
+Use `Debug` or `RelWithDebInfo` instead of `Release` when you need GDB debugging.
+Note that `Debug` builds run significantly slower due to disabled optimizations.
 
-### Flashing Firmware
+### 3. Flashing Firmware
 
-**Flashing with CLion**
+**Option A — CLion (Recommended)**
 
-Select the target you want to flash and click the **Run** button.
+Select your target and click the **Run** button (or **Debug** for step-through debugging).
 
-The default configuration uses a CMSIS-DAP debugger. If you are using ST-LINK, update the debugger settings in the CLion run configuration.
+The default configuration assumes a **CMSIS-DAP** debugger. If you are using **ST-LINK**, change the debug probe in the CLion run configuration.
 
-**Flashing with OpenOCD**
+**Option B — Command Line (OpenOCD)**
 
-You can also flash manually using OpenOCD. The repository includes OpenOCD
-configuration files in the `openocd/` directory for each MCU family.
-Refer to the [OpenOCD documentation](https://openocd.org/doc/html/Flash-Commands.html) for details.
+The repository provides OpenOCD configuration files in `openocd/` for each MCU family. 
+For example, to flash a DJI_Board_TypeC (STM32F4):
 
-### Generating Documentation
+```sh
+openocd -f openocd/stm32f4/daplink.cfg
+```
 
-You will need [Doxygen](https://www.doxygen.nl/index.html).
+See [OpenOCD Flash Commands](https://openocd.org/doc/html/Flash-Commands.html) for details.
+
+
+### 4. Generating Documentation
+
+Install [Doxygen](https://www.doxygen.nl/index.html):
 
 - **macOS**: `brew install doxygen`
 - **Ubuntu**: `sudo apt install doxygen`
 - **Arch**: `sudo pacman -S doxygen`
-- **Other Linux**: Use prebuilt binaries or build from source following the [compile manual](https://www.doxygen.nl/manual/install.html).
 
-To generate documentation after building the project:
+Then build the docs:
 
-- Run `make doc` in the `build/` directory
-- On Windows, run `ninja doc` in the `build/` directory
+```sh
+cd build
+make doc
+# or: ninja doc (Windows)
+```
 
-To view the generated documentation:
+Open `docs/html/index.html` in your browser to view the result.
 
-- Run `firefox docs/html/index.html`, or
-- Open `docs/html/index.html` in your browser.
+---
 
 ## Developer Guide
 
@@ -211,7 +246,7 @@ Debugging an embedded target requires a remote GDB server. There are two options
 
 ---
 
-### Contributing
+## Contributing
 
 The main branch is protected. You need to create a new branch and make a pull request to merge your changes. You need to
 <u>pass the CI check (formatting check and build check)</u> before merging.
