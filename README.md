@@ -58,43 +58,49 @@ You can follow the instructions below to set up the necessary environments for b
 
 #### Install Arm GNU Toolchain
 
-1. Go to the [official download page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for the Arm GNU Toolchain.
-2. Download the pre-built toolchain for your operating system.
-3. Extract it to a directory of your choice and note the path to the `bin` folder.
+- **macOS**: `brew install --cask gcc-arm-embedded`
+- **Linux / Windows**: download from the [Arm GNU downloads page](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads).
 
-    For example: `/Users/yry0008/gcc-arm-none-eabi-10.3-2021.10/bin`.
+  Extract the archive and note the path to the `bin` folder — for example:
 
-4. Add the `bin` directory to your `PATH` environment variable:
+  ```
+  /Users/yourname/gcc-arm-none-eabi-10.3-2021.10/bin
+  ```
 
-    - **Windows**: Add `<path>` to the system `PATH` environment variable.
-    - **Linux / macOS**: Add the following line to `~/.bashrc` (bash) or `~/.zshrc` (zsh):
+  Add the `bin` directory to your `PATH` (add to `~/.bashrc` or `~/.zshrc`):
 
-    ```sh
-    export PATH=<path>:$PATH
-    ```
+  ```sh
+  export PATH=<path-to-bin>:$PATH
+  ```
 
 #### Install CMake
 
 > Skip this step if you are using **CLion** — it bundles CMake.
 
-Download and install CMake from [cmake.org/download](https://cmake.org/download/).
+- **macOS**: `brew install cmake`
+- **Linux**: `sudo apt install cmake` (Ubuntu) / `sudo pacman -S cmake` (Arch)
+- **Windows**: download from [cmake.org/download](https://cmake.org/download/)
 
 #### Install Ninja
 
 > Skip this step if you are using **CLion** — it bundles Ninja.
 
-Download Ninja from [ninja-build.org](https://ninja-build.org) and place it on your `PATH`.
+- **macOS**: `brew install ninja`
+- **Linux**: `sudo apt install ninja-build` (Ubuntu) / `sudo pacman -S ninja` (Arch)
+- **Windows**: download from [ninja-build.org](https://ninja-build.org) and place it on your `PATH`
 
 #### Install OpenOCD
 
-1. Download the pre-built binary from [gnutoolchains.com/arm-eabi/openocd](https://gnutoolchains.com/arm-eabi/openocd/).
-2. Extract the archive and note the path to the `bin` folder — for example:
+- **macOS**: `brew install open-ocd`
+- **Linux / Windows**: download from [gnutoolchains.com/arm-eabi/openocd](https://gnutoolchains.com/arm-eabi/openocd/).
 
-    ```
-    /Users/yourname/openocd-0.12.0/bin
-    ```
+  Extract the archive and note the path to the `bin` folder — for example:
 
-3. Add the `bin` directory to your `PATH` (same procedure as the toolchain above).
+  ```
+  /Users/yourname/openocd-0.12.0/bin
+  ```
+
+  Add the `bin` directory to your `PATH` (same procedure as the toolchain above).
 
 **Verify your setup by running these commands in a terminal:**
 
