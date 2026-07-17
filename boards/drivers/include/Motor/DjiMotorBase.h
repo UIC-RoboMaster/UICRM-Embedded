@@ -413,7 +413,7 @@ namespace driver {
      * - **减速比**：3591:187 ≈ 19.2:1
      */
     struct Motor3508Config {
-        static constexpr int16_t MAX_RAW_THETA = 8191;  ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+        static constexpr int16_t MAX_RAW_THETA = 8192;  ///< 转子机械角最大值 [raw] 0->8191，对应 0~360°，共 8192 个值
         static constexpr int16_t MAX_RAW_CURRENT = 16384;  ///< 转矩电流反馈最大值 [raw] -16384->16384 对应 -20A~20A
         static constexpr float MAX_CURRENT = 20.0f;                             ///< 最大转矩电流 [A]
         static constexpr float RATED_TORQUE_CONSTANT = 0.3f;                    ///< 额定转矩常数 [mN·m/A]
@@ -488,7 +488,7 @@ namespace driver {
      * - **减速比**：1:1
      */
     struct Motor6020Config {
-        static constexpr int16_t MAX_RAW_THETA = 8191;  ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+        static constexpr int16_t MAX_RAW_THETA = 8192;  ///< 转子机械角最大值 [raw] 0->8191，对应 0~360°，共 8192 个值
         static constexpr int16_t MAX_RAW_CURRENT = 16384;  ///< 转矩电流反馈最大值 [raw] -16384->16384 对应 -3A~3A
         static constexpr float MAX_CURRENT = 3.0f;         ///< 最大转矩电流 [A]
         static constexpr float RATED_TORQUE_CONSTANT = 0.741f;      ///< 额定转矩常数 [mN·m/A]
@@ -575,7 +575,7 @@ namespace driver {
      * - **减速比**：36:1
      */
     struct Motor2006Config {
-        static constexpr int16_t MAX_RAW_THETA = 8191;  ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+        static constexpr int16_t MAX_RAW_THETA = 8192;  ///< 转子机械角最大值 [raw] 0->8191，对应 0~360°，共 8192 个值
         static constexpr int16_t MAX_RAW_CURRENT = 10000;  ///< 转矩电流反馈最大值（对应实际电流 -10A ~ 10A）
         static constexpr float MAX_CURRENT = 10.0f;        ///< 最大转矩电流 [A]
         static constexpr float RATED_TORQUE_CONSTANT = 0.18f;        ///< 额定转矩常数 [mN·m/A]
@@ -650,7 +650,7 @@ namespace driver {
      * - **减速比**：3591:187 ≈ 19.2:1
      */
     struct Dm1to4Config {
-        static constexpr int16_t MAX_RAW_THETA = 8191;  ///< 转子机械角最大值 [raw] 0->8191 对应 0~360°
+        static constexpr int16_t MAX_RAW_THETA = 8192;  ///< 转子机械角最大值 [raw] 0->8191，对应 0~360°，共 8192 个值
         static constexpr int16_t MAX_RAW_CURRENT = 16384;  ///< 转矩电流反馈最大值 [raw] -16384->16384 对应 -20.5A~20.5A
         static constexpr float MAX_CURRENT = 10.5f;              ///< 最大转矩电流 [A]
         static constexpr float RATED_TORQUE_CONSTANT = 0;        ///< 未知 额定转矩常数 [mN·m/A]
