@@ -130,20 +130,21 @@ private:
     constinit static event_container_t erecvlist_[EVENTHUB_RECEIVE_MAX_NUM]; // 传入消息池
     constinit static event_container_t* erecvlist_empty_head_; // 空闲传入消息池链表头指针
     constinit static inline event_container_t* erecvlist_pri_idx_[sizeof(priority_t)] {};
-    static uint8_t recvlist_clear_et(event_container_t* et); // et: event container
-    uint8_t recvlist_get_empty_et(EventHub::event_container_t** p_et = nullptr) const;
+    static uint8_t erecvlist_clear_et(event_container_t* et); // et: event container
+    uint8_t erecvlist_get_empty_et(EventHub::event_container_t** p_et = nullptr) const;
 
-    uint8_t init_maincache();
+    uint8_t init_emaincache();
     uint8_t emaincache_inited_ = 0;
     constinit static event_container_t emaincache_[EVENTHUB_CONTAINER_MAX_EVENT_NUM]; // 消息缓存池
     constinit static event_container_t* emaincache_empty_head_; // 空闲内存池槽位链表头指针
     constinit static inline event_container_t* emaincache_pri_idx_[sizeof(priority_t)] {}; // 以优先级链表的方式保存事件，next指针将指向下一个同优先级事件，如果某个优先级没有事件，则指针为nullptr
-    static uint8_t maincache_clear_et(event_container_t* et);
+    static uint8_t emaincache_clear_et(event_container_t* et);
     uint8_t emaincache_get_empty_et(EventHub::event_container_t** p_et = nullptr) const;
+
 
     // 为什么要做一个专门的缓冲区？因为紧急事件可能会出现密集突发，上一个容器还没有解除占用，下一个事件就已经来了
     // 信息传递机制需要尽量统一信息装箱\拆箱流程
-    uint8_t init_urgentcache();
+    uint8_t init_eurgentcache();
     uint8_t eurgentcache_inited_ = 0;
     // static uint8_t eUrgentF_push(event_container_t* et);
     constinit static event_container_t eurgentcache_[EVENTHUB_URGENT_FIFO_MAX_NUM];
@@ -168,12 +169,13 @@ private:
     constinit static inline subcriber_t* topic_subscribers_[sizeof(TpcIDMask_t)] {}; // 订阅者链表 表头指针组
     constinit static inline event_container_t* published_event_ {}; // 已发布事件链表头
 
+
     /**
-     * 从传入事件队列中取出全部事件并按优先级放入事件缓存
-     * @param et 将返回当前最高优先级的事件容器指针
-     * @return 取出的事件数量
+     * 从传入事件队列中取出全部事件并按优先级放入事件缓存，本函数应为事件总线的主任务函数之一
+     * @param aaaaaa 将返回当前最高优先级的事件容器指针
+     * @return 完成转移的任务数量
      */
-    uint8_t dump_and_sort(event_container_t* et) const;
+    uint8_t dump_and_sort(event_container_t* et, bool pop) const;
     // 获取事件优先级
     static priority_t get_e_priority(const event_container_t* et);
     // 获取事件主题

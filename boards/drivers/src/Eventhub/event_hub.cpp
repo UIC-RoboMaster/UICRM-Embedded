@@ -16,7 +16,7 @@ uint8_t EventHub::init_erecvlist() {
     return 0;
 }
 
-uint8_t EventHub::recvlist_get_empty_et(event_container_t** p_et) const {
+uint8_t EventHub::erecvlist_get_empty_et(event_container_t** p_et) const {
     if (this->erecvlist_inited_ == 0)  return -1;
 
     if (erecvlist_empty_head_ == nullptr) return 1;
@@ -25,17 +25,19 @@ uint8_t EventHub::recvlist_get_empty_et(event_container_t** p_et) const {
     return 0;
 }
 
-uint8_t EventHub::recvlist_clear_et(event_container_t* et) {
+uint8_t EventHub::erecvlist_clear_et(event_container_t* et) {
     if (!et) return -1;
     et->topic_ = topic_t::EMPTYTOPIC;
-    et->next_ =erecvlist_empty_head_;
-    erecvlist_empty_head_ = et;
+    if (erecvlist_empty_head_) {
+        et->next_ = erecvlist_empty_head_;
+        erecvlist_empty_head_ = et;
+    } else {et = erecvlist_empty_head_;}
     et->et_location_ = recvcache;
     return 0;
 }
 
 /****** 消息主缓存 ******/
-uint8_t EventHub::init_maincache() {
+uint8_t EventHub::init_emaincache() {
     if (this->emaincache_inited_ == 1)  return -1;
     this->emaincache_inited_ = 1;
 
@@ -49,11 +51,13 @@ uint8_t EventHub::init_maincache() {
     return 0;
 }
 
-uint8_t EventHub::maincache_clear_et(event_container_t* et) {
+uint8_t EventHub::emaincache_clear_et(event_container_t* et) {
     if (!et) return -1;
     et->topic_ = topic_t::EMPTYTOPIC;
-    et->next_ =emaincache_empty_head_;
-    emaincache_empty_head_ = et;
+    if (emaincache_empty_head_) {
+        et->next_ =emaincache_empty_head_;
+        emaincache_empty_head_ = et;
+    } else {et = emaincache_empty_head_;}
     et->et_location_ = maincache;
     return 0;
 }
@@ -68,7 +72,7 @@ uint8_t EventHub::emaincache_get_empty_et(EventHub::event_container_t** p_et) co
 }
 
 /****** 紧急消息 ******/
-uint8_t EventHub::init_urgentcache() {
+uint8_t EventHub::init_eurgentcache() {
     if (this->eurgentcache_inited_ == 1)  return -1;
     this->eurgentcache_inited_ = 1;
     for (uint8_t i = 0; i < EVENTHUB_URGENT_FIFO_MAX_NUM; i++) {
@@ -83,8 +87,10 @@ uint8_t EventHub::init_urgentcache() {
 
 uint8_t EventHub::eurentcache_clearct(event_container_t* et) {
     if (!et) return -1;
-    et->next_ = eurgentcache_empty_head_;
-    eurgentcache_empty_head_ = et;
+    if (eurgentcache_empty_head_) {
+        et->next_ = eurgentcache_empty_head_;
+        eurgentcache_empty_head_ = et;
+    } else {et = eurgentcache_empty_head_;}
     et->et_location_ = urcache;
     return 0;
 }
@@ -150,7 +156,7 @@ uint8_t EventHub::event_release(msg_owner_t* own = nullptr, uint32_t pc = 0, top
 
     event_container_t* et;
     if (pri == urgent) { if (!eurentcache_getemptyct(&et)) return -1; } // 如果是紧急事件，使用紧急缓冲区
-    else {if (!recvlist_get_empty_et(&et)) return -1;}
+    else {if (!erecvlist_get_empty_et(&et)) return -1;}
 
     et->topic_ = topic;
     et->priority_ = pri;
@@ -171,29 +177,41 @@ uint8_t EventHub::event_release(msg_owner_t* own = nullptr, uint32_t pc = 0, top
 }
 
 /****** 工具函数 ******/
-uint8_t EventHub::dump_and_sort(event_container_t* et) const {
-    uint8_t i, ret = 0;
+
+uint8_t EventHub::dump_and_sort(event_container_t* et, bool pop) const {
+    uint8_t i, ret = 0; uint8_t a = ret;
+    event_container_t* e = nullptr;
     if (sizeof(i) != sizeof(priority_t)) return 0;
 
     // 从高优先级逐级移动所有事件
-    for (i = p_err; i > p_empty; i++) {
-        if (!erecvlist_pri_idx_[i]) continue; // 此优先级没有传入事件
-        while (et != nullptr) { // 移动该优先级全部事件
-            // 获取cache容器，拷入内容，并添加链表节点
-            if (!chech_et_location(erecvlist_pri_idx_[i], recvcache)) return -1; // 容器必须来自接收缓冲区
-            if (!emaincache_get_empty_et(&et)) return ret; // 如果没拿到空容器，
-            memcpy(et, erecvlist_pri_idx_[i], sizeof(event_container_t));
-            et->et_location_ = maincache;
-            recvlist_clear_et(erecvlist_pri_idx_[i]); // 清空容器
+    for (i = urgent-1; i > p_empty; i++) {
+        while (erecvlist_pri_idx_[i] != nullptr) {                                          // 移动该优先级全部事件
+            if (constexpr uint8_t max_try = 3; a >= max_try) return -1; // 如果没拿到空容器，尝试重试
 
-            if (!emaincache_pri_idx_[i]) { emaincache_pri_idx_[i] = et; }
-            else { emaincache_pri_idx_[i]->next_ = et; }
-            erecvlist_pri_idx_[i] = erecvlist_pri_idx_[i]->next_; ret++; // 处理同优先级的下一事件
+            // 获取位于主缓存的容器，拷入内容，并添加链表节点
+            if (!emaincache_get_empty_et(&e)) {a++; continue;}
+            if (!chech_et_location(erecvlist_pri_idx_[i], recvcache)) return -1; // 容器必须来自接收缓冲区
+            memcpy(e, erecvlist_pri_idx_[i], sizeof(event_container_t));
+            e->et_location_ = maincache;
+            if (!emaincache_pri_idx_[i]) emaincache_pri_idx_[i] = e; // 判断如何插入链表节点
+            else { emaincache_pri_idx_[i]->next_ = e; }
+
+            // 如果是第一个事件，记录下来
+            ret++; if (!ret) et = e;
+
+            e = erecvlist_pri_idx_[i];  // 调整索引并清空容器
+            erecvlist_pri_idx_[i] = erecvlist_pri_idx_[i]->next_;
+            erecvlist_clear_et(e);
         }
     }
-    if (!ret) return ret;
+    if (!pop) return ret;
 
-    for (i = urgent-1; et!=nullptr; i--) (et = emaincache_pri_idx_[i]); // 从最高优先级开始搜索事件，找到事件后将该容器弹出
+    e = emaincache_pri_idx_[get_e_priority(et)]; // 检查获取的最高优先级事件是否正确
+    if (e != et) return -1;
+
+    e = e->next_;                                // 将被弹出的最高优先级事件索引从maincache迁移到published
+    if (!published_event_) published_event_ = e;
+    else e->next_ = published_event_;
     return ret;
 }
 
