@@ -40,10 +40,13 @@ enum class TpcID_t : TpcIDSize_t {
     EMPTYTOPIC = 0xFF
 };
 
+
+
 // 将使用位运算检查事件类型，每个二进制位代表一种事件
 typedef TpcID_t topic_t;
 typedef uint16_t TpcIDMask_t;
 
+// 从id查掩码
 constexpr TpcIDMask_t get_eIDMask(TpcID_t id)
 {
     return static_cast<TpcIDMask_t>(
@@ -51,11 +54,13 @@ constexpr TpcIDMask_t get_eIDMask(TpcID_t id)
     );
 }
 
+// 从id查编号
 constexpr TpcIDSize_t get_eIDNumber(TpcID_t id)
 {
     return static_cast<TpcIDSize_t>(id);
 }
 
+// 从掩码查id
 constexpr TpcID_t get_eID(TpcIDMask_t mask)
 {
     if (mask == 0u || (mask & static_cast<TpcIDMask_t>(mask - 1u)) != 0u) {
@@ -73,6 +78,7 @@ constexpr TpcID_t get_eID(TpcIDMask_t mask)
         : TpcID_t::EMPTYTOPIC;
 }
 
+// 从编号查id
 constexpr TpcID_t get_eID(TpcIDSize_t size)
 {
     return static_cast<TpcID_t>(size);
