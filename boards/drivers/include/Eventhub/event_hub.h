@@ -39,7 +39,10 @@ public:
         l_err = 0xf,
     } et_location_t;
 
-    typedef struct msg_owner_s msg_owner_t;
+
+
+    // typedef struct msgpayload_s msgpayload_t;
+
 
     /**
      * @brief 事件容器结构体定义
@@ -57,9 +60,20 @@ public:
         event_type_t event_type_ = e_empty;
         topic_t topic_ = TpcID_t::EMPTYTOPIC;
 
+        struct msgpayload_s;
+        /**
+         * @brief 消息数据所有者结构体定义
+         * @param recover_space_ 用于释放消息数据的工具函数指针
+         * @param owner_info_ 消息数据所有者的额外参数，不暴露细节，在下一层详细定义，供 recover_space_ 使用
+         */
+        typedef struct msg_owner_s {
+            uint8_t (*recover_space_)(msgpayload_s* msg) = nullptr;
+            void* owner_info_{};
+        } msg_owner_t;
+
         /**
          * @brief 消息数据结构体定义
-         * @param owner_ 消息数据的实际管理者，此为接口，实际内容定义于发布者命名空间。
+         * @param owner_ 消息数据的实际管理者，此为接口，实际内容定义于发布者命名空间，第一个成员一定是用于释放 zerocopy 内存的工具函数
          * @param publisher_cookie_ 用于释放消息所需的额外参数
          * @param payload_ 消息数据指针
          * @param length_ 消息数据长度
@@ -119,7 +133,7 @@ public:
      * @param msg_len msg_len为1则认为msg变量保存的是实际内容而不是指针
      * @return 0：接收到常规消息 1：接收到紧急消息 -1：缓冲区容量不足
      */
-    uint8_t event_release(msg_owner_t* owner, uint32_t publish_cookie, topic_t topic , priority_t priority, uint32_t* msg, uint32_t msg_len) const;
+    uint8_t event_release(event_container_t::msg_owner_t* owner, uint32_t publish_cookie, topic_t topic , priority_t priority, uint32_t* msg, uint32_t msg_len) const;
     // 订阅者使用：减少事件生命周期
     static uint8_t decrease_e_lifespan(event_container_t* event);
     static uint8_t increase_e_lifespan(event_container_t* event);
@@ -130,7 +144,7 @@ private:
     constinit static event_container_t erecvlist_[EVENTHUB_RECEIVE_MAX_NUM]; // 传入消息池
     constinit static event_container_t* erecvlist_empty_head_; // 空闲传入消息池链表头指针
     constinit static inline event_container_t* erecvlist_pri_idx_[sizeof(priority_t)] {};
-    static uint8_t erecvlist_clear_et(event_container_t* et); // et: event container
+    // static uint8_t erecvlist_clear_et(event_container_t* et); // et: event container
     uint8_t erecvlist_get_empty_et(EventHub::event_container_t** p_et = nullptr) const;
 
     uint8_t init_emaincache();
@@ -138,7 +152,7 @@ private:
     constinit static event_container_t emaincache_[EVENTHUB_CONTAINER_MAX_EVENT_NUM]; // 消息缓存池
     constinit static event_container_t* emaincache_empty_head_; // 空闲内存池槽位链表头指针
     constinit static inline event_container_t* emaincache_pri_idx_[sizeof(priority_t)] {}; // 以优先级链表的方式保存事件，next指针将指向下一个同优先级事件，如果某个优先级没有事件，则指针为nullptr
-    static uint8_t emaincache_clear_et(event_container_t* et);
+    // static uint8_t emaincache_clear_et(event_container_t* et);
     uint8_t emaincache_get_empty_et(EventHub::event_container_t** p_et = nullptr) const;
 
 
@@ -156,15 +170,16 @@ private:
      * @return 成功 / 失败
      */
     uint8_t eurentcache_getemptyct(event_container_t** p_et = nullptr) const;
+    // static uint8_t eurentcache_clearct(event_container_t* et);
+    uint8_t eurentcache_getfullctnum() const; // 调试用，获取当前有多少个容器被填充
+    uint8_t eurentcache_getemptyctnum() const; // 调试用，获取当前有多少个容器是空闲的
 
     /**
-     * @brief 清空一个紧急事件容器，将其放回空闲链表
+     * @brief 清空一个容器，根据记录的种类，将其放回空闲链表
      * @param et 需要被清空的容器句柄
      * @return 成功 / 失败
      */
-    static uint8_t eurentcache_clearct(event_container_t* et);
-    uint8_t eurentcache_getfullctnum() const; // 调试用，获取当前有多少个容器被填充
-    uint8_t eurentcache_getemptyctnum() const; // 调试用，获取当前有多少个容器是空闲的
+    static uint8_t clear_et(event_container_t* et);
 
     constinit static inline subcriber_t* topic_subscribers_[sizeof(TpcIDMask_t)] {}; // 订阅者链表 表头指针组
     constinit static inline event_container_t* published_event_ {}; // 已发布事件链表头
@@ -173,6 +188,7 @@ private:
     /**
      * 从传入事件队列中取出全部事件并按优先级放入事件缓存，本函数应为事件总线的主任务函数之一
      * @param aaaaaa 将返回当前最高优先级的事件容器指针
+     * @param pop 如果为 true，则将从传入事件队列中弹出事件容器，如果为 false，则仅拷贝内容
      * @return 完成转移的任务数量
      */
     uint8_t dump_and_sort(event_container_t* et, bool pop) const;
@@ -189,13 +205,12 @@ private:
      * @return 成功通知了多少个订阅者，如果为 0 意味着没人订阅，为 -1 则出错
      *
      */
-    uint8_t publish_e_to_subscribers(event_container_t* et);
+    static uint8_t publish_e_to_subscribers(event_container_t* et);
     // 检查已发布事件链表，清空到期容器
-    uint8_t clear_expire_container();
+    uint8_t recover_expire_container();
 
     // 检查消息容器位置
     static uint8_t chech_et_location(event_container_t* et, et_location_t loc) ;
-
-    // 从传入事件队列获取一个空容器并填充内容,返回void就是没有空容器
+    static et_location_t get_e_loc(const event_container_t* et);
 
 };

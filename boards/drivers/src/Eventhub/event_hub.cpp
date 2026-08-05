@@ -25,16 +25,16 @@ uint8_t EventHub::erecvlist_get_empty_et(event_container_t** p_et) const {
     return 0;
 }
 
-uint8_t EventHub::erecvlist_clear_et(event_container_t* et) {
-    if (!et) return -1;
-    et->topic_ = topic_t::EMPTYTOPIC;
-    if (erecvlist_empty_head_) {
-        et->next_ = erecvlist_empty_head_;
-        erecvlist_empty_head_ = et;
-    } else {et = erecvlist_empty_head_;}
-    et->et_location_ = recvcache;
-    return 0;
-}
+// uint8_t EventHub::erecvlist_clear_et(event_container_t* et) {
+//     if (!et) return -1;
+//     et->topic_ = topic_t::EMPTYTOPIC;
+//     if (erecvlist_empty_head_) {
+//         et->next_ = erecvlist_empty_head_;
+//         erecvlist_empty_head_ = et;
+//     } else {et = erecvlist_empty_head_;}
+//     et->et_location_ = recvcache;
+//     return 0;
+// }
 
 /****** 消息主缓存 ******/
 uint8_t EventHub::init_emaincache() {
@@ -51,15 +51,38 @@ uint8_t EventHub::init_emaincache() {
     return 0;
 }
 
-uint8_t EventHub::emaincache_clear_et(event_container_t* et) {
+// uint8_t EventHub::emaincache_clear_et(event_container_t* et) {
+//     if (!et) return -1;
+//     et->topic_ = topic_t::EMPTYTOPIC;
+//     if (emaincache_empty_head_) {
+//         et->next_ =emaincache_empty_head_;
+//         emaincache_empty_head_ = et;
+//     } else {et = emaincache_empty_head_;}
+//     et->et_location_ = maincache;
+//     return 0;
+// }
+
+uint8_t EventHub::clear_et(event_container_t* et) {
     if (!et) return -1;
     et->topic_ = topic_t::EMPTYTOPIC;
-    if (emaincache_empty_head_) {
-        et->next_ =emaincache_empty_head_;
-        emaincache_empty_head_ = et;
-    } else {et = emaincache_empty_head_;}
-    et->et_location_ = maincache;
+    et_location_t eloc = get_e_loc(et);
+
+    event_container_t** empty_head = nullptr;
+
+    switch (eloc) {
+        case maincache: empty_head = &emaincache_empty_head_;   break;
+        case recvcache: empty_head = &erecvlist_empty_head_;    break;
+        case urcache:   empty_head = &eurgentcache_empty_head_; break;
+        default: return -1;
+    }
+
+    et->next_ = *empty_head;
+    *empty_head = et;
     return 0;
+}
+
+EventHub::et_location_t EventHub::get_e_loc(const event_container_t* et) {
+    return et->et_location_;
 }
 
 uint8_t EventHub::emaincache_get_empty_et(EventHub::event_container_t** p_et) const {
@@ -85,15 +108,15 @@ uint8_t EventHub::init_eurgentcache() {
     return 0;
 }
 
-uint8_t EventHub::eurentcache_clearct(event_container_t* et) {
-    if (!et) return -1;
-    if (eurgentcache_empty_head_) {
-        et->next_ = eurgentcache_empty_head_;
-        eurgentcache_empty_head_ = et;
-    } else {et = eurgentcache_empty_head_;}
-    et->et_location_ = urcache;
-    return 0;
-}
+// uint8_t EventHub::eurentcache_clearct(event_container_t* et) {
+//     if (!et) return -1;
+//     if (eurgentcache_empty_head_) {
+//         et->next_ = eurgentcache_empty_head_;
+//         eurgentcache_empty_head_ = et;
+//     } else {et = eurgentcache_empty_head_;}
+//     et->et_location_ = urcache;
+//     return 0;
+// }
 
 uint8_t EventHub::eurentcache_getemptyct(event_container_t** p_et) const {
     if (this->eurgentcache_inited_ == 0)  return -1;
@@ -151,7 +174,14 @@ uint8_t EventHub::subscribe_topic(subcriber_t* s, TpcIDMask_t t) {
     return 0;
 }
 
-uint8_t EventHub::event_release(msg_owner_t* own = nullptr, uint32_t pc = 0, topic_t topic = topic_t::EMPTYTOPIC, priority_t pri = p_empty, uint32_t* msg = nullptr, uint32_t msg_len = 0) const {
+uint8_t EventHub::event_release(
+    event_container_t::msg_owner_t* own = nullptr,
+    uint32_t pc = 0,
+    topic_t topic = topic_t::EMPTYTOPIC,
+    priority_t pri = p_empty,
+    uint32_t* msg = nullptr,
+    uint32_t msg_len = 0
+    ) const {
     if (!own || !pc || topic == topic_t::EMPTYTOPIC || pri ==p_empty || !msg || msg_len) return -1;
 
     event_container_t* et;
@@ -201,7 +231,7 @@ uint8_t EventHub::dump_and_sort(event_container_t* et, bool pop) const {
 
             e = erecvlist_pri_idx_[i];  // 调整索引并清空容器
             erecvlist_pri_idx_[i] = erecvlist_pri_idx_[i]->next_;
-            erecvlist_clear_et(e);
+            clear_et(e);
         }
     }
     if (!pop) return ret;
@@ -265,4 +295,21 @@ uint8_t EventHub::publish_e_to_subscribers(event_container_t* et) {
 
 uint8_t EventHub::chech_et_location(event_container_t* et, et_location_t loc) {
     return et->et_location_ == loc ? 0 : 1;
+}
+
+// TODO: 优化容器回收函数
+uint8_t EventHub::recover_expire_container() {
+    if (!published_event_) return 0;
+    uint8_t ret = 0;
+    event_container_t* et = published_event_;
+    while (et != nullptr) {
+        if (et->life_span_ == 0) {  // 检查生命周期并回收容器
+            if (!chech_et_location(et, maincache)) return -1;
+            et->msgbody_.owner_->recover_space_(&et->msgbody_);
+            if (clear_et(et)) return -1;
+            ret++;
+        }
+        et = et->next_;
+    }
+    return ret;
 }
