@@ -22,15 +22,6 @@ public:
     } priority_t;
 
     typedef enum : uint8_t {
-        e_empty = 0,
-        can,
-        uart,
-        referee,
-        size,
-        e_err = 0xf,
-    } event_type_t;
-
-    typedef enum : uint8_t {
         l_empty = 0,
         urcache,
         recvcache,
@@ -38,11 +29,6 @@ public:
         l_size,
         l_err = 0xf,
     } et_location_t;
-
-
-
-    // typedef struct msgpayload_s msgpayload_t;
-
 
     /**
      * @brief 事件容器结构体定义
@@ -57,7 +43,7 @@ public:
         priority_t priority_ = p_empty;
         lifespan_t life_span_ = 0;
         et_location_t et_location_ = l_empty;
-        event_type_t event_type_ = e_empty;
+        // event_type_t event_type_ = e_empty;
         topic_t topic_ = TpcID_t::EMPTYTOPIC;
 
         struct msgpayload_s;
@@ -97,9 +83,6 @@ public:
     typedef struct subcriber_s {
         subcriber_s* next_ = nullptr;
 
-        // typedef struct event_handler_fn_s {
-        //     event_container_t* ct;
-        // } event_handler_fn_t;
         /**
          * @param rx_func_ 接收函数组 以 event_handler_fn_t 包装体作为入参.
          * @param sub_maskmap 订阅事件位表
@@ -121,7 +104,7 @@ public:
      * @param tgp_ 使用位运算的方式包含该任务订阅的所有事件类型,为便于运算，使用uint16_t进行封装
      * @return 成功订阅的事件数量
      */
-    static uint8_t subscribe_topic(subcriber_t* subcriber, TpcIDMask_t tgp_);
+    static uint8_t regisrter_subscriber(subcriber_t* subcriber, TpcIDMask_t tgp_);
     //
     /**
      *  发布者使用，用于发布事件：向系统fifo队列存入事件 或 发布紧急事件，此时不走事件总线任务分发，而是直接调接收者函数
@@ -187,7 +170,7 @@ private:
 
     /**
      * 从传入事件队列中取出全部事件并按优先级放入事件缓存，本函数应为事件总线的主任务函数之一
-     * @param aaaaaa 将返回当前最高优先级的事件容器指针
+     * @param et 将返回当前最高优先级的事件容器指针
      * @param pop 如果为 true，则将从传入事件队列中弹出事件容器，如果为 false，则仅拷贝内容
      * @return 完成转移的任务数量
      */
@@ -196,8 +179,8 @@ private:
     static priority_t get_e_priority(const event_container_t* et);
     // 获取事件主题
     static topic_t get_e_topic(const event_container_t* et);
-    // 获取事件类型
-    static topic_t get_e_type(const event_container_t* et);
+
+    // static event_type_t get_e_type(const event_container_t* et); // 获取事件类型
 
     /**
      * 从事件缓存中发布事件给订阅者，并加入已发布事件链表
@@ -207,7 +190,7 @@ private:
      */
     static uint8_t publish_e_to_subscribers(event_container_t* et);
     // 检查已发布事件链表，清空到期容器
-    uint8_t recover_expire_container();
+    static uint8_t recover_expire_container();
 
     // 检查消息容器位置
     static uint8_t chech_et_location(event_container_t* et, et_location_t loc) ;

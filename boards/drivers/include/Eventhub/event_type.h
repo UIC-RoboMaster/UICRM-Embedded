@@ -19,7 +19,20 @@
 // constexpr static uint16_t EVENT_15 = EVENT_0 << 15;
 // constexpr static uint16_t EMPTY_EVENT = 0xFFFF;
 
-typedef uint8_t TpcIDSize_t;
+/**
+ * 如何使用事件类型系统
+ *
+ * 1. 在 TpcIDSize_t 枚举类中添加新的事件类型
+ * 2. 使用 regisrter_subscriber() 方法注册接收者，接收者可以一次性订阅多个主题：使用 get_eIDMask() 方法把事件编号转换为掩码，然后使用OR操作符拼到一起组装成事件位表即可
+ * 2. 在对应的接收者所持有的接收回调函数数组的对应索引位置（get_eIDNumber()方法）注册该事件的接收方法
+ * 3. 直接调用发布者函数 event_release() 发布事件，
+ *
+ * 事件优先级说明：
+ * urgent：紧急事件，直接调接收函数，不等待。
+ * veryhigh~verylow：常规事件，会先被传递到等待区，然后转移到主缓存。event_hub任务的主进程会将任务进行分发。
+ *
+ **/
+typedef uint8_t TpcIDSize_t; // 更改前面的变量尺寸即可扩容整个枚举体系
 enum class TpcID_t : TpcIDSize_t {
     Event0  = 0, // 掩码为0b1, 掩码为 0b0时意味着empty event
     Event1,
@@ -40,7 +53,9 @@ enum class TpcID_t : TpcIDSize_t {
     EMPTYTOPIC = 0xFF
 };
 
-
+// 掩码：  事件类型的位表，使用某个二进制位代表一种事件
+// 编号：  事件类型的10进制序号
+// ID：   代表某一事件的枚举成员
 
 // 将使用位运算检查事件类型，每个二进制位代表一种事件
 typedef TpcID_t topic_t;

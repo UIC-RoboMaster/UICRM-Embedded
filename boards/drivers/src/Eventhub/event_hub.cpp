@@ -45,7 +45,7 @@ uint8_t EventHub::init_emaincache() {
     for (uint8_t i = 0; i < EVENTHUB_CONTAINER_MAX_EVENT_NUM; i++) {
         emaincache_[i].next_ = (i < EVENTHUB_CONTAINER_MAX_EVENT_NUM - 1) ? &emaincache_[i + 1] : nullptr;
         emaincache_[i].topic_ = TpcID_t::EMPTYTOPIC;
-        erecvlist_[i].et_location_ = maincache;
+        emaincache_[i].et_location_ = maincache;
     }
     emaincache_empty_head_ = &emaincache_[0];
     return 0;
@@ -160,7 +160,7 @@ uint8_t EventHub::eurentcache_getemptyctnum() const {
 }
 
 /****** 发布者函数 ******/
-uint8_t EventHub::subscribe_topic(subcriber_t* s, TpcIDMask_t t) {
+uint8_t EventHub::regisrter_subscriber(subcriber_t* s, TpcIDMask_t t) {
     if (!t) return -1;
     // 每次取出一位
     for (TpcIDMask_t i = 0; t ; i++) {
@@ -282,7 +282,7 @@ uint8_t EventHub::publish_e_to_subscribers(event_container_t* et) {
     if (!s) return 0; // 没有人订阅该主题
     while (s != nullptr) { // 开始发布消息
         increase_e_lifespan(et);
-        s->rx_.rx_func_[(uint32_t)tpc](et);
+        s->rx_.rx_func_[(uint32_t)tpc](et); // 在接收者函数数组中，以“事件topic的10进制索引”为索引，查具体的接收函数
         s = s->next_;
 #ifdef EH_DEBUG
         i++;
@@ -297,7 +297,6 @@ uint8_t EventHub::chech_et_location(event_container_t* et, et_location_t loc) {
     return et->et_location_ == loc ? 0 : 1;
 }
 
-// TODO: 优化容器回收函数
 uint8_t EventHub::recover_expire_container() {
     if (!published_event_) return 0;
     uint8_t ret = 0;
@@ -313,3 +312,4 @@ uint8_t EventHub::recover_expire_container() {
     }
     return ret;
 }
+
