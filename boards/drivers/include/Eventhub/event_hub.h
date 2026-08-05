@@ -1,9 +1,10 @@
 #pragma once
 #include <cstdint>
-#include "event_type.h"
+#include "../event_type.h"
 
 constexpr static uint8_t EVENTHUB_CONTAINER_MAX_EVENT_NUM = 32;
 constexpr static uint8_t EVENTHUB_RECEIVE_FIFO_MAX_NUM = 8;
+constexpr static uint8_t EVENTHUB_RECEIVER_CALLBACK_NUM = 8;
 
 class EventHub {
 public:
@@ -70,6 +71,7 @@ public:
          * 接收者可能会用多种接收函数来处理消息
          */
         typedef struct subcriber_rx_s {
+            uint32_t* rx_func_[EVENTHUB_RECEIVER_CALLBACK_NUM]{};
             uint8_t (*info_rx_)(event_container_t* ec) = nullptr;
             uint8_t (*urgent_rx_)(uint32_t* msg, uint32_t msgsize) = nullptr;
         } subcriber_rx_t;
