@@ -1,28 +1,18 @@
 #include "../../include/Execqueue/eq_worker.h"
 
-uint8_t FreqWorker::init_eq()
-{
-    if (is_init_) return EQ_ERR; is_init_ = true;
-    for (uint32_t i = 0; i<freq_level_num; i++) eq[i].init(i);
-    this->create_task(
-        &*topt,
-        WorkerTCB,
-        WorkerStack,
-        eq_task_handle);
-    return EQ_OK;
-}
-
-uint8_t FreqWorker::create_task(
-    const threadoption_s toptions[freq_level_num],
-    StaticTask_t tcbs[freq_level_num],
-    StackType_t tstacks[freq_level_num][EQ_WORKER_STACK_SIZE],
-    TaskHandle_t thandles[freq_level_num])
+template <uint32_t level_num>
+uint8_t EQWorker::create_task(
+    const threadoption_s toptions[level_num],
+    StaticTask_t tcbs[level_num],
+    StackType_t tstacks[level_num][EQ_WORKER_STACK_SIZE],
+    TaskHandle_t thandles[level_num],
+    void (*taskfunc)(void* arg))
 {
     if (!toptions || !tcbs || !thandles) return EQ_ERR;
-    for (uint32_t i = 0; i<freq_level_num; i++)
+    for (uint32_t i = 0; i<level_num; i++)
     {
         thandles[i] = xTaskCreateStatic( // 创建任务
-            eqworkerTask,
+            taskfunc,
             toptions[i].thread_name_,
             EQ_WORKER_STACK_SIZE,
             (void*)&toptions[i].arg_,
@@ -35,6 +25,19 @@ uint8_t FreqWorker::create_task(
     return EQ_OK;
 }
 
+uint8_t FreqWorker::init_eq()
+{
+    if (is_init_) return EQ_ERR; is_init_ = true;
+    for (uint32_t i = 0; i<freq_level_num; i++) eq[i].init(i);
+    this->create_task<freq_level_num>(
+        topt,
+        WorkerTCB,
+        WorkerStack,
+        eq_task_handle,
+        eqworkerTask);
+    return EQ_OK;
+}
+
 void FreqWorker::eqworkerTask(void* arg)
 {
     // 获取任务参数并验证合法性
@@ -42,7 +45,7 @@ void FreqWorker::eqworkerTask(void* arg)
     if (eqtask_arg->type_ != freq) return;
 
     // 拿到对象句柄
-    const FrequencyExecQueue* e = &eq[eqtask_arg->worker_id_];
+    const ExecQueue* e = &eq[eqtask_arg->worker_id_];
 
     // 初始化任务参数
     static uint32_t worker_num = e->task_num_;
@@ -76,3 +79,5 @@ constexpr uint32_t FreqWorker::freq_to_ticks(uint32_t freq = EQ_ERR)
     if (freq == EQ_ERR) return freq;
     return pdMS_TO_TICKS(1000u/freq);
 }
+
+// TODO 实现突发型队列相关函数
