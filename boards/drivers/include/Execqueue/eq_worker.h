@@ -1,5 +1,4 @@
 #pragma once
-#include <cstddef>
 
 #include "exec_queue.h"
 #include "FreeRTOS.h"
@@ -13,17 +12,17 @@ enum exec_type_t : uint8_t // 执行器种类枚举
 
 typedef struct taskarg_s // 任务内部传参结构体
 {
-    const uint32_t worker_id_;
-    const exec_type_t type_; // 执行器类型 (周期型执行器还是突发型执行器)
-    const uint32_t freq_; // 该等级执行器的执行频率
-    const uint32_t average_ms_; // 经测算得到的任务平均延迟
+    const uint32_t worker_id_{};
+    const exec_type_t type_ {}; // 执行器类型 (周期型执行器还是突发型执行器)
+    const uint32_t freq_{}; // 该等级执行器的执行频率
+    const uint32_t average_ms_{}; // 经测算得到的任务平均延迟
     uint32_t delay_ticks_ = UINT32_MAX;
 } taskarg_t;
 
 typedef struct threadoption_s // 线程配置结构体
 {
-    const char* thread_name_;
-    osPriority_t thread_priority_;
+    const char* thread_name_{};
+    osPriority_t thread_priority_{};
     taskarg_t arg_;
 } threadoption_t;
 
@@ -99,9 +98,9 @@ class PriWorker : public EQWorker
 public:
     static constexpr uint32_t pri_level_num = (uint32_t)PriorityExecQueue::p_size; // 获取配置中的优先级数量
     static constexpr threadoption_s topt[pri_level_num] = {
-        {.thread_name_ = "p_level0", .thread_priority_ = osPriorityHigh7,   .arg_ = {.worker_id_ = PriorityExecQueue::p_level0, .type_ = ob, .freq_ = EQ_ERR, .average_ms_ = EQ_ERR}},
-        {.thread_name_ = "p_level1", .thread_priority_ = osPriorityHigh,    .arg_ = {.worker_id_ = PriorityExecQueue::p_level1, .type_ = ob, .freq_ = EQ_ERR, .average_ms_ = EQ_ERR}},
-        {.thread_name_ = "p_level2", .thread_priority_ = osPriorityNormal7, .arg_ = {.worker_id_ = PriorityExecQueue::p_level2, .type_ = ob, .freq_ = EQ_ERR, .average_ms_ = EQ_ERR}},
+        {.thread_name_ = "p_level0", .thread_priority_ = osPriorityHigh7,   .arg_ = {.worker_id_ = PriorityExecQueue::p_level0, .type_ = ob, .freq_ = EQ_ERR, .average_ms_ = 20}},
+        {.thread_name_ = "p_level1", .thread_priority_ = osPriorityHigh,    .arg_ = {.worker_id_ = PriorityExecQueue::p_level1, .type_ = ob, .freq_ = EQ_ERR, .average_ms_ = 20}},
+        {.thread_name_ = "p_level2", .thread_priority_ = osPriorityNormal7, .arg_ = {.worker_id_ = PriorityExecQueue::p_level2, .type_ = ob, .freq_ = EQ_ERR, .average_ms_ = 20}},
     };
 
     /**
@@ -110,7 +109,6 @@ public:
      * @param arg 任务参数结构体
      */
     static void eqworkerTask(void* arg);
-    // static constexpr uint8_t calculate_delay_ticks(taskarg_t* arg);
 
 private:
     static constinit PriorityExecQueue eq[pri_level_num]; // 存储队列对象的数组

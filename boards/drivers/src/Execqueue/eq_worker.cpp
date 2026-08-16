@@ -35,7 +35,7 @@ uint8_t FreqWorker::init_eq()
 {
     if (is_init_) return EQ_ERR; is_init_ = true;
     for (uint32_t i = 0; i<freq_level_num; i++) eq[i].init(i);
-    this->create_task<freq_level_num>(
+    create_task<freq_level_num>(
         topt,
         WorkerTCB,
         WorkerStack,
@@ -47,7 +47,7 @@ uint8_t FreqWorker::init_eq()
 void FreqWorker::eqworkerTask(void* arg)
 {
     if (!arg) return;
-    taskarg_t* eqtask_arg = (taskarg_t*)arg; // 获取任务参数并验证合法性
+    auto* eqtask_arg = (taskarg_t*)arg; // 获取任务参数并验证合法性
     if (eqtask_arg->type_ != freq) return;
 
     // 拿到对象句柄
@@ -57,7 +57,7 @@ void FreqWorker::eqworkerTask(void* arg)
     static uint32_t worker_num = e->task_num_;
     static ExecQueue::queue_task_t* q = nullptr; // 任务体指针容器
 
-    while (1) // 任务主循环
+    while (true) // 任务主循环
     {
         if (worker_num != e->task_num_) // 更新任务延时
         {
@@ -88,7 +88,7 @@ uint8_t PriWorker::init_eq()
 {
     if (is_init_) return EQ_ERR; is_init_ = true;
     for (uint32_t i = 0; i<pri_level_num; i++) eq[i].init(i); // 暂时不考虑使用模板 考虑初始化方法解耦
-    this->create_task<pri_level_num>(
+    create_task<pri_level_num>(
         topt,
         WorkerTCB,
         WorkerStack,
@@ -100,16 +100,16 @@ uint8_t PriWorker::init_eq()
 void PriWorker::eqworkerTask(void* arg)
 {
     if (!arg) return;
-    taskarg_t* eqtask_arg = (taskarg_t*)arg; // 获取任务参数并验证合法性
+    auto* eqtask_arg = (taskarg_t*)arg; // 获取任务参数并验证合法性
     if ((eqtask_arg->average_ms_ == EQ_ERR) || (eqtask_arg->type_ != freq)) return;
 
     eqtask_arg->delay_ticks_ = freq_to_ticks(eqtask_arg->average_ms_);
     PriorityExecQueue* e = &eq[eqtask_arg->worker_id_]; // 拿到对象句柄
 
-    static uint32_t worker_num = e->task_num_; // 初始化任务参数
+    // static uint32_t worker_num = e->task_num_; // 初始化任务参数
     static ExecQueue::queue_task_t* q = nullptr;
 
-    while (1) // 任务主循环
+    while (true) // 任务主循环
     {
         // 取出任务，执行，放回
         e->get_exec_obtask(q); // 获取任务

@@ -26,9 +26,9 @@ public:
 
     typedef struct queue_task_s // 任务内容块
     {
-        uint8_t (*task_)(task_param_s *p);
+        uint8_t (*task_)(task_param_s *p){};
         uint32_t freq_division_ = EQ_ERR;
-        task_param_t param_;
+        task_param_t param_{};
     } queue_task_t;
 
 
@@ -50,8 +50,8 @@ protected:
      */
     queue_task_t* pop_task();
 
-    uint8_t is_full() const;
-    uint8_t is_empty() const;
+    [[nodiscard]] uint8_t is_full() const;
+    [[nodiscard]] uint8_t is_empty() const;
 
 #ifdef EQ_DEBUG
     static uint32_t get_task_timecost(queue_task_t* qt);
@@ -84,7 +84,7 @@ public:
      * @param worker_id 执行器编号，与该执行器所处FreeRTOS优先级有关
      * @return 初始化行为是否成功
      */
-    uint8_t init(const uint32_t worker_id);
+    uint8_t init(uint32_t worker_id);
 
 private:
     static constinit inline queue_task_t *queue_pool[(uint32_t)p_size][queue_size] {}; // fifo指针队列
@@ -125,7 +125,7 @@ public:
      * @param worker_id 执行器编号
      * @return 初始化是否成功
      */
-    uint8_t init(const uint32_t worker_id);
+    uint8_t init(uint32_t worker_id);
     //
     // // 计算需要延迟的时间
     // uint32_t calculate_delay_ms(uint32_t num);
