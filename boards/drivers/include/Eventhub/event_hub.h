@@ -3,7 +3,6 @@
 #include "../Eventhub/event_type.h"
 
 constexpr static uint8_t EVENTHUB_CONTAINER_MAX_EVENT_NUM = 32;
-constexpr static uint8_t EVENTHUB_RECEIVE_MAX_NUM = 8;
 constexpr static uint8_t EVENTHUB_URGENT_FIFO_MAX_NUM = 8;
 
 class EventHub {
@@ -24,7 +23,6 @@ public:
     typedef enum : uint8_t {
         l_empty = 0,
         urcache,
-        recvcache,
         maincache,
         l_size,
         l_err = 0xf,
@@ -121,15 +119,6 @@ public:
     static uint8_t decrease_e_lifespan(event_container_t* event);
     static uint8_t increase_e_lifespan(event_container_t* event);
 private:
-    // 初始化事件容器表和等待读取队列
-    uint8_t init_erecvlist();
-    uint8_t erecvlist_inited_ = 0;
-    constinit static event_container_t erecvlist_[EVENTHUB_RECEIVE_MAX_NUM]; // 传入消息池
-    constinit static event_container_t* erecvlist_empty_head_; // 空闲传入消息池链表头指针
-    constinit static inline event_container_t* erecvlist_pri_idx_[sizeof(priority_t)] {};
-    // static uint8_t erecvlist_clear_et(event_container_t* et); // et: event container
-    uint8_t erecvlist_get_empty_et(EventHub::event_container_t** p_et = nullptr) const;
-
     uint8_t init_emaincache();
     uint8_t emaincache_inited_ = 0;
     constinit static event_container_t emaincache_[EVENTHUB_CONTAINER_MAX_EVENT_NUM]; // 消息缓存池
@@ -167,14 +156,19 @@ private:
     constinit static inline subcriber_t* topic_subscribers_[sizeof(TpcIDMask_t)] {}; // 订阅者链表 表头指针组
     constinit static inline event_container_t* published_event_ {}; // 已发布事件链表头
 
+    /**
+     * 将消息插入主缓存，按优先级排序
+     * @param et 需要插入的事件容器
+     * @return 0成功 -1失败
+     */
+    uint8_t emaincache_insert_sorted(event_container_t* et) const;
 
     /**
-     * 从传入事件队列中取出全部事件并按优先级放入事件缓存，本函数应为事件总线的主任务函数之一
-     * @param et 将返回当前最高优先级的事件容器指针
-     * @param pop 如果为 true，则将从传入事件队列中弹出事件容器，如果为 false，则仅拷贝内容
-     * @return 完成转移的任务数量
+     * 从主缓存弹出最高优先级事件
+     * @param et 返回的事件容器指针
+     * @return 0成功 1缓存为空 -1失败
      */
-    uint8_t dump_and_sort(event_container_t* et, bool pop) const;
+    uint8_t emaincache_pop_highest(event_container_t** et) const;
     // 获取事件优先级
     static priority_t get_e_priority(const event_container_t* et);
     // 获取事件主题
