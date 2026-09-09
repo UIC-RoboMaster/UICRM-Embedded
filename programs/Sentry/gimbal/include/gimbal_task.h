@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_can.h"
 #include "buzzer_notes.h"
 #include "buzzer_task.h"
@@ -46,8 +46,8 @@ const osThreadAttr_t gimbalTaskAttribute =
 
 void gimbalTask(void* arg);
 extern control::Gimbal* gimbal;
-extern driver::MotorCANBase* pitch_motor;
-extern driver::MotorCANBase* yaw_motor;
+extern driver::DjiMotorBase* pitch_motor;
+extern driver::DjiMotorBase* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
 extern float pitch_diff, yaw_diff;
 extern INS_Angle_t INS_Angle;

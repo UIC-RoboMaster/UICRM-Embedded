@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2024. BNU-HKBU UIC RoboMaster              #
+ # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -18,32 +18,29 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#pragma once
-#include "main.h"
+#include "CanMotorBase.h"
+
+using namespace bsp;
 
 namespace driver {
-    /**
-     * @brief DJI通用电机的标准接口
-     */
-    /**
-     * @brief Basic Interface for DJI Motor
-     */
-    class MotorBase {
-      public:
-        MotorBase() : output_(0) {
-        }
-        virtual ~MotorBase() {
-        }
 
-        virtual void SetOutput(int16_t val) {
-            output_ = val;
-        }
+    CanMotorBase::CanMotorBase(uint32_t online_threshold) : ConnectionDriver(online_threshold) {
+    }
 
-        virtual int16_t GetOutput() {
-            return output_;
-        }
+    void CanMotorBase::RegisterCanCallback(CAN* can, uint16_t rx_id, CanRxHandler handler, void* ctx) {
+        rx_handler_ = handler;
+        rx_ctx_ = ctx;
+        can->RegisterRxCallback(rx_id, &CanMotorBase::BspRxThunk, this);
+    }
 
-      protected:
-        int16_t output_;
-    };
-};  // namespace driver
+    void CanMotorBase::BspRxThunk(const uint8_t data[], void* args) {
+        auto* self = static_cast<CanMotorBase*>(args);
+        RM_ASSERT_TRUE(self->rx_handler_ != nullptr, "CAN RX handler not set");
+        self->rx_handler_(self->rx_ctx_, data);
+    }
+
+    void CanMotorBase::TransmitFrame(bsp::CAN* can, uint16_t tx_id, const uint8_t data[8], uint8_t dlc) {
+        can->Transmit(tx_id, data, dlc);
+    }
+
+}  // namespace driver

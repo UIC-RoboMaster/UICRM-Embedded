@@ -8,11 +8,16 @@ build
 .idea/misc.xml
 .idea/uicrm.iml
 .idea/.name
+.idea/workspace.xml
 .idea/.gitignore
 .idea/workspace.xml
 .idea/scopes
 .idea/codeStyles/Project.xml
 .idea/copilot.data.migration.*
+
+### VScode Config
+.vscode
+.settings
 
 ### CMake template
 CMakeLists.txt.user
@@ -26,6 +31,10 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+
+### Local Cache
+.cache/
+**/.cache/
 
 ### C template
 # Prerequisites

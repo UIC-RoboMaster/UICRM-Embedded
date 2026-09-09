@@ -239,13 +239,13 @@ void remoteTask(void* arg) {
             shoot_speed = (ShootSpeed)next_shoot_speed;
             switch (shoot_speed) {
                 case SHOOT_FREQUENCY_NORMAL:
-                    steering_motor->ReInitPID(steering_motor_theta_normal_pid_init, driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_normal_pid_init, driver::DjiMotorBase::THETA);
                     break;
                 case SHOOT_FREQUENCY_FAST:
-                    steering_motor->ReInitPID(steering_motor_theta_fast_pid_init, driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_fast_pid_init, driver::DjiMotorBase::THETA);
                     break;
                 case SHOOT_FREQUENCY_BURST:
-                    steering_motor->ReInitPID(steering_motor_theta_burst_pid_init, driver::MotorCANBase::THETA);
+                    steering_motor->ReInitPID(steering_motor_theta_burst_pid_init, driver::DjiMotorBase::THETA);
                     break;
                 default:
                     break;

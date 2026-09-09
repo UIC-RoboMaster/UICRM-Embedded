@@ -18,55 +18,53 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DmMotorBase.h"
 #include "bsp_gpio.h"
+#include "bsp_os.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "main.h"
-#include "pid.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
 
-// Refer to typeA datasheet for channel detail
 static bsp::CAN* can1 = nullptr;
-static driver::MotorDM4310* motor1 = nullptr;
+static driver::DMMotor4310* motor1 = nullptr;
+
+// MIT 模式下的控制参数
+// Kp: 位置刚度，值越大电机"越硬"，对位置偏差响应越强（必须 > 0 才有位置保持能力）
+// Kd: 速度阻尼，值越大电机转动阻力越大，可抑制振荡
+static constexpr float MIT_KP = 10.0f;
+static constexpr float MIT_KD = 1.5f;
 
 void RM_RTOS_Init() {
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     print_use_uart(&huart1);
+
     can1 = new bsp::CAN(&hcan1, true);
-    motor1 = new driver::MotorDM4310(can1, 0x301, 0x3fe);
-    motor1->SetTransmissionRatio(1);
-    control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 2,
-        .ki = 0,
-        .kd = 0.1,
-        .max_out = 100,
-        .max_iout = 300,
-        .deadband = 0,                                          // 死区
-        .A = 1.5 * PI,                                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
-    };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
-    motor1->SetTarget(0);
-    // Snail need to be run at idle throttle for some
+    motor1 = new driver::DMMotor4310(can1, 0x00, 0x01, driver::DmControlMode::MIT);
+
+    // DM4310 需要显式发送使能命令后才能接受运行时控制帧
+    motor1->Enable();
+    HAL_Delay(100);
+
+    // 上电后使能电机，Kp > 0 让电机保持在当前位置
+    // MIT 模式下后台线程自动以 1kHz 发送控制帧
+    motor1->SetTarget(0.0f);
+    motor1->SetMitParams(0.0f, MIT_KP, MIT_KD, 0.0f);
+    // motor1->SetZeroPos();
     HAL_Delay(1000);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
     bsp::GPIO key(KEY_GPIO_GROUP, KEY_GPIO_PIN);
-    int current = 0;
+
     while (true) {
         set_cursor(0, 0);
         clear_screen();
+
+        // 按键消抖与切换
         if (key.Read() == 0) {
             osDelay(30);
             if (key.Read() == 1)
@@ -74,16 +72,12 @@ void RM_RTOS_Default_Task(const void* args) {
             while (key.Read() == 0) {
                 osDelay(30);
             }
-            if (current == 0) {
-                current = 10000;
-                motor1->SetTarget(6 * PI);
-            } else {
-                current = 0;
-                motor1->SetTarget(0);
-            }
-
+            // 相对当前反馈位置增加 1 rad，v_des=0 纯位置控制
+            motor1->SetTarget(motor1->GetTheta() + 1.0f);
+            motor1->SetMitParams(0.0f, MIT_KP, MIT_KD, 0.0f);
             osDelay(20);
         }
+
         motor1->PrintData();
         osDelay(20);
     }

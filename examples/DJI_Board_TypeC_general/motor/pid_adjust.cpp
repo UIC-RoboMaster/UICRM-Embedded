@@ -18,7 +18,7 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
@@ -53,7 +53,7 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::OutputFilter |       // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
-    motor->ReInitPID(steering_theta_pid_init, driver::MotorCANBase::THETA);
+    motor->ReInitPID(steering_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 800,
         .ki = 0,
@@ -69,8 +69,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::OutputFilter |       // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
     };
-    motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor->SetMode(driver::MotorCANBase::OMEGA | driver::MotorCANBase::THETA | driver::MotorCANBase::ABSOLUTE);
+    motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::THETA | driver::DjiMotorBase::ABSOLUTE);
 
     // Snail need to be run at idle throttle for some
     HAL_Delay(1000);
@@ -108,7 +108,7 @@ void RM_RTOS_Default_Task(const void* args) {
 void PrintTask(void* argument) {
     UNUSED(argument);
     while (1) {
-        control::ConstrainedPID::PID_State_t state = motor->GetPIDState(driver::MotorCANBase::THETA);
+        control::ConstrainedPID::PID_State_t state = motor->GetPIDState(driver::DjiMotorBase::THETA);
         uint8_t buffer[sizeof(state) + 2] = {0xAA, 0xBB};
         memcpy(buffer + 2, &state, sizeof(state));
         dump(&state, sizeof(buffer));

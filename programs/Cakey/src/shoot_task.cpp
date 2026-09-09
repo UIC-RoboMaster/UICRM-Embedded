@@ -33,10 +33,10 @@
 #define MOTOR_OUT_FREQ 500      // 电机输出频率 (500Hz)
 #define IDLE_THROTTLE 400       // 摩擦轮停转时PWM脉宽 (SNAIL电调怠速约400us)
 
-static driver::MotorPWMBase* flywheel_left = nullptr;
-static driver::MotorPWMBase* flywheel_right = nullptr;
+static driver::PWMMotorBase* flywheel_left = nullptr;
+static driver::PWMMotorBase* flywheel_right = nullptr;
 
-driver::MotorCANBase* steering_motor = nullptr;
+driver::DjiMotorBase* steering_motor = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
@@ -195,9 +195,9 @@ void shootTask(void* arg) {
 
 void init_shoot() {
     flywheel_left =
-        new driver::MotorPWMBase(&htim1, LEFT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
+        new driver::PWMMotorBase(&htim1, LEFT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
     flywheel_right =
-        new driver::MotorPWMBase(&htim1, RIGHT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
+        new driver::PWMMotorBase(&htim1, RIGHT_FLYWHEEL_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);
     // 等待电调上电初始化校准完成（SNAIL电调需要在稳定的最低油门信号下完成校准）
@@ -220,7 +220,7 @@ void init_shoot() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t steering_motor_omega_pid_init = {
         .kp = 1000,
         .ki = 1,
@@ -239,8 +239,8 @@ void init_shoot() {
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
 
     };
-    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
 

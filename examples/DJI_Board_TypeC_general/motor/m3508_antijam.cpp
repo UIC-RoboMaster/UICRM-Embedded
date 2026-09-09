@@ -18,7 +18,7 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
@@ -60,7 +60,7 @@ void RM_RTOS_Init() {
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
 
     };
-    motor1->ReInitPID(theta_pid_init, driver::MotorCANBase::THETA);
+    motor1->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
         .ki = 3,
@@ -78,8 +78,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
                 control::ConstrainedPID::ErrorHandle,            // 错误处理
     };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
     motor1->RegisterErrorCallback(jam_callback, motor1);
 

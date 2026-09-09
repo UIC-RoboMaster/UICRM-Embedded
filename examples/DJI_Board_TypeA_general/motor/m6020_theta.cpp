@@ -18,7 +18,7 @@
 # <https://www.gnu.org/licenses/>.                         #
 ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
@@ -50,7 +50,7 @@ void RM_RTOS_Init() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    motor1->ReInitPID(theta_pid_init, driver::MotorCANBase::THETA);
+    motor1->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 200,
         .ki = 1,
@@ -67,8 +67,8 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    motor1->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    motor1->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
+    motor1->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
     motor1->SetTarget(1.0f / 2 * PI);
     // Snail need to be run at idle throttle for some

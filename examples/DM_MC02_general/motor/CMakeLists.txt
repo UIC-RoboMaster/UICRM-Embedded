@@ -37,10 +37,6 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m6020_theta
         TARGET ${BOARD_NAME}
         SOURCES m6020_theta.cpp)
 
-uicrm_add_arm_executable(${PROJECT_NAME}_dm4310
-        TARGET ${BOARD_NAME}
-        SOURCES dm4310.cpp)
-
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
         TARGET ${BOARD_NAME}
         SOURCES servo_m2006.cpp)
@@ -48,15 +44,3 @@ uicrm_add_arm_executable(${PROJECT_NAME}_servo_m2006
 uicrm_add_arm_executable(${PROJECT_NAME}_servo_m3508
         TARGET ${BOARD_NAME}
         SOURCES servo_m3508.cpp)
-
-uicrm_add_arm_executable(${PROJECT_NAME}_m4310_mit
-        TARGET ${BOARD_NAME}
-        SOURCES m4310_mit.cpp)
-
-uicrm_add_arm_executable(${PROJECT_NAME}_m4310_posvel
-        TARGET ${BOARD_NAME}
-        SOURCES m4310_posvel.cpp)
-
-uicrm_add_arm_executable(${PROJECT_NAME}_m4310_vel
-        TARGET ${BOARD_NAME}
-        SOURCES m4310_vel.cpp)

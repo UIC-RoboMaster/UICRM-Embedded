@@ -53,7 +53,7 @@ namespace driver {
         volatile uint32_t last_uptime_ = 0;
         volatile uint32_t last_uptime_microsec_ = 0;
         /* 节点离线判定阈值（单位：ms） */
-        /* 默认值由两部分组成：100ms 心跳周期基准 + 150ms 延迟余量 */
+        /* 默认值由两部分组成：100ms 心跳周期基准 + 150ms 延迟余量（裁判系统） */
         uint32_t online_threshold_ = 100 + 150;
         /**
          * @brief 更新心跳包

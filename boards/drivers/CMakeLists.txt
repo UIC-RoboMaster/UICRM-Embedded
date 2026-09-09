@@ -7,6 +7,7 @@ set(DRIVER_SOURCES
         ${CRC_CHECK_SOURCES})
 set(DRIVER_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Motor
         ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/crc_check/include)
 
 file(GLOB_RECURSE DJI_Board_TypeC_Specific_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/DJI_Board_TypeC/src/*.*)

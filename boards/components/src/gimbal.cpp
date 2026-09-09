@@ -20,7 +20,7 @@
 
 #include "gimbal.h"
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "utils.h"
 
 namespace control {

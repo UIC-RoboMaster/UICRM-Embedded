@@ -24,8 +24,8 @@
 
 osThreadId_t gimbalTaskHandle;
 
-driver::MotorCANBase* pitch_motor = nullptr;
-driver::MotorCANBase* yaw_motor = nullptr;
+driver::DjiMotorBase* pitch_motor = nullptr;
+driver::DjiMotorBase* yaw_motor = nullptr;
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
@@ -130,8 +130,8 @@ void gimbalTask(void* arg) {
         //        }
         float yaw_speed_offset = actural_chassis_turn_speed + yaw_ratio;
         float pitch_speed_offset = pitch_ratio;
-        yaw_motor->SetSpeedOffset(yaw_speed_offset);
-        pitch_motor->SetSpeedOffset(pitch_speed_offset);
+        yaw_motor->SetSpeedFeedforward(yaw_speed_offset);
+        pitch_motor->SetSpeedFeedforward(pitch_speed_offset);
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
@@ -169,7 +169,7 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    pitch_motor->ReInitPID(pitch_theta_pid_init, driver::MotorCANBase::THETA);
+    pitch_motor->ReInitPID(pitch_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_omega_pid_init = {
         .kp = 4500,
         .ki = 0,
@@ -186,8 +186,8 @@ void init_gimbal() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    pitch_motor->ReInitPID(pitch_omega_pid_init, driver::MotorCANBase::OMEGA);
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->ReInitPID(pitch_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    pitch_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_theta_pid_init = {
@@ -203,7 +203,7 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
-    yaw_motor->ReInitPID(yaw_theta_pid_init, driver::MotorCANBase::THETA);
+    yaw_motor->ReInitPID(yaw_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
         .kp = 4000,
         .ki = 0,
@@ -220,8 +220,8 @@ void init_gimbal() {
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
-    yaw_motor->ReInitPID(yaw_omega_pid_init, driver::MotorCANBase::OMEGA);
-    yaw_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA | driver::MotorCANBase::ABSOLUTE);
+    yaw_motor->ReInitPID(yaw_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
     control::gimbal_t gimbal_data;
     gimbal_data.pitch_motor = pitch_motor;

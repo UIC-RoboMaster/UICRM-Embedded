@@ -37,7 +37,7 @@ namespace control {
             case CHASSIS_MECANUM_WHEEL:
             case CHASSIS_OMNI_WHEEL: {
                 // 新建电机关联
-                motors_ = new driver::MotorCANBase*[FourWheel::motor_num];
+                motors_ = new driver::DjiMotorBase*[FourWheel::motor_num];
                 motors_[FourWheel::front_left] = chassis.motors[FourWheel::front_left];
                 motors_[FourWheel::front_right] = chassis.motors[FourWheel::front_right];
                 motors_[FourWheel::back_left] = chassis.motors[FourWheel::back_left];
@@ -63,7 +63,7 @@ namespace control {
             {M3508_POWER_MODEL, M3508_POWER_MODEL, M3508_POWER_MODEL, M3508_POWER_MODEL};
         power_limit_.enabled = chassis.power_limit_on;
         power_limit_.limiter = new NewPowerLimit(power_model);
-        driver::MotorCANBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
+        driver::DjiMotorBase::RegisterPreOutputCallback(ApplyPowerLimitWrapper, this);
 
         // 底盘是否有超级电容
         if (chassis.has_super_capacitor) {
@@ -73,7 +73,7 @@ namespace control {
     }
 
     Chassis::~Chassis() {
-        driver::MotorCANBase::RegisterPreOutputCallback([](void* args) { UNUSED(args); }, nullptr);
+        driver::DjiMotorBase::RegisterPreOutputCallback([](void* args) { UNUSED(args); }, nullptr);
         switch (model_) {
             case CHASSIS_MECANUM_WHEEL:
             case CHASSIS_OMNI_WHEEL: {
@@ -291,7 +291,8 @@ namespace control {
         float max_current = power_limit_.max_watt / power_limit_.voltage;
 
         // 根据缓冲区剩余能量，使用线性插值，计算最大电流。
-        max_current = max_current * linear_interpolation<int>(20, 80, 80, 150, power_limit_.buffer_percent) / 100;
+        max_current =
+            max_current * linear_remap_clip(static_cast<int>(power_limit_.buffer_percent), 20, 80, 80.0f, 150.0f) / 100;
 
         // 获取数据
         int16_t turn_current[FourWheel::motor_num];

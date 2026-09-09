@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "ServoMotor.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "bsp_print.h"
@@ -27,7 +27,7 @@
 #include "main.h"
 
 bsp::CAN* can1 = NULL;
-driver::MotorCANBase* motor1 = NULL;
+driver::DjiMotorBase* motor1 = NULL;
 driver::ServoMotor* load_servo = NULL;
 remote::DBUS* dbus = nullptr;
 float load_step_angle = 2 * PI / 8;

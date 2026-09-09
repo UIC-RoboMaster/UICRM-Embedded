@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "MotorBase.h"
 #include "bsp_pwm.h"
 #include "main.h"
 namespace driver {
@@ -31,7 +30,7 @@ namespace driver {
      * @brief PWM motor base class, used for general PWM motor and servomotor with
      *       20ms frame
      */
-    class MotorPWMBase : public MotorBase {
+    class PWMMotorBase {
       public:
         /**
          * @brief 基础构造函数
@@ -56,7 +55,7 @@ namespace driver {
          * @note M3508 have idle_throttle about 1500, snail have idle_throttle about
          * 1100
          */
-        MotorPWMBase(
+        PWMMotorBase(
             TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle
         );
 
@@ -71,7 +70,7 @@ namespace driver {
          * @param val offset value with respect to the idle throttle pulse width, in
          * [us]
          */
-        virtual void SetOutput(int16_t val) override;
+        virtual void SetOutput(int16_t val);
 
         void Enable();
 
@@ -85,6 +84,7 @@ namespace driver {
         bsp::PWM pwm_;
         uint32_t idle_throttle_;
         bool en_;
+        int16_t output_ = 0;
     };
 
     /**
@@ -93,7 +93,7 @@ namespace driver {
     /**
      * @brief DJI snail 2305 motor class
      */
-    class Motor2305 : public MotorPWMBase {
+    class Motor2305 : public PWMMotorBase {
       public:
         Motor2305(
             TIM_HandleTypeDef* htim, uint8_t channel, uint32_t clock_freq, uint32_t output_freq, uint32_t idle_throttle
@@ -109,7 +109,7 @@ namespace driver {
      * @brief Ordinary MG995 PWM standard servo motor class
      */
 
-    class ServoMG995 : public MotorPWMBase {
+    class ServoMG995 : public PWMMotorBase {
       public:
         ServoMG995(
             TIM_HandleTypeDef* htim,
@@ -126,7 +126,7 @@ namespace driver {
      * @brief 普通 Lesar PWM标准激光
      */
 
-    class Laser : public MotorPWMBase {
+    class Laser : public PWMMotorBase {
       public:
         Laser(
             TIM_HandleTypeDef* htim,

@@ -18,15 +18,15 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "main.h"
 
 bsp::CAN* can2 = NULL;
-driver::MotorCANBase* motor1 = NULL;
-// control::MotorCANBase* motor2 = NULL;
+driver::DjiMotorBase* motor1 = NULL;
+// control::DjiMotorBase* motor2 = NULL;
 
 void RM_RTOS_Init() {
     print_use_uart(&huart4);

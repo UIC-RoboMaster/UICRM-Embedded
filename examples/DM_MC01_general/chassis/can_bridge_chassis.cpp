@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_can.h"
 #include "bsp_print.h"
 #include "chassis.h"
@@ -28,10 +28,10 @@
 
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
-driver::MotorCANBase* fl_motor = nullptr;
-driver::MotorCANBase* fr_motor = nullptr;
-driver::MotorCANBase* bl_motor = nullptr;
-driver::MotorCANBase* br_motor = nullptr;
+driver::DjiMotorBase* fl_motor = nullptr;
+driver::DjiMotorBase* fr_motor = nullptr;
+driver::DjiMotorBase* bl_motor = nullptr;
+driver::DjiMotorBase* br_motor = nullptr;
 
 driver::SuperCap* super_cap = nullptr;
 
@@ -65,20 +65,20 @@ void RM_RTOS_Init() {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
-    fl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fl_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    fl_motor->SetMode(driver::DjiMotorBase::OMEGA);
     fl_motor->SetTransmissionRatio(14);
 
-    fr_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    fr_motor->SetMode(driver::MotorCANBase::OMEGA);
+    fr_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    fr_motor->SetMode(driver::DjiMotorBase::OMEGA);
     fr_motor->SetTransmissionRatio(14);
 
-    bl_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    bl_motor->SetMode(driver::MotorCANBase::OMEGA);
+    bl_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    bl_motor->SetMode(driver::DjiMotorBase::OMEGA);
     bl_motor->SetTransmissionRatio(14);
 
-    br_motor->ReInitPID(omega_pid_init, driver::MotorCANBase::OMEGA);
-    br_motor->SetMode(driver::MotorCANBase::OMEGA);
+    br_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    br_motor->SetMode(driver::DjiMotorBase::OMEGA);
     br_motor->SetTransmissionRatio(14);
 
     driver::supercap_init_t supercap_init = {
@@ -100,7 +100,7 @@ void RM_RTOS_Init() {
 
     can_bridge = new communication::CanBridge(can2, 0x52);
 
-    driver::MotorCANBase* motors[control::FourWheel::motor_num];
+    driver::DjiMotorBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
     motors[control::FourWheel::front_right] = fr_motor;
     motors[control::FourWheel::back_left] = bl_motor;

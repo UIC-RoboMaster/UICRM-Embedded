@@ -18,7 +18,7 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "MotorPWMBase.h"
+#include "PWMMotorBase.h"
 #include "bsp_gpio.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
@@ -36,15 +36,15 @@
 #define MOTOR_OUT_FREQ 500
 #define IDLE_THROTTLE 1000
 
-driver::MotorPWMBase* motor1;
-driver::MotorPWMBase* motor2;
+driver::PWMMotorBase* motor1;
+driver::PWMMotorBase* motor2;
 remote::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init() {
     dbus = new remote::DBUS(&huart1);
     print_use_uart(&huart8);
-    motor1 = new driver::MotorPWMBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
-    motor2 = new driver::MotorPWMBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
+    motor1 = new driver::PWMMotorBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
+    motor2 = new driver::PWMMotorBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, IDLE_THROTTLE);
     motor1->SetOutput(0);
     motor2->SetOutput(0);
     // Snail need to be run at idle throttle for some

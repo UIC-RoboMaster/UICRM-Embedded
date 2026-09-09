@@ -18,7 +18,7 @@
 
 #include "shoot_task.h"
 
-#include "MotorPWMBase.h"
+#include "PWMMotorBase.h"
 
 #define LEFT_MOTOR_PWM_CHANNEL 1
 #define RIGHT_MOTOR_PWM_CHANNEL 4
@@ -28,8 +28,8 @@
 
 driver::Motor2006* steering_motor = nullptr;
 
-static driver::MotorPWMBase* flyWheelL = nullptr;
-static driver::MotorPWMBase* flyWheelR = nullptr;
+static driver::PWMMotorBase* flyWheelL = nullptr;
+static driver::PWMMotorBase* flyWheelR = nullptr;
 
 Ease* flyWheelEase = nullptr;
 
@@ -89,21 +89,21 @@ void init_shoot() {
     steering_motor = new driver::Motor2006(can1, 0x201);
     steering_motor->SetTransmissionRatio(36);
 
-    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::MotorCANBase::OMEGA);
-    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::MotorCANBase::THETA);
-    steering_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA);
+    steering_motor->ReInitPID(steering_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    steering_motor->ReInitPID(steering_motor_theta_pid_init, driver::DjiMotorBase::THETA);
+    steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
 }
 
 void init_pwm() {
-    flyWheelL = new driver::MotorPWMBase(
+    flyWheelL = new driver::PWMMotorBase(
         &htim1,
         LEFT_MOTOR_PWM_CHANNEL,
         TIM_CLOCK_FREQ,
         MOTOR_OUT_FREQ,
         BLHEIL_MOTOR_MIN_PULSE_WIDTH
     );
-    flyWheelR = new driver::MotorPWMBase(
+    flyWheelR = new driver::PWMMotorBase(
         &htim1,
         RIGHT_MOTOR_PWM_CHANNEL,
         TIM_CLOCK_FREQ,
