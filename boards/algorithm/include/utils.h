@@ -21,6 +21,8 @@
 #pragma once
 #include "main.h"
 
+#include <concepts>
+
 /**
  * @brief 将一个值限制在一个范围内
  *
@@ -604,7 +606,7 @@ inline DstT linear_remap_clip(RawT value, RawT src_min, RawT src_max, DstT dst_m
  * @param max_val   正/负满量程物理值 [rad] / [rad/s] / [N·m]
  * @return 映射后的物理值，落在 [-max_val, +max_val]
  */
-template <typename FloatT = float>
+template <std::floating_point FloatT = float>
 inline FloatT signed_linear_remap(uint16_t raw, uint16_t zero_raw, uint16_t max_raw, FloatT max_val) {
     const int32_t offset = static_cast<int32_t>(raw) - static_cast<int32_t>(zero_raw);
     const FloatT scale = static_cast<FloatT>(offset >= 0 ? (max_raw - zero_raw) : zero_raw);
@@ -622,7 +624,7 @@ inline FloatT signed_linear_remap(uint16_t raw, uint16_t zero_raw, uint16_t max_
  * @param max_val   正/负满量程物理值
  * @return raw 值，落在 [0, max_raw]
  */
-template <typename FloatT = float>
+template <std::floating_point FloatT = float>
 inline uint16_t signed_linear_remap(FloatT value, uint16_t zero_raw, uint16_t max_raw, FloatT max_val) {
     const FloatT scale = static_cast<FloatT>(value >= 0 ? (max_raw - zero_raw) : zero_raw);
     return static_cast<uint16_t>(static_cast<int32_t>(value / max_val * scale) + zero_raw);
