@@ -31,6 +31,6 @@ const control::gimbal_data_t gimbal_init_data = {
     .yaw_circle_ = true,
     .pitch_inverted = false,
     .yaw_inverted = true,
-    .pitch_eposition = 0,
-    .yaw_eposition = 0,
+    .pitch_deadband = 0,
+    .yaw_deadband = 0,
 };

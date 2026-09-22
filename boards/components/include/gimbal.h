@@ -45,8 +45,8 @@ namespace control {
         bool yaw_circle_ = true;    /* yaw angle can circle or not */
         bool pitch_inverted = false;
         bool yaw_inverted = false;
-        float pitch_eposition = 0;
-        float yaw_eposition = 0;
+        float pitch_deadband = 0;
+        float yaw_deadband = 0;
     };
 
     /**
