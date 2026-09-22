@@ -25,13 +25,13 @@
 
 namespace driver {
 
-    typedef struct {
+    struct heater_init_t {
         bsp::PWM* pwm;
         float target_temp;
         float* pid_param = new float[3]{160, 0.1, 0};
         float heater_I_limit = 300;
         float heater_output_limit = 500;
-    } heater_init_t;
+    };
 
     class Heater {
       public:

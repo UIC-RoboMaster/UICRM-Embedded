@@ -144,13 +144,13 @@
 
 namespace imu {
 
-    typedef struct {
+    struct mpu6500_init_t {
         bsp::SPIMaster* spi;
         bsp::GPIO* cs;
         bsp::GPIT* int_pin;
         bool use_mag = false;
         bool dma = true;
-    } mpu6500_init_t;
+    };
 
     typedef void (*mpu6500_callback_t)();
 
