@@ -71,16 +71,13 @@ namespace control {
            电机反装、编码器反接时置 true，标定方法见 programs/Seer/README.md */
         bool upper_yaw_joint_inverted = false;
         bool lower_yaw_joint_inverted = false;
-        /* 下yaw回中比例：每个控制周期把"上yaw当前关节角"中的该比例交给下yaw承担，
-           上yaw同时等量收回，因此回中过程中云台朝向不变（朝向由大小yaw之和/IMU闭环保持）。
-           回中是指数收敛，时间常数 ≈ 下yaw位置环时间常数 / recenter_ratio。
-           取 0 表示不做回中，此时下yaw只补上yaw吃不下的差额。 */
-        float lower_yaw_recenter_ratio = 0.0f;
-        /* 下yaw回中步长 [rad]：每个周期把下yaw的目标放在"当前实际角度 + 该角度"处，
-           等效回中角速度 ≈ 该值 / 下yaw位置环时间常数（与电机PID有关，要实测标定），
+        /* 下yaw跟随步长 [rad]：每个控制周期下yaw朝"最终由它承担的朝向 θ*"最多走该角度，
+           上yaw同时补上剩余误差（两者之和 = 本周期朝向误差，朝向由大小yaw之和/IMU闭环保持）。
+           这样从上电第一周期起两个yaw就都在转：上yaw快、下yaw慢，下yaw逐步把上yaw的角度接手，
+           上yaw回到中心。等效交接角速度 ≈ 该值 / 下yaw位置环时间常数（与电机PID有关，需实测），
            例如位置环时间常数 20ms、该值取 1.2° 时约 60°/s。
-           取 0 表示不限速（只受 recenter_ratio 限制）。
-           注意回中越快，上yaw已经把角度让出去、下yaw还没跟上造成的短暂朝向偏差越大
+           取 0 表示下yaw不主动接手（只补上yaw顶行程限位后吃不下的差额）。
+           注意交接越快，上yaw已经把角度让出去、下yaw还没跟上造成的短暂朝向偏差越大
            （量级约等于该值），所以要按现场实测的精度要求来定，不要一味加大 */
         float lower_yaw_recenter_max_step = 0.0f;
     };
@@ -107,13 +104,14 @@ namespace control {
      *          imu_yaw 直接就是该地面朝向。
      *
      * @details 协调策略（上yaw为主控快轴，下yaw为慢轴跟随）：
-     *          1. 上yaw轻、快，一个控制周期内吃下全部朝向误差，但被夹在自己的关节行程内
-     *             （典型 ±90°，由 upper_yaw_max_ / upper_yaw_circle_ 决定）；
-     *          2. 上yaw已经顶到行程边界、朝向误差还不为零时，多出来的部分由下yaw补上
+     *          1. 下yaw从第一周期起就朝"最终由它承担的朝向 θ*"走，但每周期按
+     *             lower_yaw_recenter_max_step 限速（慢轴）；上yaw同时补上剩余误差
+     *             （快轴），两者之和 = 本周期朝向误差，朝向由大小yaw之和/IMU闭环保持；
+     *          2. 上yaw被夹在自己的关节行程内（典型 ±90°，由 upper_yaw_max_ /
+     *             upper_yaw_circle_ 决定）；顶到行程边界后吃不下的差额由下yaw补上
      *             （此时"只依靠大yaw转"）；下yaw自身若有限位也会被夹住；
-     *          3. 朝向不再有误差后，下yaw按 lower_yaw_recenter_ratio 限速地把上yaw关节角
-     *             一点点收回中心（上yaw等量反向收回，两者之和不变，即朝向不变）：
-     *             最终上yaw回到中心、下yaw承担全部角度，上yaw重新获得左右两侧的快速权限。
+     *          3. 随着下yaw把角度接手，上yaw同步收回中心，最终上yaw回到中心、
+     *             下yaw承担全部角度，上yaw重新获得左右两侧的快速权限。
      */
     /**
      * @brief wrapper class for dual yaw gimbal
@@ -255,11 +253,11 @@ namespace control {
       private:
         /**
          * @brief 大小yaw协调核心：把本周期需要修正的朝向误差分配给两个yaw轴，并直接下发目标
-         * @param heading_error 本周期需要修正的地面朝向误差 [rad]
-         * @note 上yaw(小yaw)先吃下全部误差并夹在自己的关节行程内；下yaw(大yaw)补上上yaw
-         *       吃不下的差额，同时按 lower_yaw_recenter_ratio 限速地把上yaw收回中心
+         * @param yaw_diff 本周期需要修正的地面朝向误差 [rad]
+         * @note 下yaw(大yaw)从第一周期起就朝最终目标走（按 lower_yaw_recenter_max_step 限速），
+         *       上yaw(小yaw)补上剩余误差并夹在自己的关节行程内，两者之和 = yaw_diff
          */
-        void CoordinateYaw(float heading_error);
+        void CoordinateYaw(float yaw_diff);
 
         // acquired from user
         driver::DjiMotorBase* pitch_motor_ = nullptr;     /* pitch          */

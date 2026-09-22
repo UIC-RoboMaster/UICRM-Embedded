@@ -79,62 +79,72 @@ namespace control {
             pitch_angle_ = wrap<float>(pitch_angle_ + target_pitch_diff - pitch_diff, 0, 2 * PI);
         }
         // 得到最终的差值
+        // -PI - PI 不是归化值域，而是计算最短半径
         float final_pitch_diff = wrap<float>(target_pitch_diff, -PI, PI);
 
         // 死区，不动
         if (abs(final_pitch_diff) < data_.pitch_deadband) {
             final_pitch_diff = 0;
         }
+
         pitch_motor_->SetTarget(current_pitch_angle + final_pitch_diff);
 
         // ===== 大小yaw =====
         // IMU 装在云台(上yaw输出)上，imu_yaw 就是云台相对地面的朝向；
         // 目标朝向 = upper_yaw_angle_ - upper_yaw_offset_。
         // imu_yaw 与目标只差若干个 2π，所以不需要先折算到 [0, 2π]
-        float heading_error = wrapc<float>(upper_yaw_angle_ - data_.upper_yaw_offset_ - imu_yaw_angle, -PI, PI);
-        CoordinateYaw(heading_error);
+        float yaw_diff = wrapc<float>(upper_yaw_angle_ - data_.upper_yaw_offset_ - imu_yaw_angle, -PI, PI);
+        CoordinateYaw(yaw_diff);
     }
 
-    void Dual_Yaw_Gimbal::CoordinateYaw(float heading_error) {
+    void Dual_Yaw_Gimbal::CoordinateYaw(float yaw_diff) {
         const float sign_upper = data_.upper_yaw_joint_inverted ? -1.0f : 1.0f;
         const float sign_lower = data_.lower_yaw_joint_inverted ? -1.0f : 1.0f;
 
         // 朝向死区：误差很小时不再修正，避免在目标附近抖动
-        if (abs(heading_error) < data_.upper_yaw_deadband) {
-            heading_error = 0;
+        if (abs(yaw_diff) < data_.upper_yaw_deadband) {
+            yaw_diff = 0;
         }
 
-        // ===== 上yaw(小yaw)：主控快轴，一个周期内吃下全部朝向误差 =====
-        float upper_now = getUpperYawByMotor();
+        float current_upper_angle = getUpperYawByMotor();
+        float current_lower_angle = getLowerYawByMotor();
         float upper_encoder = upper_yaw_motor_->GetOutputShaftCumulatedTheta();
-
-        // 下yaw回中：本周期让下yaw多转 recenter，上yaw就等量少转 recenter，
-        // 两者之和不变，也就是云台朝向不变（上yaw只是把角度"让"给下yaw）
-        // recenter_max_step 为 0 表示不限速，此时只由 ratio 限制
-        float recenter = data_.lower_yaw_recenter_ratio * upper_now;
-        if (data_.lower_yaw_recenter_max_step > 0.0f) {
-            recenter = clip<float>(recenter, -data_.lower_yaw_recenter_max_step, data_.lower_yaw_recenter_max_step);
-        }
-
-        // 上yaw想转到的关节角：先吃下全部误差、扣掉要交给下yaw的回中量，
-        // 再夹在机械行程内（上yaw顶到限位后，多出来的部分只能由下yaw转）
-        float upper_cmd = upper_now + heading_error - recenter;
-        if (!data_.upper_yaw_circle_) {
-            upper_cmd = clip<float>(upper_cmd, -data_.upper_yaw_max_, data_.upper_yaw_max_);
-        }
-        float upper_step = upper_cmd - upper_now;
-        upper_yaw_motor_->SetTarget(upper_encoder + sign_upper * upper_step);
-
-        // ===== 下yaw(大yaw)：慢轴，补上上yaw吃不下的朝向差额 =====
-        // 本周期需要的总朝向变化是 heading_error，上yaw已经承担 upper_step，剩下的给下yaw
-        float lower_now = getLowerYawByMotor();
         float lower_encoder = lower_yaw_motor_->GetOutputShaftCumulatedTheta();
-        float lower_step = heading_error - upper_step;
+
+        // θ* = 目标地面朝向，θ = 当前地面朝向
+        // yaw_diff = θ* − θ
+        // 小yaw电机角度 u，大yaw电机角度 l
+
+        // 大yaw：从第一周期起就朝"最终由它承担的朝向"走，即让下yaw轴角度 l 趋近目标角度 θ。
+        // 因为 θ = u + l，所以 θ* - l = u_now + yaw_diff。
+
+        // 用 lower_yaw_recenter_max_step 限速，决定交接（回中）的快慢；
+        // 取 0 表示下yaw不主动接手（只补上yaw顶限位的差额）。
+        float lower_step = 0.0f;
+        if (data_.lower_yaw_recenter_max_step > 0.0f) {
+            lower_step = clip<float>(wrapc<float>(current_upper_angle + yaw_diff, -PI, PI),
+                                     -data_.lower_yaw_recenter_max_step,
+                                     data_.lower_yaw_recenter_max_step);
+        }
+
+        // 小yaw：补上大yaw还没到位的部分，使大小yaw转动之和 = 本周期移动 yaw_diff，
+        float upper_diff = yaw_diff - lower_step;
+        float upper_target = current_upper_angle + upper_diff;
+        // 如果
+        if (!data_.upper_yaw_circle_) {
+            upper_target = clip<float>(upper_target, -data_.upper_yaw_max_, data_.upper_yaw_max_);
+        }
+        // 更新 upper_diff
+        upper_diff = upper_target - current_upper_angle;
+        upper_yaw_motor_->SetTarget(upper_encoder + sign_upper * upper_diff);
+
+        // 小yaw顶到限位时，剩下的差额由大yaw补
+        lower_step = yaw_diff - upper_diff;
 
         // 下yaw自身限位（能连续旋转时不需要）
         if (!data_.lower_yaw_circle_) {
-            float lower_cmd = clip<float>(lower_now + lower_step, -data_.lower_yaw_max_, data_.lower_yaw_max_);
-            lower_step = lower_cmd - lower_now;
+            float lower_cmd = clip<float>(current_lower_angle + lower_step, -data_.lower_yaw_max_, data_.lower_yaw_max_);
+            lower_step = lower_cmd - current_lower_angle;
         }
 
         // 下yaw死区。注意它同时作用于回中量：回中步长要明显大于该死区，否则回中会被吃掉
