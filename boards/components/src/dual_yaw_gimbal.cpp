@@ -18,77 +18,53 @@
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
 
-#include "gimbal.h"
+#include "dual_yaw_gimbal.h"
 
 #include "DjiMotorBase.h"
 #include "utils.h"
 
 namespace control {
 
-    Gimbal::Gimbal(gimbal_t gimbal) {
-        // acquired from user
+    Dual_Yaw_Gimbal::Dual_Yaw_Gimbal(dual_yaw_gimbal_t gimbal) {
         pitch_motor_ = gimbal.pitch_motor;
-        yaw_motor_ = gimbal.yaw_motor;
+        upper_yaw_motor_ = gimbal.upper_yaw_motor;
+        lower_yaw_motor_ = gimbal.lower_yaw_motor;
         data_ = gimbal.data;
 
+        // 上yaw(小yaw) 是主控轴，upper_yaw_angle_ 保存的是"目标朝向"（电机域），
+        // 云台朝向以它为准；下yaw(大yaw)的目标在 Update* 里按协调结果计算
         pitch_angle_ = data_.pitch_offset_;
-        yaw_angle_ = data_.yaw_offset_;
+        upper_yaw_angle_ = data_.upper_yaw_offset_;
+        lower_yaw_angle_ = data_.lower_yaw_offset_;
 
         pitch_lower_limit_ = wrap<float>(data_.pitch_offset_ - data_.pitch_max_, 0, 2 * PI);
         pitch_upper_limit_ = wrap<float>(data_.pitch_offset_ + data_.pitch_max_, 0, 2 * PI);
-        yaw_lower_limit_ = wrap<float>(data_.yaw_offset_ - data_.yaw_max_, 0, 2 * PI);
-        yaw_upper_limit_ = wrap<float>(data_.yaw_offset_ + data_.yaw_max_, 0, 2 * PI);
     }
 
-    Gimbal::~Gimbal() {
+    Dual_Yaw_Gimbal::~Dual_Yaw_Gimbal() {
     }
 
-    gimbal_data_t* Gimbal::GetData() {
+    dual_yaw_gimbal_data_t* Dual_Yaw_Gimbal::GetData() {
         return &data_;
     }
 
-    void Gimbal::Update() {
+    void Dual_Yaw_Gimbal::UpdateEncoder() {
+        // Pitch 轴
         pitch_angle_ = wrapping_clip<float>(pitch_angle_, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
         pitch_motor_->SetTarget(pitch_angle_);
 
-        //        float pt_diff = pitch_motor_->GetThetaDelta(pitch_angle_);
-        //        pt_diff = wrap<float>(pt_diff, -PI, PI);
-        //
-        //        if (abs(pt_diff) < data_.pitch_eposition) {
-        //            pt_diff = 0;
-        //        }
-        //        float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
-        //
-        //        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
-        //        float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
-
-        if (!data_.yaw_circle_) {
-            yaw_angle_ = wrapping_clip<float>(yaw_angle_, yaw_lower_limit_, yaw_upper_limit_, 0, 2 * PI);
-        }
-        yaw_motor_->SetTarget(yaw_angle_);
-
-        //        float yt_diff = yaw_motor_->GetThetaDelta(yaw_angle_);
-        //        yt_diff = wrap<float>(yt_diff, -PI, PI);
-        //
-        //        if (abs(yt_diff) < data_.yaw_eposition) {
-        //            yt_diff = 0;
-        //        }
-        //
-        //        float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
-        //        float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
-        //        float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
-        //
-        //        pitch_motor_->SetOutput(po_out);
-        //        yaw_motor_->SetOutput(yo_out);
+        // 没有IMU时，"当前朝向"取两个yaw关节角之和（即云台相对车身/地面的朝向），
+        // 目标朝向 = upper_yaw_angle_ - upper_yaw_offset_
+        float current_yaw = getUpperYawByMotor() + getLowerYawByMotor();
+        float target_yaw = upper_yaw_angle_ - data_.upper_yaw_offset_;
+        CoordinateYaw(wrapc<float>(target_yaw - current_yaw, -PI, PI));
     }
 
-    // updatewithimu
-    void Gimbal::UpdateIMU(float imu_pitch_angle, float imu_yaw_angle) {
+    void Dual_Yaw_Gimbal::UpdateIMU(float imu_pitch_angle, float imu_yaw_angle) {
         // IMU 输出范围为 [-π, π]，电机范围为 [0, 2π]，统一转到电机域
         imu_pitch_angle = wrap<float>(imu_pitch_angle, 0, 2 * PI);
-        imu_yaw_angle = wrap<float>(imu_yaw_angle, 0, 2 * PI);
 
-        // ===== Pitch 轴 =====
+        // Pitch 轴
         // 当前角度和目标角度的差值
         float pitch_diff = pitch_angle_ - data_.pitch_offset_ - imu_pitch_angle;
         // 当前电机实际角度
@@ -106,98 +82,152 @@ namespace control {
         float final_pitch_diff = wrap<float>(target_pitch_diff, -PI, PI);
 
         // 死区，不动
-        if (abs(final_pitch_diff) < data_.pitch_eposition) {
+        if (abs(final_pitch_diff) < data_.pitch_deadband) {
             final_pitch_diff = 0;
         }
         pitch_motor_->SetTarget(current_pitch_angle + final_pitch_diff);
 
-        //        float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
-        //        float po_in = pitch_motor_->GetOmegaDelta(pt_out);
-        //        float po_out = pitch_omega_pid_->ComputeConstrainedOutput(po_in);
-
-        // ===== Yaw 轴 =====
-        float yaw_diff = yaw_angle_ - data_.yaw_offset_ - imu_yaw_angle;
-        // 当前 yaw 轴电机实际角度
-        float current_yaw_angle = yaw_motor_->GetOutputShaftTheta();
-        float final_yaw_diff;
-        if (!data_.yaw_circle_) {
-            float target_yaw_diff =
-                wrapping_clip<float>(yaw_diff + current_yaw_angle, yaw_lower_limit_, yaw_upper_limit_, 0, 2 * PI);
-            target_yaw_diff = target_yaw_diff - current_yaw_angle;
-            // 如果超过限位
-            if (yaw_diff != target_yaw_diff) {
-                yaw_angle_ = wrap<float>(yaw_angle_ + target_yaw_diff - yaw_diff, 0, 2 * PI);
-            }
-
-            final_yaw_diff = wrap<float>(target_yaw_diff, -PI, PI);
-        } else {
-            final_yaw_diff = wrap<float>(yaw_diff, -PI, PI);
-        }
-
-        // 死区处理
-        if (abs(final_yaw_diff) < data_.yaw_eposition) {
-            final_yaw_diff = 0;
-        }
-
-        yaw_motor_->SetTarget(current_yaw_angle + final_yaw_diff);
-
-        //        float yt_out = yaw_theta_pid_->ComputeOutput(yt_diff);
-        //        float yo_in = yaw_motor_->GetOmegaDelta(yt_out);
-        //        float yo_out = yaw_omega_pid_->ComputeConstrainedOutput(yo_in);
-        //        pitch_motor_->SetOutput(po_out);
-        //        yaw_motor_->SetOutput(yo_out);
+        // ===== 大小yaw =====
+        // IMU 装在云台(上yaw输出)上，imu_yaw 就是云台相对地面的朝向；
+        // 目标朝向 = upper_yaw_angle_ - upper_yaw_offset_。
+        // imu_yaw 与目标只差若干个 2π，所以不需要先折算到 [0, 2π]
+        float heading_error = wrapc<float>(upper_yaw_angle_ - data_.upper_yaw_offset_ - imu_yaw_angle, -PI, PI);
+        CoordinateYaw(heading_error);
     }
 
-    void Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
+    void Dual_Yaw_Gimbal::CoordinateYaw(float heading_error) {
+        const float sign_upper = data_.upper_yaw_joint_inverted ? -1.0f : 1.0f;
+        const float sign_lower = data_.lower_yaw_joint_inverted ? -1.0f : 1.0f;
+
+        // 朝向死区：误差很小时不再修正，避免在目标附近抖动
+        if (abs(heading_error) < data_.upper_yaw_deadband) {
+            heading_error = 0;
+        }
+
+        // ===== 上yaw(小yaw)：主控快轴，一个周期内吃下全部朝向误差 =====
+        float upper_now = getUpperYawByMotor();
+        float upper_encoder = upper_yaw_motor_->GetOutputShaftCumulatedTheta();
+
+        // 下yaw回中：本周期让下yaw多转 recenter，上yaw就等量少转 recenter，
+        // 两者之和不变，也就是云台朝向不变（上yaw只是把角度"让"给下yaw）
+        // recenter_max_step 为 0 表示不限速，此时只由 ratio 限制
+        float recenter = data_.lower_yaw_recenter_ratio * upper_now;
+        if (data_.lower_yaw_recenter_max_step > 0.0f) {
+            recenter = clip<float>(recenter, -data_.lower_yaw_recenter_max_step, data_.lower_yaw_recenter_max_step);
+        }
+
+        // 上yaw想转到的关节角：先吃下全部误差、扣掉要交给下yaw的回中量，
+        // 再夹在机械行程内（上yaw顶到限位后，多出来的部分只能由下yaw转）
+        float upper_cmd = upper_now + heading_error - recenter;
+        if (!data_.upper_yaw_circle_) {
+            upper_cmd = clip<float>(upper_cmd, -data_.upper_yaw_max_, data_.upper_yaw_max_);
+        }
+        float upper_step = upper_cmd - upper_now;
+        upper_yaw_motor_->SetTarget(upper_encoder + sign_upper * upper_step);
+
+        // ===== 下yaw(大yaw)：慢轴，补上上yaw吃不下的朝向差额 =====
+        // 本周期需要的总朝向变化是 heading_error，上yaw已经承担 upper_step，剩下的给下yaw
+        float lower_now = getLowerYawByMotor();
+        float lower_encoder = lower_yaw_motor_->GetOutputShaftCumulatedTheta();
+        float lower_step = heading_error - upper_step;
+
+        // 下yaw自身限位（能连续旋转时不需要）
+        if (!data_.lower_yaw_circle_) {
+            float lower_cmd = clip<float>(lower_now + lower_step, -data_.lower_yaw_max_, data_.lower_yaw_max_);
+            lower_step = lower_cmd - lower_now;
+        }
+
+        // 下yaw死区。注意它同时作用于回中量：回中步长要明显大于该死区，否则回中会被吃掉
+        if (abs(lower_step) < data_.lower_yaw_deadband) {
+            lower_step = 0;
+        }
+
+        lower_yaw_angle_ = lower_encoder + sign_lower * lower_step;
+        lower_yaw_motor_->SetTarget(lower_yaw_angle_);
+    }
+
+    void Dual_Yaw_Gimbal::TargetAbs(float abs_pitch, float abs_yaw) {
         if (data_.pitch_inverted)
             abs_pitch = -abs_pitch;
-        if (data_.yaw_inverted)
+        if (data_.upper_yaw_inverted)
             abs_yaw = -abs_yaw;
         float clipped_pitch = clip<float>(abs_pitch, -data_.pitch_max_, data_.pitch_max_);
-        float clipped_yaw = clip<float>(abs_yaw, -data_.yaw_max_, data_.yaw_max_);
         pitch_angle_ = wrapping_clip<
             float>(clipped_pitch + data_.pitch_offset_, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
-        if (data_.yaw_circle_) {
-            yaw_angle_ = wrap<float>(clipped_yaw + data_.yaw_offset_, 0, 2 * PI);
-        } else {
-            yaw_angle_ =
-                wrapping_clip<float>(clipped_yaw + data_.yaw_offset_, yaw_lower_limit_, yaw_upper_limit_, 0, 2 * PI);
-        }
+
+        // 目标朝向不受 upper_yaw_max_ 限幅：±90° 是上yaw关节相对下yaw的行程，
+        // 只要大小yaw协调，云台相对车身/地面可以指向任意角度
+        upper_yaw_angle_ = wrapc<float>(abs_yaw + data_.upper_yaw_offset_, 0, 2 * PI);
     }
 
-    void Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
+    void Dual_Yaw_Gimbal::TargetRel(float rel_pitch, float rel_yaw) {
         if (data_.pitch_inverted)
             rel_pitch = -rel_pitch;
-        if (data_.yaw_inverted)
+        if (data_.upper_yaw_inverted)
             rel_yaw = -rel_yaw;
         pitch_angle_ = wrap<float>(pitch_angle_ + rel_pitch, 0, 2 * PI);
-        yaw_angle_ = wrap<float>(yaw_angle_ + rel_yaw, 0, 2 * PI);
+        // 相对量叠加在"目标朝向"上，具体怎么分给两个yaw由 Update* 里的协调逻辑决定
+        upper_yaw_angle_ = wrapc<float>(upper_yaw_angle_ + rel_yaw, 0, 2 * PI);
     }
 
-    void Gimbal::UpdateOffset(float pitch_offset, float yaw_offset) {
-        data_.pitch_offset_ = wrap<float>(pitch_offset + data_.pitch_offset_, 0, 2 * PI);
-        data_.yaw_offset_ = wrap<float>(yaw_offset + data_.yaw_offset_, 0, 2 * PI);
-        // TODO 更新？
-
-    }
-    void Gimbal::TargetReal(float new_pitch, float new_yaw) {
+    void Dual_Yaw_Gimbal::TargetReal(float new_pitch, float new_yaw) {
         if (data_.pitch_inverted)
             new_pitch = -new_pitch;
-        if (data_.yaw_inverted)
+        if (data_.upper_yaw_inverted)
             new_yaw = -new_yaw;
         pitch_angle_ = wrap<float>(pitch_angle_ + new_pitch, 0, 2 * PI);
-        yaw_angle_ = wrap<float>(yaw_angle_ + new_yaw, 0, 2 * PI);
+        upper_yaw_angle_ = wrapc<float>(upper_yaw_angle_ + new_yaw, 0, 2 * PI);
     }
-    float Gimbal::getPitchTarget() const {
+
+    void Dual_Yaw_Gimbal::UpdateOffset(float pitch_offset, float upper_yaw_offset, float lower_yaw_offset) {
+        // 标定零点变化时保持"枪口指向"不变：upper_yaw_angle_ 里含有 upper_yaw_offset_，
+        // 所以 offset 增加多少，目标角度也要跟着增加多少（pitch 同理）
+        float upper_yaw_heading = upper_yaw_angle_ - data_.upper_yaw_offset_;
+        float pitch_relative = pitch_angle_ - data_.pitch_offset_;
+
+        data_.pitch_offset_ = wrap<float>(pitch_offset + data_.pitch_offset_, 0, 2 * PI);
+        data_.upper_yaw_offset_ = wrap<float>(upper_yaw_offset + data_.upper_yaw_offset_, 0, 2 * PI);
+        data_.lower_yaw_offset_ = wrap<float>(lower_yaw_offset + data_.lower_yaw_offset_, 0, 2 * PI);
+
+        pitch_angle_ = wrapc<float>(pitch_relative + data_.pitch_offset_, 0, 2 * PI);
+        upper_yaw_angle_ = wrapc<float>(upper_yaw_heading + data_.upper_yaw_offset_, 0, 2 * PI);
+
+        // pitch 限位是由 offset 算出来的，offset 变了要同步刷新
+        pitch_lower_limit_ = wrap<float>(data_.pitch_offset_ - data_.pitch_max_, 0, 2 * PI);
+        pitch_upper_limit_ = wrap<float>(data_.pitch_offset_ + data_.pitch_max_, 0, 2 * PI);
+    }
+
+    float Dual_Yaw_Gimbal::getPitchTarget() const {
         return pitch_angle_;
     }
-    float Gimbal::getYawTarget() const {
-        return yaw_angle_;
+
+    float Dual_Yaw_Gimbal::getUpperYawTarget() const {
+        return upper_yaw_angle_;
     }
-    float Gimbal::getPitchByMotor() const {
-        return pitch_motor_->GetTheta() - data_.pitch_offset_;
+
+    float Dual_Yaw_Gimbal::getLowerYawTarget() const {
+        return lower_yaw_angle_;
     }
-    float Gimbal::getYawByMotor() const {
-        return yaw_motor_->GetTheta() - data_.yaw_offset_;
+
+    float Dual_Yaw_Gimbal::getPitchByMotor() const {
+        return pitch_motor_->GetOutputShaftCumulatedTheta() - data_.pitch_offset_;
+    }
+
+    float Dual_Yaw_Gimbal::getUpperYawByMotor() const {
+        // 上yaw编码器测的是它相对下yaw(定子)的角度，减去标定中心就是关节角。
+        // 机械行程只有 ±90°，不可能超过一圈，所以 wrap 一次就够；
+        // 用多圈累计角是为了不受电机 absolute 模式影响
+        float angle = upper_yaw_motor_->GetOutputShaftCumulatedTheta() - data_.upper_yaw_offset_;
+        if (data_.upper_yaw_joint_inverted)
+            angle = -angle;
+        return wrap<float>(angle, -PI, PI);
+    }
+
+    float Dual_Yaw_Gimbal::getLowerYawByMotor() const {
+        // 下yaw可以连续旋转，同样用多圈累计角，保留圈数
+        float angle = lower_yaw_motor_->GetOutputShaftCumulatedTheta() - data_.lower_yaw_offset_;
+        if (data_.lower_yaw_joint_inverted)
+            angle = -angle;
+        return angle;
     }
 }  // namespace control
