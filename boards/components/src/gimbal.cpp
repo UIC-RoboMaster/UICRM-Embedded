@@ -54,7 +54,7 @@ namespace control {
         //        float pt_diff = pitch_motor_->GetThetaDelta(pitch_angle_);
         //        pt_diff = wrap<float>(pt_diff, -PI, PI);
         //
-        //        if (abs(pt_diff) < data_.pitch_eposition) {
+        //        if (abs(pt_diff) < data_.pitch_deadband) {
         //            pt_diff = 0;
         //        }
         //        float pt_out = pitch_theta_pid_->ComputeOutput(pt_diff);
@@ -70,7 +70,7 @@ namespace control {
         //        float yt_diff = yaw_motor_->GetThetaDelta(yaw_angle_);
         //        yt_diff = wrap<float>(yt_diff, -PI, PI);
         //
-        //        if (abs(yt_diff) < data_.yaw_eposition) {
+        //        if (abs(yt_diff) < data_.yaw_deadband) {
         //            yt_diff = 0;
         //        }
         //
@@ -93,7 +93,7 @@ namespace control {
         }
         pt_diff = wrap<float>(new_pitch_diff, -PI, PI);
 
-        if (abs(pt_diff) < data_.pitch_eposition) {
+        if (abs(pt_diff) < data_.pitch_deadband) {
             pt_diff = 0;
         }
         pitch_motor_->SetTarget(pt_diff + actual_pitch_angle);
@@ -116,7 +116,7 @@ namespace control {
             yt_diff = wrap<float>(yt_diff, -PI, PI);
         }
 
-        if (abs(yt_diff) < data_.yaw_eposition) {
+        if (abs(yt_diff) < data_.yaw_deadband) {
             yt_diff = 0;
         }
 
