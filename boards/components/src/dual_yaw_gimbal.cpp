@@ -53,9 +53,9 @@ namespace control {
         pitch_angle_ = wrapping_clip<float>(pitch_angle_, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
         pitch_motor_->SetTarget(pitch_angle_);
 
-        // 没有IMU时，"当前朝向"取两个yaw关节角之和（即云台相对车身/地面的朝向），
-        // 目标朝向 = upper_yaw_angle_ - upper_yaw_offset_
+        // 没有IMU时，当前朝向取两个yaw电机角度之和
         float current_yaw = getUpperYawByMotor() + getLowerYawByMotor();
+        // 目标朝向 = upper_yaw_angle_ - upper_yaw_offset_
         float target_yaw = upper_yaw_angle_ - data_.upper_yaw_offset_;
         CoordinateYaw(wrapc<float>(target_yaw - current_yaw, -PI, PI));
     }
@@ -192,7 +192,7 @@ namespace control {
     void Dual_Yaw_Gimbal::UpdateOffset(float pitch_offset, float upper_yaw_offset, float lower_yaw_offset) {
         // 标定零点变化时保持"枪口指向"不变：upper_yaw_angle_ 里含有 upper_yaw_offset_，
         // 所以 offset 增加多少，目标角度也要跟着增加多少（pitch 同理）
-        float upper_yaw_heading = upper_yaw_angle_ - data_.upper_yaw_offset_;
+        float upper_yaw_relative = upper_yaw_angle_ - data_.upper_yaw_offset_;
         float pitch_relative = pitch_angle_ - data_.pitch_offset_;
 
         data_.pitch_offset_ = wrap<float>(pitch_offset + data_.pitch_offset_, 0, 2 * PI);
@@ -200,7 +200,7 @@ namespace control {
         data_.lower_yaw_offset_ = wrap<float>(lower_yaw_offset + data_.lower_yaw_offset_, 0, 2 * PI);
 
         pitch_angle_ = wrapc<float>(pitch_relative + data_.pitch_offset_, 0, 2 * PI);
-        upper_yaw_angle_ = wrapc<float>(upper_yaw_heading + data_.upper_yaw_offset_, 0, 2 * PI);
+        upper_yaw_angle_ = wrapc<float>(upper_yaw_relative + data_.upper_yaw_offset_, 0, 2 * PI);
 
         // pitch 限位是由 offset 算出来的，offset 变了要同步刷新
         pitch_lower_limit_ = wrap<float>(data_.pitch_offset_ - data_.pitch_max_, 0, 2 * PI);
