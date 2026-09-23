@@ -27,3 +27,13 @@ uicrm_add_arm_executable(${PROJECT_NAME}_relative_control_model
         TARGET ${BOARD_NAME}
         SOURCES swerve_wheel/relative_control_model.cpp
 )
+
+uicrm_add_arm_executable(${PROJECT_NAME}_absolute_control_model
+        TARGET ${BOARD_NAME}
+        SOURCES swerve_wheel/absolute_control_model.cpp
+)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_encoder_scan
+        TARGET ${BOARD_NAME}
+        SOURCES swerve_wheel/encoder_scan.cpp
+)

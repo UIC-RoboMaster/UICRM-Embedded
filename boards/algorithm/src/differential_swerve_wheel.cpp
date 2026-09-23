@@ -37,6 +37,7 @@ namespace control {
           invertible_(Determinant(control_matrix) > kSingularEpsilon ||
                       Determinant(control_matrix) < -kSingularEpsilon),
           state_({0.0f, 0.0f, 0.0f, 0.0f}),
+          yaw_bias_(0.0f),
           target_drive_angle_(0.0f),
           last_feedback_dwt_cnt_(0),
           last_target_dwt_cnt_(0),
@@ -107,7 +108,7 @@ namespace control {
         // 2. 正解计算当前的绝对角度
         const float yaw_angle_raw =
             control_matrix_.a11 * input1_theta +
-            control_matrix_.a12 * input2_theta;
+            control_matrix_.a12 * input2_theta + yaw_bias_;
 
         const float drive_angle =
             control_matrix_.a21 * input1_theta +
@@ -155,16 +156,43 @@ namespace control {
         drive_speed = state.drive_speed;
     }
 
-    void DifferentialSwerveWheelKinematic::Reset(float motor1_theta, float motor2_theta) {
-        state_.yaw_angle_raw = control_matrix_.a11 * motor1_theta + control_matrix_.a12 * motor2_theta;
+    void DifferentialSwerveWheelKinematic::Reset(float motor1_theta, float motor2_theta,
+                                                 float m1_trans_ratio, float m2_trans_ratio) {
+        const float input1_theta = motor1_theta / m1_trans_ratio;
+        const float input2_theta = motor2_theta / m2_trans_ratio;
+
+        state_.yaw_angle_raw =
+            control_matrix_.a11 * input1_theta + control_matrix_.a12 * input2_theta + yaw_bias_;
+        state_.yaw_angle = WrapToPi(state_.yaw_angle_raw);
         state_.drive_angle =
-            control_matrix_.a21 * motor1_theta + control_matrix_.a22 * motor2_theta;
+            control_matrix_.a21 * input1_theta + control_matrix_.a22 * input2_theta;
         state_.drive_speed = 0.0f;
         target_drive_angle_ = state_.drive_angle;
         last_feedback_dwt_cnt_ = DWT->CYCCNT;
         last_target_dwt_cnt_ = DWT->CYCCNT;
         feedback_dwt_ready_ = true;
         target_dwt_ready_ = true;
+    }
+
+    void DifferentialSwerveWheelKinematic::AlignYaw(float measured_yaw, float motor1_theta,
+                                                    float motor2_theta, float m1_trans_ratio,
+                                                    float m2_trans_ratio) {
+        const float input1_theta = motor1_theta / m1_trans_ratio;
+        const float input2_theta = motor2_theta / m2_trans_ratio;
+
+        yaw_bias_ = measured_yaw -
+                    (control_matrix_.a11 * input1_theta + control_matrix_.a12 * input2_theta);
+
+        state_.yaw_angle_raw = measured_yaw;
+        state_.yaw_angle = WrapToPi(measured_yaw);
+    }
+
+    float DifferentialSwerveWheelKinematic::GetYawBias() const {
+        return yaw_bias_;
+    }
+
+    void DifferentialSwerveWheelKinematic::SetYawBias(float yaw_bias) {
+        yaw_bias_ = yaw_bias;
     }
 
     DifferentialSwerveWheelKinematic::MotorTarget
@@ -197,9 +225,12 @@ namespace control {
             return;
         }
 
-        motor1_angle = inverse_matrix_.a11 * yaw_angle_target +
+        // 逆解回电机侧前要先扣掉绝对基准偏置
+        const float yaw_relative_target = yaw_angle_target - yaw_bias_;
+
+        motor1_angle = inverse_matrix_.a11 * yaw_relative_target +
                        inverse_matrix_.a12 * target_drive_angle_;
-        motor2_angle = inverse_matrix_.a21 * yaw_angle_target +
+        motor2_angle = inverse_matrix_.a21 * yaw_relative_target +
                        inverse_matrix_.a22 * target_drive_angle_;
     }
 

@@ -187,8 +187,9 @@ namespace bsp {
         // TODO: Rx No DMA is currently not supported
         if (!rx_dma_) {
             // dma not supported
-            __HAL_UART_DISABLE_IT(huart_, UART_IT_IDLE);
-            __HAL_UART_DISABLE_IT(huart_, UART_IT_RXNE);
+            /* 等价于 __HAL_UART_DISABLE_IT，展开后的三元表达式在 GCC 14+ 下会因
+             * 丢弃 volatile 左值而报错 */
+            huart_->Instance->CR1 &= ~(USART_CR1_IDLEIE | USART_CR1_RXNEIE_RXFNEIE);
             length = rx_size_ - huart_->RxXferCount;
             rx_index_ = 1 - rx_index_;
             HAL_UART_Receive_IT(huart_, rx_data_[rx_index_], rx_size_);
@@ -204,7 +205,12 @@ namespace bsp {
             taskENTER_CRITICAL();
         }
 
-        __HAL_DMA_DISABLE(huart_->hdmarx);
+        /* 等价于 __HAL_DMA_DISABLE，理由同上 */
+        if (IS_DMA_STREAM_INSTANCE(huart_->hdmarx->Instance)) {
+            ((DMA_Stream_TypeDef*)huart_->hdmarx->Instance)->CR &= ~DMA_SxCR_EN;
+        } else {
+            ((BDMA_Channel_TypeDef*)huart_->hdmarx->Instance)->CCR &= ~BDMA_CCR_EN;
+        }
         length = rx_size_ - __HAL_DMA_GET_COUNTER(huart_->hdmarx);
         rx_index_ = 1 - rx_index_;
 

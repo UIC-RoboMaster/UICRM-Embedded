@@ -70,7 +70,16 @@ namespace control {
         WheelState Update(float motor1_theta, float motor2_theta, float, float);
         void Update(float motor1_theta, float motor2_theta, float& yaw_angle,
                     float& drive_speed, float, float);
-        void Reset(float motor1_theta = 0.0f, float motor2_theta = 0.0f);
+        void Reset(float motor1_theta = 0.0f, float motor2_theta = 0.0f,
+                   float m1_trans_ratio = 1.0f, float m2_trans_ratio = 1.0f);
+
+        // Anchor the yaw estimate to an externally measured absolute angle. Motor angles
+        // are relative to power-on, so the forward-solved yaw is off by a constant; this
+        // stores that constant, making the reported yaw a true absolute steering angle.
+        void AlignYaw(float measured_yaw, float motor1_theta, float motor2_theta,
+                      float m1_trans_ratio = 1.0f, float m2_trans_ratio = 1.0f);
+        float GetYawBias() const;
+        void SetYawBias(float yaw_bias);
 
         // Solve motor target angles from target yaw angle and target drive speed.
         MotorTarget UpdateTarget(float yaw_angle_target, float drive_speed_target);
@@ -103,6 +112,7 @@ namespace control {
         Matrix2x2 inverse_matrix_;
         bool invertible_;
         WheelState state_;
+        float yaw_bias_;  // motor-derived yaw -> absolute yaw
         float target_drive_angle_;
         uint32_t last_feedback_dwt_cnt_;
         uint32_t last_target_dwt_cnt_;

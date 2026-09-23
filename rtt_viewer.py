@@ -30,12 +30,14 @@ def send_commands(port, commands, host="127.0.0.1"):
         # print(data.decode(errors="ignore"))
 
 def start_openocd(cfg_path):
-    # Windows 下用 shell=True 以便于查找 openocd.exe
+    # Windows 下用 shell=True 以便于查找 openocd.exe；
+    # POSIX 上 shell=True 配合列表参数只会执行第一项（-f 会被当成 shell 自身的参数丢掉），
+    # 所以必须用 shell=False。
     proc = subprocess.Popen(
         ["openocd", "-f", cfg_path],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        shell=True,
+        shell=(os.name == "nt"),
         bufsize=1,
         universal_newlines=True
     )

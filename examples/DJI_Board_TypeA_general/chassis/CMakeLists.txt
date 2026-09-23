@@ -16,3 +16,11 @@ uicrm_add_arm_executable(${PROJECT_NAME}_can_bridge
 uicrm_add_arm_executable(${PROJECT_NAME}_can_bridge_sender
         TARGET ${BOARD_NAME}
         SOURCES can_bridge_chassis_sender.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_absolute_control_model
+        TARGET ${BOARD_NAME}
+        SOURCES swerve_wheel/absolute_control_model.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_encoder_scan
+        TARGET ${BOARD_NAME}
+        SOURCES swerve_wheel/encoder_scan.cpp)

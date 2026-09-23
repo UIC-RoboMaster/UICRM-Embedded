@@ -187,8 +187,9 @@ namespace bsp {
         // TODO: Rx No DMA is currently not supported
         if (!rx_dma_) {
             // dma not supported
-            __HAL_UART_DISABLE_IT(huart_, UART_IT_IDLE);
-            __HAL_UART_DISABLE_IT(huart_, UART_IT_RXNE);
+            /* 等价于 __HAL_UART_DISABLE_IT，展开后的三元表达式在 GCC 14+ 下会因
+             * 丢弃 volatile 左值而报错 */
+            huart_->Instance->CR1 &= ~(USART_CR1_IDLEIE | USART_CR1_RXNEIE);
             length = rx_size_ - huart_->RxXferCount;
             rx_index_ = 1 - rx_index_;
             HAL_UART_Receive_IT(huart_, rx_data_[rx_index_], rx_size_);
