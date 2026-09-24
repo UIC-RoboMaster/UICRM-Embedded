@@ -83,7 +83,7 @@ void RM_RTOS_Init() {
 
     control::chassis_t chassis_data;
     chassis_data.motors = motors;
-    chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
+    chassis_data.model = control::CHASSIS_OMNI_WHEEL;
     chassis = new control::Chassis(chassis_data);
 
     dbus = new remote::DBUS(&huart3);
