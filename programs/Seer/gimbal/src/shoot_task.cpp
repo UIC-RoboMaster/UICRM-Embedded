@@ -95,8 +95,7 @@ void shootTask(void* arg) {
         switch (shoot_fric_wheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
                 flywheel_target = 120.0f * 2 * PI;
-                shoot_fric_wheel_mode = SHOOT_FRIC_MODE_PREPARED;  // todo move to remote_task and
-                                                                   //  trigger by speed of flywheels
+                shoot_fric_wheel_mode = SHOOT_FRIC_MODE_PREPARED;
                 break;
             case SHOOT_FRIC_MODE_PREPARED:
                 break;
@@ -142,6 +141,7 @@ void shootTask(void* arg) {
 void init_shoot() {
     flywheel_left = new driver::Motor3508(can2, 0x201);
     flywheel_right = new driver::Motor3508(can2, 0x202);
+
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
 
@@ -208,6 +208,7 @@ void init_shoot() {
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
 }
+
 void kill_shoot() {
     steering_motor->Disable();
     flywheel_left->Disable();
