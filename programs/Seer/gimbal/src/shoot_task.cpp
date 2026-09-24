@@ -27,7 +27,7 @@ driver::Motor3508* flywheel_right = nullptr;
 
 driver::Motor2006* steering_motor = nullptr;
 
-const float singleShotDivider = 3.5f;
+const float magCapacity = 9;
 
 bool jam_notify_flags = false;
 
@@ -36,10 +36,10 @@ void jam_callback(void* args) {
     jam_notify_flags = true;
     float target = motor->GetTarget();
     if (target > motor->GetOutputShaftTheta()) {
-        float prev_target = motor->GetTarget() - 2 * PI / singleShotDivider;
+        float prev_target = motor->GetTarget() - 2 * PI / magCapacity;
         motor->SetTarget(prev_target);
     } else {
-        float prev_target = motor->GetTarget() + 2 * PI / singleShotDivider;
+        float prev_target = motor->GetTarget() + 2 * PI / magCapacity;
         motor->SetTarget(prev_target);
     }
 }
@@ -121,12 +121,12 @@ void shootTask(void* arg) {
                 // 发射一枚子弹
                 if (last_shoot_mode != SHOOT_MODE_SINGLE) {
                     if (steering_motor->IsHolding()) {
-                        steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                        steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / magCapacity, true);
                     }
                 }
                 break;
             case SHOOT_MODE_BURST:
-                steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / singleShotDivider, true);
+                steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / magCapacity, true);
                 break;
             case SHOOT_MODE_STOP:
                 // 停止发射
@@ -168,7 +168,7 @@ void init_shoot() {
 
     steering_motor = new driver::Motor2006(can2, 0x203);
 
-    steering_motor->SetTransmissionRatio(19);
+    steering_motor->SetTransmissionRatio(36);
     control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
         .kp = 30,
         .ki = 0,
