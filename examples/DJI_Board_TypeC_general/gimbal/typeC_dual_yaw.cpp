@@ -41,7 +41,7 @@ const osThreadAttr_t imuTaskAttribute =
      .cb_size = 0,
      .stack_mem = nullptr,
      .stack_size = 256 * 4,
-     .priority = (osPriority_t)osPriorityNormal,
+     .priority = (osPriority_t)osPriorityRealtime,
      .tz_module = 0,
      .reserved = 0};
 osThreadId_t imuTaskHandle;
@@ -85,14 +85,14 @@ const control::dual_yaw_gimbal_data_t gimbal_init_data = {
     .pitch_deadband = 0,
 
     /* 上yaw(小yaw)，角度相对下yaw */
-    .upper_yaw_offset_ = 2.5840f,
+    .upper_yaw_offset_ = -2.1f ,
     .upper_yaw_max_ = PI / 2,  // 关节行程 ±90°
     .upper_yaw_circle_ = false,
     .upper_yaw_inverted = false,  // 遥控 yaw 正方向与云台朝向正方向相反时置 true
     .upper_yaw_deadband = 0,
 
     /* 下yaw(大yaw)，角度相对车身 */
-    .lower_yaw_offset_ = 0.0f,
+    .lower_yaw_offset_ = 1.5f,
     .lower_yaw_max_ = PI,
     .lower_yaw_circle_ = true,  // 可连续旋转
     .lower_yaw_inverted = false,
@@ -104,7 +104,7 @@ const control::dual_yaw_gimbal_data_t gimbal_init_data = {
 
     // 下yaw每周期接手/回中的步长上限 [rad]；0 = 下yaw不主动接手（只补上yaw顶限位的差额）。
     // 0.02 rad ≈ 1.15°，配合约 1kHz 控制周期约 60°/s 的回中速度。
-    .lower_yaw_recenter_max_step = 0.02f,
+    .lower_yaw_recenter_max_step = 0.2f                                                                                                                                                                                                                                                               ,
 };
 
 const osThreadAttr_t gimbalTaskAttribute =
@@ -122,15 +122,15 @@ osThreadId_t gimbalTaskHandle;
 void gimbalTask(void* arg) {
     UNUSED(arg);
 
-    print("Wait for beginning signal...\r\n");
-    while (true) {
-        if (dbus->keyboard.bit.V || dbus->swr == remote::DOWN) {
-            break;
-        }
-        osDelay(100);
-    }
+    // 任务启动时先关掉三个电机，然后等待上电稳定（参考 programs/Ares gimbal_task）
+    // pitch_motor->Disable();
+    // upper_yaw_motor->Disable();
+    // lower_yaw_motor->Disable();
+    osDelay(1500);
 
-    // 预热/等待 IMU，先按编码器开环把云台稳在中心
+    // 预热/等待 IMU，先按编码器开环把云台稳在中心。
+    // 不要用遥控器拨杆作为开始校准的前置条件：没有接收机时永远不会开始校准，
+    // 默认任务就会一直显示 IMU Not Ready。
     int i = 0;
     while (i < 2000 || !imu->DataReady()) {
         gimbal->TargetAbs(0, 0);
@@ -183,7 +183,9 @@ void gimbalTask(void* arg) {
 }
 
 void RM_RTOS_Init(void) {
-    print_use_uart(&huart6);
+    print_use_uart(&huart1);
+
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
 
     can1 = new bsp::CAN(&hcan1, true);
     dbus = new remote::DBUS(&huart3);
@@ -315,13 +317,13 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
         print(
             "Yaw joint: upper %6.1f deg, lower %6.1f deg\r\n",
-            gimbal->getUpperYawByMotor() / PI * 180,
-            gimbal->getLowerYawByMotor() / PI * 180
+            gimbal->getUpperYawByMotor(),
+            gimbal->getLowerYawByMotor()
         );
         print(
             "Yaw target: upper %6.1f deg, lower %6.1f deg\r\n",
-            (gimbal->getUpperYawTarget() - gimbal_param->upper_yaw_offset_) / PI * 180,
-            gimbal->getLowerYawTarget() / PI * 180
+            (gimbal->getUpperYawTarget() - gimbal_param->upper_yaw_offset_) ,
+            gimbal->getLowerYawTarget()
         );
 
         print("\r\n");
