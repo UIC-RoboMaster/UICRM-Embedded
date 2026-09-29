@@ -218,11 +218,12 @@ void RM_RTOS_Init(void) {
     // IMU 必须装在云台(上yaw输出)上，imu_yaw 才是枪口相对地面的朝向
     imu = new IMU(imu_init, false);
 
-    // 下yaw 0x204 / 上yaw 0x205 / pitch 0x206（三者共用 0x1FE 报文）
-    lower_yaw_motor = new driver::Motor6020(can1, 0x204);
-    upper_yaw_motor = new driver::Motor6020(can1, 0x205);
-    pitch_motor = new driver::Motor6020(can1, 0x206);
+    lower_yaw_motor = new driver::Motor6020(can1, 0x205);
+    upper_yaw_motor = new driver::Motor6020(can1, 0x209);
+    pitch_motor = new driver::Motor6020(can1, 0x208);
 
+    // pitch 和 上yaw(小yaw) 轻、快，可以共用一套；下yaw(大yaw) 重、静摩擦/偏心负载大，
+    // 出力要明显更大，必须单独给一套 PID。下面的数值是占位值，上车后要现场标。
     control::ConstrainedPID::PID_Init_t theta_pid_init = {
         .kp = 20,
         .ki = 0,
@@ -253,15 +254,59 @@ void RM_RTOS_Init(void) {
                 control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
     };
 
-    driver::DjiMotorBase* motors[3] = {pitch_motor, upper_yaw_motor, lower_yaw_motor};
-    for (auto* motor : motors) {
-        motor->SetTransmissionRatio(1);
-        motor->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
-        motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
-        motor->SetMode(
-            driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE
-        );
-    }
+    // 下yaw(大yaw)专用：位置环增益调大，让速度环更快顶到电流上限；
+    // 速度环 kp / 积分上限也加大，保证持续输出足够的力矩。
+    control::ConstrainedPID::PID_Init_t lower_yaw_theta_pid_init = {
+        .kp = 20,
+        .ki = 0,
+        .kd = 0,
+        .max_out = 6 * PI,
+        .max_iout = 0,
+        .deadband = 0,                                 // 死区
+        .A = 0,                                        // 变速积分所能达到的最大值为A+B
+        .B = 0,                                        // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,           // 输出滤波系数
+        .derivative_filtering_coefficient = 0,         // 微分滤波系数
+        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
+    };
+    control::ConstrainedPID::PID_Init_t lower_yaw_omega_pid_init = {
+        .kp = 200,
+        .ki = 1,
+        .kd = 0,
+        .max_out = 16384,
+        .max_iout = 2000,
+        .deadband = 0,                                          // 死区
+        .A = 1.5 * PI,                                          // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+
+    pitch_motor->SetTransmissionRatio(1);
+    pitch_motor->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
+    pitch_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    pitch_motor->SetMode(
+        driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE
+    );
+
+    upper_yaw_motor->SetTransmissionRatio(1);
+    upper_yaw_motor->ReInitPID(theta_pid_init, driver::DjiMotorBase::THETA);
+    upper_yaw_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    upper_yaw_motor->SetMode(
+        driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE
+    );
+
+    // 下yaw(大yaw) 用单独一套更强的 PID
+    lower_yaw_motor->SetTransmissionRatio(1);
+    lower_yaw_motor->ReInitPID(lower_yaw_theta_pid_init, driver::DjiMotorBase::THETA);
+    lower_yaw_motor->ReInitPID(lower_yaw_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    lower_yaw_motor->SetMode(
+        driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE
+    );
 
     control::dual_yaw_gimbal_t gimbal_data;
     gimbal_data.data = gimbal_init_data;
