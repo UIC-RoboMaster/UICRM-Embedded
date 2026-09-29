@@ -37,14 +37,15 @@ chassis_example.cpp 为独立的底盘 example，直接用底部c板控制4个35
 
     云台相对地面的朝向 = 下yaw关节角 + 上yaw关节角
 
-- **上yaw(小yaw) 轻、快**：主控轴。每个控制周期先吃下全部朝向误差，但被夹在自己 ±90° 的行程内；
-- **下yaw(大yaw) 重、慢**：只补上yaw吃不下的差额，也就是"小yaw相对大yaw顶到90°后只靠大yaw转"；
-- **下yaw回中**：朝向到位后，下yaw按 `lower_yaw_recenter_ratio` 限速地把上yaw关节角一点点收回中心，
-  上yaw等量反向收回，两者之和不变 → 回中过程中朝向不变。
+- **上yaw(小yaw) 轻、快**：主控快轴。补上下yaw还没到位的部分，但被夹在自己 ±90° 的行程内；
+- **下yaw(大yaw) 重、慢**：慢轴。从第一周期起就朝最终由它承担的朝向走，每周期按
+  `lower_yaw_recenter_max_step` 限速地接手；上yaw同步补差额。
+- 两个yaw**从一开始都在转**：上yaw快、下yaw慢，下yaw逐步把角度接过手，上yaw随之收回中心。
+  两者之和 = 本周期朝向误差，所以过程中朝向仍由 IMU 闭环保证。
   最终上yaw回中心、下yaw承担全部角度，上yaw重新拿到左右各90°的快速权限。
 
-例：目标相对车身 +120° —— 上yaw先快速转到 +90°（此时下yaw不动），下yaw补上剩下的 +30°；
-随后下yaw继续转、上yaw同步收回中心，稳态为 **下yaw = +120°、上yaw = 0°**。
+例：目标相对车身 +120° —— 下yaw一开始就朝 +120° 转（慢），上yaw先快速转到 +90°（夹限位）；
+随着下yaw转过 30°，上yaw的目标从 +90° 连续回缩到 0°，稳态为 **下yaw = +120°、上yaw = 0°**。
 
 注意：`upper_yaw_max_` 是**上yaw关节**相对下yaw的行程，不是云台朝向的限幅，
 `TargetAbs()` 的 yaw 目标可以给任意角度，怎么分给两个电机由协调逻辑决定。
@@ -63,8 +64,7 @@ IMU 必须装在云台(上yaw输出)上，此时 `imu_yaw` 就是枪口相对地
 | `lower_yaw_offset_` | 下yaw指向车身正前方时的编码器读数 |
 | `upper_yaw_joint_inverted` | 上yaw编码器增大时，云台地面朝向是否同向增大，反向则置 true |
 | `lower_yaw_joint_inverted` | 同上，下yaw |
-| `lower_yaw_recenter_ratio` | 回中比例：每周期把上yaw关节角的该比例交给下yaw；0 = 不回中 |
-| `lower_yaw_recenter_max_step` | 回中步长上限 [rad]，等效回中角速度 ≈ 该值 / 下yaw位置环时间常数。0 = 不限速 |
+| `lower_yaw_recenter_max_step` | 下yaw每周期接手/回中的步长上限 [rad]，等效交接角速度 ≈ 该值 / 下yaw位置环时间常数。0 = 下yaw不主动接手（只补上yaw顶限位的差额） |
 
 标定顺序建议：
 
@@ -74,9 +74,9 @@ IMU 必须装在云台(上yaw输出)上，此时 `imu_yaw` 就是枪口相对地
    `lower_yaw_offset_`（上电相关，所以每次上电都要标）。
 2. `upper_yaw_joint_inverted` / `lower_yaw_joint_inverted`：给一个小角度目标，看云台实际往哪边转，
    反向就置 true。标错的典型现象是上yaw顶在限位、朝向一直追不上目标（有界，不会跑飞，但明显不对）。
-3. `lower_yaw_recenter_ratio` 先给 0（只补差额、不回中）：确认 ±90° 内上yaw单独跟踪、
-   超过90°后下yaw接手。再给 0.02~0.05 打开回中，用 `lower_yaw_recenter_max_step` 调回中快慢。
-   回中越快，上yaw已经让出角度而下yaw还没跟上的短暂朝向偏差越大（量级约等于该步长），
+3. `lower_yaw_recenter_max_step` 先给 0（下yaw不主动接手）：确认 ±90° 内上yaw单独跟踪、
+   超过90°后下yaw接手。再给一个正值（如 1°~2°）让下yaw从第一周期起就接手、上yaw回中心。
+   交接越快，上yaw已经让出角度而下yaw还没跟上的短暂朝向偏差越大（量级约等于该步长），
    按现场精度要求折中。
 
 #### 待办
