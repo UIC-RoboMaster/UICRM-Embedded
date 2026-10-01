@@ -21,7 +21,10 @@ Navigator 2026 哨兵 Seer/断头龙 采用 双 DJI Robomaster C型开发板
     - 右摩擦轮 云台 can2 0x201
 
 使用的其他接口如下：
-- 底盘 UART：调试接口
+- 底盘 UART6 ：
+- 底盘 UART1 ：调试接口
+- 云台 UART6 ：
+- 云台 UART1 ： 调试接口
 
 - UART6：~~外置IMU~~后续更换为mini-PC对接接口
 - UART1：D-Bus接收机
