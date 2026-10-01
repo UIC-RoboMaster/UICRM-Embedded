@@ -5,18 +5,24 @@
 ## 电路相关
 Navigator 2026 哨兵 Seer/断头龙 采用 双 DJI Robomaster C型开发板
 
-- 大yaw电机：GM6020 0x204
-- 小yaw电机：GM6020 0x205
-- pitch电机：GM6020 0x206
+- 底盘：4个 3508电机 底盘 can2
+    - fl 0x204
+    - fr 0x201
+    - bl 0x203
+    - br 0x202
 
-- 拨弹电机：M2006 0x207
+- 大yaw：GM6020 底盘/云台 can1 0x204
+- 小yaw：GM6020 云台 can2 0x202
+- pitch：GM6020 云台 can2 0x206
+
+- 拨弹：M2006 云台 can2 0x203
 - 摩擦轮电机：M3508 * 2
-    - 左摩擦轮
-    - 右摩擦轮
-- 底盘：通过 Can Bridge 连接控制4个底盘3508电机
+    - 左摩擦轮 云台 can2 0x202
+    - 右摩擦轮 云台 can2 0x201
 
 使用的其他接口如下：
-- UART8：调试接口
+- 底盘 UART：调试接口
+
 - UART6：~~外置IMU~~后续更换为mini-PC对接接口
 - UART1：D-Bus接收机
 - UART3：裁判系统串口
@@ -26,6 +32,12 @@ Navigator 2026 哨兵 Seer/断头龙 采用 双 DJI Robomaster C型开发板
 
 ### 底盘 chasiss
 chassis_example.cpp 为独立的底盘 example，直接用底部c板控制4个3508电机，并可以使用DBUS遥控器。
+
+
+
+
+
+
 
 ### 双 yaw 云台 dual_yaw_gimbal
 
