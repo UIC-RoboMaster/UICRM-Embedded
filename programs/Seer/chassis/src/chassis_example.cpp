@@ -36,12 +36,17 @@ remote::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init() {
     HAL_Delay(200);
-    print_use_uart(&huart1);
-    can = new bsp::CAN(&hcan1, true);
-    fl_motor = new driver::Motor3508(can, 0x201);
-    bl_motor = new driver::Motor3508(can, 0x202);
-    br_motor = new driver::Motor3508(can, 0x203);
-    fr_motor = new driver::Motor3508(can, 0x204);
+
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
+
+    // print_use_uart(&huart1, true, 962100);
+    print_use_rtt();
+
+    can = new bsp::CAN(&hcan2, true);
+    fl_motor = new driver::Motor3508(can, 0x204);
+    bl_motor = new driver::Motor3508(can, 0x203);
+    br_motor = new driver::Motor3508(can, 0x202);
+    fr_motor = new driver::Motor3508(can, 0x201);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
         .ki = 3,
