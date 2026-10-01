@@ -28,6 +28,8 @@ osThreadId_t gimbalTaskHandle;
 
 driver::Motor6020* pitch_motor = nullptr;
 driver::Motor6020* yaw_motor = nullptr;
+
+
 control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 driver::PWMMotorBase* bulletCap = nullptr;
