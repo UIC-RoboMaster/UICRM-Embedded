@@ -11,9 +11,9 @@ Navigator 2026 哨兵 Seer/断头龙 采用 双 DJI Robomaster C型开发板
     - bl 0x203
     - br 0x202
 
-- 大yaw：GM6020 底盘/云台 can1 0x204
-- 小yaw：GM6020 云台 can2 0x202
-- pitch：GM6020 云台 can2 0x206
+- 大yaw：GM6020 canbridge can1 id4 = 0x208
+- 小yaw：GM6020 云台 can2 id2 = 0x206
+- pitch：GM6020 云台 can2 id6 = 0x20a
 
 - 拨弹：M2006 云台 can2 0x203
 - 摩擦轮电机：M3508 * 2
