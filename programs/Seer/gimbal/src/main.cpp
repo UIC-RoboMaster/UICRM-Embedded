@@ -28,7 +28,9 @@
 #include "cmsis_os.h"
 #include "gimbal_task.h"
 #include "imu_task.h"
+#ifdef HAS_MINIPC
 #include "minipc_task.h"
+#endif
 #include "public_port.h"
 #include "referee_task.h"
 #include "remote_task.h"
@@ -45,16 +47,19 @@ void RM_RTOS_Init(void) {
     init_batt();
     init_imu();
     init_buzzer();
-    init_referee();  // todo
-                     // referee线程由父类UARTProtocal构造函数创建，考虑转移到RM_RTOS_Threads_Init
-    init_minipc();   // todo minipc线程从这里开始，考虑转移到RM_RTOS_Threads_Init
+#if defined(HAS_REFEREE) || defined(HAS_MINIPC)
+    init_referee();
+#endif
+#ifdef HAS_MINIPC
+    init_minipc();
+#endif
     init_remote();
     init_shoot();
     init_gimbal();
     init_chassis();
-    init_ui();
-    //    gimbal_power = new bsp::GPIO(MOS_CTL2_GPIO_Port, MOS_CTL2_Pin);
-    //    gimbal_power->Low();
+    // init_ui();
+    // gimbal_power = new bsp::GPIO(MOS_CTL2_GPIO_Port, MOS_CTL2_Pin);
+    // gimbal_power->Low();
 }
 
 void RM_RTOS_Threads_Init(void) {
@@ -64,8 +69,8 @@ void RM_RTOS_Threads_Init(void) {
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
     chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
-    if (ENABLE_UI)
-        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
+    // if (ENABLE_UI)
+    //     uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
@@ -118,66 +123,75 @@ void RM_RTOS_Default_Task(const void* arg) {
             dbus->ch3,
             dbus->ch4,
             dbus->swl,
-            dbus->swr
+            dbus->swr,
+            dbus->GetLastUptime()
         );
         print("\r\n");
 
         // Chassis info
         print("Chassis speed %.3f %.3f %.3f\r\n", chassis_vx, chassis_vy, chassis_vt);
-        print(
-            "Power %.3fV %.3fA %.3fW\r\n",
-            referee->power_heat_data.chassis_volt / 1000.0,
-            referee->power_heat_data.chassis_current / 1000.0,
-            referee->power_heat_data.chassis_power
-        );
+        // print(
+        //     "Power %.3fV %.3fA %.3fW\r\n",
+        //     referee->power_heat_data.chassis_volt / 1000.0,
+        //     referee->power_heat_data.chassis_current / 1000.0,
+        //     referee->power_heat_data.chassis_power
+        // );
+#ifdef HAS_MINIPC
         print(
             "Navigation Target X%.3f Y%.3f Spin%.3f\r\n",
             minipc->robot_move.target_x,
             minipc->robot_move.target_y,
             minipc->robot_move.target_turn
         );
+#endif
         print("\r\n");
 
         // Gimbal info
         print(
             "Gimbal target P%.3f Y%.3f\r\n",
-            gimbal->getPitchTarget() - gimbal_param->pitch_offset_ - (2 * PI),
-            gimbal->getYawTarget() - gimbal_param->yaw_offset_ - (2 * PI)
+            wrap<float>(gimbal->getPitchTarget() - gimbal_param->pitch_offset_, -PI, PI),
+            wrap<float>(gimbal->getUpperYawTarget() - gimbal_param->upper_yaw_offset_, -PI, PI)
         );
+        print("Yaw joints: upper %.3f lower %.3f\r\n", gimbal->getUpperYawByMotor(), gimbal->getLowerYawByMotor());
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", -imu->INS_angle[1], imu->INS_angle[0], imu->INS_angle[2]);
+#ifdef HAS_MINIPC
         print(
             "Vision Target: P%.3f Y%.3f Acc[%d]\r\n",
             minipc->target_angle.target_pitch,
             minipc->target_angle.target_yaw,
             minipc->target_angle.accuracy
         );
+#endif
         // auto it = time_queue.begin();
         // if (std::find(time_queue.begin(), time_queue.end(), minipc->target_angle.time_stamp) !=
         // time_queue.end())
         //     print("Latency [%d]", (uint8_t)dbus->timestamp - *it);
         print("\r\n");
 
-        // Shoot info
-        print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
-        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
-        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        print_enabled("MiniPC Shoot CMD", minipc->target_angle.shoot_cmd);
-        print("\r\n");
+        // // Shoot info
+        // print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        // print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
+        // print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
+        // print_enabled("MiniPC Shoot CMD", minipc->target_angle.shoot_cmd);
+        // print("\r\n");
 
         // Online info
         print("Comm Stat:  ");
         print_enabled("DBUS", dbus->IsOnline());
-        print_enabled("Referee", referee->IsOnline());
+        // print_enabled("Referee", referee->IsOnline());
         print("\r\n");
+
         print("Motor Stat: ");
-        print_enabled("Yaw", yaw_motor->IsOnline());
+        print_enabled("UpperYaw", upper_yaw_motor->IsOnline());
+        print_enabled("LowerYaw", lower_yaw_motor->IsOnline());
         print_enabled("Pitch", pitch_motor->IsOnline());
         print("\r\n");
-        print("Ref Pwr En: ");
-        print_enabled("Chassis", referee->game_robot_status.mains_power_chassis_output);
-        print_enabled("Gimbal", referee->game_robot_status.mains_power_gimbal_output);
-        print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
-        print("\r\n");
+        //
+        // print("Ref Pwr En: ");
+        // print_enabled("Chassis", referee->game_robot_status.mains_power_chassis_output);
+        // print_enabled("Gimbal", referee->game_robot_status.mains_power_gimbal_output);
+        // print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
+        // print("\r\n");
 
         osDelay(100);
     }

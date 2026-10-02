@@ -21,12 +21,19 @@
 #include "Automata.h"
 #include "remote_task.h"
 #include "imu_task.h"
+#ifdef HAS_MINIPC
 #include "minipc_task.h"
+#endif
 
 remote::DBUS* dbus = nullptr;
 
 bool is_activate = true;
-RemoteMode remote_mode = REMOTE_MODE_AUTOPILOT;
+#ifdef HAS_MINIPC
+constexpr RemoteMode initial_remote_mode = REMOTE_MODE_AUTOPILOT;
+#else
+constexpr RemoteMode initial_remote_mode = REMOTE_MODE_FOLLOW;
+#endif
+RemoteMode remote_mode = initial_remote_mode;
 ShootFricMode shoot_fric_wheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_mode = SHOOT_MODE_STOP;
 BulletCapMode bullet_cap_mode = BULLET_CAP_MODE_CLOSE;
@@ -69,10 +76,18 @@ void remoteTask(void* arg) {
     auto remote_mode_aut = control::AutomataBuilder<RemoteMode>()
         .item<control::AutomataInputEdge>(dbus->swr)
         .item<control::AutomataInputEdge>(bool{}) // mode_change_key
+#ifdef HAS_MINIPC
         .transition<REMOTE_MODE_AUTOPILOT, REMOTE_MODE_FOLLOW>(tranlogic_next_remote_mode_trigger)
+#else
+        .transition<REMOTE_MODE_ADVANCED, REMOTE_MODE_FOLLOW>(tranlogic_next_remote_mode_trigger)
+#endif
         .transition<REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN>(tranlogic_next_remote_mode_trigger)
+#ifdef HAS_MINIPC
         .transition<REMOTE_MODE_SPIN, REMOTE_MODE_AUTOPILOT>(tranlogic_next_remote_mode_trigger)
-        .build<REMOTE_MODE_AUTOPILOT>();
+#else
+        .transition<REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED>(tranlogic_next_remote_mode_trigger)
+#endif
+        .build<initial_remote_mode>();
 
     /*
     todo: should construct more stable logic.
@@ -103,17 +118,22 @@ void remoteTask(void* arg) {
         const auto& referee_permit = COMPONENT(2);
         const auto& shoot_key = COMPONENT(3);
         const auto& remote_mode = COMPONENT(4);
+#ifdef HAS_MINIPC
+        const bool minipc_permit = remote_mode.get() != REMOTE_MODE_AUTOPILOT || minipc->target_angle.shoot_cmd;
+#else
+        const bool minipc_permit = remote_mode.get() != REMOTE_MODE_AUTOPILOT;
+#endif
         return (swl.get() == remote::DOWN || shoot_key.get()) &&
             fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
             referee_permit.get() &&
-            (remote_mode.get() == REMOTE_MODE_AUTOPILOT ? minipc->target_angle.shoot_cmd : true);
+            minipc_permit;
     };
     auto shoot_aut = control::AutomataBuilder<ShootMode>()
         .item<control::AutomataInputEdge>(dbus->swl)
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .item<control::AutomataInputRaw>(is_referee_shoot_available)
         .item<control::AutomataInputEdge>(bool{}) // shoot_key
-        .item<control::AutomataInputRaw>(REMOTE_MODE_AUTOPILOT)
+        .item<control::AutomataInputRaw>(initial_remote_mode)
         .transition<SHOOT_MODE_SINGLE, SHOOT_MODE_STOP>(tranlogic_shooting_condition, control::ReverseTag{})
         .transition<SHOOT_MODE_BURST, SHOOT_MODE_STOP>(tranlogic_shooting_condition, control::ReverseTag{})
         .transition<SHOOT_MODE_STOP, SHOOT_MODE_SINGLE>(tranlogic_shooting_condition)
