@@ -21,7 +21,9 @@
 #include "chassis_task.h"
 
 #include "imu_task.h"
+#ifdef HAS_MINIPC
 #include "minipc_task.h"
+#endif
 osThreadId_t chassisTaskHandle;
 
 const float chassis_max_xy_speed = 2 * PI * 10;
@@ -61,10 +63,10 @@ void chassisTask(void* arg) {
             continue;
         }
 
-        remote::keyboard_t keyboard;
+        remote::keyboard_t keyboard{};
         if (dbus->IsOnline()) {
             keyboard = dbus->keyboard;
-        } else if (refereerc->IsOnline()) {
+        } else if (refereerc != nullptr && refereerc->IsOnline()) {
             keyboard = refereerc->remote_control.keyboard;
         }
 
@@ -76,11 +78,14 @@ void chassisTask(void* arg) {
         //            car_vy = 0;
         //            car_vt = 0;
         //        } else
+#ifdef HAS_MINIPC
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
             car_vy = minipc->robot_move.target_x;
             car_vx = -minipc->robot_move.target_y;
             car_vt = minipc->robot_move.target_turn;
-        } else if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
+        } else
+#endif
+        if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX;
@@ -94,19 +99,11 @@ void chassisTask(void* arg) {
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
 
-        // // 云台相对底盘的角度，通过云台和底盘连接的电机获取
-        // float A = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-        // // 云台当前相对云台零点的角度，通过IMU获取
-        // float B = imu->INS_angle[0];
-        // // 云台目标相对云台零点的角度，直接读取gimbal class获取
-        // float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
-        // float chassis_target_diff = C - B + A;
-        // chassis_target_diff = -chassis_target_diff;
-        // chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
-
         // chassis need to move to where gimbal towards
         // [cosθ, -sinθ; sinθ, cosθ] rotation matrix, apply offset angle to expecting speed input
-        float chassis_target_diff = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        float chassis_target_diff = wrap<float>(
+            gimbal->getUpperYawByMotor() + gimbal->getLowerYawByMotor(), -PI, PI
+        );
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
@@ -115,12 +112,14 @@ void chassisTask(void* arg) {
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
         chassis_vt = 0;
 
+#ifdef HAS_MINIPC
         // 切换模式清空导航信息
         if (remote_mode != REMOTE_MODE_AUTOPILOT && last_remote_mode == REMOTE_MODE_AUTOPILOT) {
             minipc->robot_move.target_x = 0;
             minipc->robot_move.target_y = 0;
             minipc->robot_move.target_turn = 0;
         }
+#endif
 
         if (remote_mode == REMOTE_MODE_ADVANCED) {
             // 手动模式下，遥控器直接控制底盘速度

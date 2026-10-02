@@ -24,7 +24,7 @@
 #include "buzzer_notes.h"
 #include "buzzer_task.h"
 #include "cmsis_os2.h"
-#include "gimbal.h"
+#include "dual_yaw_gimbal.h"
 #include "gimbal_data.h"
 #include "imu_task.h"
 #include "main.h"
@@ -45,10 +45,11 @@ const osThreadAttr_t gimbalTaskAttribute =
      .reserved = 0};
 
 void gimbalTask(void* arg);
-extern control::Gimbal* gimbal;
+extern control::Dual_Yaw_Gimbal* gimbal;
 extern driver::Motor6020* pitch_motor;
-extern driver::Motor6020* yaw_motor;
-extern control::gimbal_data_t* gimbal_param;
+extern driver::Motor6020* upper_yaw_motor;
+extern driver::Motor6020* lower_yaw_motor;
+extern control::dual_yaw_gimbal_data_t* gimbal_param;
 extern float pitch_diff, yaw_diff;
 void init_gimbal();
 void kill_gimbal();
