@@ -135,7 +135,7 @@ void uiTask(void* arg) {
     BoolEdgeDetector* shoot_jam_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
-        relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
+        relative_angle = wrap<float>(gimbal->getUpperYawByMotor() + gimbal->getLowerYawByMotor(), -PI, PI);
         pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
         chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max, relative_angle);
         osDelay(UI_OS_DELAY);
@@ -207,7 +207,7 @@ void uiTask(void* arg) {
             fr_motor_check_edge->input(true);
             bl_motor_check_edge->input(true);
             br_motor_check_edge->input(true);
-            yaw_motor_check_edge->input(yaw_motor->IsOnline());
+            yaw_motor_check_edge->input(upper_yaw_motor->IsOnline() && lower_yaw_motor->IsOnline());
             pitch_motor_check_edge->input(pitch_motor->IsOnline());
             // steer_motor_check_edge->input(steering_motor->IsOnline());
             dbus_edge->input(dbus->IsOnline());
