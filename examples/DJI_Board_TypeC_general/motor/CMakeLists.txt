@@ -41,6 +41,10 @@ uicrm_add_arm_executable(${PROJECT_NAME}_m6020_theta
         TARGET ${BOARD_NAME}
         SOURCES m6020_theta.cpp)
 
+uicrm_add_arm_executable(${PROJECT_NAME}_m6020_DBUS
+        TARGET ${BOARD_NAME}
+        SOURCES m6020_DBUS.cpp)
+
 uicrm_add_arm_executable(${PROJECT_NAME}_dm4310_mit
         TARGET ${BOARD_NAME}
         SOURCES J4310_mit.cpp)
