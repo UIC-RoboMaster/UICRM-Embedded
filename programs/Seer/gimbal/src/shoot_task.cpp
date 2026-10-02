@@ -20,8 +20,6 @@
 
 #include "shoot_task.h"
 
-#include "minipc_task.h"
-
 driver::Motor3508* flywheel_left = nullptr;
 driver::Motor3508* flywheel_right = nullptr;
 
@@ -139,8 +137,8 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::Motor3508(can2, 0x201);
-    flywheel_right = new driver::Motor3508(can2, 0x202);
+    flywheel_left = new driver::Motor3508(can2, 0x202);
+    flywheel_right = new driver::Motor3508(can2, 0x201);
 
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
