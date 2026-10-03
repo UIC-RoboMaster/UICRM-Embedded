@@ -6,7 +6,7 @@
  * @note: 该文件实现了对i6x遥控器的数据解包。
  * 四个摇杆通道值初始值为-784~783，为方便适配现有代码进行了对-660~660的映射，默认开启
  * 可直接改变宏定义MAPPING_ENABLE实现映射开关
- * i6x包括四个遥控通道，两个旋钮通道，三个两档拨杆，一个三档拨杆
+ * i6x包括四个遥控通道，两个旋钮通道，*三个两档拨杆，一个三档拨杆*
  * @copyright: Copyright (c) 2025
  * @license: MIT
  *********************************/
@@ -53,7 +53,7 @@ void sbus_to_i6x(i6x_ctrl_t *i6x_ctrl, const uint8_t *sbus_data) {
 
     i6x_ctrl->s[0] = (int8_t) TO_STICK((((sbus_data[9] >> 2) | (sbus_data[10] << 6)) & 0x07FF) - 1024);
     i6x_ctrl->s[1] = (int8_t) TO_STICK((((sbus_data[10] >> 5) | (sbus_data[11] << 3)) & 0x07FF) - 1024);
-    i6x_ctrl->s[2] = (int8_t) TO_STICK((((sbus_data[12] | (sbus_data[13] << 8)) & 0x07FF) - 1024);
+    i6x_ctrl->s[2] = (int8_t) TO_STICK(((sbus_data[12] | (sbus_data[13] << 8)) & 0x07FF) - 1024);
     i6x_ctrl->s[3] = (int8_t) TO_STICK((((sbus_data[13] >> 3) | (sbus_data[14] << 5)) & 0x07FF) - 1024);
 
     // 通道值映射

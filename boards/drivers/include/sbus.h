@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2023-2026. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -27,11 +27,11 @@ namespace remote {
 
     /**
      * @brief SBUS 遥控器接收类
-     * @note 用于支持SBUS的接收机
+     * @note 用于支持SBUS的接收机(FS-iA6B)
      */
     /**
-     * @brief DBUS remote receiver class
-     * @note used for DJI DR16 receiver
+     * @brief SBUS remote receiver class
+     * @note used for FS-iA6B SBUS receiver
      */
     class SBUS : public bsp::UART, public driver::ConnectionDriver {
       public:
@@ -54,16 +54,24 @@ namespace remote {
 
         // rocker channel information
         /**
-         * @note 遥控器的样式
+         * @note 遥控器的样式(FS-i6X)
          *
          * @note the style of the remote
          *
-         * C4(
-         * SWL*           *SWR
-         *   C3-^       ^-C1
-         * C2-<   >+ -<   >+C0
+         *      C4(   )C5
+         * SW1* SW2* *SW3 *SW4
+         *   C2-^       ^-C1
+         * C3-<   >+ -<   >+C0
          *     +v       v+
          *
+         */
+
+        // 以下为待验证参数
+        /**
+         * @brief FS-i6X原始摇杆数据值为-784~+783，经iA6B-SBUS协议解包得到的原始值
+         * @param val 根据原项目做浮点拟合映射
+         * @return 映射到-660~660的数据值
+         * @note 此部分暂时留空 TODO
          */
 
         volatile int16_t ch1;

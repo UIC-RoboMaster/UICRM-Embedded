@@ -34,24 +34,28 @@
 namespace remote {
 
     // helper struct for decoding raw bytes
+    /**
+     * TEST: 这里使用结构体搭配packed进行数据包裁剪分发，
+     * TODO：移植新数据包协议分发，并需要做sbus.h库文件中的数据映射
+     * 否则后续数据可能出现溢出/死区过大等问题
+     * 遥控器具体通道详见sbus.h注释
+     * Update: 2026.10.3
+     */
     typedef struct {
-        uint8_t start : 8;
+        // uint8_t start : 8;
+        // !IMPORTANT 测试，请勿merge
+        uint16_t ch0 : 11;
         uint16_t ch1 : 11;
         uint16_t ch2 : 11;
         uint16_t ch3 : 11;
         uint16_t ch4 : 11;
         uint16_t ch5 : 11;
-        uint16_t ch6 : 11;
-        uint16_t ch7 : 11;
-        uint16_t ch8 : 11;
-        uint16_t ch9 : 11;
-        uint16_t ch10 : 11;
-        uint16_t ch11 : 11;
-        uint16_t ch12 : 11;
-        uint16_t ch13 : 11;
-        uint16_t ch14 : 11;
-        uint16_t ch15 : 11;
-        uint16_t ch16 : 11;
+        /* left and right switch information */
+        uint8_t sw0 : 2;
+        uint8_t sw1 : 2;
+        uint8_t sw2 : 2;
+        // 前三个为两档拨杆，后一个为三档拨杆，具体协议需要重构，这里只做pseudo演示
+        uint8_t sw3 : 2;
         uint8_t flag : 8;
         uint8_t end : 8;
     } __packed sbus_t;
