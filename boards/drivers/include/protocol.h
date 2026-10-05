@@ -26,6 +26,7 @@
 #include "bsp_usb.h"
 #include "connection_driver.h"
 #include "dji_remote.h"
+#include "protocols/refereerc_receiver.h"
 
 namespace communication {
 
@@ -46,6 +47,7 @@ namespace communication {
          * @return true for success; false for failure
          */
         bool Receive(package_t package);
+        const remote::RefereeRcReceiver& Vt13() const { return refereerc_receiver_; }
 
         /**
          * @brief Generate the package to be sent according to the command and save to the internal
@@ -63,15 +65,8 @@ namespace communication {
 
         uint8_t bufferRx[MAX_FRAME_LEN] = {0};
         uint8_t bufferTx[MAX_FRAME_LEN] = {0};
-
-        struct {
-            int idx = 0;
-            enum mode {
-                WAITING_FOR_SOF,
-                RECEIVING_REFEREE,
-                RECEIVING_VT13,
-            } mode = WAITING_FOR_SOF;
-        } rx_state;
+        // Called only for a complete VT13 frame accepted by the new receiver.
+        virtual void ProcessVt13Rx(const uint8_t* data, size_t size);
 
         /**
          * @brief verify the header of frame with crc8
@@ -126,6 +121,12 @@ namespace communication {
          * @return length of the data that is copied into buffer
          */
         virtual int ProcessDataTx(int cmd_id, uint8_t* data) = 0;
+
+      private:
+        size_t rx_used_ = 0;
+        remote::RefereeRcReceiver refereerc_receiver_;
+        void DiscardRx(size_t size);
+        void ResyncRx();
     };
 
     class UARTProtocol : public Protocol {
@@ -215,7 +216,6 @@ namespace communication {
      * 0x0301 STUDENT_INTERACTIVE
      * 0x0302 ROBOT_INTERACTIVE [x]
      * 0x0303 ROBOT_COMMAND [x]
-     * 0x0304 REMOTE_CONTROL_DATA
      * 0x0305 CLIENT_MAP_COMMAND [x]
      */
 
@@ -240,8 +240,6 @@ namespace communication {
         RFID_STATUS = 0x0209,
         DART_CLIENT_CMD = 0x020A,
         STUDENT_INTERACTIVE = 0x0301,
-        REMOTE_CONTROL_DATA = 0x304,
-        REMOTE_CONTROL_VT13 = 0x53,
         CUSTOM_CLIENT_DATA = 0x0306,
     } referee_cmd;
 
@@ -535,7 +533,7 @@ namespace communication {
         uint8_t cmd_source;
     } __packed map_command_t;
 
-    /* ===== REMOTE_CONTROL_DATA 0x0304 30Hz ===== */
+    // Obsolete 0x0304 layout, retained only for old robot source compatibility.
     typedef struct {
         remote::mouse_t mouse;
         remote::keyboard_t keyboard;
@@ -610,7 +608,7 @@ namespace communication {
 
         custom_robot_data_t custom_robot_data{};                  // 0x0302
         map_command_t map_command{};                              // 0x0303
-        remote_control_t remote_control{};                        // 0x0304
+        remote_control_t remote_control{};  // Obsolete: never updated by Receive; migrate old callers.
         map_robot_data_t map_robot_data{};                        // 0x0305
         custom_client_data_t custom_client_data{};                // 0x0306
         custom_client_map_command_t custom_client_map_command{};  // 0x0307
@@ -641,6 +639,7 @@ namespace communication {
          */
         int ProcessDataTx(int cmd_id, uint8_t* data) final;
 
+        void ProcessVt13Rx(const uint8_t* data, size_t size) override;
         content graph_content_ = NO_GRAPH;
     };
 

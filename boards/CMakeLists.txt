@@ -1,6 +1,7 @@
 add_subdirectory(base)
 add_subdirectory(platform)
 add_subdirectory(algorithm)
+add_subdirectory(remote)
 add_subdirectory(drivers)
 add_subdirectory(components)
 add_subdirectory(third_party)
