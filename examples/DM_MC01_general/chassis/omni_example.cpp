@@ -36,10 +36,10 @@ control::Chassis* chassis = nullptr;
 remote::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init() {
+    bsp::SetHighresClockTimer(&htim2);  // TIM2 is configured with a 1 MHz counter.
     HAL_Delay(200);
-    print_use_uart(&huart6, true, 921600);
-    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
-    can = new bsp::CAN(&hcan2, true);
+    print_use_uart(&huart5);
+    can = new bsp::CAN(&hcan2, false);
     fl_motor = new driver::Motor3508(can, 0x201);
     fr_motor = new driver::Motor3508(can, 0x202);
     bl_motor = new driver::Motor3508(can, 0x203);
@@ -50,11 +50,11 @@ void RM_RTOS_Init() {
         .kd = 0,
         .max_out = 30000,
         .max_iout = 10000,
-        .deadband = 0,                          // 死区
-        .A = 3 * PI,                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,  // 微分滤波系数
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
                 control::ConstrainedPID::OutputFilter |         // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
@@ -107,26 +107,6 @@ void RM_RTOS_Default_Task(const void* args) {
         }
         chassis->SetPower(false, 30, 20, 60);
         chassis->Update();
-
-        set_cursor(0, 0);
-        clear_screen();
-
-        // Chassis info
-        print_enabled("fl_motor", fl_motor->IsOnline());
-        print_enabled("fr_motor", fr_motor->IsOnline());
-        print_enabled("bl_motor", bl_motor->IsOnline());
-        print_enabled("bl_motor", br_motor->IsOnline());
-        print("\r\n");
-
-        // DBUS info
-        print(
-            "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
-            "@ %d "
-            "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
-            dbus->GetLastUptime());
-        print("\r\n");
-
         osDelay(10);
     }
 }
