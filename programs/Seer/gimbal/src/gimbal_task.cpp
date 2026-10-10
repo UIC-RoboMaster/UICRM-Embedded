@@ -20,7 +20,6 @@
 
 #include "gimbal_task.h"
 
-#include "PWMMotorBase.h"
 #include "chassis_task.h"
 #ifdef HAS_MINIPC
 #include "minipc_task.h"
@@ -35,7 +34,7 @@ driver::Motor6020* lower_yaw_motor = nullptr;
 
 control::Dual_Yaw_Gimbal* gimbal = nullptr;
 control::dual_yaw_gimbal_data_t* gimbal_param = nullptr;
-driver::PWMMotorBase* bulletCap = nullptr;
+
 static float yaw_speed_offset = 0;
 float pitch_diff, yaw_diff;
 void gimbalTask(void* arg) {
@@ -68,8 +67,7 @@ void gimbalTask(void* arg) {
         if (!lower_yaw_motor->IsEnable())
             lower_yaw_motor->Enable();
 
-        gimbal->TargetAbs(0, 0);
-        gimbal->UpdateEncoder();
+        gimbal->Recenter();
 
         osDelay(GIMBAL_OS_DELAY);
         ++i;
@@ -91,8 +89,7 @@ void gimbalTask(void* arg) {
         pitch_motor->Enable();
         upper_yaw_motor->Enable();
         lower_yaw_motor->Enable();
-        gimbal->TargetAbs(0, 0);
-        gimbal->UpdateEncoder();
+        gimbal->Recenter();
 
         osDelay(1);
         ++i;
@@ -119,19 +116,7 @@ void gimbalTask(void* arg) {
             continue;
         }
 
-        // 子弹盖
-        if (!bulletCap->isEnable())
-            bulletCap->Enable();
-        switch (bullet_cap_mode) {
-            case BULLET_CAP_MODE_CLOSE:
-                bulletCap->SetOutput(200);
-                break;
-            case BULLET_CAP_MODE_OPEN:
-                bulletCap->SetOutput(0);
-                break;
-            default:
-                break;
-        }
+
 
         if (!pitch_motor->IsEnable())
             pitch_motor->Enable();
@@ -233,9 +218,9 @@ void init_gimbal() {
 
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 60,
+        .kp = 0,
         .ki = 0.005,
-        .kd = 4000,
+        .kd = 0,
         .max_out = 6 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
@@ -247,9 +232,9 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 1500,
+        .kp = 0,
         .ki = 0,
-        .kd = 500,
+        .kd = 0,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 4000,
         .deadband = 0,                                                // 死区
@@ -267,12 +252,13 @@ void init_gimbal() {
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
     pitch_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
+    // 小 yaw
     upper_yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t upper_yaw_theta_pid_init = {
-        .kp = 10,
+        .kp = 2,
         .ki = 0,
         .kd = 0,
-        .max_out = 6 * PI,
+        .max_out = 16384,
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
@@ -283,10 +269,10 @@ void init_gimbal() {
     };
     upper_yaw_motor->ReInitPID(upper_yaw_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 80,
-        .ki = 5,
+        .kp = 800,
+        .ki = 1,
         .kd = 0,
-        .max_out = 16384,
+        .max_out = 0,
         .max_iout = 2000,
         .deadband = 0,                                          // 死区
         .A = 1.5 * PI,                                          // 变速积分所能达到的最大值为A+B
@@ -302,11 +288,11 @@ void init_gimbal() {
     upper_yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
 
-    // 大 yaw 单独使用慢轴 PID；初始值参考双 yaw 示例，现场按负载调参。
+    // 大 yaw
     lower_yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t lower_omega_pid_init = {
         .kp = 600,
-        .ki = 30,
+        .ki = 20,
         .kd = 4,
         .max_out = 16384,
         .max_iout = 2000,
@@ -325,7 +311,7 @@ void init_gimbal() {
         .kp = 8.0f,
         .ki = 0.0f,
         .kd = 600.0f,
-        .max_out = 6 * PI,
+        .max_out = 16384,
         .max_iout = 2000,
         .deadband = 0.0f,
         .A = 0,
@@ -346,8 +332,6 @@ void init_gimbal() {
     gimbal = new control::Dual_Yaw_Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
 
-    // init cap
-    bulletCap = new driver::PWMMotorBase(&htim1, 1, 1000000, 50, 1440);  // 1435
 }
 void kill_gimbal() {
     yaw_speed_offset = 0;
@@ -356,6 +340,4 @@ void kill_gimbal() {
     upper_yaw_motor->Disable();
     lower_yaw_motor->Disable();
     pitch_motor->Disable();
-    bulletCap->Disable();
-    // steering_motor->SetOutput(0);
 }
