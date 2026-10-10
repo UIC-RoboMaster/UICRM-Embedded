@@ -161,8 +161,9 @@ void init_shoot() {
     };
     flywheel_left->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
     flywheel_right->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
-    flywheel_left->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
-    flywheel_right->SetMode(driver::DjiMotorBase::OMEGA);
+
+    flywheel_left->SetMode(driver::DjiMotorBase::OMEGA);
+    flywheel_right->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
 
     steering_motor = new driver::Motor2006(can2, 0x203);
 
