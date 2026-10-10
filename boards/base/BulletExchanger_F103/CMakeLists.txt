@@ -38,7 +38,7 @@ file(GLOB_RECURSE DSP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/DSP/Source/*.c)
 add_library(${PROJECT_NAME}_libDSP ${DSP_SOURCES})
 target_compile_options(${PROJECT_NAME}_libDSP PRIVATE
         -Wno-strict-aliasing -Wno-unused-parameter)
-target_compile_definitions(${PROJECT_NAME}_libDSP PRIVATE __FPU_PRESENT)
+# Cortex-M3 has no FPU
 target_link_libraries(${PROJECT_NAME}_libDSP PRIVATE ${PROJECT_NAME}_interface)
 
 # ----- board driver library -----

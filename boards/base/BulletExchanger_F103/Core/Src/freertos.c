@@ -51,12 +51,16 @@
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+/* Overridden by programs/BulletExchanger in the repository CMake build. */
+__weak void RM_RTOS_Init(void) {}
+__weak void RM_RTOS_Threads_Init(void) {}
+__weak void RM_RTOS_Default_Task(const void *argument) { UNUSED(argument); }
 
 /* USER CODE END FunctionPrototypes */
 
@@ -71,6 +75,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+  RM_RTOS_Init();
 
   /* USER CODE END Init */
 
@@ -95,6 +100,8 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
+  if (defaultTaskHandle == NULL) { Error_Handler(); }
+  RM_RTOS_Threads_Init();
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
@@ -114,6 +121,7 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+  RM_RTOS_Default_Task(argument);
   /* Infinite loop */
   for(;;)
   {
@@ -124,6 +132,17 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void vApplicationMallocFailedHook(void)
+{
+  Error_Handler();
+}
+
+void vApplicationStackOverflowHook(TaskHandle_t task, char *name)
+{
+  UNUSED(task);
+  UNUSED(name);
+  Error_Handler();
+}
 
 /* USER CODE END Application */
 

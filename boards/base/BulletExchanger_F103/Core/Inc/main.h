@@ -53,6 +53,9 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void RM_RTOS_Init(void);
+void RM_RTOS_Threads_Init(void);
+void RM_RTOS_Default_Task(const void *argument);
 
 /* USER CODE END EFP */
 
