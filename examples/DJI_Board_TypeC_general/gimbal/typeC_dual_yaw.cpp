@@ -102,9 +102,6 @@ const control::dual_yaw_gimbal_data_t gimbal_init_data = {
     .upper_yaw_joint_inverted = false,
     .lower_yaw_joint_inverted = false,
 
-    // 下yaw每周期接手/回中的步长上限 [rad]；0 = 下yaw不主动接手（只补上yaw顶限位的差额）。
-    // 0.02 rad ≈ 1.15°，配合约 1kHz 控制周期约 60°/s 的回中速度。
-    .lower_yaw_recenter_max_step = 0.2f                                                                                                                                                                                                                                                               ,
 };
 
 const osThreadAttr_t gimbalTaskAttribute =
@@ -133,8 +130,7 @@ void gimbalTask(void* arg) {
     // 默认任务就会一直显示 IMU Not Ready。
     int i = 0;
     while (i < 2000 || !imu->DataReady()) {
-        gimbal->TargetAbs(0, 0);
-        gimbal->UpdateEncoder();
+        gimbal->Recenter();
         osDelay(1);
         ++i;
     }
@@ -144,8 +140,7 @@ void gimbalTask(void* arg) {
 
     i = 0;
     while (!imu->DataReady() || !imu->CaliDone()) {
-        gimbal->TargetAbs(0, 0);
-        gimbal->UpdateEncoder();
+        gimbal->Recenter();
         osDelay(1);
         ++i;
     }

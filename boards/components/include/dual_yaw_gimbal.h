@@ -71,15 +71,6 @@ namespace control {
            电机反装、编码器反接时置 true，标定方法见 programs/Seer/README.md */
         bool upper_yaw_joint_inverted = false;
         bool lower_yaw_joint_inverted = false;
-        /* 下yaw跟随步长 [rad]：每个控制周期下yaw朝"最终由它承担的朝向 θ*"最多走该角度，
-           上yaw同时补上剩余误差（两者之和 = 本周期朝向误差，朝向由大小yaw之和/IMU闭环保持）。
-           这样从上电第一周期起两个yaw就都在转：上yaw快、下yaw慢，下yaw逐步把上yaw的角度接手，
-           上yaw回到中心。等效交接角速度 ≈ 该值 / 下yaw位置环时间常数（与电机PID有关，需实测），
-           例如位置环时间常数 20ms、该值取 1.2° 时约 60°/s。
-           取 0 表示下yaw不主动接手（只补上yaw顶行程限位后吃不下的差额）。
-           注意交接越快，上yaw已经把角度让出去、下yaw还没跟上造成的短暂朝向偏差越大
-           （量级约等于该值），所以要按现场实测的精度要求来定，不要一味加大 */
-        float lower_yaw_recenter_max_step = 0.0f;
     };
 
     /**
@@ -103,15 +94,9 @@ namespace control {
      *          因此"云台相对地面的朝向 = 下yaw关节角 + 上yaw关节角"。IMU 装在云台(上yaw输出)上，
      *          imu_yaw 直接就是该地面朝向。
      *
-     * @details 协调策略（上yaw为主控快轴，下yaw为慢轴跟随）：
-     *          1. 下yaw从第一周期起就朝"最终由它承担的朝向 θ*"走，但每周期按
-     *             lower_yaw_recenter_max_step 限速（慢轴）；上yaw同时补上剩余误差
-     *             （快轴），两者之和 = 本周期朝向误差，朝向由大小yaw之和/IMU闭环保持；
-     *          2. 上yaw被夹在自己的关节行程内（典型 ±90°，由 upper_yaw_max_ /
-     *             upper_yaw_circle_ 决定）；顶到行程边界后吃不下的差额由下yaw补上
-     *             （此时"只依靠大yaw转"）；下yaw自身若有限位也会被夹住；
-     *          3. 随着下yaw把角度接手，上yaw同步收回中心，最终上yaw回到中心、
-     *             下yaw承担全部角度，上yaw重新获得左右两侧的快速权限。
+     * @details 两轴同周期响应：上yaw直接修正朝向误差，下yaw直接接手 u + 朝向误差。
+     *          上yaw根据下yaw实际运动持续补偿并逐渐回中；两轴分别遵守关节限位。
+     *          快慢响应由电机位置/速度环及速度输出限幅决定，不在云台层规划步长。
      */
     /**
      * @brief wrapper class for dual yaw gimbal
@@ -161,6 +146,13 @@ namespace control {
          * @note open loop mode, no IMU involved
          */
         void UpdateEncoder();
+
+        /**
+         * @brief 初始化/IMU校准时，将三个关节分别回到各自的标定零点
+         * @note 同时将目标朝向清零；不使用正常跟踪的目标分配和朝向死区。
+         *       必须在电机反馈有效后调用，并在回中/校准期间持续调用。
+         */
+        void Recenter();
 
         /**
          * @brief 基于当前传感器数据更新云台的输出
@@ -254,8 +246,8 @@ namespace control {
         /**
          * @brief 大小yaw协调核心：把本周期需要修正的朝向误差分配给两个yaw轴，并直接下发目标
          * @param yaw_diff 本周期需要修正的地面朝向误差 [rad]
-         * @note 下yaw(大yaw)从第一周期起就朝最终目标走（按 lower_yaw_recenter_max_step 限速），
-         *       上yaw(小yaw)补上剩余误差并夹在自己的关节行程内，两者之和 = yaw_diff
+         * @note 两轴同周期直接接收位置目标；上yaw根据实际反馈补偿，不提前让角。
+         *       快慢响应由各电机的位置/速度环决定，两轴分别遵守关节限位。
          */
         void CoordinateYaw(float yaw_diff);
 

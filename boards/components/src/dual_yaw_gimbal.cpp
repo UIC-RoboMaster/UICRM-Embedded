@@ -48,6 +48,21 @@ namespace control {
         return &data_;
     }
 
+    void Dual_Yaw_Gimbal::Recenter() {
+        TargetAbs(0.0f, 0.0f);
+        pitch_motor_->SetTarget(pitch_angle_);
+
+        // 初始化要求两个关节各自归零，仅让关节角之和归零不能保证到达 offset。
+        // offset 和反馈同属编码器域，无需再应用关节方向；选择最近的等价零点。
+        const float upper_encoder = upper_yaw_motor_->GetOutputShaftCumulatedTheta();
+        const float lower_encoder = lower_yaw_motor_->GetOutputShaftCumulatedTheta();
+        upper_yaw_motor_->SetTarget(
+            upper_encoder + wrapc<float>(data_.upper_yaw_offset_ - upper_encoder, -PI, PI));
+        lower_yaw_angle_ =
+            lower_encoder + wrapc<float>(data_.lower_yaw_offset_ - lower_encoder, -PI, PI);
+        lower_yaw_motor_->SetTarget(lower_yaw_angle_);
+    }
+
     void Dual_Yaw_Gimbal::UpdateEncoder() {
         // Pitch 轴
         pitch_angle_ = wrapping_clip<float>(pitch_angle_, pitch_lower_limit_, pitch_upper_limit_, 0, 2 * PI);
@@ -100,59 +115,30 @@ namespace control {
     void Dual_Yaw_Gimbal::CoordinateYaw(float yaw_diff) {
         const float sign_upper = data_.upper_yaw_joint_inverted ? -1.0f : 1.0f;
         const float sign_lower = data_.lower_yaw_joint_inverted ? -1.0f : 1.0f;
+        const float u = getUpperYawByMotor();
+        const float l = getLowerYawByMotor();
+        const float upper_encoder = upper_yaw_motor_->GetOutputShaftCumulatedTheta();
+        const float lower_encoder = lower_yaw_motor_->GetOutputShaftCumulatedTheta();
 
-        // 朝向死区：误差很小时不再修正，避免在目标附近抖动
-        if (abs(yaw_diff) < data_.upper_yaw_deadband) {
-            yaw_diff = 0;
-        }
+        // 下yaw同周期响应完整接手需求，不受上yaw朝向死区影响。
+        float lower_delta = wrapc<float>(u + yaw_diff, -PI, PI);
 
-        float current_upper_angle = getUpperYawByMotor();
-        float current_lower_angle = getLowerYawByMotor();
-        float upper_encoder = upper_yaw_motor_->GetOutputShaftCumulatedTheta();
-        float lower_encoder = lower_yaw_motor_->GetOutputShaftCumulatedTheta();
-
-        // θ* = 目标地面朝向，θ = 当前地面朝向
-        // yaw_diff = θ* − θ
-        // 小yaw电机角度 u，大yaw电机角度 l
-
-        // 大yaw：从第一周期起就朝"最终由它承担的朝向"走，即让下yaw轴角度 l 趋近目标角度 θ。
-        // 因为 θ = u + l，所以 θ* - l = u_now + yaw_diff。
-
-        // 用 lower_yaw_recenter_max_step 限速，决定交接（回中）的快慢；
-        // 取 0 表示下yaw不主动接手（只补上yaw顶限位的差额）。
-        float lower_step = 0.0f;
-        if (data_.lower_yaw_recenter_max_step > 0.0f) {
-            lower_step = clip<float>(wrapc<float>(current_upper_angle + yaw_diff, -PI, PI),
-                                     -data_.lower_yaw_recenter_max_step,
-                                     data_.lower_yaw_recenter_max_step);
-        }
-
-        // 小yaw：补上大yaw还没到位的部分，使大小yaw转动之和 = 本周期移动 yaw_diff，
-        float upper_diff = yaw_diff - lower_step;
-        float upper_target = current_upper_angle + upper_diff;
-        // 如果
-        if (!data_.upper_yaw_circle_) {
+        // 上yaw快速瞄准，只补偿下yaw已经实际完成的运动，不提前让角。
+        if (abs(yaw_diff) < data_.upper_yaw_deadband)
+            yaw_diff = 0.0f;
+        float upper_target = u + yaw_diff;
+        if (!data_.upper_yaw_circle_)
             upper_target = clip<float>(upper_target, -data_.upper_yaw_max_, data_.upper_yaw_max_);
-        }
-        // 更新 upper_diff
-        upper_diff = upper_target - current_upper_angle;
-        upper_yaw_motor_->SetTarget(upper_encoder + sign_upper * upper_diff);
+        upper_yaw_motor_->SetTarget(upper_encoder + sign_upper * (upper_target - u));
 
-        // 小yaw顶到限位时，剩下的差额由大yaw补
-        lower_step = yaw_diff - upper_diff;
-
-        // 下yaw自身限位（能连续旋转时不需要）
         if (!data_.lower_yaw_circle_) {
-            float lower_cmd = clip<float>(current_lower_angle + lower_step, -data_.lower_yaw_max_, data_.lower_yaw_max_);
-            lower_step = lower_cmd - current_lower_angle;
+            const float lower_target = clip<float>(l + lower_delta, -data_.lower_yaw_max_, data_.lower_yaw_max_);
+            lower_delta = lower_target - l;
         }
-
-        // 下yaw死区。注意它同时作用于回中量：回中步长要明显大于该死区，否则回中会被吃掉
-        if (abs(lower_step) < data_.lower_yaw_deadband) {
-            lower_step = 0;
-        }
-
-        lower_yaw_angle_ = lower_encoder + sign_lower * lower_step;
+        // 死区作用于完整接手误差；每周期明确下发保持/跟随目标。
+        if (abs(lower_delta) < data_.lower_yaw_deadband)
+            lower_delta = 0.0f;
+        lower_yaw_angle_ = lower_encoder + sign_lower * lower_delta;
         lower_yaw_motor_->SetTarget(lower_yaw_angle_);
     }
 
