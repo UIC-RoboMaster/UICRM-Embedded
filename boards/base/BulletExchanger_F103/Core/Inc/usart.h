@@ -41,6 +41,7 @@ extern UART_HandleTypeDef huart1;
 void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void RM_UART_IRQHandler(UART_HandleTypeDef *huart);
 
 /* USER CODE END Prototypes */
 
