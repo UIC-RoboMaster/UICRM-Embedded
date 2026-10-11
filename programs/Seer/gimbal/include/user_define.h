@@ -28,3 +28,13 @@
 #define UI_OS_DELAY 40
 #define SHOOT_REFEREE 1
 #define ENABLE_UI 0
+
+// gimbal
+constexpr uint16_t lower_yaw_id = 0x208;
+constexpr uint16_t upper_yaw_id = 0x206;
+constexpr uint16_t pitch_id = 0x20A;
+
+// shoot
+constexpr uint16_t left_flywheel_id = 0x202;
+constexpr uint16_t right_flywheel_id = 0x201;
+constexpr uint16_t steering_id = 0x203;
