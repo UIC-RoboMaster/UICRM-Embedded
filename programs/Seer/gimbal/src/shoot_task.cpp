@@ -142,8 +142,8 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::Motor3508(can2, 0x202);
-    flywheel_right = new driver::Motor3508(can2, 0x201);
+    flywheel_left = new driver::Motor3508(can2, left_flywheel_id);
+    flywheel_right = new driver::Motor3508(can2, right_flywheel_id);
 
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
@@ -153,7 +153,7 @@ void init_shoot() {
     flywheel_right->ReInitPID(flywheel_omega_pid_init, driver::DjiMotorBase::OMEGA);
     flywheel_right->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
 
-    steering_motor = new driver::Motor2006(can2, 0x203);
+    steering_motor = new driver::Motor2006(can2, steering_id);
 
     steering_motor->SetTransmissionRatio(36);
     steering_motor->ReInitPID(steering_theta_pid_init, driver::DjiMotorBase::THETA);
