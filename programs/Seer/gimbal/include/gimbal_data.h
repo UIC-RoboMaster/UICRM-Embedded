@@ -36,13 +36,13 @@ const control::dual_yaw_gimbal_data_t gimbal_init_data = {
     .pitch_inverted = true,
     .pitch_deadband = 0,
 
-    .upper_yaw_offset_ = 2.0572f,
+    .upper_yaw_offset_ = 3.1,
     .upper_yaw_max_ = PI / 2,
     .upper_yaw_circle_ = false,
     .upper_yaw_inverted = false,
     .upper_yaw_deadband = 0,
 
-    .lower_yaw_offset_ = 4.7f,
+    .lower_yaw_offset_ = 2.1f,
     .lower_yaw_max_ = PI,
     .lower_yaw_circle_ = true,
     .lower_yaw_inverted = false,
