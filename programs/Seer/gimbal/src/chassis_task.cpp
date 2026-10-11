@@ -191,7 +191,7 @@ void chassisTask(void* arg) {
 
 void init_chassis() {
     // 添加can bridge，注册本机ID
-    can_bridge = new communication::CanBridge(can2, 0x51);
+    can_bridge = new communication::CanBridge(can1, 0x51);
     // 添加can bridge的底盘控制器
     chassis = new control::ChassisCanBridgeSender(can_bridge, 0x52);
     // 设置底盘各目标的寄存器id
