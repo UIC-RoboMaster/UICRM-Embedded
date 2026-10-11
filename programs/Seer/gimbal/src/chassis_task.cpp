@@ -201,12 +201,3 @@ void init_chassis() {
 void kill_chassis() {
     chassis->Disable();
 }
-//
-// void goForward() {
-//     float x = 10;
-//     osDelay(1000);
-//     chassis->SetSpeed(x, 0, 0);
-// }
-//
-// void goBackward() {
-// }
