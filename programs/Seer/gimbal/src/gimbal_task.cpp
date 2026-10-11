@@ -213,114 +213,28 @@ void gimbalTask(void* arg) {
 
 void init_gimbal() {
     pitch_motor = new driver::Motor6020(can2, pitch_rx_id);
+    pitch_motor->Disable();
     upper_yaw_motor = new driver::Motor6020(can2, upper_yaw_rx_id);
+    upper_yaw_motor->Disable();
     lower_yaw_motor = new driver::Motor6020(can1, lower_yaw_rx_id);
+    lower_yaw_motor->Disable();
 
     pitch_motor->SetTransmissionRatio(1);
-    control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 0,
-        .ki = 0.005,
-        .kd = 0,
-        .max_out = 6 * PI,  // 最高旋转速度
-        .max_iout = 0,
-        .deadband = 0,                                 // 死区
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
-    };
-    pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::DjiMotorBase::THETA);
-    control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 0,
-        .ki = 0,
-        .kd = 0,
-        .max_out = 16384,  // 最大电流输出，参考说明书
-        .max_iout = 4000,
-        .deadband = 0,                                                // 死区
-        .A = 1.5 * PI,                                                // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                                                  // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,                          // 输出滤波系数
-        .derivative_filtering_coefficient = 0,                        // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
-                control::ConstrainedPID::OutputFilter |               // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate |       // 变速积分
-                control::ConstrainedPID::Derivative_On_Measurement |  // 微分在测量值上
-                control::ConstrainedPID::DerivativeFilter             // 微分在测量值上
-    };
-    pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    pitch_motor->ReInitPID(pitch_theta_pid_init, driver::DjiMotorBase::THETA);
+    pitch_motor->ReInitPID(pitch_omega_pid_init, driver::DjiMotorBase::OMEGA);
     pitch_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
     // 小 yaw
     upper_yaw_motor->SetTransmissionRatio(1);
-    control::ConstrainedPID::PID_Init_t upper_yaw_theta_pid_init = {
-        .kp = 2,
-        .ki = 0,
-        .kd = 0,
-        .max_out = 16384,
-        .max_iout = 0,
-        .deadband = 0,                                 // 死区
-        .A = 0,                                        // 变速积分所能达到的最大值为A+B
-        .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 1,           // 输出滤波系数
-        .derivative_filtering_coefficient = 0,         // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
-    };
+    upper_yaw_motor->ReInitPID(upper_yaw_omega_pid_init, driver::DjiMotorBase::OMEGA);
     upper_yaw_motor->ReInitPID(upper_yaw_theta_pid_init, driver::DjiMotorBase::THETA);
-    control::ConstrainedPID::PID_Init_t yaw_omega_pid_init = {
-        .kp = 800,
-        .ki = 1,
-        .kd = 0,
-        .max_out = 0,
-        .max_iout = 2000,
-        .deadband = 0,                                          // 死区
-        .A = 1.5 * PI,                                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                                            // 启动变速积分的死区
-        .output_filtering_coefficient = 1,                    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,             // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
-    };
-    upper_yaw_motor->ReInitPID(yaw_omega_pid_init, driver::DjiMotorBase::OMEGA);
     upper_yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
 
     // 大 yaw
     lower_yaw_motor->SetTransmissionRatio(1);
-    control::ConstrainedPID::PID_Init_t lower_omega_pid_init = {
-        .kp = 600,
-        .ki = 20,
-        .kd = 4,
-        .max_out = 16384,
-        .max_iout = 2000,
-        .deadband = 0,
-        .A = 1.5 * PI,
-        .B = 1 * PI,
-        .output_filtering_coefficient = 1,
-        .derivative_filtering_coefficient = 0,
-        .mode = control::ConstrainedPID::Integral_Limit |
-                control::ConstrainedPID::OutputFilter |
-                control::ConstrainedPID::Trapezoid_Intergral |
-                control::ConstrainedPID::ChangingIntegralRate,
-    };
-    lower_yaw_motor->ReInitPID(lower_omega_pid_init, driver::DjiMotorBase::OMEGA);
-    control::ConstrainedPID::PID_Init_t lower_theta_pid_init = {
-        .kp = 8.0f,
-        .ki = 0.0f,
-        .kd = 600.0f,
-        .max_out = 16384,
-        .max_iout = 2000,
-        .deadband = 0.0f,
-        .A = 0,
-        .B = 0,
-        .output_filtering_coefficient = 1,
-        .derivative_filtering_coefficient = 0.0f,
-        .mode = control::ConstrainedPID::Integral_Limit
-    };
-    lower_yaw_motor->ReInitPID(lower_theta_pid_init, driver::DjiMotorBase::THETA);
+    lower_yaw_motor->ReInitPID(lower_yaw_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    lower_yaw_motor->ReInitPID(lower_yaw_theta_pid_init, driver::DjiMotorBase::THETA);
     lower_yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
     // 初始化云台对象

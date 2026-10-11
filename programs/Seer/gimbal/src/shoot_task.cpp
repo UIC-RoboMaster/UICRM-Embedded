@@ -20,6 +20,8 @@
 
 #include "shoot_task.h"
 
+#include "shoot_data.h"
+
 driver::Motor3508* flywheel_left = nullptr;
 driver::Motor3508* flywheel_right = nullptr;
 
@@ -46,13 +48,16 @@ osThreadId_t shootTaskHandle;
 
 void shootTask(void* arg) {
     UNUSED(arg);
-    // 启动等待
+    // 初始化完成前保持输出关闭。
+    kill_shoot();
     osDelay(1000);
     while (!is_activate) {
+        kill_shoot();
         osDelay(SHOOT_OS_DELAY);
     }
     // 等待IMU初始化
     while (!imu->DataReady() || !imu->CaliDone()) {
+        kill_shoot();
         osDelay(SHOOT_OS_DELAY);
     }
     //    int last_state = remote::MID;
@@ -69,7 +74,7 @@ void shootTask(void* arg) {
     while (true) {
         osDelay(SHOOT_OS_DELAY);
 
-        bool shoot_en = is_activate;
+        bool shoot_en = is_activate && imu->DataReady() && imu->CaliDone();
 #ifdef HAS_REFEREE
         shoot_en = shoot_en && referee->game_robot_status.mains_power_shooter_output;
 #endif
@@ -143,69 +148,20 @@ void init_shoot() {
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
 
-    control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 150,
-        .ki = 0.03,
-        .kd = 1,
-        .max_out = 30000,
-        .max_iout = 10000,
-        .deadband = 0,                                          // 死区
-        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
-    };
-    flywheel_left->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
-    flywheel_right->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
-
+    flywheel_left->ReInitPID(flywheel_omega_pid_init, driver::DjiMotorBase::OMEGA);
     flywheel_left->SetMode(driver::DjiMotorBase::OMEGA);
+    flywheel_right->ReInitPID(flywheel_omega_pid_init, driver::DjiMotorBase::OMEGA);
     flywheel_right->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
 
     steering_motor = new driver::Motor2006(can2, 0x203);
 
     steering_motor->SetTransmissionRatio(36);
-    control::ConstrainedPID::PID_Init_t steering_theta_pid_init = {
-        .kp = 30,
-        .ki = 0,
-        .kd = 300,
-        .max_out = 4 * PI,
-        .max_iout = 0.25 * PI,
-        .deadband = 0,                                        // 死区
-        .A = 0,                                               // 变速积分所能达到的最大值为A+B
-        .B = 0,                                               // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,                  // 输出滤波系数
-        .derivative_filtering_coefficient = 0,                // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |     // 积分限幅
-                control::ConstrainedPID::OutputFilter |       // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral  // 梯形积分
-    };
     steering_motor->ReInitPID(steering_theta_pid_init, driver::DjiMotorBase::THETA);
-    control::ConstrainedPID::PID_Init_t steering_omega_pid_init = {
-        .kp = 800,
-        .ki = 0,
-        .kd = 5000,
-        .max_out = 10000,
-        .max_iout = 0,
-        .deadband = 0,                                           // 死区
-        .A = 2 * PI,                                             // 变速积分所能达到的最大值为A+B
-        .B = 1.5 * PI,                                           // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,                     // 输出滤波系数
-        .derivative_filtering_coefficient = 0,                   // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |        // 积分限幅
-                control::ConstrainedPID::OutputFilter |          // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |   // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate |  // 变速积分
-                control::ConstrainedPID::ErrorHandle,            // 错误处理
-
-    };
     steering_motor->ReInitPID(steering_omega_pid_init, driver::DjiMotorBase::OMEGA);
     steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
+    kill_shoot();
 }
 
 void kill_shoot() {
