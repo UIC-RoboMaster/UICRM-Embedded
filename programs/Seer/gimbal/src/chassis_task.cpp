@@ -68,12 +68,6 @@ void chassisTask(void* arg) {
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
         float car_vx, car_vy, car_vt;
-        //        if (keyboard.bit.X) {
-        //            // 刹车
-        //            car_vx = 0;
-        //            car_vy = 0;
-        //            car_vt = 0;
-        //        } else
 #ifdef HAS_MINIPC
         if (remote_mode == REMOTE_MODE_AUTOPILOT) {
             car_vy = minipc->robot_move.target_x;
@@ -95,6 +89,24 @@ void chassisTask(void* arg) {
             car_vt = (keyboard.bit.E - keyboard.bit.Q) * keyboard_spin_speed;
         }
 
+        // TODO：实时补偿
+        // float relative_yaw = wrapc<float>(
+        //     gimbal->getUpperYawByMotor() + gimbal->getLowerYawByMotor(),
+        //     -PI, PI
+        // );
+        //
+        // float target_yaw = wrapc<float>(
+        //     gimbal->getUpperYawTarget() - gimbal_param->upper_yaw_offset_,
+        //     -PI, PI
+        // );
+        //
+        // float aim_error = wrapc<float>(
+        //     target_yaw - imu->INS_angle[0], -PI, PI
+        // );
+        //
+        // float follow_error = wrapc<float>(
+        //     relative_yaw + aim_error, -PI, PI
+        // );
         // chassis need to move to where gimbal towards
         // [cosθ, -sinθ; sinθ, cosθ] rotation matrix, apply offset angle to expecting speed input
         // 下 yaw 可连续转动，累计关节角必须消除任意整圈，才能作为跟随误差。
