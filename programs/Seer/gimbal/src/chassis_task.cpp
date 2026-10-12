@@ -61,8 +61,9 @@ void chassisTask(void* arg) {
         remote::keyboard_t keyboard{};
         if (dbus->IsOnline()) {
             keyboard = dbus->keyboard;
-        } else if (refereerc != nullptr && refereerc->IsOnline()) {
-            keyboard = refereerc->remote_control.keyboard;
+        } else if (refereerc != nullptr && refereerc->IsOnline() &&
+                   refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C) {
+            keyboard = refereerc->vt13_packet.keyboard;
         }
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
@@ -80,7 +81,7 @@ void chassisTask(void* arg) {
             car_vt = minipc->robot_move.target_turn;
         } else
 #endif
-        if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
+        if (dbus->IsOnline() && (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4)) {
             // 优先使用遥控器
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX;
