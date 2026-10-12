@@ -1,6 +1,6 @@
-# Navigator 2026 哨兵 Seer/断头龙
+# Navigator 2026 哨兵 Seer/断头龙 
 
-大小 yaw 全向轮的哨兵
+大小 yaw 全向轮的哨兵 Developed by Martin 2026-2027
 
 ## 电路相关
 Navigator 2026 哨兵 Seer/断头龙 采用 双 DJI Robomaster C型开发板
@@ -12,10 +12,14 @@ Navigator 2026 哨兵 Seer/断头龙 采用 双 DJI Robomaster C型开发板
     - br 0x202
 
 - 大yaw：GM6020 canbridge can1 id4 = 0x208
+  - 正向安装，逆时针旋转为正，电机角度++
 - 小yaw：GM6020 云台 can2 id2 = 0x206
+  - 正向安装，逆时针旋转为正，电机角度++
 - pitch：GM6020 云台 can2 id6 = 0x20a
+  - 侧向安装，以抬头为正方向，电机角度++
 
 - 拨弹：M2006 云台 can2 0x203
+  - 正向安装
 - 摩擦轮电机：M3508 * 2
     - 左摩擦轮 云台 can2 0x202
     - 右摩擦轮 云台 can2 0x201
@@ -28,6 +32,11 @@ Navigator 2026 哨兵 Seer/断头龙 采用 双 DJI Robomaster C型开发板
 - 底盘 / 云台UART3：dbus接收机
 - 云台 UART：裁判系统串口（暂无）
 - 云台 UART：图传串口，用于接收图传数据（暂无）
+
+- IMU 正对安装
+  - INS_angle[0] 为 yaw 轴角度
+  - INS_angle[1] 为 pitch 轴角度
+  - INS_angle[2] 暂时未使用
 
 ## 程序指南
 
