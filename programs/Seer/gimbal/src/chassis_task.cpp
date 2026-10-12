@@ -41,11 +41,11 @@ void chassisTask(void* arg) {
     kill_chassis();
     osDelay(1000);
 
+    // 初始化
     while (!is_activate || !imu->DataReady() || !imu->CaliDone()) {
         kill_chassis();
         osDelay(CHASSIS_OS_DELAY);
     }
-
     chassis->Enable();
 
     while (true) {
