@@ -19,7 +19,6 @@
 ###########################################################*/
 
 #include "chassis_task.h"
-
 #include "imu_task.h"
 #ifdef HAS_MINIPC
 #include "minipc_task.h"
@@ -42,21 +41,17 @@ void chassisTask(void* arg) {
     kill_chassis();
     osDelay(1000);
 
-    while (!is_activate) {
+    while (!is_activate || !imu->DataReady() || !imu->CaliDone()) {
         kill_chassis();
         osDelay(CHASSIS_OS_DELAY);
     }
 
-    //   while (!ahrs->IsCailbrated()) {
-    //       osDelay(1);
-    //   }
-
     chassis->Enable();
 
     while (true) {
-        if (!is_activate) {
+        if (!is_activate || !imu->DataReady() || !imu->CaliDone()) {
             kill_chassis();
-            while (!is_activate) {
+            while (!is_activate || !imu->DataReady() || !imu->CaliDone()) {
                 osDelay(CHASSIS_OS_DELAY + 2);
             }
             chassis->Enable();
@@ -101,7 +96,8 @@ void chassisTask(void* arg) {
 
         // chassis need to move to where gimbal towards
         // [cosθ, -sinθ; sinθ, cosθ] rotation matrix, apply offset angle to expecting speed input
-        float chassis_target_diff = wrap<float>(
+        // 下 yaw 可连续转动，累计关节角必须消除任意整圈，才能作为跟随误差。
+        float chassis_target_diff = wrapc<float>(
             gimbal->getUpperYawByMotor() + gimbal->getLowerYawByMotor(), -PI, PI
         );
 
@@ -137,7 +133,9 @@ void chassisTask(void* arg) {
             }
 
             static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(4 / (2 * PI), 0, 0, 0.5, 1);
-            float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
+            // 底盘转速正方向与统一 yaw 朝向相反（参照 Ares）。
+            // 正的枪口相对角需要负的转速指令，底盘才能向枪口靠拢。
+            float vt = -chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
             if (chassis_vt_pid_error != 0)
                 chassis_vt = vt;
         }
