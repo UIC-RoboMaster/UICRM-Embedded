@@ -19,7 +19,6 @@
  ###########################################################*/
 
 #include "gimbal_task.h"
-
 #include "chassis_task.h"
 #ifdef HAS_MINIPC
 #include "minipc_task.h"
@@ -30,7 +29,6 @@ osThreadId_t gimbalTaskHandle;
 driver::Motor6020* pitch_motor = nullptr;
 driver::Motor6020* upper_yaw_motor = nullptr;
 driver::Motor6020* lower_yaw_motor = nullptr;
-
 
 control::Dual_Yaw_Gimbal* gimbal = nullptr;
 control::dual_yaw_gimbal_data_t* gimbal_param = nullptr;
@@ -60,6 +58,7 @@ void gimbalTask(void* arg) {
             osDelay(GIMBAL_OS_DELAY);
             continue;
         }
+        gimbal->Recenter();
         if (!pitch_motor->IsEnable())
             pitch_motor->Enable();
         if (!upper_yaw_motor->IsEnable())
@@ -67,15 +66,12 @@ void gimbalTask(void* arg) {
         if (!lower_yaw_motor->IsEnable())
             lower_yaw_motor->Enable();
 
-        gimbal->Recenter();
-
         osDelay(GIMBAL_OS_DELAY);
         ++i;
     }
 
     // 云台复位完成后，播放一段音乐，代表开始校准陀螺仪
     // 校准陀螺仪会对陀螺仪进行2000次的读取，然后取平均值作为校准值
-    // buzzer->SingTone(bsp::BuzzerNote::La6M);
     Buzzer_Sing(SingCaliStart);
     imu->Calibrate();
     i = 0;
@@ -86,11 +82,11 @@ void gimbalTask(void* arg) {
             osDelay(GIMBAL_OS_DELAY);
             continue;
         }
+        gimbal->Recenter();
+
         pitch_motor->Enable();
         upper_yaw_motor->Enable();
         lower_yaw_motor->Enable();
-        gimbal->Recenter();
-
         osDelay(1);
         ++i;
     }
@@ -105,7 +101,8 @@ void gimbalTask(void* arg) {
 
     //    float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
-        bool gimbal_en = is_activate && pitch_motor->IsOnline() && upper_yaw_motor->IsOnline() &&
+        bool gimbal_en = is_activate && imu->DataReady() && imu->CaliDone() &&
+                         pitch_motor->IsOnline() && upper_yaw_motor->IsOnline() &&
                          lower_yaw_motor->IsOnline();
 #ifdef HAS_REFEREE
         gimbal_en = gimbal_en && referee->game_robot_status.mains_power_gimbal_output;
@@ -120,11 +117,11 @@ void gimbalTask(void* arg) {
 
         if (!pitch_motor->IsEnable())
             pitch_motor->Enable();
-        // pitch_motor->Disable();
         if (!upper_yaw_motor->IsEnable())
             upper_yaw_motor->Enable();
         if (!lower_yaw_motor->IsEnable())
             lower_yaw_motor->Enable();
+
         pitch_curr = -imu->INS_angle[1];
         yaw_curr = imu->INS_angle[0];
         if (dbus->IsOnline()) {
@@ -162,15 +159,15 @@ void gimbalTask(void* arg) {
         // }
 
         // TODO 等待标定
-        const float offset_ratio =
-            0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
-        const float offset_filter_ratio =
-            0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
-        yaw_speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio +
-                           yaw_speed_offset * (1 - offset_filter_ratio);
-        lower_yaw_motor->SetSpeedFeedforward(
-            gimbal_param->lower_yaw_joint_inverted ? -yaw_speed_offset : yaw_speed_offset
-        );
+        // const float offset_ratio =
+        //     0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
+        // const float offset_filter_ratio =
+        //     0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
+        // yaw_speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio +
+        //                    yaw_speed_offset * (1 - offset_filter_ratio);
+        // lower_yaw_motor->SetSpeedFeedforward(
+        //     gimbal_param->lower_yaw_joint_inverted ? -yaw_speed_offset : yaw_speed_offset
+        // );
 
         // float pitch_speed_offset = pitch_ratio;
         // pitch_motor->SetSpeedOffset(pitch_speed_offset);
@@ -212,11 +209,11 @@ void gimbalTask(void* arg) {
 }
 
 void init_gimbal() {
-    pitch_motor = new driver::Motor6020(can2, pitch_rx_id);
+    pitch_motor = new driver::Motor6020(can2, pitch_id);
     pitch_motor->Disable();
-    upper_yaw_motor = new driver::Motor6020(can2, upper_yaw_rx_id);
+    upper_yaw_motor = new driver::Motor6020(can2, upper_yaw_id);
     upper_yaw_motor->Disable();
-    lower_yaw_motor = new driver::Motor6020(can1, lower_yaw_rx_id);
+    lower_yaw_motor = new driver::Motor6020(can1, lower_yaw_id);
     lower_yaw_motor->Disable();
 
     pitch_motor->SetTransmissionRatio(1);
