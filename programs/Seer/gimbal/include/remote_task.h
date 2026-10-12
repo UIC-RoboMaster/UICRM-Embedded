@@ -152,25 +152,6 @@ inline const char* shoot_load_mode_str(ShootMode mode) {
 extern ShootMode shoot_mode;
 extern ShootMode last_shoot_mode;
 
-enum BulletCapMode { BULLET_CAP_MODE_DISABLE = -1, BULLET_CAP_MODE_CLOSE = 0, BULLET_CAP_MODE_OPEN = 1 };
-inline const char* cap_mode_str(BulletCapMode mode) {
-    switch (mode) {
-        case BULLET_CAP_MODE_DISABLE:
-            return "DISABLE";
-            break;
-        case BULLET_CAP_MODE_CLOSE:
-            return "CLOSE";
-            break;
-        case BULLET_CAP_MODE_OPEN:
-            return "OPEN";
-            break;
-        default:
-            return "UNKNOWN";
-            break;
-    }
-}
-extern BulletCapMode bullet_cap_mode;
-
 extern osThreadId_t remoteTaskHandle;
 const osThreadAttr_t remoteTaskAttribute =
     {.name = "remoteTask",
