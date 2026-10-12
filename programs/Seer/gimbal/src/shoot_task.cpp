@@ -67,7 +67,6 @@ void shootTask(void* arg) {
     //    uint8_t shoot_state_2 = 0;
     //    uint8_t last_shoot_key = 0;
     //    uint16_t shoot_time_count = 0;
-    //    uint8_t servo_back = 0;
     //    bool can_shoot_click = false;
 
     float flywheel_target = 0.0;
