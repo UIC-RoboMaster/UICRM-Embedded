@@ -135,9 +135,10 @@ void gimbalTask(void* arg) {
             } else {
                 yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
             }
-        } else if (refereerc != nullptr && refereerc->IsOnline()) {
-            pitch_ratio = refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 7.0;
-            yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 7.0;
+        } else if (refereerc != nullptr && refereerc->IsOnline() &&
+                   refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C) {
+            pitch_ratio = refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
+            yaw_ratio = -refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
         } else {
             pitch_ratio = 0;
             yaw_ratio = 0;
