@@ -25,19 +25,21 @@ driver::Motor3508* flywheel_right = nullptr;
 
 driver::Motor3508* steering_motor = nullptr;
 
-bool jam_notify_flags = false;
+// bool jam_notify_flags = false;
+static bool unload_cmd_latched = false;
 
 void jam_callback(void* args) {
-    driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
-    jam_notify_flags = true;
-    float target = motor->GetTarget();
-    if (target > motor->GetOutputShaftTheta()) {
-        float prev_target = motor->GetTarget() - 2 * PI / 5;
-        motor->SetTarget(prev_target);
-    } else {
-        float prev_target = motor->GetTarget() + 2 * PI / 5;
-        motor->SetTarget(prev_target);
-    }
+    UNUSED(args);
+    // driver::Motor3508* motor = static_cast<driver::Motor3508*>(args);
+    // jam_notify_flags = true;
+    // float target = motor->GetTarget();
+    // if (target > motor->GetOutputShaftTheta()) {
+    //     float prev_target = motor->GetTarget() - 2 * PI / 5;
+    //     motor->SetTarget(prev_target);
+    // } else {
+    //     float prev_target = motor->GetTarget() + 2 * PI / 5;
+    //     motor->SetTarget(prev_target);
+    // }
 }
 
 osThreadId_t shootTaskHandle;
@@ -88,8 +90,8 @@ void shootTask(void* arg) {
 
         switch (shoot_flywheel_mode) {
             case SHOOT_FRIC_MODE_PREPARING:
-                flywheel_left->SetTarget(120.0f * 2 * PI);
-                flywheel_right->SetTarget(120.0f * 2 * PI);
+                flywheel_left->SetTarget(67.0f * 2 * PI);
+                flywheel_right->SetTarget(67.0f * 2 * PI);
                 shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
                 shoot_load_mode = SHOOT_MODE_PREPARED;
                 break;
@@ -105,7 +107,37 @@ void shootTask(void* arg) {
                 // laser->SetOutput(0);
                 break;
         }
+        // 退弹处理 - 不受摩擦轮状态限制
+        if (shoot_load_mode == SHOOT_MODE_UNLOAD) {
+            if (!unload_cmd_latched) {
+                steering_motor->SetTarget(steering_motor->GetTarget() - 2 * PI / 8, true);
+                unload_cmd_latched = true;  // 只触发一次
+            }
+            // 保持UNLOAD期间不覆写电机目标，让电机完成旋转
+        } else {
+            if (unload_cmd_latched) {
+                // 刚退出UNLOAD，取消未完成的退弹旋转，锁定到当前位置
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            }
+            unload_cmd_latched = false;  // 退出UNLOAD后解锁，等待下次触发
+
+            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            }
+        }
         if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
+#if SHOOT_REFEREE
+            // 42mm 枪管过热检测：当前热量接近热量上限时禁止发射
+            int heat_limit = referee->game_robot_status.shooter_heat_limit;
+            int heat_current = referee->power_heat_data.shooter_id1_42mm_cooling_heat;
+            const int heat_threshold = 100;  // 42mm 单发热量约 100，预留一发余量
+            if (heat_current > heat_limit - heat_threshold) {
+                // 过热保护：锁定拨弹电机，跳过本轮发射
+                steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+                osDelay(SHOOT_OS_DELAY);
+                continue;
+            }
+#endif
             switch (shoot_load_mode) {
                 case SHOOT_MODE_PREPARING:
                 case SHOOT_MODE_PREPARED:

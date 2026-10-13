@@ -28,9 +28,14 @@
 #include "chassis.h"
 #include "cmsis_os.h"
 #include "supercap.h"
+#include "bsp_batteryvol.h"
+#include "bsp_os.h"
 
-bsp::CAN* can1 = nullptr;
-bsp::CAN* can2 = nullptr;
+// bridge_can 是与顶部大疆c板进行通信的can通道
+// chassis_can 是操控底盘四个电机的can通道
+// damiao的can相对于大疆是反着的！！！一定要注意！
+bsp::CAN* bridge_can = nullptr;
+bsp::CAN* chassis_can = nullptr;
 driver::DjiMotorBase* fl_motor = nullptr;
 driver::DjiMotorBase* fr_motor = nullptr;
 driver::DjiMotorBase* bl_motor = nullptr;
@@ -41,15 +46,22 @@ driver::SuperCap* super_cap = nullptr;
 control::Chassis* chassis = nullptr;
 communication::CanBridge* can_bridge = nullptr;
 
+bsp::BatteryVol* battery_vol = nullptr;
+
 void RM_RTOS_Init() {
     HAL_Delay(100);
-    print_use_uart(&huart5);
-    can2 = new bsp::CAN(&hcan2, false);
-    can1 = new bsp::CAN(&hcan1, true);
-    fl_motor = new driver::Motor3508(can2, 0x202);
-    fr_motor = new driver::Motor3508(can2, 0x201);
-    bl_motor = new driver::Motor3508(can2, 0x203);
-    br_motor = new driver::Motor3508(can2, 0x204);
+    // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
+    print_use_rtt();
+    // print_use_uart(&huart4,false,921600);
+    print("helloworld!");
+
+    chassis_can = new bsp::CAN(&hcan1, true);
+    bridge_can = new bsp::CAN(&hcan2, false);
+    fl_motor = new driver::Motor3508(chassis_can, 0x202);
+    fr_motor = new driver::Motor3508(chassis_can, 0x201);
+    bl_motor = new driver::Motor3508(chassis_can, 0x203);
+    br_motor = new driver::Motor3508(chassis_can, 0x204);
 
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 2500,
@@ -85,7 +97,7 @@ void RM_RTOS_Init() {
     br_motor->SetTransmissionRatio(19);
 
     driver::supercap_init_t supercap_init = {
-        .can = can1,
+        .can = bridge_can,
         .tx_id = 0x02e,
         .tx_settings_id = 0x02f,
         .rx_id = 0x030,
@@ -101,7 +113,7 @@ void RM_RTOS_Init() {
     super_cap->SetMaxDischargePower(250.0f);
     super_cap->SetPerferBuffer(50.0f);
 
-    can_bridge = new communication::CanBridge(can1, 0x52);
+    can_bridge = new communication::CanBridge(bridge_can, 0x52);
 
     driver::DjiMotorBase* motors[control::FourWheel::motor_num];
     motors[control::FourWheel::front_left] = fl_motor;
@@ -124,6 +136,8 @@ void RM_RTOS_Init() {
     can_bridge->RegisterRxCallback(0x72, chassis->CanBridgeUpdateEventPowerLimitWrapper, chassis);
     can_bridge->RegisterRxCallback(0x73, chassis->CanBridgeUpdateEventCurrentPowerWrapper, chassis);
 
+    battery_vol = new bsp::BatteryVol(&hadc1, ADC_CHANNEL_0, 1, ADC_SAMPLETIME_3CYCLES);
+
     HAL_Delay(300);
     init_buzzer();
 }
@@ -135,7 +149,10 @@ void RM_RTOS_Default_Task(const void* args) {
     Buzzer_Sing(Mario);
 
     while (true) {
+        chassis->UpdatePowerVoltage(battery_vol->GetBatteryVol());
         chassis->Update();
         osDelay(10);
+        print("helloworld\r\n");
+        Buzzer_Sing(Mario);
     }
 }
