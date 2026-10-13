@@ -42,15 +42,15 @@ communication::DiagGUI* diagGUI = nullptr;
 //           \ /       ← end points (lower, near screen bottom)
 //
 // Left guideline
-const int16_t GUIDELINE_LEFT_START_X_OFFSET = -50-240-140;   // Start X (upper, close to center)
-const int16_t GUIDELINE_LEFT_START_Y_OFFSET = -100;  // Start Y (negative = below center)
-const int16_t GUIDELINE_LEFT_END_X_OFFSET = -200-240-140;    // End X (lower, spread outward)
-const int16_t GUIDELINE_LEFT_END_Y_OFFSET = -440;    // End Y (near screen bottom)
+const int16_t GUIDELINE_LEFT_START_X_OFFSET = -50 - 240 - 140;  // Start X (upper, close to center)
+const int16_t GUIDELINE_LEFT_START_Y_OFFSET = -100;             // Start Y (negative = below center)
+const int16_t GUIDELINE_LEFT_END_X_OFFSET = -200 - 240 - 140;   // End X (lower, spread outward)
+const int16_t GUIDELINE_LEFT_END_Y_OFFSET = -440;               // End Y (near screen bottom)
 // Right guideline
-const int16_t GUIDELINE_RIGHT_START_X_OFFSET = 50+230+180;    // Start X (upper, close to center)
-const int16_t GUIDELINE_RIGHT_START_Y_OFFSET = -100;  // Start Y (negative = below center)
-const int16_t GUIDELINE_RIGHT_END_X_OFFSET = 200+230+180;     // End X (lower, spread outward)
-const int16_t GUIDELINE_RIGHT_END_Y_OFFSET = -440;    // End Y (near screen bottom)
+const int16_t GUIDELINE_RIGHT_START_X_OFFSET = 50 + 230 + 180;  // Start X (upper, close to center)
+const int16_t GUIDELINE_RIGHT_START_Y_OFFSET = -100;            // Start Y (negative = below center)
+const int16_t GUIDELINE_RIGHT_END_X_OFFSET = 200 + 230 + 180;   // End X (lower, spread outward)
+const int16_t GUIDELINE_RIGHT_END_Y_OFFSET = -440;              // End Y (near screen bottom)
 
 const int16_t GUIDELINE_CENTER_X = 960;
 const int16_t GUIDELINE_CENTER_Y = 540;
@@ -90,16 +90,30 @@ void uiTask(void* arg) {
     osDelay(110);
 
     // Initialize guideline GUI (reverse-camera style diagonal lines)
-    UI->LineDraw(&guidelineLeft, "gl", UI_Graph_Add, 1, UI_Color_Yellow, 2,
-                 GUIDELINE_CENTER_X + GUIDELINE_LEFT_START_X_OFFSET,
-                 GUIDELINE_CENTER_Y + GUIDELINE_LEFT_START_Y_OFFSET,
-                 GUIDELINE_CENTER_X + GUIDELINE_LEFT_END_X_OFFSET,
-                 GUIDELINE_CENTER_Y + GUIDELINE_LEFT_END_Y_OFFSET);
-    UI->LineDraw(&guidelineRight, "gr", UI_Graph_Add, 1, UI_Color_Yellow, 2,
-                 GUIDELINE_CENTER_X + GUIDELINE_RIGHT_START_X_OFFSET,
-                 GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_START_Y_OFFSET,
-                 GUIDELINE_CENTER_X + GUIDELINE_RIGHT_END_X_OFFSET,
-                 GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_END_Y_OFFSET);
+    UI->LineDraw(
+        &guidelineLeft,
+        "gl",
+        UI_Graph_Add,
+        1,
+        UI_Color_Yellow,
+        2,
+        GUIDELINE_CENTER_X + GUIDELINE_LEFT_START_X_OFFSET,
+        GUIDELINE_CENTER_Y + GUIDELINE_LEFT_START_Y_OFFSET,
+        GUIDELINE_CENTER_X + GUIDELINE_LEFT_END_X_OFFSET,
+        GUIDELINE_CENTER_Y + GUIDELINE_LEFT_END_Y_OFFSET
+    );
+    UI->LineDraw(
+        &guidelineRight,
+        "gr",
+        UI_Graph_Add,
+        1,
+        UI_Color_Yellow,
+        2,
+        GUIDELINE_CENTER_X + GUIDELINE_RIGHT_START_X_OFFSET,
+        GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_START_Y_OFFSET,
+        GUIDELINE_CENTER_X + GUIDELINE_RIGHT_END_X_OFFSET,
+        GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_END_Y_OFFSET
+    );
     UI->GraphRefresh(2, guidelineLeft, guidelineRight);
     osDelay(110);
 
@@ -177,8 +191,7 @@ void uiTask(void* arg) {
         // Update chassis GUI
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
         // pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
-        chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max,
-                           relative_angle);
+        chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max, relative_angle);
         osDelay(UI_OS_DELAY);
 
         // power_percent = battery_vol->GetBatteryPercentage();
@@ -227,10 +240,8 @@ void uiTask(void* arg) {
 
         // Update wheel status GUI
         if (last_fric_mode != shoot_flywheel_mode) {
-            char* wheelStr =
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
-            uint32_t wheelColor =
-                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
+            char* wheelStr = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
+            uint32_t wheelColor = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }
@@ -366,16 +377,30 @@ void uiTask(void* arg) {
             crossairGui->Init();
             osDelay(110);
             // Re-init guidelines
-            UI->LineDraw(&guidelineLeft, "gl", UI_Graph_Add, 1, UI_Color_Yellow, 2,
-                         GUIDELINE_CENTER_X + GUIDELINE_LEFT_START_X_OFFSET,
-                         GUIDELINE_CENTER_Y + GUIDELINE_LEFT_START_Y_OFFSET,
-                         GUIDELINE_CENTER_X + GUIDELINE_LEFT_END_X_OFFSET,
-                         GUIDELINE_CENTER_Y + GUIDELINE_LEFT_END_Y_OFFSET);
-            UI->LineDraw(&guidelineRight, "gr", UI_Graph_Add, 1, UI_Color_Yellow, 2,
-                         GUIDELINE_CENTER_X + GUIDELINE_RIGHT_START_X_OFFSET,
-                         GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_START_Y_OFFSET,
-                         GUIDELINE_CENTER_X + GUIDELINE_RIGHT_END_X_OFFSET,
-                         GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_END_Y_OFFSET);
+            UI->LineDraw(
+                &guidelineLeft,
+                "gl",
+                UI_Graph_Add,
+                1,
+                UI_Color_Yellow,
+                2,
+                GUIDELINE_CENTER_X + GUIDELINE_LEFT_START_X_OFFSET,
+                GUIDELINE_CENTER_Y + GUIDELINE_LEFT_START_Y_OFFSET,
+                GUIDELINE_CENTER_X + GUIDELINE_LEFT_END_X_OFFSET,
+                GUIDELINE_CENTER_Y + GUIDELINE_LEFT_END_Y_OFFSET
+            );
+            UI->LineDraw(
+                &guidelineRight,
+                "gr",
+                UI_Graph_Add,
+                1,
+                UI_Color_Yellow,
+                2,
+                GUIDELINE_CENTER_X + GUIDELINE_RIGHT_START_X_OFFSET,
+                GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_START_Y_OFFSET,
+                GUIDELINE_CENTER_X + GUIDELINE_RIGHT_END_X_OFFSET,
+                GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_END_Y_OFFSET
+            );
             UI->GraphRefresh(2, guidelineLeft, guidelineRight);
             osDelay(110);
             // batteryGUI->Init();

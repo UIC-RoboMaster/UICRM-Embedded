@@ -103,8 +103,8 @@ void gimbalTask(void* arg) {
         if (dbus->IsOnline()) {
             if (dbus->mouse.y != 0) {
                 pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
-            } else if (refereerc->IsOnline() && (refereerc->vt13_packet.mouse.x != 0 ||
-                                                 refereerc->vt13_packet.mouse.y != 0)) {
+            } else if (refereerc->IsOnline() &&
+                       (refereerc->vt13_packet.mouse.x != 0 || refereerc->vt13_packet.mouse.y != 0)) {
                 // DBUS在线但摇杆/鼠标无输入时，使用VT13鼠标
                 pitch_ratio = refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
             } else {
@@ -112,8 +112,8 @@ void gimbalTask(void* arg) {
             }
             if (dbus->mouse.x != 0) {
                 yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-            } else if (refereerc->IsOnline() && (refereerc->vt13_packet.mouse.x != 0 ||
-                                                 refereerc->vt13_packet.mouse.y != 0)) {
+            } else if (refereerc->IsOnline() &&
+                       (refereerc->vt13_packet.mouse.x != 0 || refereerc->vt13_packet.mouse.y != 0)) {
                 yaw_ratio = -refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
             } else {
                 yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
@@ -122,12 +122,10 @@ void gimbalTask(void* arg) {
             // DBUS离线时使用VT13：优先摇杆，否则鼠标
             if (refereerc->vt13_packet.remote.ch3 != remote::vt13_remote_t::ROCKER_MID ||
                 refereerc->vt13_packet.remote.ch2 != remote::vt13_remote_t::ROCKER_MID) {
-                pitch_ratio =
-                    (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) /
-                    remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
-                yaw_ratio =
-                    (float)-(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
-                    remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
+                pitch_ratio = (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) /
+                              remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
+                yaw_ratio = (float)-(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
+                            remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
             } else {
                 pitch_ratio = -refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
                 yaw_ratio = -refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
