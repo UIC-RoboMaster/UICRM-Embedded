@@ -57,7 +57,7 @@ enum ShootMode {
     SHOOT_MODE_PREPARED = 2,
     SHOOT_MODE_SINGLE = 3,
     SHOOT_MODE_BURST = 4,
-    SHOOT_MODE_UNLOAD = 5,   // 退弹
+    SHOOT_MODE_UNLOAD = 5,  // 退弹
 };
 extern ShootMode shoot_load_mode;
 extern osThreadId_t remoteTaskHandle;
@@ -78,67 +78,67 @@ inline const char* remote_mode_str(RemoteMode mode) {
     switch (mode) {
         case REMOTE_MODE_PREPARE:
             return "PREPARE";
-        break;
+            break;
         case REMOTE_MODE_KILL:
             return "KILL";
-        break;
+            break;
         case REMOTE_MODE_STOP:
             return "STOP";
-        break;
+            break;
         case REMOTE_MODE_FOLLOW:
             return "FOLLOW";
-        break;
+            break;
         case REMOTE_MODE_SPIN:
             return "SPIN";
-        break;
+            break;
         case REMOTE_MODE_ADVANCED:
             return "ADVANCED";
-        break;
+            break;
         default:
             return "\033[31mUNKNOWN\033[0m";
-        break;
+            break;
     }
 }
 
-    inline const char* shoot_fric_mode_str(ShootFricMode mode) {
-        switch (mode) {
-            case SHOOT_FRIC_MODE_DISABLE:
-                return "\033[31mDISABLE\033[0m";
+inline const char* shoot_fric_mode_str(ShootFricMode mode) {
+    switch (mode) {
+        case SHOOT_FRIC_MODE_DISABLE:
+            return "\033[31mDISABLE\033[0m";
             break;
-            case SHOOT_FRIC_MODE_STOP:
-                return "STOP";
+        case SHOOT_FRIC_MODE_STOP:
+            return "STOP";
             break;
-            case SHOOT_FRIC_MODE_PREPARING:
-                return "PREPARING";
+        case SHOOT_FRIC_MODE_PREPARING:
+            return "PREPARING";
             break;
-            case SHOOT_FRIC_MODE_PREPARED:
-                return "PREPARED";
+        case SHOOT_FRIC_MODE_PREPARED:
+            return "PREPARED";
             break;
-            default:
-                return "UNKNOWN";
+        default:
+            return "UNKNOWN";
             break;
-        }
     }
+}
 
 inline const char* shoot_load_mode_str(ShootMode mode) {
     switch (mode) {
         case SHOOT_MODE_DISABLE:
             return "\033[31mDISABLE\033[0m";
-        break;
+            break;
         case SHOOT_MODE_STOP:
             return "STOP";
-        break;
+            break;
         case SHOOT_MODE_SINGLE:
             return "SINGLE";
-        break;
+            break;
         case SHOOT_MODE_BURST:
             return "BURST";
-        break;
+            break;
         case SHOOT_MODE_PREPARED:
             return "\033[31mREADY SHOOT!\033[0m";
         default:
             return "UNKNOWN";
-        break;
+            break;
         case SHOOT_MODE_UNLOAD:
             return "UNLOAD";
             break;

@@ -54,4 +54,3 @@ extern bool chassis_boost_flag;
 const float chassis_vx_max = 660.0f;
 const float chassis_vy_max = 660.0f;
 const float chassis_vz_max = 660.0f;
-

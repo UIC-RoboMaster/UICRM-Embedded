@@ -77,8 +77,8 @@ void remoteTask(void* arg) {
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
         is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
         // 检测VT13是否离线或不在C模式
-        is_vt13_offline = (!refereerc->IsOnline()) ||
-                          refereerc->vt13_packet.remote.mode_sw != remote::vt13_remote_t::MODE_C;
+        is_vt13_offline =
+            (!refereerc->IsOnline()) || refereerc->vt13_packet.remote.mode_sw != remote::vt13_remote_t::MODE_C;
 #ifdef HAS_REFEREE
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -

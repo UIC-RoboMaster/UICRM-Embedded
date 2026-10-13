@@ -109,27 +109,40 @@ void RM_RTOS_Default_Task(const void* arg) {
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr);
+            dbus->ch0,
+            dbus->ch1,
+            dbus->ch2,
+            dbus->ch3,
+            dbus->ch4,
+            dbus->swl,
+            dbus->swr
+        );
         // VT13 info
         print(
             "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: "
             "%d] "
             "[SWR: %d] [Trig: %d]\r\n",
-            refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
-            refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
-            refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
-            refereerc->vt13_packet.remote.swl, refereerc->vt13_packet.remote.swr,
-            refereerc->vt13_packet.remote.trigger);
-        print("Chassis %.3f %.3f %.3f\r\n", chassis->chassis_vy, chassis->chassis_vy,
-              chassis->chassis_vt);
-        print("Power %.3fV %.3fA %.3fW\r\n", referee->power_heat_data.chassis_volt / 1000.0,
-              referee->power_heat_data.chassis_current / 1000.0,
-              referee->power_heat_data.chassis_power);
+            refereerc->vt13_packet.remote.ch0,
+            refereerc->vt13_packet.remote.ch1,
+            refereerc->vt13_packet.remote.ch2,
+            refereerc->vt13_packet.remote.ch3,
+            refereerc->vt13_packet.remote.ch4,
+            refereerc->vt13_packet.remote.mode_sw,
+            refereerc->vt13_packet.remote.swl,
+            refereerc->vt13_packet.remote.swr,
+            refereerc->vt13_packet.remote.trigger
+        );
+        print("Chassis %.3f %.3f %.3f\r\n", chassis->chassis_vy, chassis->chassis_vy, chassis->chassis_vt);
+        print(
+            "Power %.3fV %.3fA %.3fW\r\n",
+            referee->power_heat_data.chassis_volt / 1000.0,
+            referee->power_heat_data.chassis_current / 1000.0,
+            referee->power_heat_data.chassis_power
+        );
         print("\r\n");
 
         // Shoot info
-        print("Shooter Cooling Heat: %hu\r\n",
-              referee->power_heat_data.shooter_id1_17mm_cooling_heat);
+        print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
         print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
         print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
         print("\r\n");
@@ -137,21 +150,19 @@ void RM_RTOS_Default_Task(const void* arg) {
         // Online info
         print("[DBUS %s] ", dbus->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
-        print("[Referee %s] ",
-              referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("[Referee %s] ", referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
-        print("[Referee RC %s] ",
-              refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("[Referee RC %s] ", refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
-        print("[Yaw %s] ",
-              yaw_motor->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("[Yaw %s] ", yaw_motor->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
-        print("[Pitch %s] ",
-              pitch_motor->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print("[Pitch %s] ", pitch_motor->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
-        print("[Flywheel %s %s]",
-              flywheel_left->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m",
-              flywheel_right->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print(
+            "[Flywheel %s %s]",
+            flywheel_left->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m",
+            flywheel_right->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m"
+        );
         print("\r\n");
         osDelay(50);
     }
