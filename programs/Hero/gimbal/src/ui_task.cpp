@@ -25,12 +25,38 @@ communication::UserInterface* UI = nullptr;
 communication::ChassisGUI* chassisGUI = nullptr;
 communication::CrossairGUI* crossairGui = nullptr;
 communication::GimbalGUI* gimbalGUI = nullptr;
-communication::CapGUI* batteryGUI = nullptr;
+// communication::CapGUI* batteryGUI = nullptr;
 communication::StringGUI* modeGUI = nullptr;
 communication::StringGUI* wheelGUI = nullptr;
 communication::StringGUI* boostGUI = nullptr;
 communication::StringGUI* shootUnlockGUI = nullptr;
 communication::DiagGUI* diagGUI = nullptr;
+
+// ============ Guideline Configuration (reverse-camera style) ============
+// Offsets relative to screen center (GUIDELINE_CENTER_X, GUIDELINE_CENTER_Y)
+// Adjust these values to match robot physical outline
+//
+//        \       /    ← start points (upper, near crosshair)
+//         \     /
+//          \   /
+//           \ /       ← end points (lower, near screen bottom)
+//
+// Left guideline
+const int16_t GUIDELINE_LEFT_START_X_OFFSET = -50-240-140;   // Start X (upper, close to center)
+const int16_t GUIDELINE_LEFT_START_Y_OFFSET = -100;  // Start Y (negative = below center)
+const int16_t GUIDELINE_LEFT_END_X_OFFSET = -200-240-140;    // End X (lower, spread outward)
+const int16_t GUIDELINE_LEFT_END_Y_OFFSET = -440;    // End Y (near screen bottom)
+// Right guideline
+const int16_t GUIDELINE_RIGHT_START_X_OFFSET = 50+230+180;    // Start X (upper, close to center)
+const int16_t GUIDELINE_RIGHT_START_Y_OFFSET = -100;  // Start Y (negative = below center)
+const int16_t GUIDELINE_RIGHT_END_X_OFFSET = 200+230+180;     // End X (lower, spread outward)
+const int16_t GUIDELINE_RIGHT_END_Y_OFFSET = -440;    // End Y (near screen bottom)
+
+const int16_t GUIDELINE_CENTER_X = 960;
+const int16_t GUIDELINE_CENTER_Y = 540;
+
+communication::graphic_data_t guidelineLeft;
+communication::graphic_data_t guidelineRight;
 
 void UI_Delay(uint32_t delay) {
     osDelay(delay);
@@ -60,21 +86,35 @@ void uiTask(void* arg) {
     chassisGUI->Init2();
     osDelay(110);
     // Initialize crosshair GUI
-    crossairGui = new communication::CrossairGUI(UI, 988, 540, -70, -540, -540, -540, -540, -84);
+    crossairGui = new communication::CrossairGUI(UI, 968, 510, -70, -540, -540, -540, -540, -84);
+    osDelay(110);
+
+    // Initialize guideline GUI (reverse-camera style diagonal lines)
+    UI->LineDraw(&guidelineLeft, "gl", UI_Graph_Add, 1, UI_Color_Yellow, 2,
+                 GUIDELINE_CENTER_X + GUIDELINE_LEFT_START_X_OFFSET,
+                 GUIDELINE_CENTER_Y + GUIDELINE_LEFT_START_Y_OFFSET,
+                 GUIDELINE_CENTER_X + GUIDELINE_LEFT_END_X_OFFSET,
+                 GUIDELINE_CENTER_Y + GUIDELINE_LEFT_END_Y_OFFSET);
+    UI->LineDraw(&guidelineRight, "gr", UI_Graph_Add, 1, UI_Color_Yellow, 2,
+                 GUIDELINE_CENTER_X + GUIDELINE_RIGHT_START_X_OFFSET,
+                 GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_START_Y_OFFSET,
+                 GUIDELINE_CENTER_X + GUIDELINE_RIGHT_END_X_OFFSET,
+                 GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_END_Y_OFFSET);
+    UI->GraphRefresh(2, guidelineLeft, guidelineRight);
     osDelay(110);
 
     // Initialize supercapacitor GUI
-    char batteryStr[15] = "BATTERY";
-    batteryGUI = new communication::CapGUI(UI, batteryStr);
-    osDelay(110);
-    batteryGUI->InitName();
-    osDelay(110);
+    // char batteryStr[15] = "BATTERY";
+    // batteryGUI = new communication::CapGUI(UI, batteryStr);
+    // osDelay(110);
+    // batteryGUI->InitName();
+    // osDelay(110);
 
     // Initialize Gimbal GUI
-    gimbalGUI = new communication::GimbalGUI(UI);
-    osDelay(110);
-    gimbalGUI->Init2();
-    osDelay(110);
+    // gimbalGUI = new communication::GimbalGUI(UI);
+    // osDelay(110);
+    // gimbalGUI->Init2();
+    // osDelay(110);
 
     // Initialize self-diagnosis GUI
     char diagStr[29] = "";
@@ -88,10 +128,10 @@ void uiTask(void* arg) {
     // Initialize flywheel status GUI
     char wheelOnStr[15] = "FLYWHEEL ON";
     char wheelOffStr[15] = "FLYWHEEL OFF";
-    wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500, 430, UI_Color_Pink);
-    char boostModeStr[15] = "BOOST!";
-    char boostOffStr[15] = " ";
-    boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
+    wheelGUI = new communication::StringGUI(UI, wheelOffStr, 1500, 450, UI_Color_Pink, 30);
+    // char boostModeStr[15] = "BOOST!";
+    // char boostOffStr[15] = " ";
+    // boostGUI = new communication::StringGUI(UI, boostOffStr, 870, 630, UI_Color_Pink, 30);
     // osDelay(110);
     char shootUnlockStr[15] = "UNLOCK";
     char shootLockStr[15] = "       ";
@@ -101,23 +141,23 @@ void uiTask(void* arg) {
     osDelay(110);
     wheelGUI->Init();
     osDelay(110);
-    boostGUI->Init();
-    osDelay(110);
-    shootUnlockGUI->Init();
-    osDelay(110);
+    // boostGUI->Init();
+    // osDelay(110);
+    // shootUnlockGUI->Init();
+    // osDelay(110);
     modeGUI->InitString();
     osDelay(110);
     wheelGUI->InitString();
     osDelay(110);
-    boostGUI->InitString();
-    osDelay(110);
+    // boostGUI->InitString();
+    // osDelay(110);
     shootUnlockGUI->InitString();
     float relative_angle = 0;
-    float pitch_angle = 0;
-    float power_percent = 1;
+    // float pitch_angle = 0;
+    // float power_percent = 1;
     RemoteMode last_mode = REMOTE_MODE_KILL;
     ShootFricMode last_fric_mode = SHOOT_FRIC_MODE_STOP;
-    BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* boostEdgeDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* turboShootDetector = new BoolEdgeDetector(false);
     BoolEdgeDetector* c_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* v_edge = new BoolEdgeDetector(false);
@@ -131,29 +171,35 @@ void uiTask(void* arg) {
     BoolEdgeDetector* steer_motor_check_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* dbus_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* imu_cali_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* imu_temp_edge = new BoolEdgeDetector(false);
-    BoolEdgeDetector* shoot_jam_edge = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* imu_temp_edge = new BoolEdgeDetector(false);
+    // BoolEdgeDetector* shoot_jam_edge = new BoolEdgeDetector(false);
     while (true) {
         // Update chassis GUI
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
-        pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
-        chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max, relative_angle);
+        // pitch_angle = pitch_motor->GetThetaDelta(gimbal_param->pitch_offset_);
+        chassisGUI->Update(chassis_vx / chassis_vx_max, chassis_vy / chassis_vy_max,
+                           relative_angle);
         osDelay(UI_OS_DELAY);
 
-        power_percent = battery_vol->GetBatteryPercentage();
+        // power_percent = battery_vol->GetBatteryPercentage();
 
-        batteryGUI->Update(power_percent);
-        osDelay(UI_OS_DELAY);
+        // batteryGUI->Update(power_percent);
+        // osDelay(UI_OS_DELAY);
 
         // Update Gimbal GUI
-        gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle, imu->CaliDone());
-        osDelay(UI_OS_DELAY);
+        // gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle,
+        //                   imu->CaliDone());
+        // osDelay(UI_OS_DELAY);
 
         // Update current mode GUI
         if (remote_mode != last_mode) {
             char modeStr[30];
             switch (remote_mode) {
                 case REMOTE_MODE_STOP:
+                    strcpy(modeStr, "STOP MODE     ");
+                    modeColor = UI_Color_Purplish_red;
+                    break;
+                case REMOTE_MODE_KILL:
                     strcpy(modeStr, "STOP MODE     ");
                     modeColor = UI_Color_Purplish_red;
                     break;
@@ -181,17 +227,19 @@ void uiTask(void* arg) {
 
         // Update wheel status GUI
         if (last_fric_mode != shoot_flywheel_mode) {
-            char* wheelStr = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
-            uint32_t wheelColor = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
+            char* wheelStr =
+                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? wheelOnStr : wheelOffStr;
+            uint32_t wheelColor =
+                shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED ? UI_Color_Pink : UI_Color_Green;
             wheelGUI->Update(wheelStr, wheelColor);
             osDelay(UI_OS_DELAY);
         }
-        boostEdgeDetector->input(chassis_boost_flag);
-        if (boostEdgeDetector->edge()) {
-            char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
-            boostGUI->Update(boostStr, UI_Color_Pink);
-            osDelay(UI_OS_DELAY);
-        }
+        // boostEdgeDetector->input(chassis_boost_flag);
+        // if (boostEdgeDetector->edge()) {
+        //     char* boostStr = chassis_boost_flag ? boostModeStr : boostOffStr;
+        //     boostGUI->Update(boostStr, UI_Color_Pink);
+        //     osDelay(UI_OS_DELAY);
+        // }
         turboShootDetector->input(turbo_shoot);
         if (turboShootDetector->edge()) {
             char* turboshootstr = turbo_shoot ? shootUnlockStr : shootLockStr;
@@ -212,8 +260,8 @@ void uiTask(void* arg) {
             steer_motor_check_edge->input(steering_motor->IsOnline());
             dbus_edge->input(dbus->IsOnline());
             imu_cali_edge->input(imu->CaliDone());
-            imu_temp_edge->input(true);
-            shoot_jam_edge->input(jam_notify_flags);
+            // imu_temp_edge->input(true);
+            // shoot_jam_edge->input(jam_notify_flags);
             if (fl_motor_check_edge->negEdge()) {
                 strcpy(diagStr, "FL MOTOR OFFLINE     ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
@@ -246,26 +294,26 @@ void uiTask(void* arg) {
                 strcpy(diagStr, "DBUS OFFLINE         ");
                 diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
             }
-            if (imu_cali_edge->posEdge()) {
-                strcpy(diagStr, "IMU CALIBRATION DONE");
-                diagGUI->Update(diagStr, UI_Delay, UI_Color_Green);
-            }
-            if (imu_temp_edge->posEdge()) {
-                strcpy(diagStr, "IMU TEMP NOT SAFE   ");
-                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-            }
-            if (shoot_jam_edge->posEdge()) {
-                jam_notify_flags = false;
-                strcpy(diagStr, "STEER JAM");
-                diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
-            }
+            // if (imu_cali_edge->posEdge()) {
+            //     strcpy(diagStr, "IMU CALIBRATION DONE");
+            //     diagGUI->Update(diagStr, UI_Delay, UI_Color_Green);
+            // }
+            // if (imu_temp_edge->posEdge()) {
+            //     strcpy(diagStr, "IMU TEMP NOT SAFE   ");
+            //     diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            // }
+            // if (shoot_jam_edge->posEdge()) {
+            //     // jam_notify_flags = false;
+            //     strcpy(diagStr, "STEER JAM");
+            //     diagGUI->Update(diagStr, UI_Delay, UI_Color_Pink);
+            // }
         }
 
         // clear self-diagnosis messages
         if (dbus->IsOnline()) {
             v_edge->input(dbus->keyboard.bit.V);
         } else {
-            v_edge->input(refereerc->remote_control.keyboard.bit.V);
+            v_edge->input(refereerc->vt13_packet.keyboard.bit.V);
         }
 
         if (v_edge->posEdge()) {
@@ -274,72 +322,90 @@ void uiTask(void* arg) {
             osDelay(110);
             chassisGUI->Delete();
             osDelay(110);
-            gimbalGUI->Delete2();
-            osDelay(110);
-            gimbalGUI->Delete();
-            osDelay(110);
+            // gimbalGUI->Delete2();
+            // osDelay(110);
+            // gimbalGUI->Delete();
+            // osDelay(110);
             crossairGui->Delete();
             osDelay(110);
-            batteryGUI->DeleteName();
+            // Delete guidelines
+            UI->LineDraw(&guidelineLeft, "gl", UI_Graph_Del, 1, UI_Color_Yellow, 2, 0, 0, 0, 0);
+            UI->LineDraw(&guidelineRight, "gr", UI_Graph_Del, 1, UI_Color_Yellow, 2, 0, 0, 0, 0);
+            UI->GraphRefresh(2, guidelineLeft, guidelineRight);
             osDelay(110);
-            batteryGUI->Delete();
-            osDelay(110);
+            // batteryGUI->DeleteName();
+            // osDelay(110);
+            // batteryGUI->Delete();
+            // osDelay(110);
             modeGUI->Init();
             osDelay(110);
             wheelGUI->Init();
             osDelay(110);
-            boostGUI->Init();
-            osDelay(110);
+            // boostGUI->Init();
+            // osDelay(110);
             shootUnlockGUI->Init();
             osDelay(110);
             modeGUI->InitString();
             osDelay(110);
             wheelGUI->InitString();
             osDelay(110);
-            boostGUI->InitString();
-            osDelay(110);
+            // boostGUI->InitString();
+            // osDelay(110);
             shootUnlockGUI->Init();
             osDelay(110);
             diagGUI->Clear(UI_Delay);
             osDelay(110);
             chassisGUI->Init();
             osDelay(110);
-            chassisGUI->Init2();
-            osDelay(110);
-            gimbalGUI->Init();
-            osDelay(110);
-            gimbalGUI->Init2();
-            osDelay(110);
+            // chassisGUI->Init2();
+            // osDelay(110);
+            // gimbalGUI->Init();
+            // osDelay(110);
+            // gimbalGUI->Init2();
+            // osDelay(110);
             crossairGui->Init(-70, -540, -540, -540, -540, -84);
             osDelay(110);
-            batteryGUI->Init();
+            // Re-init guidelines
+            UI->LineDraw(&guidelineLeft, "gl", UI_Graph_Add, 1, UI_Color_Yellow, 2,
+                         GUIDELINE_CENTER_X + GUIDELINE_LEFT_START_X_OFFSET,
+                         GUIDELINE_CENTER_Y + GUIDELINE_LEFT_START_Y_OFFSET,
+                         GUIDELINE_CENTER_X + GUIDELINE_LEFT_END_X_OFFSET,
+                         GUIDELINE_CENTER_Y + GUIDELINE_LEFT_END_Y_OFFSET);
+            UI->LineDraw(&guidelineRight, "gr", UI_Graph_Add, 1, UI_Color_Yellow, 2,
+                         GUIDELINE_CENTER_X + GUIDELINE_RIGHT_START_X_OFFSET,
+                         GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_START_Y_OFFSET,
+                         GUIDELINE_CENTER_X + GUIDELINE_RIGHT_END_X_OFFSET,
+                         GUIDELINE_CENTER_Y + GUIDELINE_RIGHT_END_Y_OFFSET);
+            UI->GraphRefresh(2, guidelineLeft, guidelineRight);
             osDelay(110);
-            batteryGUI->InitName();
-            osDelay(110);
+            // batteryGUI->Init();
+            // osDelay(110);
+            // osDelay(110);
             modeGUI->Init();
-            osDelay(110);
+            // batteryGUI->InitName();
+            // osDelay(110);
             wheelGUI->Init();
             osDelay(110);
-            boostGUI->Init();
-            osDelay(110);
+            // boostGUI->Init();
+            // osDelay(110);
             modeGUI->InitString();
             osDelay(110);
             wheelGUI->InitString();
             osDelay(110);
-            boostGUI->InitString();
-            osDelay(110);
+            // boostGUI->InitString();
+            // osDelay(110);
             modeGUI->InitString();
             osDelay(110);
             wheelGUI->InitString();
             osDelay(110);
-            boostGUI->InitString();
-            osDelay(110);
+            // boostGUI->InitString();
+            // osDelay(110);
             continue;
         }
         if (dbus->IsOnline()) {
             c_edge->input(dbus->keyboard.bit.C);
         } else {
-            c_edge->input(refereerc->remote_control.keyboard.bit.C);
+            c_edge->input(refereerc->vt13_packet.keyboard.bit.C);
         }
         if (c_edge->posEdge()) {
             diagGUI->Clear(UI_Delay);
