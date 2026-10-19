@@ -119,6 +119,8 @@ void RM_RTOS_Init(void) {
     sw_right = new bsp::GPIO(SW_RIGHT_GPIO_Port, SW_RIGHT_Pin);
     // 创建二值信号量，初始计数为 0
     led_sem = osSemaphoreNew(1, 0, nullptr);
+    if (led_sem == nullptr)
+        Error_Handler();
 }
 
 // LED 线程的属性配置
@@ -152,15 +154,14 @@ static void led_task(void* arg) {
 }
 
 void RM_RTOS_Threads_Init(void) {
-    osThreadNew(led_task, nullptr, &led_task_attr);
+    if (osThreadNew(led_task, nullptr, &led_task_attr) == nullptr)
+        Error_Handler();
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
-    // 小登快闪-初始化
-    for (int i = 0; i < 3; i++) {
-        osSemaphoreRelease(led_sem);
-    }
+    // 小登快闪, 启动时一次双闪
+    osSemaphoreRelease(led_sem);
     bool flag50 = false, flag100 = false, flag200 = false;
 
     while (true) {

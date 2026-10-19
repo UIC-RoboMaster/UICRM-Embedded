@@ -1,6 +1,7 @@
 # BulletExchanger — Sarzn
 
-> 目标板：STM32F103CBT6 - (F103_Nano_general)  
+> 板级工程：`boards/base/BulletExchanger_F103`；应用：`programs/BulletExchanger`
+> 目标芯片：STM32F103CBT6
 
 ---
 
@@ -13,7 +14,7 @@
 
 - 三个按键分别触发购买 **50 发 / 100 发 / 200 发** 弹药
 - 通过~~拨动开关~~`摇头开关`选择弹药类型：**左拨 = 17mm 小弹丸（O 键）**，**右拨 = 42mm 大弹丸（I 键）**
-- LED 闪烁反馈：`1.初始化完成时快闪 3 次` `2.每次成功买弹后闪烁一次`
+- LED 闪烁反馈：启动及每次本地购弹发送流程结束后会发生一次双闪
 - 通过裁判系统串口（`0x0306 指令`）向游戏客户端发送模拟键鼠操作
 
 ### 原理 - *Why*
@@ -34,7 +35,7 @@
 | `send_click(x, y)` | 发送一次完整鼠标点击（`移动`、`按下`、`松开`，共 3 个包，每包间隔 `CLICK_DELAY_MS`） |
 | `click_OI()` | 发送 O 键或 I 键，根据拨动开关位置自动切换，用于打开/关闭购弹界面 |
 | `buy_bullets(x, y, double_click)` | 完整购弹流程：`O/I 键`、`点击数量`、`确认`、`O/I 键`、`归位` |
-| `RM_RTOS_Init()` | 在FreeRTOS启动前初始化外设UART、GPIO |
+| `RM_RTOS_Init()` | 内核初始化后、调度器启动前创建 UART、GPIO 与信号量 |
 | `RM_RTOS_Default_Task()` | 主任务 |
 
 ---
@@ -53,7 +54,7 @@
 | `BUY_X / BUY_Y` | 买 | 960, 670 |
 | `CONFIRM_BUY_X / CONFIRM_BUY_Y` | 确认买 | 860, 560 |
 | `CLICK_DELAY_MS` | 每个数据包之间间隔 | 25ms |
-| `LOOP_DELAY_MS` | 主循环轮询间隔~这样也可以用来按键消抖啦!~ | 10ms |
+| `LOOP_DELAY_MS` | 主循环轮询间隔 | 10ms |
 
 **校准步骤**：
 
@@ -196,3 +197,17 @@ flowchart LR
 | 按键没反应 | 波特率不匹配 | 确认两端都是 115200 |
 | 点击位置偏 | 坐标没校准 | 在比赛电脑上重新校准，确认 100% 缩放 |
 ---
+
+## 构建与 CubeMX 维护
+
+`boards/base/BulletExchanger_F103/BulletExchanger_F103.ioc`，Toolchain / IDE 保持 **Makefile**
+CubeMX 生成的 Makefile 只构建板级底层工程, 但是完整应用由仓库 CMake 构建
+
+- CMake 使用 `STM32F103CBTx_FLASH.ld`；现有 CubeMX Makefile 使用 `STM32F103XX_FLASH.ld`。两者均按 STM32F103CBT6 配置：128 KB Flash，20 KB RAM，主栈 1 KB。重新生成后核对链接脚本容量一致。
+- `DSP/` 是 CMSIS-DSP V1.5.3。当前构建会编译共享 PID、姿态估计与 UI 等模块：PID 使用 `arm_pid_init_f32` / `arm_pid_f32`，卡尔曼滤波使用矩阵运算，UI 使用 `arm_sin_f32` / `arm_cos_f32`，因此编译依赖该库。购弹应用本身只使用 GPIO、RTOS、UART 和协议封包，没有直接调用 DSP；本次检查最终 ELF 无 `arm_*` DSP 函数符号。保留库是为了兼容现有整套共享模块构建，若要删除，应先裁剪本目标的模块依赖
+- SYS Debug 使用 Serial Wire：保留 PA13/PA14 的 SWD，释放 PB3 用作拨动开关。
+
+上板：
+1. 连接 SWD，检查能正常进入默认任务、无内存故障. 观察启动双闪
+2. 依次按三个按键并抓取 PA9 串口数据(115200)
+3. 最后连接客户端校准坐标

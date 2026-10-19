@@ -23,7 +23,7 @@
 #ifndef UICRM_CONFIG_H
 #define UICRM_CONFIG_H
 
-#include <sys/types.h>
+#include <cstdint>
 // 这是屏幕坐标，请使用 pixpin 校准后填入
 static constexpr uint16_t POS_50_X = 1160;  // 50 发
 static constexpr uint16_t POS_50_Y = 560;

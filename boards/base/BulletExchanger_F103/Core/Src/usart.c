@@ -157,6 +157,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
+__weak void RM_UART_IRQHandler(UART_HandleTypeDef *huart)
+{
+  UNUSED(huart);
+}
 
 /* USER CODE END 1 */
 
