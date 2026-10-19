@@ -562,7 +562,7 @@ namespace driver {
             return (rx_id >= GROUP2_RX_START) ? TX2_ID : TX1_ID;
         }
 
-        float input_speed_filter_ = 0.1;  ///< 速度反馈低通滤波系数 [0, 1]
+        float input_speed_filter_ = 1;  ///< 速度反馈低通滤波系数 [0, 1]
     };
 
     // ===== Motor2006 =====
