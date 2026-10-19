@@ -16,3 +16,7 @@ uicrm_add_arm_executable(${PROJECT_NAME}_usb
 uicrm_add_arm_executable(${PROJECT_NAME}_vofa
         TARGET ${BOARD_NAME}
         SOURCES typeC_vofa.cpp)
+
+uicrm_add_arm_executable(${PROJECT_NAME}_dm_imu
+        TARGET ${BOARD_NAME}
+        SOURCES dm_imu.cpp)
