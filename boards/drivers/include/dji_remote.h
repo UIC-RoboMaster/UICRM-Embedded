@@ -80,6 +80,7 @@ namespace remote {
         int16_t roll;
         struct {
             uint8_t l : 1;
+            uint8_t reserved : 1; // 不知道为什么，VT13目前的包中间空了一位
             uint8_t r : 1;
             uint8_t mid : 1;
         };
