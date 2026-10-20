@@ -105,15 +105,23 @@ void RM_RTOS_Default_Task(const void* arg) {
             "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
-            dbus->GetLastUptime());
+            dbus->ch0,
+            dbus->ch1,
+            dbus->ch2,
+            dbus->ch3,
+            dbus->ch4,
+            dbus->swl,
+            dbus->swr,
+            dbus->GetLastUptime()
+        );
         print("\r\n");
 
-
         // Gimbal info
-        print("Gimbal target P%.3f Y%.3f\r\n",
-              gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
-              gimbal->getYawTarget() - gimbal_param->yaw_offset_);
+        print(
+            "Gimbal target P%.3f Y%.3f\r\n",
+            gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
+            gimbal->getYawTarget() - gimbal_param->yaw_offset_
+        );
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
         print("\r\n");
 
@@ -125,7 +133,6 @@ void RM_RTOS_Default_Task(const void* arg) {
         print_enabled("Yaw", yaw_motor->IsOnline());
         print_enabled("Pitch", pitch_motor->IsOnline());
         print("\r\n");
-
 
         osDelay(50);
     }
