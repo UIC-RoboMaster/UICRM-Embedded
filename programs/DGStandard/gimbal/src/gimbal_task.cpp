@@ -39,7 +39,6 @@ void check_kill();
 
 float pitch_feedforward;
 
-
 void gimbalTask(void* arg) {
     UNUSED(arg);
     // 任务启动时先关掉两个电机，然后等待遥控器连接
@@ -155,16 +154,14 @@ void gimbalTask(void* arg) {
         // pitch_feedforward = car_vy_diff.get() * car_vy_ratio;
         // pitch_motor->SetCurrentOffset(pitch_feedforward);
 
-
         switch (remote_mode) {
             case REMOTE_MODE_SPIN:
             case REMOTE_MODE_FOLLOW:
                 // 如果是跟随模式或者旋转模式，将IMU作为参考系
-                if (minipc->IsOnline()  && is_autoaim && (abs(minipc->target_angle.target_pitch) > 0.01 && abs(minipc->target_angle.target_pitch) < 100 &&
-                    abs(minipc->target_angle.target_yaw) > 0.01 && abs(minipc->target_angle.target_yaw) < 100))
-                {
-                    gimbal->TargetAbs(minipc->target_angle.target_pitch,
-                                      -minipc->target_angle.target_yaw);
+                if (minipc->IsOnline() && is_autoaim &&
+                    (abs(minipc->target_angle.target_pitch) > 0.01 && abs(minipc->target_angle.target_pitch) < 100 &&
+                     abs(minipc->target_angle.target_yaw) > 0.01 && abs(minipc->target_angle.target_yaw) < 100)) {
+                    gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
                 } else {
                     gimbal->TargetRel(pitch_diff, yaw_diff);
                 }
@@ -212,7 +209,7 @@ void init_gimbal() {
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
         .B = 0,                                        // 启动变速积分的死区
-        .output_filtering_coefficient = 1,           // 输出滤波系数
+        .output_filtering_coefficient = 1,             // 输出滤波系数
         .derivative_filtering_coefficient = 0,         // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
     };
@@ -223,11 +220,11 @@ void init_gimbal() {
         .kd = 5000,
         .max_out = 16384,  // 最大电流输出，参考说明书
         .max_iout = 2000,
-        .deadband = 0,                          // 死区
-        .A = 1.5 * PI,                          // 变速积分所能达到的最大值为A+B
-        .B = 1 * PI,                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,    // 输出滤波系数
-        .derivative_filtering_coefficient = 0.5,  // 微分滤波系数
+        .deadband = 0,                                                // 死区
+        .A = 1.5 * PI,                                                // 变速积分所能达到的最大值为A+B
+        .B = 1 * PI,                                                  // 启动变速积分的死区
+        .output_filtering_coefficient = 0.5,                          // 输出滤波系数
+        .derivative_filtering_coefficient = 0.5,                      // 微分滤波系数
         .mode = control::ConstrainedPID::Integral_Limit |             // 积分限幅
                 control::ConstrainedPID::OutputFilter |               // 输出滤波
                 control::ConstrainedPID::Trapezoid_Intergral |        // 梯形积分
@@ -245,21 +242,21 @@ void init_gimbal() {
      */
     yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
     yaw_motor->SetTransmissionRatio(1);
-    control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init = {
-        .kp = 12,
-        .ki = 0.001,
-        .kd = 200,  // 再大会在前面顿一下
-        .max_out =
-            3 *
-            PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
-        .max_iout = PI / 8,
-        .deadband = PI / 180,
-        .A = 0,                                    // 变速积分所能达到的最大值为A+B
-        .B = 0,                                    // 启动变速积分的死区
-        .output_filtering_coefficient = 0.5,       // 输出滤波系数
-        .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
-        .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
-                control::ConstrainedPID::Integral_Limit};
+    control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init =
+        {.kp = 12,
+         .ki = 0.001,
+         .kd = 200,  // 再大会在前面顿一下
+         .max_out =
+             3 *
+             PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
+         .max_iout = PI / 8,
+         .deadband = PI / 180,
+         .A = 0,                                    // 变速积分所能达到的最大值为A+B
+         .B = 0,                                    // 启动变速积分的死区
+         .output_filtering_coefficient = 0.5,       // 输出滤波系数
+         .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
+         .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
+                 control::ConstrainedPID::Integral_Limit};
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
         .kp = 5000,

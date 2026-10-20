@@ -31,7 +31,6 @@
 #include "supercap.h"
 #include "bsp_os.h"
 
-
 bsp::CAN* can1 = nullptr;
 bsp::CAN* can2 = nullptr;
 driver::DjiMotorBase* fl_motor = nullptr;

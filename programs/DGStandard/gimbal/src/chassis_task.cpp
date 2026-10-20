@@ -32,7 +32,6 @@ float car_vx, car_vy, car_vt;
 
 diff<float> car_vx_diff, car_vy_diff, car_vt_diff;
 
-
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
 

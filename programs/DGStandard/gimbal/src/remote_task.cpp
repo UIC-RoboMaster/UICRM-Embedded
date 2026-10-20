@@ -166,12 +166,10 @@ void remoteTask(void* arg) {
 
         static BoolEdgeDetector remote_swr;
         remote_swr.input(refereerc->vt13_packet.remote.swr || mouse.r);
-        if (remote_swr.posEdge())
-        {
+        if (remote_swr.posEdge()) {
             is_autoaim = true;
         }
-        if (remote_swr.negEdge())
-        {
+        if (remote_swr.negEdge()) {
             is_autoaim = false;
             shoot_load_mode = SHOOT_MODE_STOP;
         }
@@ -223,8 +221,7 @@ void remoteTask(void* arg) {
         // VT13 扳机键
         vt13_trigger_edge->input(refereerc->vt13_packet.remote.trigger);
 
-        if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge() ||
-            vt13_trigger_edge->posEdge()) {
+        if (shoot_switch_edge->posEdge() || mouse_left_edge->posEdge() || vt13_trigger_edge->posEdge()) {
             shoot_load_mode = SHOOT_MODE_SINGLE;
             shoot_burst_timestamp = 0;
         }
@@ -240,8 +237,7 @@ void remoteTask(void* arg) {
         }
 
         // 不发射
-        if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() ||
-            vt13_trigger_edge->negEdge()) {
+        if (shoot_switch_edge->negEdge() || mouse_left_edge->negEdge() || vt13_trigger_edge->negEdge()) {
             shoot_load_mode = SHOOT_MODE_STOP;
             shoot_burst_timestamp = 0;
         }

@@ -58,13 +58,13 @@ extern const float chassis_max_xy_speed;
 extern const float chassis_max_t_speed;
 
 template <typename T>
-class diff
-{
+class diff {
     constexpr static int N = 6;
     T prev[N];
     T result;
     float filter_ratio = 0.1;
-public:
+
+  public:
     T calc(T current) {
         float tmp = (current + prev[N - 1]) / 2 - (prev[0] + prev[1]) / 2;
         result = tmp * filter_ratio + result * (1 - filter_ratio);

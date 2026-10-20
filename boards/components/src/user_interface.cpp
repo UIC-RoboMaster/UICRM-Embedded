@@ -567,13 +567,31 @@ namespace communication {
         Init();
     }
     void ChassisGUI::Init() {
-        UI_->LineDraw(&chassis_, "c", UI_Graph_Add, 1, UI_Color_Yellow, 60, chassis_X_,
-                      chassis_Y_ - chassisLen_ / 2, chassis_X_, chassis_Y_ + chassisLen_ / 2);
-        UI_->LineDraw(&arrow_, "a", UI_Graph_Add, 1, UI_Color_Yellow, 20, chassis_X_ - 7,
-                      chassis_Y_ + chassisLen_ / 2 - 7, chassis_X_ + 7,
-                      chassis_Y_ + chassisLen_ / 2 + 7);
-        UI_->GraphRefresh(2, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_,
-                          speed_y_axis_);
+        UI_->LineDraw(
+            &chassis_,
+            "c",
+            UI_Graph_Add,
+            1,
+            UI_Color_Yellow,
+            60,
+            chassis_X_,
+            chassis_Y_ - chassisLen_ / 2,
+            chassis_X_,
+            chassis_Y_ + chassisLen_ / 2
+        );
+        UI_->LineDraw(
+            &arrow_,
+            "a",
+            UI_Graph_Add,
+            1,
+            UI_Color_Yellow,
+            20,
+            chassis_X_ - 7,
+            chassis_Y_ + chassisLen_ / 2 - 7,
+            chassis_X_ + 7,
+            chassis_Y_ + chassisLen_ / 2 + 7
+        );
+        UI_->GraphRefresh(2, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_, speed_y_axis_);
         // 底盘速度圆形UI，在26赛季删除
         // UI_->LineDraw(&gimbal_, "g", UI_Graph_Add, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
         //               chassis_X_, chassis_Y_ + gimbalLen_);
@@ -592,13 +610,31 @@ namespace communication {
     }
 
     void ChassisGUI::Delete() {
-        UI_->LineDraw(&chassis_, "c", UI_Graph_Del, 1, UI_Color_Yellow, 60, chassis_X_,
-                      chassis_Y_ - chassisLen_ / 2, chassis_X_, chassis_Y_ + chassisLen_ / 2);
-        UI_->LineDraw(&arrow_, "a", UI_Graph_Del, 1, UI_Color_Yellow, 20, chassis_X_ - 7,
-                      chassis_Y_ + chassisLen_ / 2 - 7, chassis_X_ + 7,
-                      chassis_Y_ + chassisLen_ / 2 + 7);
-        UI_->GraphRefresh(2, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_,
-                          speed_y_axis_);
+        UI_->LineDraw(
+            &chassis_,
+            "c",
+            UI_Graph_Del,
+            1,
+            UI_Color_Yellow,
+            60,
+            chassis_X_,
+            chassis_Y_ - chassisLen_ / 2,
+            chassis_X_,
+            chassis_Y_ + chassisLen_ / 2
+        );
+        UI_->LineDraw(
+            &arrow_,
+            "a",
+            UI_Graph_Del,
+            1,
+            UI_Color_Yellow,
+            20,
+            chassis_X_ - 7,
+            chassis_Y_ + chassisLen_ / 2 - 7,
+            chassis_X_ + 7,
+            chassis_Y_ + chassisLen_ / 2 + 7
+        );
+        UI_->GraphRefresh(2, chassis_, arrow_, gimbal_, speed_circle_, speed_center_, speed_x_axis_, speed_y_axis_);
         // 底盘速度圆形UI，在26赛季删除
         // UI_->LineDraw(&gimbal_, "g", UI_Graph_Del, 2, UI_Color_White, 7, chassis_X_, chassis_Y_,
         //               chassis_X_, chassis_Y_ + gimbalLen_);
@@ -638,13 +674,30 @@ namespace communication {
         float y_end = chassis_Y_ + chassisLen_ / 2.0 * arm_cos_f32(relative);
         float x_start = chassis_X_ + chassisLen_ / 2.0 * arm_sin_f32(relative);
         float y_start = chassis_Y_ - chassisLen_ / 2.0 * arm_cos_f32(relative);
-        UI_->LineDraw(&chassis_, "c", UI_Graph_Change, 1, UI_Color_Yellow, 60, (uint32_t)x_start,
-                      (uint32_t)y_start, (uint32_t)x_end, (uint32_t)y_end);
-        UI_->LineDraw(&arrow_, "a", UI_Graph_Change, 1, UI_Color_Yellow, 20,
-                      (uint32_t)(x_end + 10 * arm_sin_f32(relative + M_PI / 4)),
-                      (uint32_t)(y_end - 10 * arm_cos_f32(relative + M_PI / 4)),
-                      (uint32_t)(x_end - 10 * arm_sin_f32(relative + M_PI / 4)),
-                      (uint32_t)(y_end + 10 * arm_cos_f32(relative + M_PI / 4)));
+        UI_->LineDraw(
+            &chassis_,
+            "c",
+            UI_Graph_Change,
+            1,
+            UI_Color_Yellow,
+            60,
+            (uint32_t)x_start,
+            (uint32_t)y_start,
+            (uint32_t)x_end,
+            (uint32_t)y_end
+        );
+        UI_->LineDraw(
+            &arrow_,
+            "a",
+            UI_Graph_Change,
+            1,
+            UI_Color_Yellow,
+            20,
+            (uint32_t)(x_end + 10 * arm_sin_f32(relative + M_PI / 4)),
+            (uint32_t)(y_end - 10 * arm_cos_f32(relative + M_PI / 4)),
+            (uint32_t)(x_end - 10 * arm_sin_f32(relative + M_PI / 4)),
+            (uint32_t)(y_end + 10 * arm_cos_f32(relative + M_PI / 4))
+        );
 
         UI_->GraphRefresh(2, chassis_, arrow_);
 
@@ -693,22 +746,91 @@ namespace communication {
     }
 
     void CrossairGUI::Init() {
-        UI_->LineDraw(&crosshair1_, "ch1", UI_Graph_Add, 0, UI_Color_Cyan, 1, centerX_ - 30,
-                      centerY_ + x_[0], centerX_ + 30, centerY_ + x_[0]);
-        UI_->LineDraw(&crosshair2_, "ch2", UI_Graph_Add, 0, UI_Color_Cyan, 1, centerX_ - 15,
-                      centerY_ + x_[1], centerX_ + 15, centerY_ + x_[1]);
-        UI_->LineDraw(&crosshair3_, "ch3", UI_Graph_Add, 0, UI_Color_Cyan, 1, centerX_ - 15,
-                      centerY_ + x_[2], centerX_ + 15, centerY_ + x_[2]);
-        UI_->LineDraw(&crosshair4_, "ch4", UI_Graph_Add, 0, UI_Color_Cyan, 1, centerX_ - 30,
-                      centerY_ + x_[3], centerX_ + 30, centerY_ + x_[3]);
-        UI_->LineDraw(&crosshair5_, "ch5", UI_Graph_Add, 0, UI_Color_Cyan, 1, centerX_ - 15,
-                      centerY_ + x_[4], centerX_ + 15, centerY_ + x_[4]);
-        UI_->LineDraw(&crosshair6_, "ch6", UI_Graph_Add, 0, UI_Color_Cyan, 1, centerX_ - 15,
-                      centerY_ + x_[5], centerX_ + 15, centerY_ + x_[5]);
-        UI_->LineDraw(&crosshair7_, "ch7", UI_Graph_Add, 0, UI_Color_Cyan, 1, centerX_,
-                      centerY_ + x_[0] + 30, centerX_, centerY_ + x_[5] - 30);
-        UI_->GraphRefresh(7, crosshair1_, crosshair2_, crosshair3_, crosshair4_, crosshair5_,
-                          crosshair6_, crosshair7_);
+        UI_->LineDraw(
+            &crosshair1_,
+            "ch1",
+            UI_Graph_Add,
+            0,
+            UI_Color_Cyan,
+            1,
+            centerX_ - 30,
+            centerY_ + x_[0],
+            centerX_ + 30,
+            centerY_ + x_[0]
+        );
+        UI_->LineDraw(
+            &crosshair2_,
+            "ch2",
+            UI_Graph_Add,
+            0,
+            UI_Color_Cyan,
+            1,
+            centerX_ - 15,
+            centerY_ + x_[1],
+            centerX_ + 15,
+            centerY_ + x_[1]
+        );
+        UI_->LineDraw(
+            &crosshair3_,
+            "ch3",
+            UI_Graph_Add,
+            0,
+            UI_Color_Cyan,
+            1,
+            centerX_ - 15,
+            centerY_ + x_[2],
+            centerX_ + 15,
+            centerY_ + x_[2]
+        );
+        UI_->LineDraw(
+            &crosshair4_,
+            "ch4",
+            UI_Graph_Add,
+            0,
+            UI_Color_Cyan,
+            1,
+            centerX_ - 30,
+            centerY_ + x_[3],
+            centerX_ + 30,
+            centerY_ + x_[3]
+        );
+        UI_->LineDraw(
+            &crosshair5_,
+            "ch5",
+            UI_Graph_Add,
+            0,
+            UI_Color_Cyan,
+            1,
+            centerX_ - 15,
+            centerY_ + x_[4],
+            centerX_ + 15,
+            centerY_ + x_[4]
+        );
+        UI_->LineDraw(
+            &crosshair6_,
+            "ch6",
+            UI_Graph_Add,
+            0,
+            UI_Color_Cyan,
+            1,
+            centerX_ - 15,
+            centerY_ + x_[5],
+            centerX_ + 15,
+            centerY_ + x_[5]
+        );
+        UI_->LineDraw(
+            &crosshair7_,
+            "ch7",
+            UI_Graph_Add,
+            0,
+            UI_Color_Cyan,
+            1,
+            centerX_,
+            centerY_ + x_[0] + 30,
+            centerX_,
+            centerY_ + x_[5] - 30
+        );
+        UI_->GraphRefresh(7, crosshair1_, crosshair2_, crosshair3_, crosshair4_, crosshair5_, crosshair6_, crosshair7_);
     }
 
     void CrossairGUI::Delete() {

@@ -142,16 +142,28 @@ void RM_RTOS_Default_Task(const void* arg) {
         print(
             "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d]"
             " [Mode: %d] [SWL: %d] [SWR: %d] [Trig: %d]\r\n",
-            refereerc->vt13_packet.remote.ch0, refereerc->vt13_packet.remote.ch1,
-            refereerc->vt13_packet.remote.ch2, refereerc->vt13_packet.remote.ch3,
-            refereerc->vt13_packet.remote.ch4, refereerc->vt13_packet.remote.mode_sw,
-            (int)refereerc->vt13_packet.remote.swl, (int)refereerc->vt13_packet.remote.swr?1:0,
-            (int)refereerc->vt13_packet.remote.trigger?1:0);
+            refereerc->vt13_packet.remote.ch0,
+            refereerc->vt13_packet.remote.ch1,
+            refereerc->vt13_packet.remote.ch2,
+            refereerc->vt13_packet.remote.ch3,
+            refereerc->vt13_packet.remote.ch4,
+            refereerc->vt13_packet.remote.mode_sw,
+            (int)refereerc->vt13_packet.remote.swl,
+            (int)refereerc->vt13_packet.remote.swr ? 1 : 0,
+            (int)refereerc->vt13_packet.remote.trigger ? 1 : 0
+        );
         print("\r\n");
-        auto &mouse = refereerc->vt13_packet.mouse;
-        print("Mouse: [X: %d] [Y: %d] [ROLL: %d] [L %d] [R %d] [MID %d]", mouse.x, mouse.y, mouse.roll, mouse.l, mouse.r, mouse.mid);
+        auto& mouse = refereerc->vt13_packet.mouse;
+        print(
+            "Mouse: [X: %d] [Y: %d] [ROLL: %d] [L %d] [R %d] [MID %d]",
+            mouse.x,
+            mouse.y,
+            mouse.roll,
+            mouse.l,
+            mouse.r,
+            mouse.mid
+        );
         print("\r\n");
-
 
         // Chassis info
         print("Chassis speed %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy, chassis->chassis_vt);
@@ -170,8 +182,14 @@ void RM_RTOS_Default_Task(const void* arg) {
             gimbal->getYawTarget() - gimbal_param->yaw_offset_
         );
         print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
-        print("Vision Target: P%.3f Y%.3f acc[%d] shoot{%d} time(%d)\r\n", minipc->target_angle.target_pitch,
-              minipc->target_angle.target_yaw, minipc->target_angle.accuracy, minipc->shoot_cmd.shoot_cmd, minipc->GetLastUptime());
+        print(
+            "Vision Target: P%.3f Y%.3f acc[%d] shoot{%d} time(%d)\r\n",
+            minipc->target_angle.target_pitch,
+            minipc->target_angle.target_yaw,
+            minipc->target_angle.accuracy,
+            minipc->shoot_cmd.shoot_cmd,
+            minipc->GetLastUptime()
+        );
         print("\r\n");
 
         // Shoot info

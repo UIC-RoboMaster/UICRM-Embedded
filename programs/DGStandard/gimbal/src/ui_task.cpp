@@ -61,8 +61,7 @@ void uiTask(void* arg) {
     chassisGUI->Init2();
     osDelay(110);
     // Initialize crosshair GUI
-    crossairGui = new communication::CrossairGUI(UI, 940, 485,
-        0, 0, 0, 0, 0, 0);
+    crossairGui = new communication::CrossairGUI(UI, 940, 485, 0, 0, 0, 0, 0, 0);
     osDelay(110);
 
     // Initialize supercapacitor GUI
@@ -177,37 +176,35 @@ void uiTask(void* arg) {
         // gimbalGUI->Update(pitch_diff * 200, -yaw_diff * 200, pitch_angle, relative_angle, true);
         // osDelay(UI_OS_DELAY);
 
-
-
         {
             // 运行模式
             if (remote_mode != last_mode) {
                 char modeStr[30];
                 switch (remote_mode) {
-                case REMOTE_MODE_KILL:
-                    strcpy(modeStr, "KILL MODE ");
-                    modeColor = UI_Color_Green;
-                    break;
-                case REMOTE_MODE_STOP:
-                    strcpy(modeStr, "STOP MODE     ");
-                    modeColor = UI_Color_Purplish_red;
-                    break;
-                case REMOTE_MODE_FOLLOW:
-                    strcpy(modeStr, "FOLLOW MODE   ");
-                    modeColor = UI_Color_Green;
-                    break;
-                case REMOTE_MODE_SPIN:
-                    strcpy(modeStr, "SPIN MODE     ");
-                    modeColor = UI_Color_Orange;
-                    break;
-                case REMOTE_MODE_ADVANCED:
-                    strcpy(modeStr, "ADVANCED MODE ");
-                    modeColor = UI_Color_Green;
-                    break;
-                default:
-                    strcpy(modeStr, "UNKNOWN MODE   ");
-                    modeColor = UI_Color_Purplish_red;
-                    break;
+                    case REMOTE_MODE_KILL:
+                        strcpy(modeStr, "KILL MODE ");
+                        modeColor = UI_Color_Green;
+                        break;
+                    case REMOTE_MODE_STOP:
+                        strcpy(modeStr, "STOP MODE     ");
+                        modeColor = UI_Color_Purplish_red;
+                        break;
+                    case REMOTE_MODE_FOLLOW:
+                        strcpy(modeStr, "FOLLOW MODE   ");
+                        modeColor = UI_Color_Green;
+                        break;
+                    case REMOTE_MODE_SPIN:
+                        strcpy(modeStr, "SPIN MODE     ");
+                        modeColor = UI_Color_Orange;
+                        break;
+                    case REMOTE_MODE_ADVANCED:
+                        strcpy(modeStr, "ADVANCED MODE ");
+                        modeColor = UI_Color_Green;
+                        break;
+                    default:
+                        strcpy(modeStr, "UNKNOWN MODE   ");
+                        modeColor = UI_Color_Purplish_red;
+                        break;
                 }
 
                 modeGUI->Update(modeStr, modeColor);
@@ -217,24 +214,23 @@ void uiTask(void* arg) {
             if (last_fric_mode != shoot_flywheel_mode) {
                 char* wheelStr;
                 uint32_t wheelColor;
-                switch (shoot_flywheel_mode)
-                {
-                case SHOOT_FRIC_MODE_STOP:
-                    wheelStr = wheelOffStr;
-                    wheelColor = UI_Color_Purplish_red;
-                    break;
-                case SHOOT_FRIC_MODE_PREPARING:
-                    wheelStr = wheelStartingStr;
-                    wheelColor = UI_Color_Orange;
-                    break;
-                case SHOOT_FRIC_MODE_PREPARED:
-                    wheelStr = wheelOnStr;
-                    wheelColor = UI_Color_Green;
-                    break;
-                default:
-                    wheelStr = wheelUnknownStr;
-                    wheelColor = UI_Color_Black;
-                    break;
+                switch (shoot_flywheel_mode) {
+                    case SHOOT_FRIC_MODE_STOP:
+                        wheelStr = wheelOffStr;
+                        wheelColor = UI_Color_Purplish_red;
+                        break;
+                    case SHOOT_FRIC_MODE_PREPARING:
+                        wheelStr = wheelStartingStr;
+                        wheelColor = UI_Color_Orange;
+                        break;
+                    case SHOOT_FRIC_MODE_PREPARED:
+                        wheelStr = wheelOnStr;
+                        wheelColor = UI_Color_Green;
+                        break;
+                    default:
+                        wheelStr = wheelUnknownStr;
+                        wheelColor = UI_Color_Black;
+                        break;
                 }
                 wheelGUI->Update(wheelStr, wheelColor);
                 osDelay(UI_OS_DELAY);
@@ -279,8 +275,7 @@ void uiTask(void* arg) {
             //     osDelay(UI_OS_DELAY);
             // }
             bullet_edge->input(referee->bullet_remaining.bullet_remaining_num_17mm <= 0);
-            if (bullet_edge->posEdge())
-            {
+            if (bullet_edge->posEdge()) {
                 noBulletGUI->Update(noBulletStr, UI_Color_Purplish_red, sizeof(noBulletStr));
                 osDelay(UI_OS_DELAY);
             } else if (bullet_edge->negEdge()) {
@@ -292,7 +287,6 @@ void uiTask(void* arg) {
             last_fric_mode = shoot_flywheel_mode;
             last_shoot_frequency = shoot_speed;
         }
-
 
         // 离线信息
         {
