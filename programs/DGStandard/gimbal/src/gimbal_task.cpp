@@ -148,7 +148,7 @@ void gimbalTask(void* arg) {
         static float speed_offset = 0;
         speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
 
-        yaw_motor->SetSpeedOffset(speed_offset);
+        yaw_motor->SetSpeedFeedforward(speed_offset);
 
         // 前后移动pitch前馈
         // const float car_vy_ratio = 100000;
@@ -237,8 +237,7 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    pitch_motor->SetMode(driver::MotorCANBase::THETA | driver::MotorCANBase::OMEGA |
-                         driver::MotorCANBase::ABSOLUTE);
+    pitch_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
     pitch_motor->SetSpeedFilter(0.1);
 
     /**
@@ -261,7 +260,7 @@ void init_gimbal() {
         .derivative_filtering_coefficient = 0.05,  // 微分滤波系数
         .mode = control::ConstrainedPID::OutputFilter | control::ConstrainedPID::DerivativeFilter |
                 control::ConstrainedPID::Integral_Limit};
-    yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::MotorCANBase::THETA);
+    yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
         .kp = 5000,
         .ki = 5,
