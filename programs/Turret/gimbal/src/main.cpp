@@ -76,11 +76,11 @@ void RM_RTOS_Default_Task(const void* arg) {
     //     uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
     //
     //     control::ConstrainedPID::PID_State_t state;
-    //     state = yaw_motor->GetPIDState(driver::MotorCANBase::THETA);
+    //     state = yaw_motor->GetPIDState(driver::DjiMotorBase::THETA);
     //     state.dout = -state.dout;
     //     memcpy(buffer + 2, &state, sizeof(state));
     //
-    //     state = yaw_motor->GetPIDState(driver::MotorCANBase::OMEGA);
+    //     state = yaw_motor->GetPIDState(driver::DjiMotorBase::OMEGA);
     //     state.dout = -state.dout;
     //     memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
     //
@@ -106,7 +106,7 @@ void RM_RTOS_Default_Task(const void* arg) {
             "@ %d "
             "ms\r\n",
             dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3, dbus->ch4, dbus->swl, dbus->swr,
-            dbus->timestamp);
+            dbus->GetLastUptime());
         print("\r\n");
 
 

@@ -19,7 +19,7 @@
  ###########################################################*/
 
 #pragma once
-#include "MotorCanBase.h"
+#include "DjiMotorBase.h"
 #include "bsp_can.h"
 #include "buzzer_notes.h"
 #include "buzzer_task.h"
