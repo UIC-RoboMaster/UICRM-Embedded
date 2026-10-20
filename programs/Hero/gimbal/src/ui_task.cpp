@@ -310,7 +310,7 @@ void uiTask(void* arg) {
             osDelay(110);
             gimbalGUI->Init2();
             osDelay(110);
-            crossairGui->Init(-70, -540, -540, -540, -540, -84);
+            crossairGui->Init();
             osDelay(110);
             batteryGUI->Init();
             osDelay(110);
