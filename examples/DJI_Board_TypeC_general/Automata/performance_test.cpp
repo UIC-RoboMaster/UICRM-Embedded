@@ -108,15 +108,16 @@ void RM_RTOS_Default_Task(const void* args) {
     uint32_t build_end = DWT->CYCCNT;
 
     const int TEST_COUNT = 1000000;
-    uint32_t cycle_sum = 0, cycle_1[3] = {0}, cycle_2[3] = {0}, cycle_3[3] = {0}, cycle_big[3] = {0, 0, 0},
-             cycle_heavy[3] = {0, 0, 0}, cycle_switch = 0;
+    // uint32_t cycle_sum = 0;
+    uint32_t cycle_1[3] = {0}, cycle_2[3] = {0}, cycle_3[3] = {0}, cycle_big[3] = {0, 0, 0}, cycle_heavy[3] = {0, 0, 0},
+             cycle_switch = 0;
 
     for (int i = 0; i < TEST_COUNT; i++) {
         input = rand() % 1;
         big_input = (i * 13) % 600;
 
         // FSM 自动机
-        uint32_t t0 = DWT->CYCCNT;
+        // uint32_t t0 = DWT->CYCCNT;
         cycle_1[0] = DWT->CYCCNT;
         fsm1.input(std::make_tuple(input, 1.0));
         cycle_1[1] = DWT->CYCCNT;
@@ -132,8 +133,8 @@ void RM_RTOS_Default_Task(const void* args) {
         cycle_heavy[0] = DWT->CYCCNT;
         fsm_heavy.input(std::make_tuple(big_input));
         cycle_heavy[1] = DWT->CYCCNT;
-        uint32_t t1 = DWT->CYCCNT;
-        cycle_sum += t1 - t0;
+        // uint32_t t1 = DWT->CYCCNT;
+        // cycle_sum += t1 - t0;
         cycle_1[2] += cycle_1[1] - cycle_1[0];
         cycle_2[2] += cycle_2[1] - cycle_2[0];
         cycle_3[2] += cycle_3[1] - cycle_3[0];
