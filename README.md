@@ -41,6 +41,12 @@ uicrm/
 | STM32F4 | Cortex-M4 | `DJI_Board_TypeC_general` (F407), `DJI_Board_TypeA_general` (F427), `DM_MC01_general` (F446) |
 | STM32H7 | Cortex-M7 | `DM_MC02_general` (H723) |
 
+### Program Maintenance
+
+The current branch maintains `Ares`, `BulletExchanger`, `Cakey`, `DGStandard`, `Hero`, and `Neo`.
+
+`Car3`, `Dart`, `FakeSentry`, `Sentry`, `Quadrotor_UAV_MAN`, `Minnie`, and `Turret` are retired and have been removed from the current branch. Their source and matching shared libraries remain available in the [RMUL2026 release](https://github.com/UIC-RoboMaster/UICRM-Embedded/releases/tag/RMUL2026). Use that tag to build these programs.
+
 ---
 
 ## User Guide
