@@ -29,7 +29,7 @@ uicrm/
 ├── cmake/                   CMake 模块 — 工具链、构建辅助、clang-format、Doxygen
 ├── examples/                独立外设示例（60+）
 ├── openocd/                 OpenOCD 配置文件（stm32f1 / stm32f4 / stm32h7）
-├── programs/                完整机器人固件（12 款机器人）
+├── programs/                完整机器人固件（6 个程序）
 └── scripts/                 工具脚本（launch.json 生成、RTT 查看器、格式化）
 ```
 
@@ -40,6 +40,12 @@ uicrm/
 | STM32F1 | Cortex-M3 | `F103_Nano_general`、`BulletExchanger_F103` |
 | STM32F4 | Cortex-M4 | `DJI_Board_TypeC_general` (F407)、`DJI_Board_TypeA_general` (F427)、`DM_MC01_general` (F446) |
 | STM32H7 | Cortex-M7 | `DM_MC02_general` (H723) |
+
+### 程序维护状态
+
+当前分支维护 `Ares`、`BulletExchanger`、`Cakey`、`DGStandard`、`Hero` 和 `Neo`。
+
+`Car3`、`Dart`、`FakeSentry`、`Sentry`、`Quadrotor_UAV_MAN`、`Minnie` 和 `Turret` 已停止维护并从当前分支移除。源码及配套共享库保留在 [RMUL2026 发布版本](https://github.com/UIC-RoboMaster/UICRM-Embedded/releases/tag/RMUL2026)，如需构建旧程序，请使用该 tag。
 
 ---
 
