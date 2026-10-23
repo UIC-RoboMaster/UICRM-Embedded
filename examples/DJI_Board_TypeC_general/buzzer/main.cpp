@@ -21,6 +21,7 @@
 #include "main.h"
 
 #include "buzzer.h"
+#include "buzzer_songs.h"
 #include "tim.h"
 
 using Note = driver::BuzzerNote;
@@ -70,10 +71,7 @@ static bsp::BuzzerNoteDelayed War_Cant_of_Mars[] = {
     {Note::Finish, 0},
 };
 */
-static driver::BuzzerNoteDelayed DJI[] = {{Note::Do1M, 300}, {Note::Re2M, 300}, {Note::So5M, 600}, {Note::Finish, 0}};
-
 void RM_RTOS_Init(void) {
     driver::Buzzer buzzer(&htim4, 3, 1000000);
-    buzzer.SingSong(DJI);
-    // buzzer.SingSong(War_Cant_of_Mars);
+    buzzer.SingSong(driver::songs::NeverGonnaGiveYouUp);
 }
