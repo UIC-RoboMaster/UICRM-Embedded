@@ -52,7 +52,7 @@ void RM_RTOS_Init(void) {
 void RM_RTOS_Default_Task(const void* argument) {
     UNUSED(argument);
     while (true) {
-        remote::Vt13Frame state;
+        remote::RefereeRcFrame state;
         bool online;
         bool has_state;
         uint32_t sequence;
@@ -60,7 +60,7 @@ void RM_RTOS_Default_Task(const void* argument) {
 
         // 防止接收线程在拷贝状态期间切入；临界区内不打印、不延时。
         taskENTER_CRITICAL();
-        const auto& receiver = link->Vt13();
+        const auto& receiver = link->RefereeRc();
         online = receiver.IsOnline(bsp::GetHighresTickMilliSec());
         has_state = receiver.GetState(state);
         sequence = receiver.GetSequence();
@@ -78,8 +78,8 @@ void RM_RTOS_Default_Task(const void* argument) {
             print("Right X/Y: %d / %d\r\n", state.channels[0], state.channels[1]);
             print("Left Y/X: %d / %d\r\n", state.channels[2], state.channels[3]);
             print("Dial: %d\r\n", state.channels[4]);
-            const char* mode = state.mode == remote::Vt13Mode::C ? "C" :
-                               state.mode == remote::Vt13Mode::N ? "N" : "S";
+            const char* mode = state.mode == remote::RefereeRcMode::C ? "C" :
+                               state.mode == remote::RefereeRcMode::N ? "N" : "S";
             print("Mode: %s  Pause: %d\r\n", mode, state.pause);
             print("Button L/R: %d / %d\r\n", state.left_button, state.right_button);
             print("Trigger: %d\r\n", state.trigger);

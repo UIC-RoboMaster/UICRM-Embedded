@@ -22,23 +22,23 @@
 
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "controller/fs_i6x_receiver.h"
+#include "sbus.h"
 
 namespace {
-    remote::FsI6xReceiver* receiver = nullptr;
+    remote::I6x* receiver = nullptr;
 
-    const char* PositionName(remote::FsI6xTwoPosition position) {
-        return position == remote::FsI6xTwoPosition::Down ? "DOWN" : "UP";
+    const char* PositionName(remote::TwoPositionSwitch position) {
+        return position == remote::TwoPositionSwitch::Up ? "UP" : "DOWN";
     }
 
-    const char* PositionName(remote::FsI6xThreePosition position) {
+    const char* PositionName(remote::ThreePositionSwitch position) {
         switch (position) {
-            case remote::FsI6xThreePosition::Down:
-                return "DOWN";
-            case remote::FsI6xThreePosition::Middle:
-                return "MID";
-            case remote::FsI6xThreePosition::Up:
+            case remote::ThreePositionSwitch::Up:
                 return "UP";
+            case remote::ThreePositionSwitch::Mid:
+                return "MID";
+            case remote::ThreePositionSwitch::Down:
+                return "DOWN";
         }
         return "UNKNOWN";
     }
@@ -47,13 +47,13 @@ namespace {
 void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
 
-    receiver = new remote::FsI6xReceiver(&huart3);
+    receiver = new remote::I6x(&huart3);
 }
 
 void RM_RTOS_Default_Task(const void* argument) {
     UNUSED(argument);
     while (true) {
-        remote::FsI6xFrame state;
+        remote::I6xState state;
         bool online;
         bool has_state;
         uint32_t sequence;
@@ -77,12 +77,17 @@ void RM_RTOS_Default_Task(const void* argument) {
         if (has_state) {
             print("Frame lost: %d  Failsafe: %d  Flags: 0x%02X\r\n",
                   state.frame_lost, state.failsafe, static_cast<unsigned>(state.flags));
+            // CH1/2：右 X/Y；CH3/4：左 Y/X；CH5/6：VrA/VrB；CH7～10：SwA～SwD。
+            // I6x 已统一映射到 ±660 并处理原始 ±10 死区；原始通道保留用于诊断。
             print("Right X/Y: %d / %d\r\n", state.channels[0], state.channels[1]);
             print("Left X/Y: %d / %d\r\n", state.channels[3], state.channels[2]);
             print("VrA/VrB: %d / %d\r\n", state.channels[4], state.channels[5]);
             print("SwA: %s  SwB: %s  SwC: %s  SwD: %s\r\n",
                   PositionName(state.sw_a), PositionName(state.sw_b), PositionName(state.sw_c),
                   PositionName(state.sw_d));
+            print("Switch codes A/B/C/D: %u / %u / %u / %u\r\n",
+                  static_cast<unsigned>(state.sw_a), static_cast<unsigned>(state.sw_b),
+                  static_cast<unsigned>(state.sw_c), static_cast<unsigned>(state.sw_d));
             print("Usable: %d\r\n", online && !state.failsafe && !state.frame_lost);
             for (size_t i = 0; i < state.raw_channels.size(); ++i) {
                 print("Raw CH%u: %u\r\n", static_cast<unsigned>(i + 1),

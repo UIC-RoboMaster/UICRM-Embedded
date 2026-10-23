@@ -22,16 +22,16 @@
 
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "protocols/dbus_receiver.h"
+#include "dbus.h"
 
 namespace {
-    remote::DbusReceiver* receiver = nullptr;
+    remote::Dbus* receiver = nullptr;
 }
 
 void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
 
-    receiver = new remote::DbusReceiver(&huart3);
+    receiver = new remote::Dbus(&huart3);
 }
 
 void RM_RTOS_Default_Task(const void* argument) {
