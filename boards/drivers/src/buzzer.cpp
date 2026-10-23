@@ -28,6 +28,10 @@ namespace driver {
     }
 
     void Buzzer::SingTone(const BuzzerNote& note) {
+        if (note == BuzzerNote::Silent) {
+            Off();
+            return;
+        }
         if (note != BuzzerNote::Finish) {
             pwm_.SetFrequency(static_cast<uint32_t>(note));
             pwm_.SetPulseWidth(1000000 / static_cast<uint32_t>(note) / 2);
