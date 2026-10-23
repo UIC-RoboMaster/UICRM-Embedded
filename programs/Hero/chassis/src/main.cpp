@@ -23,7 +23,7 @@
 #include "DjiMotorBase.h"
 #include "bsp_can.h"
 #include "bsp_print.h"
-#include "buzzer_notes.h"
+#include "buzzer_songs.h"
 #include "buzzer_task.h"
 #include "chassis.h"
 #include "cmsis_os.h"
@@ -146,13 +146,13 @@ void RM_RTOS_Default_Task(const void* args) {
     UNUSED(args);
 
     osDelay(500);
-    Buzzer_Sing(Mario);
+    Buzzer_Sing(driver::songs::Mario);
 
     while (true) {
         chassis->UpdatePowerVoltage(battery_vol->GetBatteryVol());
         chassis->Update();
         osDelay(10);
         print("helloworld\r\n");
-        Buzzer_Sing(Mario);
+        Buzzer_Sing(driver::songs::Mario);
     }
 }
