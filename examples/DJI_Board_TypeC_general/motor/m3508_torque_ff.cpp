@@ -33,18 +33,22 @@
 
 // 趋近目标角时叠加的恒力矩前馈幅值 [N·m]，方向随角度误差符号变化
 static constexpr float ASSIST_TORQUE_NM = 2.5f;
+// 转矩到原始电流指令的换算由调用方完成，沿用本例原有电机参数。
+static constexpr float TORQUE_TO_RAW =
+    driver::Motor3508Config::MAX_RAW_CURRENT /
+    (driver::Motor3508Config::RATED_TORQUE_CONSTANT * driver::Motor3508Config::MAX_CURRENT);
 static constexpr float STEP_ANGLE = PI / 3.0f;  // 每次按键转 60°
 
 static bsp::CAN* can2 = nullptr;
 static driver::Motor3508* motor1 = nullptr;
 
-static void UpdateTorqueFeedforward() {
+static void UpdateFeedforward() {
     float diff = motor1->GetTarget() - motor1->GetOutputShaftTheta();
     if (motor1->IsHolding() || fabsf(diff) < 0.01f) {
-        motor1->SetTorqueFeedforward(0.0f);
+        motor1->SetFeedforward(0.0f);
         return;
     }
-    motor1->SetTorqueFeedforward((diff > 0.0f ? 1.0f : -1.0f) * ASSIST_TORQUE_NM);
+    motor1->SetFeedforward((diff > 0.0f ? 1.0f : -1.0f) * ASSIST_TORQUE_NM * TORQUE_TO_RAW);
 }
 
 void RM_RTOS_Init() {
@@ -88,7 +92,7 @@ void RM_RTOS_Init() {
 
     motor1->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
     motor1->SetTarget(0.0f);
-    UpdateTorqueFeedforward();
+    UpdateFeedforward();
 
     HAL_Delay(1000);
 }
@@ -113,7 +117,7 @@ void RM_RTOS_Default_Task(const void* args) {
             osDelay(20);
         }
 
-        UpdateTorqueFeedforward();
+        UpdateFeedforward();
 
         print("Torque feedforward demo (M3508 ID1)\r\n");
         print("KEY: +60 deg per press\r\n");
