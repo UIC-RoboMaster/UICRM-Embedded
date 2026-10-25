@@ -75,7 +75,7 @@ namespace driver {
 
         // ── 前馈控制 ──
         float speed_feedforward = 0;   // 速度前馈 [rad/s]，叠加到 ω 环设定值
-        float torque_feedforward = 0;  // 力矩前馈 [raw]，叠加到 ω 环 PID 输出
+        float current_feedforward = 0;  // 电流前馈 [raw]，直接叠加到最终电流指令
 
         // ── 角度控制 ──
         float target = 0;            // 目标值：角度 [rad] 或 角速度 [rad/s]
@@ -203,22 +203,18 @@ namespace driver {
 
         /**
          * @brief 设置速度前馈 [rad/s]，叠加到 ω 环设定值
-         * @note 用于底盘跟踪等场景；与 SetTorqueFeedforward 独立、可同时生效
+         * @note 用于底盘跟踪等场景；与 SetFeedforward 独立、可同时生效
          */
         void SetSpeedFeedforward(float offset);
 
         /**
-         * @brief 设置力矩前馈 [N·m]，转换为 raw current 后叠加到 ω 环 PID 输出
-         * @note 与 SetSpeedOffset 独立、可同时生效
+         * @brief 设置通用前馈 [raw]，不做转矩换算，直接叠加到最终电流指令。
+         * @param current_raw 与 SetOutput 相同单位和方向的原始指令。
+         * @note CURRENT 模式：输出 = SetTarget 的结果 + current_raw；
+         *       PID 模式：输出 = PID 及其他前馈计算结果 + current_raw。
+         *       不受 INVERTED 自动反向影响；与其他前馈相加，设为 0 可清除。
          */
-        void SetTorqueFeedforward(float torque_nm);
-
-        /**
-         * @brief 开环力矩指令 [N·m]，旁路 PID
-         * @note 须 SetMode(CURRENT)；级联控制下的力矩前馈请用 SetTorqueFeedforward
-         * @param override 同 SetTarget
-         */
-        void SetTorque(float torque_nm, bool override = true);
+        void SetFeedforward(float current_raw);
 
         /** @brief 获取减速比 */
         float GetTransmissionRatio() const;
@@ -318,8 +314,7 @@ namespace driver {
         /// 转矩常数 [N·m/A]，由各子类构造函数根据电机规格设置
         float torque_constant_ = 0;
 
-        /// 电流物理量程 [A]、原始码值量程 [raw]，用于力矩 - 电流 raw 换算
-        float max_current_amp_ = 0;
+        /// 原始电流指令量程 [raw]，用于最终输出限幅
         int16_t max_raw_current_ = 0;
 
         /**

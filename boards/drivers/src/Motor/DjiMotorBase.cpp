@@ -256,38 +256,8 @@ namespace driver {
         state_.speed_feedforward = speed;
     }
 
-    void DjiMotorBase::SetTorqueFeedforward(float torque_nm) {
-        if (torque_constant_ > 0 && max_current_amp_ > 0) {
-            state_.torque_feedforward = linear_remap(
-                torque_nm / torque_constant_,
-                -max_current_amp_,
-                max_current_amp_,
-                static_cast<float>(-max_raw_current_),
-                static_cast<float>(max_raw_current_)
-            );
-        } else {
-            // 如果没有设置扭矩常数或最大电流，则直接将力矩前馈设置为原始电流值
-            state_.torque_feedforward = torque_nm;
-        }
-    }
-
-    void DjiMotorBase::SetTorque(float torque_nm, bool override) {
-        RM_ASSERT_TRUE(torque_constant_ > 0, "Torque constant not set for this motor");
-        RM_ASSERT_TRUE(max_current_amp_ > 0, "Current range not configured for this motor");
-        RM_ASSERT_TRUE(
-            state_.mode & CURRENT,
-            "SetTorque requires CURRENT mode; use SetTorqueFeedforward in cascade control"
-        );
-        SetTarget(
-            linear_remap(
-                torque_nm / torque_constant_,
-                -max_current_amp_,
-                max_current_amp_,
-                static_cast<float>(-max_raw_current_),
-                static_cast<float>(max_raw_current_)
-            ),
-            override
-        );
+    void DjiMotorBase::SetFeedforward(float current_raw) {
+        state_.current_feedforward = current_raw;
     }
 
     float DjiMotorBase::GetTransmissionRatio() const {
@@ -369,9 +339,12 @@ namespace driver {
             return;
         }
 
-        // 开环电流/力矩：旁路角度/速度 PID，直接输出 setpoint
+        // 开环电流/力矩：旁路角度/速度 PID，原始目标值直接叠加通用前馈。
         if (state_.mode & CURRENT) {
-            SetOutput(static_cast<int16_t>(state_.target));
+            float current = state_.target + state_.current_feedforward;
+            // 在浮点域限幅，避免相加后的指令超出 int16_t 范围再转换。
+            current = clip<float>(current, -max_raw_current_, max_raw_current_);
+            SetOutput(static_cast<int16_t>(current));
             return;
         }
 
@@ -416,11 +389,12 @@ namespace driver {
         // 处理速度环 PID，输出反馈电流
         if (state_.mode & OMEGA) {
             target = omega_pid_.ComputeOutput(target, GetOutputShaftOmega());
-            // 力矩前馈
-            target += state_.torque_feedforward;
         }
 
         if (state_.mode != NONE) {
+            // 通用前馈不参与 PID，直接叠加到最终原始电流指令。
+            target += state_.current_feedforward;
+            target = clip<float>(target, -max_raw_current_, max_raw_current_);
             SetOutput(static_cast<int16_t>(target));
         }
     }
@@ -481,7 +455,6 @@ namespace driver {
         }
         state_.transmission_ratio = Motor3508Config::ORIGINAL_TRANSMISSION_RATIO;
         torque_constant_ = Motor3508Config::RATED_TORQUE_CONSTANT;
-        max_current_amp_ = Motor3508Config::MAX_CURRENT;
         max_raw_current_ = Motor3508Config::MAX_RAW_CURRENT;
         CanMotorBase::RegisterCanCallback(can, rx_id, &Motor3508::RxThunk, this);
     }
@@ -536,7 +509,6 @@ namespace driver {
         }
         state_.transmission_ratio = Motor6020Config::ORIGINAL_TRANSMISSION_RATIO;
         torque_constant_ = Motor6020Config::RATED_TORQUE_CONSTANT;
-        max_current_amp_ = Motor6020Config::MAX_CURRENT;
         max_raw_current_ = Motor6020Config::MAX_RAW_CURRENT;
         // GM6020 使用绝对值编码器，直接将上电角度初始化为 0
         state_.power_on_angle = 0;
@@ -602,7 +574,6 @@ namespace driver {
         }
         state_.transmission_ratio = Motor2006Config::ORIGINAL_TRANSMISSION_RATIO;
         torque_constant_ = Motor2006Config::RATED_TORQUE_CONSTANT;
-        max_current_amp_ = Motor2006Config::MAX_CURRENT;
         max_raw_current_ = Motor2006Config::MAX_RAW_CURRENT;
         CanMotorBase::RegisterCanCallback(can, rx_id, &Motor2006::RxThunk, this);
     }
@@ -659,7 +630,6 @@ namespace driver {
         }
         state_.transmission_ratio = Dm1to4Config::ORIGINAL_TRANSMISSION_RATIO;
         torque_constant_ = Dm1to4Config::RATED_TORQUE_CONSTANT;
-        max_current_amp_ = Dm1to4Config::MAX_CURRENT;
         max_raw_current_ = Dm1to4Config::MAX_RAW_CURRENT;
         CanMotorBase::RegisterCanCallback(can, rx_id, &Dm1to4::RxThunk, this);
     }
