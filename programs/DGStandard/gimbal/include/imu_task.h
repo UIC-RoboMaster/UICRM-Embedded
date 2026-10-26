@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+# Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -19,40 +19,32 @@
  ###########################################################*/
 
 #pragma once
-#include "AHRS.h"
-#include "MPU6500.h"
-#include "bsp_i2c.h"
-#include "bsp_pwm.h"
-#include "bsp_spi.h"
+#include "bsp_imu.h"
 #include "cmsis_os2.h"
-#include "heater.h"
+#include "i2c.h"
 #include "main.h"
-#include "wit_protocol.h"
+#include "spi.h"
 #define RX_SIGNAL (1 << 0)
+extern osThreadId_t imuTaskHandle;
+const osThreadAttr_t imuTaskAttribute =
+{.name = "imuTask",
+ .attr_bits = osThreadDetached,
+ .cb_mem = nullptr,
+ .cb_size = 0,
+ .stack_mem = nullptr,
+ .stack_size = 128 * 4,
+ .priority = (osPriority_t)osPriorityRealtime,
+ .tz_module = 0,
+ .reserved = 0};
 
-// extern imu::WITUART* witimu;
+class IMU : public bsp::IMU_typeC {
+public:
+ using bsp::IMU_typeC::IMU_typeC;
 
-// extern float yaw_offset;
-// extern bool imu_ok;
-
-extern imu::MPU6500* mpu6500;
-extern control::AHRS* ahrs;
-
-// extern osThreadId_t extimuTaskHandle;
-// const osThreadAttr_t extimuTaskAttribute = {.name = "extimuTask",
-//                                             .attr_bits = osThreadDetached,
-//                                             .cb_mem = nullptr,
-//                                             .cb_size = 0,
-//                                             .stack_mem = nullptr,
-//                                             .stack_size = 128 * 4,
-//                                             .priority = (osPriority_t)osPriorityRealtime,
-//                                             .tz_module = 0,
-//                                             .reserved = 0};
-
-// void extimuTask(void* arg);
+protected:
+ void RxCompleteCallback() final;
+};
+extern IMU* imu;
+void imuTask(void* arg);
 
 void init_imu();
-
-// typedef void (*imu_task_delay_t)(uint32_t milli);
-
-// void reset_yaw();

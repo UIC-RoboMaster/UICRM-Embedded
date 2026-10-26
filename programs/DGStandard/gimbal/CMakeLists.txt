@@ -1,8 +1,8 @@
 project(DGStandard_gimbal ASM C CXX)
 
 
-uicrm_add_arm_executable(${PROJECT_NAME}_typeA
-        TARGET DJI_Board_TypeA_general
+uicrm_add_arm_executable(${PROJECT_NAME}_typeC
+        TARGET DJI_Board_TypeC_general
         SOURCES
         src/main.cpp
         src/public_port.cpp

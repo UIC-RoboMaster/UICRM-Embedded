@@ -60,9 +60,9 @@ void gimbalTask(void* arg) {
     // buzzer->SingTone(bsp::BuzzerNote::La6M);
     Buzzer_Sing(SingCaliStart);
     //    reset_yaw();
-    ahrs->Cailbrate();
+    imu->Calibrate();
     i = 0;
-    while (!ahrs->IsCailbrated()) {
+    while (!imu->CaliDone()) {
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
         osDelay(1);
@@ -74,8 +74,8 @@ void gimbalTask(void* arg) {
 
     // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
     float pitch_ratio, yaw_ratio;
-    INS_Angle.pitch = ahrs->INS_angle[2];
-    INS_Angle.yaw = ahrs->INS_angle[0];
+    INS_Angle.pitch = imu->INS_angle[1];
+    INS_Angle.yaw = imu->INS_angle[0];
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
     float pitch_target = 0, yaw_target = 0;
@@ -85,8 +85,8 @@ void gimbalTask(void* arg) {
         check_kill();
 
         // 获取当前陀螺仪角度
-        INS_Angle.pitch = ahrs->INS_angle[2];
-        INS_Angle.yaw = ahrs->INS_angle[0];
+        INS_Angle.pitch = imu->INS_angle[1];
+        INS_Angle.yaw = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
         //    if (dbus->swr == remote::UP) {
@@ -198,7 +198,7 @@ void init_gimbal() {
     /**
      * pitch motor
      */
-    pitch_motor = new driver::Motor6020(can2, 0x20A, 0x2FE);
+    pitch_motor = new driver::Motor6020(can2, 0x209);
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
         .kp = 12,
@@ -240,7 +240,7 @@ void init_gimbal() {
     /**
      * yaw motor
      */
-    yaw_motor = new driver::Motor6020(can1, 0x209, 0x2FE);
+    yaw_motor = new driver::Motor6020(can1, 0x209);
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init =
         {.kp = 12,

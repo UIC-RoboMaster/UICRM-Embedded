@@ -20,54 +20,14 @@
 
 #include "shoot_task.h"
 
-static driver::PWMMotorBase* flywheel_left = nullptr;
-static driver::PWMMotorBase* flywheel_right = nullptr;
+driver::Motor3508* flywheel_left = nullptr;
+driver::Motor3508* flywheel_right = nullptr;
 
 driver::DjiMotorBase* steering_motor = nullptr;
 
 bsp::GPIO* shoot_key = nullptr;
 
 bool jam_notify_flags = false;
-
-control::ConstrainedPID::PID_Init_t steering_motor_theta_normal_pid_init = {
-    .kp = 20,
-    .ki = 0,
-    .kd = 0,
-    .max_out = 2 * PI,
-    .max_iout = 0,
-    .deadband = 0,                                 // 死区
-    .A = 0,                                        // 变速积分所能达到的最大值为A+B
-    .B = 0,                                        // 启动变速积分的死区
-    .output_filtering_coefficient = 0.1,           // 输出滤波系数
-    .derivative_filtering_coefficient = 0,         // 微分滤波系数
-    .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
-};
-control::ConstrainedPID::PID_Init_t steering_motor_theta_fast_pid_init = {
-    .kp = 25,
-    .ki = 0,
-    .kd = 0,
-    .max_out = 4 * PI,
-    .max_iout = 0,
-    .deadband = 0,                                 // 死区
-    .A = 0,                                        // 变速积分所能达到的最大值为A+B
-    .B = 0,                                        // 启动变速积分的死区
-    .output_filtering_coefficient = 0.1,           // 输出滤波系数
-    .derivative_filtering_coefficient = 0,         // 微分滤波系数
-    .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
-};
-control::ConstrainedPID::PID_Init_t steering_motor_theta_burst_pid_init = {
-    .kp = 30,
-    .ki = 0,
-    .kd = 0,
-    .max_out = 5 * PI,
-    .max_iout = 0,
-    .deadband = 0,                                 // 死区
-    .A = 0,                                        // 变速积分所能达到的最大值为A+B
-    .B = 0,                                        // 启动变速积分的死区
-    .output_filtering_coefficient = 0.1,           // 输出滤波系数
-    .derivative_filtering_coefficient = 0,         // 微分滤波系数
-    .mode = control::ConstrainedPID::OutputFilter  // 输出滤波
-};
 
 void jam_callback(void* args) {
     driver::Motor2006* motor = static_cast<driver::Motor2006*>(args);
@@ -92,7 +52,7 @@ void shootTask(void* arg) {
         osDelay(SHOOT_OS_DELAY);
     }
     // 等待IMU初始化
-    while (ahrs->IsCailbrated()) {
+    while (imu->CaliDone()) {
         osDelay(SHOOT_OS_DELAY);
     }
 
@@ -181,10 +141,34 @@ void shootTask(void* arg) {
 }
 
 void init_shoot() {
-    flywheel_left = new driver::PWMMotorBase(&htim1, 1, 1000000, 500, 1000);
-    flywheel_right = new driver::PWMMotorBase(&htim1, 4, 1000000, 500, 1000);
-    flywheel_left->SetOutput(0);
-    flywheel_right->SetOutput(0);
+    //TODO: id
+    flywheel_left = new driver::Motor3508(can2, 0x202);
+    flywheel_right = new driver::Motor3508(can2, 0x203);
+    flywheel_left->SetTransmissionRatio(1);
+    flywheel_right->SetTransmissionRatio(1);
+
+    control::ConstrainedPID::PID_Init_t omega_pid_init = {
+        .kp = 150,
+        .ki = 0.03,
+        .kd = 1,
+        .max_out = 30000,
+        .max_iout = 10000,
+        .deadband = 0,                                          // 死区
+        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
+        .B = 2 * PI,                                            // 启动变速积分的死区
+        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
+        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
+        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
+                control::ConstrainedPID::OutputFilter |         // 输出滤波
+                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
+                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
+    };
+    flywheel_left->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+    flywheel_right->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
+
+    // TODO: 反向旋转
+    flywheel_left->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
+    flywheel_right->SetMode(driver::DjiMotorBase::OMEGA);
 
     steering_motor = new driver::Motor2006(can1, 0x207);
 
@@ -225,9 +209,6 @@ void init_shoot() {
     steering_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA);
 
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
-
-    shoot_key = new bsp::GPIO(TRIG_KEY_GPIO_Port, TRIG_KEY_Pin);
-    // laser = new bsp::Laser(&htim3, 3, 1000000);
 }
 void kill_shoot() {
     steering_motor->SetOutput(0);
