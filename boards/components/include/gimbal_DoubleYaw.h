@@ -38,11 +38,20 @@ namespace control {
      * @note except for max is determined by user (mechanical limit), these should be
      * obtained by reading encoder values through uart/gdb
      */
-    struct dual_yaw_gimbal_data_t {
+    struct gimbal_DoubleYaw_data_t {
         /* pitch 轴 */
-        float pitch_offset_ = 0.0f; /* pitch offset angle (angle when muzzle is at vertical
-                                  center) */
-        float pitch_max_ = 0.0f;    /* maximum pitch angle the gimbal can turn from center */
+        /**
+         * @brief 底盘水平且枪口水平时的 pitch 输出轴编码器角度，单位 rad。
+         * @note 在水平标定时设置，运行中的 IMU 姿态补偿不修改此值。
+         */
+        float pitch_offset_ = 0.0f;
+        /**
+         * @brief pitch 的对称俯仰限幅，单位 rad；同时限制输入目标和相对 offset 的机械行程。
+         * @note 上下行程不对称时取两侧安全行程的较小值。当前最短路径电机模式要求
+         *       0 <= pitch_max_ < PI / 2，避免两端之间的运动被映射到限位外的短路径。
+         */
+        float pitch_max_ = 0.0f;
+        /** @brief 是否反转 TargetAbs/TargetRel 的 pitch 输入；不改变 pitch 编码器或 IMU 反馈方向。 */
         bool pitch_inverted = false;
         float pitch_deadband = 0;  /* pitch 死区，小于该角度不动作 */
 
@@ -52,25 +61,37 @@ namespace control {
         float upper_yaw_max_ = 0.0f;    /* 上yaw关节相对下yaw的机械行程上限（如 90° = PI/2）；
                                            注意这是关节限位，不是云台朝向的限幅 */
         bool upper_yaw_circle_ = true;  /* upper yaw angle can circle or not */
-        bool upper_yaw_inverted = false; /* 输入(遥控/自瞄)的yaw正方向与云台朝向正方向相反时置 true，
-                                            只影响 Target* 的输入方向，和编码器极性无关 */
+        /**
+         * @brief 小 yaw 编码器方向是否与云台 IMU yaw 正方向相反。
+         * @details 固定底盘和大 yaw，若小 yaw 编码器增大时 IMU yaw 减小，置 true；
+         *          两者同向增大则置 false。标定时避开角度跨圈点。
+         *          此参数同时用于编码器到关节角、关节运动增量到电机目标的方向转换。
+         * @note 不反转 TargetAbs/TargetRel 的 yaw 输入；调用方必须按 IMU yaw 正方向传入目标。
+         */
+        bool upper_yaw_inverted = false;
         float upper_yaw_deadband = 0;  /* upper yaw 死区，小于该角度不动作 */
 
         /* 大yaw，靠近底盘的一级，其角度是相对车身的 */
         float lower_yaw_offset_ = 0.0f; /* lower yaw offset angle (angle when muzzle is at
                                   horizontal center) */
-        float lower_yaw_max_ = 0.0f;    /* maximum lower yaw angle it can turn from center */
+        /**
+         * @brief 大 yaw 相对机械中心的最大偏转角，单位 rad；连续旋转时不使用。
+         * @note 有限行程使用最近的等价机械中心，要求 0 <= lower_yaw_max_ < PI。
+         *       有限多圈机构需另行建立回零和圈数基准，本接口不支持。
+         */
+        float lower_yaw_max_ = 0.0f;
         bool lower_yaw_circle_ = true;  /* lower yaw angle can circle or not */
+        /**
+         * @brief 大 yaw 编码器方向是否与云台 IMU yaw 正方向相反。
+         * @details 固定底盘和小 yaw，若大 yaw 编码器增大时 IMU yaw 减小，置 true；
+         *          两者同向增大则置 false。标定时避开角度跨圈点。
+         *          此参数同时用于编码器到关节角、关节运动增量到电机目标的方向转换，
+         *          与小 yaw 的安装方向独立标定。
+         * @note 不反转 TargetAbs/TargetRel 的 yaw 输入；调用方必须按 IMU yaw 正方向传入目标。
+         */
         bool lower_yaw_inverted = false;
         float lower_yaw_deadband = 0;  /* lower yaw 死区，小于该角度不动作 */
 
-        /* 大小yaw协调：上yaw为主控快轴，下yaw慢速跟随并把上yaw收回中心 */
-        /* 关节角正方向标定：电机编码器增大时，该级关节是否让"云台相对地面的朝向"同向增大。
-           地面朝向增量 = 上yaw关节角增量 * su + 下yaw关节角增量 * sl
-           （IMU 装在云台(上yaw输出)上，直接测得该地面朝向）
-           电机反装、编码器反接时置 true，标定方法见 programs/Seer/README.md */
-        bool upper_yaw_joint_inverted = false;
-        bool lower_yaw_joint_inverted = false;
     };
 
     /**
@@ -83,8 +104,8 @@ namespace control {
         driver::DjiMotorBase* pitch_motor;      /* pitch motor instance           */
         driver::DjiMotorBase* upper_yaw_motor;  /* 上yaw / 小yaw 电机（靠近枪口） */
         driver::DjiMotorBase* lower_yaw_motor;  /* 下yaw / 大yaw 电机（靠近底盘） */
-        dual_yaw_gimbal_data_t data;            /* gimbal related constants       */
-    } dual_yaw_gimbal_t;
+        gimbal_DoubleYaw_data_t data;            /* gimbal related constants       */
+    } gimbal_DoubleYaw_t;
 
     /**
      * @brief 双 yaw 云台类
@@ -101,20 +122,20 @@ namespace control {
     /**
      * @brief wrapper class for dual yaw gimbal
      */
-    class Dual_Yaw_Gimbal {
+    class Gimbal_DoubleYaw {
       public:
         /**
          * @brief 构造函数
          *
-         * @param gimbal 用于初始化云台的结构体，参考dual_yaw_gimbal_t
+         * @param gimbal 用于初始化云台的结构体，参考gimbal_DoubleYaw_t
          */
         /**
          * @brief constructor for gimbal
          *
          * @param gimbal structure that used to initialize gimbal, refer to type
-         * dual_yaw_gimbal_t
+         * gimbal_DoubleYaw_t
          */
-        Dual_Yaw_Gimbal(dual_yaw_gimbal_t gimbal);
+        Gimbal_DoubleYaw(gimbal_DoubleYaw_t gimbal);
 
         /**
          * @brief 析构函数
@@ -122,24 +143,25 @@ namespace control {
         /**
          * @brief destructor for gimbal
          */
-        ~Dual_Yaw_Gimbal();
+        ~Gimbal_DoubleYaw();
 
         /**
          * @brief 获取云台相关常量
          *
-         * @return 参考dual_yaw_gimbal_data_t
+         * @return 参考gimbal_DoubleYaw_data_t
          */
         /**
          * @brief get gimbal related constants
          *
-         * @return refer to dual_yaw_gimbal_data_t
+         * @return refer to gimbal_DoubleYaw_data_t
          */
-        dual_yaw_gimbal_data_t* GetData();
+        gimbal_DoubleYaw_data_t* GetData();
 
         /**
          * @brief 计算当前云台的输出
          * @note 不带IMU的开环模式：用两个yaw编码器的关节角之和作为当前朝向，
          *       同时完成大小yaw协调：上yaw吃误差、下yaw补差额并回中
+         * @note pitch 目标在此模式解释为相对 pitch_offset_ 的关节角，不能补偿底盘倾斜。
          */
         /**
          * @brief calculate the output of the motors under current configuration
@@ -151,12 +173,15 @@ namespace control {
          * @brief 初始化/IMU校准时，将三个关节分别回到各自的标定零点
          * @note 同时将目标朝向清零；不使用正常跟踪的目标分配和朝向死区。
          *       必须在电机反馈有效后调用，并在回中/校准期间持续调用。
+         * @note 仅返回已有标定位置，不根据 IMU 自动校准 pitch_offset_；底盘倾斜时不保证枪口水平。
          */
         void Recenter();
 
         /**
          * @brief 基于当前传感器数据更新云台的输出
          * @param imu_pitch_angle 陀螺仪测量的pitch角度，范围为[-pi, pi]
+         * @note pitch IMU 随枪口俯仰，水平为零，正方向须由调用方统一为编码器增大的方向。
+         *       机械限幅只限制电机目标，不改写保存的对地 pitch 目标或 pitch_offset_。
          * @param imu_yaw_angle 陀螺仪测量的yaw角度，范围为[-pi, pi]
          * @note IMU 需要装在云台(上yaw输出)上，此时 imu_yaw 就是枪口相对地面的朝向；
          *       若IMU装在底盘上，本类的增量闭环会失去稳定点（每周期都被命令再转一个固定角）
@@ -169,11 +194,14 @@ namespace control {
         void UpdateIMU(float imu_pitch_angle, float imu_yaw_angle);
 
         /**
-         * @brief 将云台指向新的方向，是绝对于车身零点的角度
+         * @brief 设置绝对目标；IMU 模式下 pitch 相对水平、yaw 相对 IMU 朝向零点。
          * @param new_pitch 新的pitch角度
          * @param new_yaw 新的yaw角度
+         * @note pitch 输入应用 pitch_inverted 后按 ±pitch_max_ 饱和，0 表示水平，不环绕。
          * @note new_yaw 是"云台相对地面的目标朝向"，不受 upper_yaw_max_ 限幅
          *       （±90° 是上yaw关节相对下yaw的行程，超过90°的朝向由大小yaw协调实现）
+         * @note new_yaw 与传入 UpdateIMU 的 imu_yaw_angle 同正方向；yaw 反转参数仅描述关节方向，
+         *       输入设备的方向转换由调用方完成。
          */
         /**
          * @brief set motors to point to a new orientation
@@ -188,6 +216,8 @@ namespace control {
          *
          * @param new_pitch 新的pitch角度
          * @param new_yaw 新的yaw角度
+         * @note new_yaw 是按 IMU yaw 正方向定义的目标增量，不受 yaw 反转参数影响。
+         * @note pitch 增量应用 pitch_inverted 后累加并保存饱和值，持续同向输入不会绕圈。
          */
         /**
          * @brief set motors to point to a new orientation
@@ -198,47 +228,56 @@ namespace control {
         void TargetRel(float new_pitch, float new_yaw);
 
         /**
-         * @brief 将云台指向新的方向，是相对于当前云台方向的角度
-         * @param new_pitch
-         * @param new_yaw
-         */
-        void TargetReal(float new_pitch, float new_yaw);
-
-        /**
-         * @brief 更新云台的偏移量
+         * @brief 用增量更新云台的标定偏移量。
          *
-         * @param pitch_offset 新的pitch偏移量
-         * @param upper_yaw_offset 新的上yaw(小yaw)偏移量
-         * @param lower_yaw_offset 新的下yaw(大yaw)偏移量
+         * @param pitch_offset_delta pitch offset 的增量，单位 rad。
+         * @param upper_yaw_offset 上yaw(小yaw) offset 的增量，单位 rad。
+         * @param lower_yaw_offset 下yaw(大yaw) offset 的增量，单位 rad。
+         * @note pitch 的对地目标保持不变；绝对设置水平标定值应使用 SetPitchOffset。
          */
         /**
          * @brief update the offset of the gimbal
          *
-         * @param pitch_offset     new pitch offset
-         * @param upper_yaw_offset new upper yaw offset
-         * @param lower_yaw_offset new lower yaw offset
+         * @param pitch_offset_delta pitch offset increment
+         * @param upper_yaw_offset upper yaw offset increment
+         * @param lower_yaw_offset lower yaw offset increment
          */
-        void UpdateOffset(float pitch_offset, float upper_yaw_offset, float lower_yaw_offset);
+        void UpdateOffset(float pitch_offset_delta, float upper_yaw_offset, float lower_yaw_offset);
 
+        /**
+         * @brief 绝对设置水平标定得到的 pitch 编码器零点，不改变对地 pitch 目标。
+         * @param encoder_at_level 底盘与枪口均水平且稳定时的输出轴编码器角度，单位 rad。
+         * @note 调用方负责确认标定姿态及反馈有效性；仅更新内存，不下发电机目标、不持久化。
+         *       禁止根据运行中的 IMU 误差持续更新；更新后机械限位随新零点重新解释。
+         */
+        void SetPitchOffset(float encoder_at_level);
+
+        /** @brief 获取应用输入反转后的有符号 pitch 目标，单位 rad；水平为零，不包含 offset。 */
         float getPitchTarget() const;
+
         /* 上yaw(小yaw) 是主控轴，它保存的是"目标朝向"而不是关节角；
            真实目标朝向 = 返回值 - data_.upper_yaw_offset_ */
         float getUpperYawTarget() const;
+
         /* 下yaw(大yaw) 跟随上yaw，一般不单独作为朝向参考；返回下yaw的目标角度（编码器域） */
         float getLowerYawTarget() const;
 
-        /*
-         * @brief 通过电机编码器 获取 云台相对于云台参数标定的零点 的pitch
+        /**
+         * @brief 获取相对水平标定零点的 pitch 关节角，单位 rad，范围 [-PI, PI]。
+         * @note 消除累计反馈的整圈偏置；底盘倾斜时此值不等于对地俯仰。
          */
         float getPitchByMotor() const;
+
         /*
          * @brief 通过电机编码器 获取 上yaw(小yaw)相对标定零点(即相对下yaw)的关节角，
          *        带符号、正方向 = 地面朝向增大的方向
          */
         float getUpperYawByMotor() const;
-        /*
-         * @brief 通过电机编码器 获取 下yaw(大yaw)相对标定零点的关节角（可多圈累计），
-         *        带符号、正方向 = 地面朝向增大的方向
+
+        /**
+         * @brief 获取大 yaw 相对标定零点的关节角，正方向与云台 IMU yaw 一致。
+         * @return 连续旋转模式返回多圈累计角；有限行程模式返回 [-PI, PI] 内的关节角，
+         *         消除累计反馈相对标定零点的整圈偏置。单位 rad。
          */
         float getLowerYawByMotor() const;
 
@@ -251,23 +290,19 @@ namespace control {
          */
         void CoordinateYaw(float yaw_diff);
 
-        // acquired from user
         driver::DjiMotorBase* pitch_motor_ = nullptr;     /* pitch          */
         driver::DjiMotorBase* upper_yaw_motor_ = nullptr; /* 上yaw / 小yaw  */
         driver::DjiMotorBase* lower_yaw_motor_ = nullptr; /* 下yaw / 大yaw  */
 
         // pitch and yaw constants
-        dual_yaw_gimbal_data_t data_;
+        gimbal_DoubleYaw_data_t data_;
 
         // pitch and yaw angle
-        float pitch_angle_;     /* 目标pitch角（电机域，含 pitch_offset_） */
+        float pitch_target_ = 0.0f; /* 有符号对地俯仰目标，水平为零，不含 offset、不环绕 */
         float upper_yaw_angle_; /* 上yaw是主控轴，这里存的是目标朝向（电机域），
                                    真实目标朝向 = upper_yaw_angle_ - upper_yaw_offset_ */
         float lower_yaw_angle_; /* 下yaw(大yaw)的目标角度（编码器域），由 Update* 计算 */
 
-        // pitch limit
-        float pitch_lower_limit_; /* pitch lower limit */
-        float pitch_upper_limit_; /* pitch upper limit */
     };
 
 }  // namespace control

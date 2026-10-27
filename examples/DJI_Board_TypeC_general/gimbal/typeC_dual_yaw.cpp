@@ -23,7 +23,7 @@
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "dji_dbus.h"
-#include "dual_yaw_gimbal.h"
+#include "gimbal_DoubleYaw.h"
 #include "i2c.h"
 #include "main.h"
 #include "spi.h"
@@ -72,12 +72,12 @@ void imuTask(void* arg) {
 static driver::DjiMotorBase* pitch_motor = nullptr;
 static driver::DjiMotorBase* upper_yaw_motor = nullptr;
 static driver::DjiMotorBase* lower_yaw_motor = nullptr;
-static control::Dual_Yaw_Gimbal* gimbal = nullptr;
-static control::dual_yaw_gimbal_data_t* gimbal_param = nullptr;
+static control::Gimbal_DoubleYaw* gimbal = nullptr;
+static control::gimbal_DoubleYaw_data_t* gimbal_param = nullptr;
 
-/* 大小yaw参数：offset / joint_inverted 需要在现场标定（见 programs/Seer/README.md），
+/* 大小yaw参数：offset / *_yaw_inverted（关节方向）需要在现场标定，
    这里给的是占位值，直接上车前务必重新标。 */
-const control::dual_yaw_gimbal_data_t gimbal_init_data = {
+const control::gimbal_DoubleYaw_data_t gimbal_init_data = {
     /* pitch 轴 */
     .pitch_offset_ = 2.8582f,
     .pitch_max_ = 0.4897f,  // ~28°
@@ -88,19 +88,15 @@ const control::dual_yaw_gimbal_data_t gimbal_init_data = {
     .upper_yaw_offset_ = -2.1f ,
     .upper_yaw_max_ = PI / 2,  // 关节行程 ±90°
     .upper_yaw_circle_ = false,
-    .upper_yaw_inverted = false,  // 遥控 yaw 正方向与云台朝向正方向相反时置 true
+    .upper_yaw_inverted = false,  // 小 yaw 编码器增大时，IMU yaw 同向增大。
     .upper_yaw_deadband = 0,
 
     /* 下yaw(大yaw)，角度相对车身 */
     .lower_yaw_offset_ = 1.5f,
     .lower_yaw_max_ = PI,
     .lower_yaw_circle_ = true,  // 可连续旋转
-    .lower_yaw_inverted = false,
+    .lower_yaw_inverted = false,  // 大 yaw 编码器增大时，IMU yaw 同向增大。
     .lower_yaw_deadband = 0,
-
-    /* 关节角正方向标定：电机反装/编码器反接时置 true */
-    .upper_yaw_joint_inverted = false,
-    .lower_yaw_joint_inverted = false,
 
 };
 
@@ -303,13 +299,13 @@ void RM_RTOS_Init(void) {
         driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE
     );
 
-    control::dual_yaw_gimbal_t gimbal_data;
+    control::gimbal_DoubleYaw_t gimbal_data;
     gimbal_data.data = gimbal_init_data;
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.upper_yaw_motor = upper_yaw_motor;
     gimbal_data.lower_yaw_motor = lower_yaw_motor;
 
-    gimbal = new control::Dual_Yaw_Gimbal(gimbal_data);
+    gimbal = new control::Gimbal_DoubleYaw(gimbal_data);
     gimbal_param = gimbal->GetData();
 }
 
