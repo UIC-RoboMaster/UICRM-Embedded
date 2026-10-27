@@ -31,6 +31,7 @@
 #include <cmath>
 
 #include "bsp_error_handler.h"
+
 #include "chassis_kinematics.h"
 #include "power_limit_new.h"
 
@@ -61,11 +62,14 @@ namespace control {
     }
 
     void chassis_v2::UpdatePower(bool enabled, float max_watt, float voltage, uint8_t buffer_percent) {
+        const uint32_t primask = __get_PRIMASK();
+        __disable_irq();
         power_.enabled = enabled;
         power_.max_watt = max_watt;
         power_.buffer_percent = buffer_percent > 100 ? 100 : buffer_percent;
         if (std::isfinite(voltage) && voltage > 1)
             power_.voltage = voltage;
+        __set_PRIMASK(primask);
     }
 
     void chassis_v2::UpdatePowerVoltage(float voltage) {
@@ -77,7 +81,8 @@ namespace control {
     }
 
     mecanum::mecanum(const mecanum::config& config, driver::SuperCap* super_capacitor)
-        : chassis_v2(super_capacitor), offset_(config.offset), max_motor_speed_(config.max_motor_speed) {
+        : chassis_v2(super_capacitor), wheel_radius_(config.wheel_radius), offset_(config.offset),
+          max_motor_speed_(config.max_motor_speed) {
         RM_ASSERT_TRUE(max_motor_speed_ > 0, "Invalid motor speed limit");
         for (int i = 0; i < chassis_v2_wheel::count; ++i) {
             RM_ASSERT_TRUE(config.motors[i] != nullptr, "Missing chassis motor");
@@ -101,6 +106,29 @@ namespace control {
         delete limiter_;
     }
 
+    chassis_feedback mecanum::GetFeedback() const {
+        if (!std::isfinite(wheel_radius_) || wheel_radius_ <= 0 || !std::isfinite(offset_))
+            return {};
+
+        float omega[chassis_v2_wheel::count];
+        for (int i = 0; i < chassis_v2_wheel::count; ++i) {
+            if (!motors_[i]->IsOnline())
+                return {};
+            omega[i] = motors_[i]->GetState().output_shaft_omega;
+        }
+        for (float speed : omega) {
+            if (!std::isfinite(speed))
+                return {};
+        }
+
+        const auto motion = kinematics::MecanumForward({omega[0], omega[1], omega[2], omega[3]}, offset_);
+        const float scale = wheel_radius_;
+        const float vx = motion.x * scale;
+        const float vy = motion.y * scale;
+        if (!std::isfinite(vx) || !std::isfinite(vy))
+            return {};
+        return {vx, vy, true};
+    }
     bool mecanum::IsReady() const {
         return true;
     }
@@ -179,8 +207,11 @@ namespace control {
     }
 
     void mecanum::ApplyPowerLimit() {
+        const uint32_t primask = __get_PRIMASK();
+        __disable_irq();
         const chassis_power power = power_;
         const bool enabled = state_.enabled;
+        __set_PRIMASK(primask);
         if (!enabled || !IsReady()) {
             ZeroOutputs();
             return;
@@ -216,7 +247,8 @@ namespace control {
     }
 
     omni::omni(const omni::config& config, driver::SuperCap* super_capacitor)
-        : chassis_v2(super_capacitor), offset_(config.offset), max_motor_speed_(config.max_motor_speed) {
+        : chassis_v2(super_capacitor), wheel_radius_(config.wheel_radius), offset_(config.offset),
+          max_motor_speed_(config.max_motor_speed) {
         RM_ASSERT_TRUE(max_motor_speed_ > 0, "Invalid motor speed limit");
         for (int i = 0; i < chassis_v2_wheel::count; ++i) {
             RM_ASSERT_TRUE(config.motors[i] != nullptr, "Missing chassis motor");
@@ -240,6 +272,29 @@ namespace control {
         delete limiter_;
     }
 
+    chassis_feedback omni::GetFeedback() const {
+        if (!std::isfinite(wheel_radius_) || wheel_radius_ <= 0 || !std::isfinite(offset_))
+            return {};
+
+        float omega[chassis_v2_wheel::count];
+        for (int i = 0; i < chassis_v2_wheel::count; ++i) {
+            if (!motors_[i]->IsOnline())
+                return {};
+            omega[i] = motors_[i]->GetState().output_shaft_omega;
+        }
+        for (float speed : omega) {
+            if (!std::isfinite(speed))
+                return {};
+        }
+
+        const auto motion = kinematics::OmniForward({omega[0], omega[1], omega[2], omega[3]}, offset_);
+        const float scale = 1.41421356237f * wheel_radius_;
+        const float vx = motion.x * scale;
+        const float vy = motion.y * scale;
+        if (!std::isfinite(vx) || !std::isfinite(vy))
+            return {};
+        return {vx, vy, true};
+    }
     bool omni::IsReady() const {
         return true;
     }
@@ -356,6 +411,10 @@ namespace control {
     }
 
     // TODO: implement this model after its mechanics, units and actuators are defined.
+    chassis_feedback steer::GetFeedback() const {
+        return {};  // Actuator layout and forward kinematics are not implemented yet.
+    }
+
     bool steer::IsReady() const {
         return false;
     }
@@ -380,6 +439,10 @@ namespace control {
     }
 
     // TODO: implement this model after its mechanics, units and actuators are defined.
+    chassis_feedback swerve::GetFeedback() const {
+        return {};  // Actuator layout and forward kinematics are not implemented yet.
+    }
+
     bool swerve::IsReady() const {
         return false;
     }

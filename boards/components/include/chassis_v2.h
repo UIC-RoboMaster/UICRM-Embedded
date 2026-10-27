@@ -91,6 +91,13 @@ namespace control {
         uint32_t time = 0;
     };
 
+    // Physical XY velocity from measured actuators; invalid results contain zeros.
+    struct chassis_feedback {
+        float vx = 0;  // m/s, right positive
+        float vy = 0;  // m/s, forward positive
+        bool valid = false;
+    };
+
     /**
      * @brief 底盘控制抽象父类
      * @details 保存运动指令、运行状态、功率参数和超级电容指针，提供公共启停与参数更新。
@@ -122,6 +129,14 @@ namespace control {
          * @note 子类定义就绪条件；此接口不保证自动检查电机在线状态、通信超时或 IMU 校准状态。
          */
         virtual bool IsReady() const = 0;
+
+        /**
+         * @brief Return measured chassis XY velocity, independent of enable/target state.
+         * @note Each model samples its actual actuators and applies forward kinematics.
+         *       Missing/stale/non-finite measurements or invalid geometry return {0,0,false}.
+         *       Does not update chassis_state or perform IMU fusion/CAN transmission.
+         */
+        virtual chassis_feedback GetFeedback() const = 0;
 
         /**
          * @brief 检查并保存目标运动指令，准备执行器目标
@@ -238,6 +253,7 @@ namespace control {
             driver::DjiMotorBase* motors[chassis_v2_wheel::count] = {};  ///< 前左、前右、后左、后右，指针非空且互异
             float offset = 0;                     ///< 无量纲前后轮旋转项偏置，分别使用 1-offset 和 1+offset
             float max_motor_speed = 2 * PI * 10;  ///< 电机输出轴目标速度上限 [rad/s]，默认 2π×10，必须大于 0
+            float wheel_radius = 0;  ///< 轮半径 [m]，由 program 配置；未配置时反馈无效
         };
 
         /**
@@ -267,6 +283,8 @@ namespace control {
          * @note 不包含电机在线、通信超时或 IMU 检查，应用须自行处理这些条件。
          */
         bool IsReady() const override;
+
+        chassis_feedback GetFeedback() const override;
 
         /**
          * @brief 保存指令并解算、等比例限制四轮速度目标
@@ -320,6 +338,7 @@ namespace control {
 
         driver::DjiMotorBase* motors_[chassis_v2_wheel::count] = {};  ///< 外部电机指针，顺序为前左、前右、后左、后右
         float speeds_[chassis_v2_wheel::count] = {};                  ///< 四轮输出轴速度目标 [rad/s]
+        float wheel_radius_;                                          ///< 本车型轮半径 [m]
         float offset_;                                                ///< 从配置复制的旋转项偏置系数
         float max_motor_speed_;                                       ///< 电机输出轴速度上限 [rad/s]
         NewPowerLimit* limiter_;                                      ///< 本对象创建和释放的四电机功率限制器
@@ -341,6 +360,7 @@ namespace control {
             driver::DjiMotorBase* motors[chassis_v2_wheel::count] = {};  ///< 前左、前右、后左、后右，指针非空且互异
             float offset = 0;                     ///< 无量纲前后轮旋转项偏置，分别使用 1-offset 和 1+offset
             float max_motor_speed = 2 * PI * 10;  ///< 电机输出轴目标速度上限 [rad/s]，默认 2π×10，必须大于 0
+            float wheel_radius = 0;  ///< 轮半径 [m]，由 program 配置；未配置时反馈无效
         };
 
         /**
@@ -370,6 +390,8 @@ namespace control {
          * @note 不包含电机在线、通信超时或 IMU 检查，应用须自行处理这些条件。
          */
         bool IsReady() const override;
+
+        chassis_feedback GetFeedback() const override;
 
         /**
          * @brief 保存指令并解算、等比例限制四轮速度目标
@@ -423,6 +445,7 @@ namespace control {
 
         driver::DjiMotorBase* motors_[chassis_v2_wheel::count] = {};  ///< 外部电机指针，顺序为前左、前右、后左、后右
         float speeds_[chassis_v2_wheel::count] = {};                  ///< 四轮输出轴速度目标 [rad/s]
+        float wheel_radius_;  ///< 本车型轮半径 [m]
         float offset_;                                                ///< 从配置复制的旋转项偏置系数
         float max_motor_speed_;                                       ///< 电机输出轴速度上限 [rad/s]
         NewPowerLimit* limiter_;                                      ///< 本对象创建和释放的四电机功率限制器
@@ -440,6 +463,8 @@ namespace control {
          * @return 始终返回 false。
          */
         bool IsReady() const override;
+
+        chassis_feedback GetFeedback() const override;
 
         /**
          * @brief 拒绝运动指令并保持禁用
@@ -479,6 +504,8 @@ namespace control {
          * @return 始终返回 false。
          */
         bool IsReady() const override;
+
+        chassis_feedback GetFeedback() const override;
 
         /**
          * @brief 拒绝运动指令并保持禁用

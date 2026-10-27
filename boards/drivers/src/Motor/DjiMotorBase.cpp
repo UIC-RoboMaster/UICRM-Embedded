@@ -23,6 +23,8 @@
 #include "arm_math.h"
 #include "bsp_error_handler.h"
 #include "bsp_os.h"
+#include "FreeRTOS.h"
+#include "task.h"
 #include "utils.h"
 
 using namespace bsp;
@@ -204,6 +206,13 @@ namespace driver {
 
     float DjiMotorBase::GetOutputShaftCumulatedTheta() const {
         return state_.output_cumulated_angle;
+    }
+
+    DjiMotorState DjiMotorBase::GetState() const {
+        taskENTER_CRITICAL();
+        const DjiMotorState state = state_;
+        taskEXIT_CRITICAL();
+        return state;
     }
 
     float DjiMotorBase::GetOutputShaftOmega() const {

@@ -69,7 +69,7 @@ namespace driver {
 
         // ── 时间戳 ──
         uint32_t last_update_time_us = 0;     // 最近 CAN 包时间戳
-        uint32_t motor_update_time_interval;  // CAN 回传间隔 [us]
+        uint32_t motor_update_time_interval = 0;  // CAN 回传间隔 [us]
 
         volatile bool feedback_pending = false;  // 是否收到新的反馈
 
@@ -133,6 +133,12 @@ namespace driver {
          * @param freq 频率 [Hz]，默认 1000
          */
         static void SetFrequency(uint32_t freq = 1000);
+
+        /**
+         * @brief 返回电机状态副本；在线状态仍通过 IsOnline() 查询。
+         * @note 仅供任务上下文调用。临界区保护复制过程，各字段不保证来自同一帧。
+         */
+        DjiMotorState GetState() const;
 
         /** @brief 获得电机转子角度 [rad] */
         float GetTheta() const override;

@@ -10,6 +10,7 @@ uicrm_add_board_specific_library(DJI_Board_TypeC_general_components
         INCLUDES ${COMPONENTS_INCLUDES}
         DEPENDS DJI_Board_TypeC_general_drivers DJI_Board_TypeC_general_algorithm DJI_Board_TypeC_general_platform)
 target_include_directories(DJI_Board_TypeC_general_components PUBLIC ${COMPONENTS_INCLUDES})
+target_link_libraries(DJI_Board_TypeC_general_components PUBLIC uicrm_kinematics)
 
 uicrm_add_board_specific_library(DJI_Board_TypeA_general_components
         TARGET DJI_Board_TypeA_general
@@ -17,6 +18,7 @@ uicrm_add_board_specific_library(DJI_Board_TypeA_general_components
         INCLUDES ${COMPONENTS_INCLUDES}
         DEPENDS DJI_Board_TypeA_general_drivers DJI_Board_TypeA_general_algorithm DJI_Board_TypeA_general_platform)
 target_include_directories(DJI_Board_TypeA_general_components PUBLIC ${COMPONENTS_INCLUDES})
+target_link_libraries(DJI_Board_TypeA_general_components PUBLIC uicrm_kinematics)
 
 uicrm_add_board_specific_library(DM_MC01_general_components
         TARGET DM_MC01_general
@@ -24,6 +26,7 @@ uicrm_add_board_specific_library(DM_MC01_general_components
         INCLUDES ${COMPONENTS_INCLUDES}
         DEPENDS DM_MC01_general_drivers DM_MC01_general_algorithm DM_MC01_general_platform)
 target_include_directories(DM_MC01_general_components PUBLIC ${COMPONENTS_INCLUDES})
+target_link_libraries(DM_MC01_general_components PUBLIC uicrm_kinematics)
 
 uicrm_add_board_specific_library(DM_MC02_general_components
         TARGET DM_MC02_general
@@ -31,6 +34,7 @@ uicrm_add_board_specific_library(DM_MC02_general_components
         INCLUDES ${COMPONENTS_INCLUDES}
         DEPENDS DM_MC02_general_drivers DM_MC02_general_algorithm DM_MC02_general_platform)
 target_include_directories(DM_MC02_general_components PUBLIC ${COMPONENTS_INCLUDES})
+target_link_libraries(DM_MC02_general_components PUBLIC uicrm_kinematics)
 
 uicrm_add_board_specific_library(F103_Nano_general_components
         TARGET F103_Nano_general
@@ -38,6 +42,7 @@ uicrm_add_board_specific_library(F103_Nano_general_components
         INCLUDES ${COMPONENTS_INCLUDES}
         DEPENDS F103_Nano_general_drivers F103_Nano_general_algorithm F103_Nano_general_platform)
 target_include_directories(F103_Nano_general_components PUBLIC ${COMPONENTS_INCLUDES})
+target_link_libraries(F103_Nano_general_components PUBLIC uicrm_kinematics)
 
 uicrm_add_board_specific_library(BulletExchanger_F103_components
         TARGET BulletExchanger_F103
@@ -45,3 +50,4 @@ uicrm_add_board_specific_library(BulletExchanger_F103_components
         INCLUDES ${COMPONENTS_INCLUDES}
         DEPENDS BulletExchanger_F103_drivers BulletExchanger_F103_algorithm BulletExchanger_F103_platform)
 target_include_directories(BulletExchanger_F103_components PUBLIC ${COMPONENTS_INCLUDES})
+target_link_libraries(BulletExchanger_F103_components PUBLIC uicrm_kinematics)
