@@ -51,5 +51,5 @@ void buzzerTask(void* arg) {
 }
 
 void init_buzzer() {
-    buzzer = new driver::Buzzer(&htim12, 1, 1000000);
+    buzzer = new driver::Buzzer(&htim4, 1, 1000000);
 }

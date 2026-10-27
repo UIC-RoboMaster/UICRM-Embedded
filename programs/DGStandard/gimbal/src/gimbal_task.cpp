@@ -280,6 +280,7 @@ void init_gimbal() {
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
     yaw_motor->SetSpeedFilter(0.1);
     yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
+                                               //TODO:若直接修改此,改为INVERTED，或将中间上面的代码数值改为负数，了解实现逻辑
 
     // 初始化云台对象
     gimbal_data.pitch_motor = pitch_motor;

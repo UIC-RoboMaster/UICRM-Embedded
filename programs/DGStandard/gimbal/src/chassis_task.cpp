@@ -45,7 +45,7 @@ void chassisTask(void* arg) {
         osDelay(CHASSIS_OS_DELAY);
     }
 
-    while (!ahrs->IsCailbrated()) {
+    while (!imu->CaliDone()) {
         osDelay(1);
     }
 

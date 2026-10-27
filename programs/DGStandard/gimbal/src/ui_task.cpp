@@ -298,7 +298,7 @@ void uiTask(void* arg) {
             pitch_motor_check_edge->input(pitch_motor->IsOnline());
             steer_motor_check_edge->input(steering_motor->IsOnline());
             dbus_edge->input(dbus->IsOnline());
-            imu_cali_edge->input(ahrs->IsCailbrated());
+            imu_cali_edge->input(imu->CaliDone()); //TODO
             imu_temp_edge->input(true);
             shoot_jam_edge->input(jam_notify_flags);
 
