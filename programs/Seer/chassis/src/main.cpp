@@ -81,19 +81,19 @@ void RM_RTOS_Init() {
 
     fl_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
     fl_motor->SetMode(driver::DjiMotorBase::OMEGA);
-    fl_motor->SetTransmissionRatio(14);
+    fl_motor->SetTransmissionRatio(19);
 
     fr_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
     fr_motor->SetMode(driver::DjiMotorBase::OMEGA);
-    fr_motor->SetTransmissionRatio(14);
+    fr_motor->SetTransmissionRatio(19);
 
     bl_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
     bl_motor->SetMode(driver::DjiMotorBase::OMEGA);
-    bl_motor->SetTransmissionRatio(14);
+    bl_motor->SetTransmissionRatio(19);
 
     br_motor->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
     br_motor->SetMode(driver::DjiMotorBase::OMEGA);
-    br_motor->SetTransmissionRatio(14);
+    br_motor->SetTransmissionRatio(19);
 
     /* 超级电容逻辑
     driver::supercap_init_t supercap_init = {
