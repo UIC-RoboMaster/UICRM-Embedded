@@ -25,7 +25,7 @@
 #include "bsp_uart.h"
 #include "bsp_usb.h"
 #include "connection_driver.h"
-#include "dji_remote.h"
+#include "refereerc.h"
 
 namespace communication {
 
@@ -46,6 +46,9 @@ namespace communication {
          * @return true for success; false for failure
          */
         bool Receive(package_t package);
+        const controller::RefereeRC& RefereeRc() const {
+            return refereerc_;
+        }
 
         /**
          * @brief Generate the package to be sent according to the command and save to the internal
@@ -63,15 +66,6 @@ namespace communication {
 
         uint8_t bufferRx[MAX_FRAME_LEN] = {0};
         uint8_t bufferTx[MAX_FRAME_LEN] = {0};
-
-        struct {
-            int idx = 0;
-            enum mode {
-                WAITING_FOR_SOF,
-                RECEIVING_REFEREE,
-                RECEIVING_VT13,
-            } mode = WAITING_FOR_SOF;
-        } rx_state;
 
         /**
          * @brief verify the header of frame with crc8
@@ -126,6 +120,12 @@ namespace communication {
          * @return length of the data that is copied into buffer
          */
         virtual int ProcessDataTx(int cmd_id, uint8_t* data) = 0;
+
+      private:
+        size_t rx_used_ = 0;
+        controller::RefereeRC refereerc_;
+        void DiscardRx(size_t size);
+        void ResyncRx();
     };
 
     class UARTProtocol : public Protocol {
@@ -215,7 +215,6 @@ namespace communication {
      * 0x0301 STUDENT_INTERACTIVE
      * 0x0302 ROBOT_INTERACTIVE [x]
      * 0x0303 ROBOT_COMMAND [x]
-     * 0x0304 REMOTE_CONTROL_DATA
      * 0x0305 CLIENT_MAP_COMMAND [x]
      */
 
@@ -240,8 +239,6 @@ namespace communication {
         RFID_STATUS = 0x0209,
         DART_CLIENT_CMD = 0x020A,
         STUDENT_INTERACTIVE = 0x0301,
-        REMOTE_CONTROL_DATA = 0x304,
-        REMOTE_CONTROL_VT13 = 0x53,
         CUSTOM_CLIENT_DATA = 0x0306,
     } referee_cmd;
 
@@ -535,13 +532,6 @@ namespace communication {
         uint8_t cmd_source;
     } __packed map_command_t;
 
-    /* ===== REMOTE_CONTROL_DATA 0x0304 30Hz ===== */
-    typedef struct {
-        remote::mouse_t mouse;
-        remote::keyboard_t keyboard;
-        uint16_t reserved;
-    } __packed remote_control_t;
-
     /* ===== MAP_ROBOT_DATA 0x0305 ===== */
     typedef struct {
         uint16_t target_robot_id;
@@ -610,13 +600,10 @@ namespace communication {
 
         custom_robot_data_t custom_robot_data{};                  // 0x0302
         map_command_t map_command{};                              // 0x0303
-        remote_control_t remote_control{};                        // 0x0304
         map_robot_data_t map_robot_data{};                        // 0x0305
         custom_client_data_t custom_client_data{};                // 0x0306
         custom_client_map_command_t custom_client_map_command{};  // 0x0307
         custom_info_t custom_info{};                              // 0x0308
-
-        remote::vt13_packet_t vt13_packet{};
 
         void PrepareUIContent(content graph_content);
 

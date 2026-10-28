@@ -90,6 +90,9 @@ void RM_RTOS_Default_Task(const void* arg) {
     //    }
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
         //        if (referee->game_robot_status.mains_power_gimbal_output) {
         //            gimbal_power->High();
         //        } else {
@@ -109,16 +112,16 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         // DBUS info
         print(
-            "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
+            "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %s] [SWR: %s]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0,
-            dbus->ch1,
-            dbus->ch2,
-            dbus->ch3,
-            dbus->ch4,
-            dbus->swl,
-            dbus->swr
+            dbus_state.channels[0],
+            dbus_state.channels[1],
+            dbus_state.channels[2],
+            dbus_state.channels[3],
+            dbus_state.channels[4],
+            controller::SwitchName(dbus_state.left_switch),
+            controller::SwitchName(dbus_state.right_switch)
         );
         print("\r\n");
 

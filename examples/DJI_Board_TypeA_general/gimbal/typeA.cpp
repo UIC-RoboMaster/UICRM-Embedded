@@ -26,7 +26,7 @@
 #include "bsp_os.h"
 #include "bsp_spi.h"
 #include "cmsis_os.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 #include "gimbal.h"
 #include "heater.h"
 #include "main.h"
@@ -88,7 +88,7 @@ void imuUpdateTask(void* arguments) {
 
 static bsp::CAN* can1 = nullptr;
 static bsp::CAN* can2 = nullptr;
-static remote::DBUS* dbus = nullptr;
+static controller::DBUS* dbus = nullptr;
 
 static driver::DjiMotorBase* pitch_motor = nullptr;
 static driver::DjiMotorBase* yaw_motor = nullptr;
@@ -120,11 +120,16 @@ const osThreadAttr_t gimbalTaskAttribute =
 osThreadId_t gimbalTaskHandle;
 
 void gimbalTask(void* arg) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(arg);
 
     print("Wait for beginning signal...\r\n");
     while (true) {
-        if (dbus->keyboard.bit.V || dbus->swr == remote::DOWN) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.keyboard.bit.V || dbus_state.right_switch == Down) {
             break;
         }
         osDelay(100);
@@ -159,19 +164,24 @@ void gimbalTask(void* arg) {
     float pitch_target = 0, yaw_target = 0;
 
     while (true) {
-        if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.keyboard.bit.B || dbus_state.left_switch == Down) {
             while (true) {
-                if (dbus->keyboard.bit.V) {
+                dbus->GetState(dbus_state);
+
+                if (dbus_state.keyboard.bit.V) {
                     break;
                 }
                 osDelay(10);
             }
         }
 
-        pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
-        yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-        pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
-        yaw_ratio = dbus->ch2 / 18000.0 / 7.0;
+        pitch_ratio = dbus_state.mouse.y / 32767.0 * 7.5 / 7.0;
+        yaw_ratio = -dbus_state.mouse.x / 32767.0 * 7.5 / 7.0;
+        pitch_ratio = -dbus_state.channels[3] / 18000.0 / 7.0;
+        yaw_ratio = dbus_state.channels[2] / 18000.0 / 7.0;
         pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = clip<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
@@ -194,7 +204,7 @@ void RM_RTOS_Init(void) {
 
     can1 = new bsp::CAN(&hcan1, true);
     can2 = new bsp::CAN(&hcan2, false);
-    dbus = new remote::DBUS(&huart1);
+    dbus = new controller::DBUS(&huart1);
 
     imu_cs = new bsp::GPIO(ONBOARD_IMU_CS_GROUP, ONBOARD_IMU_CS_PIN);
     mpu6500_it = new bsp::GPIT(MPU6500_IT_Pin);
@@ -309,7 +319,10 @@ void RM_RTOS_Threads_Init(void) {
 void KillAll() {
     RM_EXPECT_TRUE(false, "Operation killed\r\n");
     while (true) {
-        if (dbus->keyboard.bit.V) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.keyboard.bit.V) {
             break;
         }
         pitch_motor->Disable();
@@ -320,11 +333,16 @@ void KillAll() {
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(arg);
     mpu6500->RegisterCallback(MPU6500ReceiveDone);
 
     while (true) {
-        if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN)
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.keyboard.bit.B || dbus_state.left_switch == Down)
             KillAll();
 
         set_cursor(0, 0);
@@ -345,8 +363,19 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         print("\r\n");
 
-        print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ", dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3);
-        print("SWL: %d SWR: %d @ %d ms\r\n", dbus->swl, dbus->swr, dbus->GetLastUptime());
+        print(
+            "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ",
+            dbus_state.channels[0],
+            dbus_state.channels[1],
+            dbus_state.channels[2],
+            dbus_state.channels[3]
+        );
+        print(
+            "SWL: %s SWR: %s @ %d ms\r\n",
+            controller::SwitchName(dbus_state.left_switch),
+            controller::SwitchName(dbus_state.right_switch),
+            dbus->GetLastValidTimeMs()
+        );
 
         osDelay(100);
     }

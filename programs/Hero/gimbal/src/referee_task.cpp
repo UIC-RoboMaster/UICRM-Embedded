@@ -21,9 +21,8 @@
 #include "referee_task.h"
 
 bsp::UART* referee_uart = nullptr;
-bsp::UART* refereerc_uart = nullptr;
 communication::Referee* referee = nullptr;
-communication::Referee* refereerc = nullptr;
+controller::RefereeRC* refereerc = nullptr;
 
 void init_referee() {
     referee_uart = new bsp::UART(&BOARD_UART1);
@@ -32,9 +31,5 @@ void init_referee() {
     referee = new communication::Referee(referee_uart);
 
     // 启动裁判系统图传链路（VT13遥控器）
-    refereerc_uart = new bsp::UART(&BOARD_UART2);
-    refereerc_uart->SetBaudrate(921600);
-    refereerc_uart->SetupRx(300);
-    refereerc_uart->SetupTx(300, false);
-    refereerc = new communication::Referee(refereerc_uart);
+    refereerc = new controller::RefereeRC(&BOARD_UART2);
 }

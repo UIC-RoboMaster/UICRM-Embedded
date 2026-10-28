@@ -22,7 +22,7 @@
 #include "bsp_print.h"
 #include "bsp_uart.h"
 #include "cmsis_os2.h"
-#include "dji_dbus.h"
+#include "refereerc.h"
 #include "main.h"
 #include "protocol.h"
 
@@ -30,7 +30,6 @@
 
 extern bsp::UART* referee_uart;
 extern communication::Referee* referee;
-extern bsp::UART* refereerc_uart;
-extern communication::Referee* refereerc;
+extern controller::RefereeRC* refereerc;
 
 void init_referee();

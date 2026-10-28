@@ -23,7 +23,7 @@
 #include "imu_task.h"
 #include "minipc_task.h"
 
-remote::DBUS* dbus = nullptr;
+controller::DBUS* dbus = nullptr;
 
 bool is_activate = true;
 RemoteMode remote_mode = REMOTE_MODE_AUTOPILOT;
@@ -35,13 +35,18 @@ RemoteMode last_remote_mode = REMOTE_MODE_SPIN;
 ShootMode last_shoot_mode = SHOOT_MODE_STOP;
 
 void init_remote() {
-    dbus = new remote::DBUS(&huart3);
+    dbus = new controller::DBUS(&huart3);
 }
 
 osThreadId_t remoteTaskHandle;
 void remoteTask(void* arg) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(arg);
     osDelay(1000);
+
+    controller::DbusFrame dbus_state{};
+    dbus->GetState(dbus_state);
 
     bool is_referee_robot_dead = true;
     bool is_referee_shoot_available = false;
@@ -51,8 +56,11 @@ void remoteTask(void* arg) {
 
     // 使/失能（上/下电）
     auto tranlogic_active_condition = TRANLOGIC {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
         const auto& referee_cmd_dead = COMPONENT(0);
-        return dbus->IsOnline() && dbus->swr != remote::DOWN && !referee_cmd_dead.get();
+        return dbus->IsOnline() && dbus_state.right_switch != Down && !referee_cmd_dead.get();
     };
     auto activate_aut = control::AutomataBuilder<ActivateStates>()
         .item<control::AutomataInputRaw>(is_referee_robot_dead)
@@ -64,10 +72,10 @@ void remoteTask(void* arg) {
     auto tranlogic_next_remote_mode_trigger = TRANLOGIC {
         const auto& swr = COMPONENT(0);
         const auto& mode_change_key = COMPONENT(1);
-        return (swr.downEdge() && swr.get() == remote::UP) || mode_change_key.upEdge();
+        return (swr.downEdge() && swr.get() == Up) || mode_change_key.upEdge();
     };
     auto remote_mode_aut = control::AutomataBuilder<RemoteMode>()
-        .item<control::AutomataInputEdge>(dbus->swr)
+        .item<control::AutomataInputEdge>(dbus_state.right_switch)
         .item<control::AutomataInputEdge>(bool{}) // mode_change_key
         .transition<REMOTE_MODE_AUTOPILOT, REMOTE_MODE_FOLLOW>(tranlogic_next_remote_mode_trigger)
         .transition<REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN>(tranlogic_next_remote_mode_trigger)
@@ -82,10 +90,10 @@ void remoteTask(void* arg) {
     auto tranlogic_fric_wheel_trigger = TRANLOGIC {
         const auto& swl = COMPONENT(0);
         const auto& fric_key = COMPONENT(1);
-        return (swl.downEdge() && swl.get() == remote::UP) || fric_key.upEdge();
+        return (swl.downEdge() && swl.get() == Up) || fric_key.upEdge();
     };
     auto fric_wheel_aut = control::AutomataBuilder<ShootFricMode>()
-        .item<control::AutomataInputEdge>(dbus->swl)
+        .item<control::AutomataInputEdge>(dbus_state.left_switch)
         .item<control::AutomataInputEdge>(bool{}) // friction_key
         .transition<SHOOT_FRIC_MODE_PREPARING, SHOOT_FRIC_MODE_STOP>(tranlogic_fric_wheel_trigger)
         .transition<SHOOT_FRIC_MODE_PREPARED, SHOOT_FRIC_MODE_STOP>(tranlogic_fric_wheel_trigger)
@@ -103,13 +111,13 @@ void remoteTask(void* arg) {
         const auto& referee_permit = COMPONENT(2);
         const auto& shoot_key = COMPONENT(3);
         const auto& remote_mode = COMPONENT(4);
-        return (swl.get() == remote::DOWN || shoot_key.get()) &&
+        return (swl.get() == Down || shoot_key.get()) &&
             fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
             referee_permit.get() &&
             (remote_mode.get() == REMOTE_MODE_AUTOPILOT ? minipc->target_angle.shoot_cmd : true);
     };
     auto shoot_aut = control::AutomataBuilder<ShootMode>()
-        .item<control::AutomataInputEdge>(dbus->swl)
+        .item<control::AutomataInputEdge>(dbus_state.left_switch)
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .item<control::AutomataInputRaw>(is_referee_shoot_available)
         .item<control::AutomataInputEdge>(bool{}) // shoot_key
@@ -130,10 +138,10 @@ void remoteTask(void* arg) {
     auto tranlogic_bullet_cap_trigger = TRANLOGIC {
         const auto& swl = COMPONENT(0);
         const auto& fric_state = COMPONENT(1);
-        return swl.downEdge() && swl.get() == remote::DOWN && fric_state.get() == SHOOT_FRIC_MODE_STOP;
+        return swl.downEdge() && swl.get() == Down && fric_state.get() == SHOOT_FRIC_MODE_STOP;
     };
     auto bullet_cap_aut = control::AutomataBuilder<BulletCapMode>()
-        .item<control::AutomataInputEdge>(dbus->swl)
+        .item<control::AutomataInputEdge>(dbus_state.left_switch)
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .transition<BULLET_CAP_MODE_CLOSE, BULLET_CAP_MODE_OPEN>(tranlogic_bullet_cap_trigger)
         .transition<BULLET_CAP_MODE_OPEN, BULLET_CAP_MODE_CLOSE>(tranlogic_bullet_cap_trigger)
@@ -144,6 +152,9 @@ void remoteTask(void* arg) {
 
     while (true) {
         osDelay(REMOTE_OS_DELAY);
+
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
 
 #ifdef HAS_REFEREE
         // Kill Detection
@@ -162,20 +173,25 @@ void remoteTask(void* arg) {
         if (!is_activate || !imu->DataReady() || !imu->CaliDone())
             continue;
 
-        remote_mode_aut.input(std::make_tuple(dbus->swr, static_cast<bool>(dbus->keyboard.bit.SHIFT)));
+        remote_mode_aut.input(std::make_tuple(dbus_state.right_switch, static_cast<bool>(dbus_state.keyboard.bit.SHIFT))
+        );
         last_remote_mode = remote_mode;
         remote_mode = remote_mode_aut.state();
 
-        fric_wheel_aut.input(std::make_tuple(dbus->swl, static_cast<bool>(dbus->keyboard.bit.Z)));
+        fric_wheel_aut.input(std::make_tuple(dbus_state.left_switch, static_cast<bool>(dbus_state.keyboard.bit.Z)));
         shoot_fric_wheel_mode = fric_wheel_aut.state();
 
-        shoot_aut.input(
-            std::make_tuple(dbus->swl, shoot_fric_wheel_mode, is_referee_shoot_available, dbus->mouse.l, remote_mode)
-        );
+        shoot_aut.input(std::make_tuple(
+            dbus_state.left_switch,
+            shoot_fric_wheel_mode,
+            is_referee_shoot_available,
+            dbus_state.mouse.left,
+            remote_mode
+        ));
         last_shoot_mode = shoot_mode;
         shoot_mode = shoot_aut.state();
 
-        bullet_cap_aut.input(std::make_tuple(dbus->swl, shoot_fric_wheel_mode));
+        bullet_cap_aut.input(std::make_tuple(dbus_state.left_switch, shoot_fric_wheel_mode));
         bullet_cap_mode = bullet_cap_aut.state();
     }
 }

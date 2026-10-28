@@ -25,7 +25,7 @@
 
 #include "imu_task.h"
 
-remote::DBUS* dbus = nullptr;
+controller::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode last_remote_mode = REMOTE_MODE_FOLLOW;
 RemoteMode available_remote_mode[] = {REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN, REMOTE_MODE_ADVANCED};
@@ -37,28 +37,26 @@ bool is_killed = false;
 bool turbo_shoot = false;
 
 void init_dbus() {
-    dbus = new remote::DBUS(&huart3);
+    dbus = new controller::DBUS(&huart3);
 }
 osThreadId_t remoteTaskHandle;
 void remoteTask(void* arg) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(arg);
     osDelay(1000);
     bool mode_switch = false;
     bool shoot_fric_switch = false;
     bool shoot_switch = false;
     bool shoot_stop_switch = false;
-    remote::switch_t last_state_r = remote::MID;
-    remote::switch_t last_state_l = remote::MID;
-    remote::keyboard_t last_keyboard;
-    remote::mouse_t last_mouse;
-    remote::switch_t state_r = remote::MID;
-    remote::switch_t state_l = remote::MID;
-    remote::keyboard_t keyboard;
-    remote::mouse_t mouse;
-    memset(&keyboard, 0, sizeof(keyboard));
-    memset(&mouse, 0, sizeof(mouse));
-    memset(&last_keyboard, 0, sizeof(last_keyboard));
-    memset(&last_mouse, 0, sizeof(last_mouse));
+    controller::ThreePositionSwitch last_state_r = Mid;
+    controller::ThreePositionSwitch last_state_l = Mid;
+    controller::KeyboardState last_keyboard{};
+    controller::MouseState last_mouse{};
+    controller::ThreePositionSwitch state_r = Mid;
+    controller::ThreePositionSwitch state_l = Mid;
+    controller::KeyboardState keyboard{};
+    controller::MouseState mouse{};
     bool is_dbus_offline;
     bool is_vt13_offline;
     bool is_robot_dead;
@@ -74,11 +72,18 @@ void remoteTask(void* arg) {
     BoolEdgeDetector* vt13_trigger_edge = new BoolEdgeDetector(false);
 
     while (1) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         // 检测遥控器是否离线，或者遥控器是否在安全模式下
-        is_dbus_offline = (!dbus->IsOnline()) || dbus->swr == remote::DOWN;
+        is_dbus_offline = (!dbus->IsOnline()) || dbus_state.right_switch == Down;
         // 检测VT13是否离线或不在C模式
         is_vt13_offline =
-            (!refereerc->IsOnline()) || refereerc->vt13_packet.remote.mode_sw != remote::vt13_remote_t::MODE_C;
+            (!(refereerc != nullptr && refereerc->IsOnline())) || refereerc_state.mode != controller::RefereeRcMode::C;
 #ifdef HAS_REFEREE
         is_robot_dead = referee->game_robot_status.remain_HP == 0;
         is_shoot_available = (referee->game_robot_status.shooter_heat_limit -
@@ -117,22 +122,22 @@ void remoteTask(void* arg) {
         last_mouse = mouse;
         // Update State：优先使用DBUS，否则使用VT13
         if (dbus->IsOnline()) {
-            state_r = dbus->swr;
-            state_l = dbus->swl;
-            keyboard = dbus->keyboard;
-            mouse = dbus->mouse;
-        } else if (refereerc->IsOnline()) {
-            state_r = remote::MID;
-            state_l = remote::MID;
-            keyboard = refereerc->vt13_packet.keyboard;
-            mouse = (remote::mouse_t)refereerc->vt13_packet.mouse;
+            state_r = dbus_state.right_switch;
+            state_l = dbus_state.left_switch;
+            keyboard = dbus_state.keyboard;
+            mouse = dbus_state.mouse;
+        } else if ((refereerc != nullptr && refereerc->IsOnline())) {
+            state_r = Mid;
+            state_l = Mid;
+            keyboard = refereerc_state.keyboard;
+            mouse = refereerc_state.mouse;
         }
 
         // Update Edge Detectors
         z_edge->input(keyboard.bit.Z);
         shift_edge->input(keyboard.bit.SHIFT);
-        mouse_left_edge->input(mouse.l);
-        mouse_right_edge->input(mouse.r);
+        mouse_left_edge->input(mouse.left);
+        mouse_right_edge->input(mouse.right);
 
         shoot_burst_edge->input(keyboard.bit.F);
         if (shoot_burst_edge->posEdge()) {
@@ -140,25 +145,25 @@ void remoteTask(void* arg) {
         }
 
         // VT13 边沿检测
-        vt13_pause_edge->input(refereerc->vt13_packet.remote.pause);
-        vt13_left_edge->input(refereerc->vt13_packet.remote.swl);
-        vt13_trigger_edge->input(refereerc->vt13_packet.remote.trigger);
+        vt13_pause_edge->input(refereerc_state.pause);
+        vt13_left_edge->input(refereerc_state.left_button);
+        vt13_trigger_edge->input(refereerc_state.trigger);
 
         // ========== 模式切换 ==========
         // DT7 右摇杆上拨
         switch (state_r) {
-            case remote::UP:
-                if (last_state_r == remote::MID && dbus->IsOnline()) {
+            case Up:
+                if (last_state_r == Mid && dbus->IsOnline()) {
                     mode_switch = true;
                 }
                 break;
-            case remote::MID:
+            case Mid:
                 // 键盘 SHIFT 切换模式
                 if (shift_edge->posEdge()) {
                     mode_switch = true;
                 }
                 break;
-            case remote::DOWN:
+            case Down:
                 break;
         }
         // VT13 暂停键切换模式
@@ -177,24 +182,24 @@ void remoteTask(void* arg) {
         // ========== 摩擦轮切换 ==========
         // DT7 左摇杆上拨
         switch (state_l) {
-            case remote::UP:
-                if (last_state_l == remote::MID && dbus->IsOnline()) {
+            case Up:
+                if (last_state_l == Mid && dbus->IsOnline()) {
                     shoot_fric_switch = true;
                 }
                 break;
-            case remote::DOWN:
-                if (last_state_l == remote::MID && dbus->IsOnline()) {
+            case Down:
+                if (last_state_l == Mid && dbus->IsOnline()) {
                     shoot_switch = true;
                 }
                 break;
-            case remote::MID:
+            case Mid:
                 switch (last_state_l) {
-                    case remote::DOWN:
+                    case Down:
                         shoot_stop_switch = true;
                         break;
-                    case remote::UP:
+                    case Up:
                         break;
-                    case remote::MID:
+                    case Mid:
                         // 键盘 Z键 切换摩擦轮
                         if (z_edge->posEdge()) {
                             shoot_fric_switch = true;
@@ -236,7 +241,7 @@ void remoteTask(void* arg) {
             }
         }
         // 退弹 - 不受摩擦轮状态限制
-        if (refereerc->vt13_packet.remote.ch4 < 424 || refereerc->vt13_packet.mouse.mid) {
+        if (refereerc_state.channels[4] < -600 || refereerc_state.mouse.middle) {
             shoot_load_mode = SHOOT_MODE_UNLOAD;
         } else if (shoot_load_mode == SHOOT_MODE_UNLOAD) {
             // 退弹条件消失，根据摩擦轮状态恢复

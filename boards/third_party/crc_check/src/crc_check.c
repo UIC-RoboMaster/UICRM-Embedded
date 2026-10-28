@@ -20,6 +20,8 @@
 
 #include "crc_check.h"
 
+#include <stddef.h>
+
 // crc8 generator polynomial:G(x)=x8+x5+x4+1
 const uint8_t CRC8_INIT = 0xff;
 const uint8_t CRC8_TAB[256] = {

@@ -105,6 +105,13 @@ void RM_RTOS_Default_Task(const void* arg) {
     // }
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         if (referee->game_robot_status.mains_power_gimbal_output) {
             gimbal_power->High();
         } else {
@@ -124,17 +131,17 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         // DBUS info
         print(
-            "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
+            "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %s] [SWR: %s]"
             "@ %d "
             "ms\r\n",
-            dbus->ch0,
-            dbus->ch1,
-            dbus->ch2,
-            dbus->ch3,
-            dbus->ch4,
-            dbus->swl,
-            dbus->swr,
-            dbus->GetLastUptime()
+            dbus_state.channels[0],
+            dbus_state.channels[1],
+            dbus_state.channels[2],
+            dbus_state.channels[3],
+            dbus_state.channels[4],
+            controller::SwitchName(dbus_state.left_switch),
+            controller::SwitchName(dbus_state.right_switch),
+            dbus->GetLastValidTimeMs()
         );
         print("\r\n");
 
@@ -142,26 +149,26 @@ void RM_RTOS_Default_Task(const void* arg) {
         print(
             "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d]"
             " [Mode: %d] [SWL: %d] [SWR: %d] [Trig: %d]\r\n",
-            refereerc->vt13_packet.remote.ch0,
-            refereerc->vt13_packet.remote.ch1,
-            refereerc->vt13_packet.remote.ch2,
-            refereerc->vt13_packet.remote.ch3,
-            refereerc->vt13_packet.remote.ch4,
-            refereerc->vt13_packet.remote.mode_sw,
-            (int)refereerc->vt13_packet.remote.swl,
-            (int)refereerc->vt13_packet.remote.swr ? 1 : 0,
-            (int)refereerc->vt13_packet.remote.trigger ? 1 : 0
+            refereerc_state.channels[0],
+            refereerc_state.channels[1],
+            refereerc_state.channels[2],
+            refereerc_state.channels[3],
+            refereerc_state.channels[4],
+            static_cast<unsigned>(refereerc_state.mode),
+            (int)refereerc_state.left_button,
+            (int)refereerc_state.right_button ? 1 : 0,
+            (int)refereerc_state.trigger ? 1 : 0
         );
         print("\r\n");
-        auto& mouse = refereerc->vt13_packet.mouse;
+        const auto& mouse = refereerc_state.mouse;
         print(
             "Mouse: [X: %d] [Y: %d] [ROLL: %d] [L %d] [R %d] [MID %d]",
             mouse.x,
             mouse.y,
-            mouse.roll,
-            mouse.l,
-            mouse.r,
-            mouse.mid
+            mouse.z,
+            mouse.left,
+            mouse.right,
+            mouse.middle
         );
         print("\r\n");
 
@@ -202,7 +209,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("Comm Stat:  ");
         print_enabled("DBUS", dbus->IsOnline());
         print_enabled("Referee", referee->IsOnline());
-        print_enabled("Referee RC", refereerc->IsOnline());
+        print_enabled("Referee RC", (refereerc != nullptr && refereerc->IsOnline()));
         print("\r\n");
         print("Motor Stat: ");
         print_enabled("Yaw", yaw_motor->IsOnline());

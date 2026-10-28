@@ -152,6 +152,13 @@ void uiTask(void* arg) {
     BoolEdgeDetector* shoot_jam_edge = new BoolEdgeDetector(false);
     BoolEdgeDetector* bullet_edge = new BoolEdgeDetector(false);
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         // Update chassis GUI
         // 通过两个云台电机的角度
         float relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
@@ -351,9 +358,9 @@ void uiTask(void* arg) {
 
         // v键清理UI
         if (dbus->IsOnline())
-            v_edge->input(dbus->keyboard.bit.V);
+            v_edge->input(dbus_state.keyboard.bit.V);
         else
-            v_edge->input(refereerc->vt13_packet.keyboard.bit.V);
+            v_edge->input(refereerc_state.keyboard.bit.V);
 
         if (v_edge->posEdge()) {
             osDelay(110);
@@ -429,9 +436,9 @@ void uiTask(void* arg) {
 
         // c键清理消息
         if (dbus->IsOnline())
-            c_edge->input(dbus->keyboard.bit.C);
+            c_edge->input(dbus_state.keyboard.bit.C);
         else
-            c_edge->input(refereerc->vt13_packet.keyboard.bit.C);
+            c_edge->input(refereerc_state.keyboard.bit.C);
         if (c_edge->posEdge()) {
             diagGUI->Clear(UI_Delay);
         }

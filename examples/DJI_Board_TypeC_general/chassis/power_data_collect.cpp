@@ -21,7 +21,7 @@
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 #include "main.h"
 #include "power_meter.h"
 
@@ -32,7 +32,7 @@ driver::DjiMotorBase* bl_motor = nullptr;
 driver::DjiMotorBase* br_motor = nullptr;
 
 control::Chassis* chassis = nullptr;
-remote::DBUS* dbus = nullptr;
+controller::DBUS* dbus = nullptr;
 
 power_meter* power_meter_1 = nullptr;
 
@@ -107,7 +107,7 @@ void RM_RTOS_Init() {
     chassis_data.model = control::CHASSIS_MECANUM_WHEEL;
     chassis = new control::Chassis(chassis_data);
 
-    dbus = new remote::DBUS(&BOARD_DBUS);
+    dbus = new controller::DBUS(&BOARD_DBUS);
 
     power_meter_1 = new power_meter(&BOARD_UART2, 1, callback);
 
@@ -123,8 +123,11 @@ void RM_RTOS_Default_Task(const void* args) {
     osDelay(500);  // DBUS initialization needs time
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
         const float ratio = 1.0f / 660.0f * PI * 12;
-        float target = ratio * dbus->ch0;
+        float target = ratio * dbus_state.channels[0];
         fr_motor->SetTarget(target, true);
         osDelay(10);
     }

@@ -24,7 +24,7 @@
 
 #include "bsp_usb.h"
 #include "crc_check.h"
-#include "dji_remote.h"
+#include "bsp_os.h"
 
 static const uint8_t SOF = 0xA5;
 static const int FRAME_HEADER_LEN = 5;
@@ -33,46 +33,75 @@ static const int FRAME_TAIL_LEN = 2;
 static const int BYTE = 8;
 
 namespace communication {
-    bool Protocol::Receive(package_t package) {
-        Heartbeat();
-        for (int i = 0; i < package.length; ++i) {
-            if (rx_state.mode == rx_state.mode::WAITING_FOR_SOF) {
-                // 还未接收到帧头，检测是否为帧头
-                if (package.data[i] == SOF) {
-                    rx_state.mode = rx_state.mode::RECEIVING_REFEREE;
-                    bufferRx[0] = SOF;
-                    rx_state.idx = 1;
-                } else if (package.data[i] == remote::vt13_packet_t::SOF) {
-                    rx_state.mode = rx_state.mode::RECEIVING_VT13;
-                    bufferRx[0] = remote::vt13_packet_t::SOF;
-                    rx_state.idx = 1;
-                }
-            } else if (rx_state.mode == rx_state.RECEIVING_REFEREE) {
-                // 接收裁判系统的数据
-                bufferRx[rx_state.idx++] = package.data[i];
+    void Protocol::DiscardRx(size_t size) {
+        rx_used_ -= size;
+        std::memmove(bufferRx, bufferRx + size, rx_used_);
+    }
 
-                if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN) {
-                    int DATA_LENGTH = bufferRx[2] << BYTE | bufferRx[1];
-                    if (rx_state.idx >= FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN) {
-                        if (VerifyHeader(bufferRx, FRAME_HEADER_LEN) &&
-                            VerifyFrame(bufferRx, FRAME_HEADER_LEN + CMD_ID_LEN + DATA_LENGTH + FRAME_TAIL_LEN)) {
-                            int cmd_id = bufferRx[FRAME_HEADER_LEN + 1] << BYTE | bufferRx[FRAME_HEADER_LEN];
-                            ProcessDataRx(cmd_id, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN, DATA_LENGTH);
-                        }
-                        rx_state.mode = rx_state.WAITING_FOR_SOF;
-                        rx_state.idx = 0;
-                    }
+    void Protocol::ResyncRx() {
+        size_t next = 1;
+        while (next < rx_used_ && bufferRx[next] != SOF && bufferRx[next] != controller::RefereeRC::SOF) {
+            ++next;
+        }
+        DiscardRx(next);
+    }
+
+    bool Protocol::Receive(package_t package) {
+        if (!package.data || package.length <= 0)
+            return false;
+        // Preserve the legacy link heartbeat. Input-source health is independent.
+        Heartbeat();
+        const uint32_t now_ms = bsp::GetHighresTickMilliSec();
+        for (int i = 0; i < package.length; ++i) {
+            const auto byte = package.data[i];
+            if (!rx_used_ && byte != SOF && byte != controller::RefereeRC::SOF)
+                continue;
+            // A5 lengths are capped below; every full candidate is consumed or
+            // resynchronized before the next append, keeping this buffer bounded.
+            bufferRx[rx_used_++] = byte;
+            while (rx_used_) {
+                if (bufferRx[0] != SOF && bufferRx[0] != controller::RefereeRC::SOF) {
+                    ResyncRx();
+                    continue;
                 }
-            } else if (rx_state.mode == rx_state.mode::RECEIVING_VT13) {
-                // VT13遥控器与图传链路从同一个UART输出，包头不同。
-                // Todo: 应该把图传链路和遥控器数据分开处理
-                bufferRx[rx_state.idx++] = package.data[i];
-                if (rx_state.idx >= static_cast<int>(sizeof(remote::vt13_packet_t))) {
-                    if (verify_crc16_check_sum(bufferRx, sizeof(remote::vt13_packet_t))) {
-                        ProcessDataRx(REMOTE_CONTROL_VT13, bufferRx, sizeof(remote::vt13_packet_t));
+                if (bufferRx[0] == controller::RefereeRC::SOF) {
+                    if (rx_used_ < 2)
+                        break;
+                    if (bufferRx[1] != controller::RefereeRC::CMD) {
+                        ResyncRx();
+                        continue;
                     }
-                    rx_state.mode = rx_state.WAITING_FOR_SOF;
-                    rx_state.idx = 0;
+                    if (rx_used_ < controller::RefereeRC::FRAME_SIZE)
+                        break;
+                    // Protocol owns stream framing; the receiver owns VT13
+                    // validation, decoding and the independent input timestamp.
+                    refereerc_.ResetStream();
+                    const auto sequence = refereerc_.GetSequence();
+                    refereerc_.UpdateData(bufferRx, controller::RefereeRC::FRAME_SIZE, now_ms);
+                    refereerc_.ResetStream();
+                    if (refereerc_.GetSequence() == sequence) {
+                        ResyncRx();
+                        continue;
+                    }
+                    DiscardRx(controller::RefereeRC::FRAME_SIZE);
+                } else {
+                    if (rx_used_ < FRAME_HEADER_LEN)
+                        break;
+                    const int payload = int(bufferRx[1]) | (int(bufferRx[2]) << BYTE);
+                    if (!VerifyHeader(bufferRx, FRAME_HEADER_LEN) || payload > MAX_FRAME_LEN - 9) {
+                        ResyncRx();
+                        continue;
+                    }
+                    const int total = payload + FRAME_HEADER_LEN + CMD_ID_LEN + FRAME_TAIL_LEN;
+                    if (rx_used_ < static_cast<size_t>(total))
+                        break;
+                    if (!VerifyFrame(bufferRx, total)) {
+                        ResyncRx();
+                        continue;
+                    }
+                    const int cmd = int(bufferRx[5]) | (int(bufferRx[6]) << BYTE);
+                    ProcessDataRx(cmd, bufferRx + FRAME_HEADER_LEN + CMD_ID_LEN, payload);
+                    DiscardRx(static_cast<size_t>(total));
                 }
             }
         }
@@ -82,7 +111,7 @@ namespace communication {
     package_t Protocol::Transmit(int cmd_id) {
         bufferTx[0] = SOF;
         int DATA_LENGTH = ProcessDataTx(cmd_id, bufferTx + FRAME_HEADER_LEN + CMD_ID_LEN);
-        if (DATA_LENGTH < 0)
+        if (DATA_LENGTH < 0 || DATA_LENGTH > MAX_FRAME_LEN - 9)
             return package_t{nullptr, 0};
         bufferTx[1] = (uint8_t)((uint32_t)DATA_LENGTH & 0xFF);
         bufferTx[2] = (uint8_t)((uint32_t)DATA_LENGTH >> BYTE);
@@ -138,7 +167,8 @@ namespace communication {
 
     package_t UARTProtocol::Transmit(int cmd_id) {
         package_t package = Protocol::Transmit(cmd_id);
-        uart_->Write(package.data, package.length);
+        if (package.data && package.length > 0)
+            uart_->Write(package.data, package.length);
         return package;
     }
 
@@ -177,7 +207,8 @@ namespace communication {
 
     package_t USBProtocol::Transmit(int cmd_id) {
         package_t package = Protocol::Transmit(cmd_id);
-        usb_->Write<false>(package.data, package.length);
+        if (package.data && package.length > 0)
+            usb_->Write<false>(package.data, package.length);
         return package;
     }
 
@@ -191,61 +222,89 @@ namespace communication {
     bool Referee::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
         switch (cmd_id) {
             case GAME_STATUS:
-                memcpy(&game_status, data, length);
+                if (length != static_cast<int>(sizeof(game_status)))
+                    return false;
+                memcpy(&game_status, data, sizeof(game_status));
                 break;
             case GAME_RESULT:
-                memcpy(&game_result, data, length);
+                if (length != static_cast<int>(sizeof(game_result)))
+                    return false;
+                memcpy(&game_result, data, sizeof(game_result));
                 break;
             case GAME_ROBOT_HP:
-                memcpy(&game_robot_HP, data, length);
+                if (length != static_cast<int>(sizeof(game_robot_HP)))
+                    return false;
+                memcpy(&game_robot_HP, data, sizeof(game_robot_HP));
                 break;
             case EVENT_DATA:
-                memcpy(&event_data, data, length);
+                if (length != static_cast<int>(sizeof(event_data)))
+                    return false;
+                memcpy(&event_data, data, sizeof(event_data));
                 break;
             case SUPPLY_PROJECTILE_ACTION:
-                memcpy(&supply_projectile_action, data, length);
+                if (length != static_cast<int>(sizeof(supply_projectile_action)))
+                    return false;
+                memcpy(&supply_projectile_action, data, sizeof(supply_projectile_action));
                 break;
             case REFEREE_WARNING:
-                memcpy(&referee_warning, data, length);
+                if (length != static_cast<int>(sizeof(referee_warning)))
+                    return false;
+                memcpy(&referee_warning, data, sizeof(referee_warning));
                 break;
             case DART_REMAINING_TIME:
-                memcpy(&dart_remaining_time, data, length);
+                if (length != static_cast<int>(sizeof(dart_remaining_time)))
+                    return false;
+                memcpy(&dart_remaining_time, data, sizeof(dart_remaining_time));
                 break;
             case GAME_ROBOT_STATUS:
-                memcpy(&game_robot_status, data, length);
+                if (length != static_cast<int>(sizeof(game_robot_status)))
+                    return false;
+                memcpy(&game_robot_status, data, sizeof(game_robot_status));
                 break;
             case POWER_HEAT_DATA:
-                memcpy(&power_heat_data, data, length);
+                if (length != static_cast<int>(sizeof(power_heat_data)))
+                    return false;
+                memcpy(&power_heat_data, data, sizeof(power_heat_data));
                 break;
             case GAME_ROBOT_POS:
-                memcpy(&game_robot_pos, data, length);
+                if (length != static_cast<int>(sizeof(game_robot_pos)))
+                    return false;
+                memcpy(&game_robot_pos, data, sizeof(game_robot_pos));
                 break;
             case BUFF:
-                memcpy(&buff, data, length);
+                if (length != static_cast<int>(sizeof(buff)))
+                    return false;
+                memcpy(&buff, data, sizeof(buff));
                 break;
             case AERIAL_ROBOT_ENERGY:
-                memcpy(&aerial_robot_energy, data, length);
+                if (length != static_cast<int>(sizeof(aerial_robot_energy)))
+                    return false;
+                memcpy(&aerial_robot_energy, data, sizeof(aerial_robot_energy));
                 break;
             case ROBOT_HURT:
-                memcpy(&robot_hurt, data, length);
+                if (length != static_cast<int>(sizeof(robot_hurt)))
+                    return false;
+                memcpy(&robot_hurt, data, sizeof(robot_hurt));
                 break;
             case SHOOT_DATA:
-                memcpy(&shoot_data, data, length);
+                if (length != static_cast<int>(sizeof(shoot_data)))
+                    return false;
+                memcpy(&shoot_data, data, sizeof(shoot_data));
                 break;
             case BULLET_REMAINING:
-                memcpy(&bullet_remaining, data, length);
+                if (length != static_cast<int>(sizeof(bullet_remaining)))
+                    return false;
+                memcpy(&bullet_remaining, data, sizeof(bullet_remaining));
                 break;
             case RFID_STATUS:
-                memcpy(&rfid_status, data, length);
+                if (length != static_cast<int>(sizeof(rfid_status)))
+                    return false;
+                memcpy(&rfid_status, data, sizeof(rfid_status));
                 break;
             case DART_CLIENT_CMD:
-                memcpy(&dart_client_cmd, data, length);
-                break;
-            case REMOTE_CONTROL_DATA:
-                memcpy(&remote_control, data, length);
-                break;
-            case REMOTE_CONTROL_VT13:
-                memcpy(&vt13_packet, data, length);
+                if (length != static_cast<int>(sizeof(dart_client_cmd)))
+                    return false;
+                memcpy(&dart_client_cmd, data, sizeof(dart_client_cmd));
                 break;
             default:
                 return false;
@@ -299,8 +358,6 @@ namespace communication {
             default:
                 data_len = -1;
         }
-        if (data_len > 0)
-            uart_->Write(data, data_len);
         return data_len;
     }
 
@@ -314,35 +371,55 @@ namespace communication {
     bool Host::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
         switch (cmd_id) {
             case PACK:
-                memcpy(&pack, data, length);
+                if (length != static_cast<int>(sizeof(pack)))
+                    return false;
+                memcpy(&pack, data, sizeof(pack));
                 break;
             case TARGET_ANGLE:
                 // memset(&target_angle, 0, sizeof(target_angle));
-                memcpy(&target_angle, data, length);
+                if (length != static_cast<int>(sizeof(target_angle)))
+                    return false;
+                memcpy(&target_angle, data, sizeof(target_angle));
                 break;
             case NO_TARGET_FLAG:
-                memcpy(&no_target_flag, data, length);
+                if (length != static_cast<int>(sizeof(no_target_flag)))
+                    return false;
+                memcpy(&no_target_flag, data, sizeof(no_target_flag));
                 break;
             case SHOOT_CMD:
-                memcpy(&shoot_cmd, data, length);
+                if (length != static_cast<int>(sizeof(shoot_cmd)))
+                    return false;
+                memcpy(&shoot_cmd, data, sizeof(shoot_cmd));
                 break;
             case ROBOT_MOVE_SPEED:
-                memcpy(&robot_move, data, length);
+                if (length != static_cast<int>(sizeof(robot_move)))
+                    return false;
+                memcpy(&robot_move, data, sizeof(robot_move));
                 break;
             case ROBOT_POWER_HEAT_HP_UPLOAD:
-                memcpy(&robot_power_heat_hp_upload, data, length);
+                if (length != static_cast<int>(sizeof(robot_power_heat_hp_upload)))
+                    return false;
+                memcpy(&robot_power_heat_hp_upload, data, sizeof(robot_power_heat_hp_upload));
                 break;
             case GIMBAL_CURRENT_STATUS:
-                memcpy(&gimbal_current_status, data, length);
+                if (length != static_cast<int>(sizeof(gimbal_current_status)))
+                    return false;
+                memcpy(&gimbal_current_status, data, sizeof(gimbal_current_status));
                 break;
             case CHASSIS_CURRENT_STATUS:
-                memcpy(&chassis_current_status, data, length);
+                if (length != static_cast<int>(sizeof(chassis_current_status)))
+                    return false;
+                memcpy(&chassis_current_status, data, sizeof(chassis_current_status));
                 break;
             case AUTOAIM_ENABLE:
-                memcpy(&autoaim_enable, data, length);
+                if (length != static_cast<int>(sizeof(autoaim_enable)))
+                    return false;
+                memcpy(&autoaim_enable, data, sizeof(autoaim_enable));
                 break;
             case ROBOT_STATUS_UPLOAD:
-                memcpy(&robot_status_upload, data, length);
+                if (length != static_cast<int>(sizeof(robot_status_upload)))
+                    return false;
+                memcpy(&robot_status_upload, data, sizeof(robot_status_upload));
                 break;
             default:
                 return false;
@@ -408,35 +485,55 @@ namespace communication {
     bool HostUSB::ProcessDataRx(int cmd_id, const uint8_t* data, int length) {
         switch (cmd_id) {
             case PACK:
-                memcpy(&pack, data, length);
+                if (length != static_cast<int>(sizeof(pack)))
+                    return false;
+                memcpy(&pack, data, sizeof(pack));
                 break;
             case TARGET_ANGLE:
                 // memset(&target_angle, 0, sizeof(target_angle));
-                memcpy(&target_angle, data, length);
+                if (length != static_cast<int>(sizeof(target_angle)))
+                    return false;
+                memcpy(&target_angle, data, sizeof(target_angle));
                 break;
             case NO_TARGET_FLAG:
-                memcpy(&no_target_flag, data, length);
+                if (length != static_cast<int>(sizeof(no_target_flag)))
+                    return false;
+                memcpy(&no_target_flag, data, sizeof(no_target_flag));
                 break;
             case SHOOT_CMD:
-                memcpy(&shoot_cmd, data, length);
+                if (length != static_cast<int>(sizeof(shoot_cmd)))
+                    return false;
+                memcpy(&shoot_cmd, data, sizeof(shoot_cmd));
                 break;
             case ROBOT_MOVE_SPEED:
-                memcpy(&robot_move, data, length);
+                if (length != static_cast<int>(sizeof(robot_move)))
+                    return false;
+                memcpy(&robot_move, data, sizeof(robot_move));
                 break;
             case ROBOT_POWER_HEAT_HP_UPLOAD:
-                memcpy(&robot_power_heat_hp_upload, data, length);
+                if (length != static_cast<int>(sizeof(robot_power_heat_hp_upload)))
+                    return false;
+                memcpy(&robot_power_heat_hp_upload, data, sizeof(robot_power_heat_hp_upload));
                 break;
             case GIMBAL_CURRENT_STATUS:
-                memcpy(&gimbal_current_status, data, length);
+                if (length != static_cast<int>(sizeof(gimbal_current_status)))
+                    return false;
+                memcpy(&gimbal_current_status, data, sizeof(gimbal_current_status));
                 break;
             case CHASSIS_CURRENT_STATUS:
-                memcpy(&chassis_current_status, data, length);
+                if (length != static_cast<int>(sizeof(chassis_current_status)))
+                    return false;
+                memcpy(&chassis_current_status, data, sizeof(chassis_current_status));
                 break;
             case AUTOAIM_ENABLE:
-                memcpy(&autoaim_enable, data, length);
+                if (length != static_cast<int>(sizeof(autoaim_enable)))
+                    return false;
+                memcpy(&autoaim_enable, data, sizeof(autoaim_enable));
                 break;
             case ROBOT_STATUS_UPLOAD:
-                memcpy(&robot_status_upload, data, length);
+                if (length != static_cast<int>(sizeof(robot_status_upload)))
+                    return false;
+                memcpy(&robot_status_upload, data, sizeof(robot_status_upload));
                 break;
             default:
                 return false;

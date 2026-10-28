@@ -23,20 +23,20 @@
 #include "bsp_os.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 #include "main.h"
 
 bsp::CAN* can2 = NULL;
 driver::DjiMotorBase* motor1 = NULL;
 driver::ServoMotor* load_servo = NULL;
-remote::DBUS* dbus = nullptr;
+controller::DBUS* dbus = nullptr;
 float load_step_angle = 2 * PI / 8;
 
 void RM_RTOS_Init() {
     bsp::SetHighresClockTimer(&htim5);
     HAL_Delay(200);
     print_use_uart(&huart1);
-    dbus = new remote::DBUS(&huart3);
+    dbus = new controller::DBUS(&huart3);
     can2 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::Motor2006(can2, 0x201);
     driver::servo_t servo_data;
@@ -56,27 +56,32 @@ void RM_RTOS_Init() {
 }
 
 void RM_RTOS_Default_Task(const void* args) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(args);
-    int last_state = remote::MID;
+    auto last_state = Mid;
 
     while (true) {
-        if (last_state != dbus->swl && dbus->swl == remote::MID) {
-            if (last_state == remote::UP) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (last_state != dbus_state.left_switch && dbus_state.left_switch == Mid) {
+            if (last_state == Up) {
                 load_servo->SetTarget(load_servo->GetTarget() + load_step_angle);
-            } else if (last_state == remote::DOWN) {
+            } else if (last_state == Down) {
                 load_servo->SetTarget(load_servo->GetTarget() - load_step_angle);
             }
         } else {
-            if (dbus->ch3 > 0) {
+            if (dbus_state.channels[3] > 0) {
                 load_servo->SetTarget(load_servo->GetTarget() + load_step_angle);
-            } else if (dbus->ch3 < 0) {
+            } else if (dbus_state.channels[3] < 0) {
                 load_servo->SetTarget(load_servo->GetTarget() - load_step_angle);
             }
         }
 
         load_servo->CalcOutput();
 
-        last_state = dbus->swl;
+        last_state = dbus_state.left_switch;
         osDelay(1);
     }
 }

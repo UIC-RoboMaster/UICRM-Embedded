@@ -21,14 +21,14 @@
 #include "bsp_imu.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 #include "gimbal.h"
 #include "i2c.h"
 #include "main.h"
 #include "spi.h"
 
 static bsp::CAN* can1 = nullptr;
-static remote::DBUS* dbus = nullptr;
+static controller::DBUS* dbus = nullptr;
 
 #define RX_SIGNAL (1 << 0)
 
@@ -92,11 +92,16 @@ const osThreadAttr_t gimbalTaskAttribute =
 osThreadId_t gimbalTaskHandle;
 
 void gimbalTask(void* arg) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(arg);
 
     print("Wait for beginning signal...\r\n");
     while (true) {
-        if (dbus->keyboard.bit.V || dbus->swr == remote::DOWN) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.keyboard.bit.V || dbus_state.right_switch == Down) {
             break;
         }
         osDelay(100);
@@ -129,19 +134,24 @@ void gimbalTask(void* arg) {
     float pitch_target = 0, yaw_target = 0;
 
     while (true) {
-        if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.keyboard.bit.B || dbus_state.left_switch == Down) {
             while (true) {
-                if (dbus->keyboard.bit.V) {
+                dbus->GetState(dbus_state);
+
+                if (dbus_state.keyboard.bit.V) {
                     break;
                 }
                 osDelay(10);
             }
         }
 
-        pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
-        yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-        pitch_ratio = dbus->ch3 / 18000.0 / 7.0;
-        yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
+        pitch_ratio = dbus_state.mouse.y / 32767.0 * 7.5 / 7.0;
+        yaw_ratio = -dbus_state.mouse.x / 32767.0 * 7.5 / 7.0;
+        pitch_ratio = dbus_state.channels[3] / 18000.0 / 7.0;
+        yaw_ratio = -dbus_state.channels[2] / 18000.0 / 7.0;
         pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
         yaw_target = clip<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
@@ -162,7 +172,7 @@ void RM_RTOS_Init(void) {
     print_use_uart(&huart6);
 
     can1 = new bsp::CAN(&hcan1, true);
-    dbus = new remote::DBUS(&huart3);
+    dbus = new controller::DBUS(&huart3);
 
     bsp::IST8310_init_t IST8310_init;
     IST8310_init.hi2c = &hi2c3;
@@ -303,7 +313,10 @@ void RM_RTOS_Threads_Init(void) {
 void KillAll() {
     RM_EXPECT_TRUE(false, "Operation killed\r\n");
     while (true) {
-        if (dbus->keyboard.bit.V) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.keyboard.bit.V) {
             break;
         }
         pitch_motor->SetOutput(0);
@@ -313,10 +326,15 @@ void KillAll() {
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(arg);
 
     while (true) {
-        if (dbus->keyboard.bit.B || dbus->swl == remote::DOWN)
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.keyboard.bit.B || dbus_state.left_switch == Down)
             KillAll();
 
         set_cursor(0, 0);
@@ -337,8 +355,19 @@ void RM_RTOS_Default_Task(const void* arg) {
 
         print("\r\n");
 
-        print("CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ", dbus->ch0, dbus->ch1, dbus->ch2, dbus->ch3);
-        print("SWL: %d SWR: %d @ %d ms\r\n", dbus->swl, dbus->swr, dbus->GetLastUptime());
+        print(
+            "CH0: %-4d CH1: %-4d CH2: %-4d CH3: %-4d ",
+            dbus_state.channels[0],
+            dbus_state.channels[1],
+            dbus_state.channels[2],
+            dbus_state.channels[3]
+        );
+        print(
+            "SWL: %s SWR: %s @ %d ms\r\n",
+            controller::SwitchName(dbus_state.left_switch),
+            controller::SwitchName(dbus_state.right_switch),
+            dbus->GetLastValidTimeMs()
+        );
 
         osDelay(100);
     }

@@ -23,20 +23,20 @@
 #include "bsp_os.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 #include "main.h"
 
 bsp::CAN* can2 = NULL;
 driver::DjiMotorBase* motor1 = NULL;
 driver::ServoMotor* load_servo = NULL;
-remote::DBUS* dbus = nullptr;
+controller::DBUS* dbus = nullptr;
 float load_step_angle = 2 * PI / 8;
 
 void RM_RTOS_Init() {
     bsp::SetHighresClockTimer(&htim5);
     HAL_Delay(200);
     print_use_uart(&huart4);
-    dbus = new remote::DBUS(&huart3);
+    dbus = new controller::DBUS(&huart3);
     can2 = new bsp::CAN(&hcan2, false);
     motor1 = new driver::Motor2006(can2, 0x207);
     driver::servo_t servo_data;
@@ -56,17 +56,22 @@ void RM_RTOS_Init() {
 }
 
 void RM_RTOS_Default_Task(const void* args) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(args);
-    int last_state = remote::MID;
+    auto last_state = Mid;
     int state = 0;
 
     while (true) {
-        if (dbus->swl == remote::UP) {
-            if (last_state == remote::MID)
-                last_state = remote::UP;
-        } else if (dbus->swl == remote::MID) {
-            if (last_state == remote::UP) {
-                last_state = remote::MID;
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
+        if (dbus_state.left_switch == Up) {
+            if (last_state == Mid)
+                last_state = Up;
+        } else if (dbus_state.left_switch == Mid) {
+            if (last_state == Up) {
+                last_state = Mid;
                 load_servo->SetTarget(load_servo->GetTarget() + load_step_angle);
                 if (state == 0) {
                     state = 1;

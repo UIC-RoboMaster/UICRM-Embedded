@@ -55,6 +55,13 @@ void chassisTask(void* arg) {
     chassis->Enable();
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
             while (remote_mode == REMOTE_MODE_KILL) {
@@ -64,21 +71,22 @@ void chassisTask(void* arg) {
             continue;
         }
 
-        remote::keyboard_t keyboard;
+        controller::KeyboardState keyboard{};
         if (dbus->IsOnline()) {
-            keyboard = dbus->keyboard;
-        } else if (refereerc->IsOnline()) {
-            keyboard = refereerc->remote_control.keyboard;
+            keyboard = dbus_state.keyboard;
+        } else if ((refereerc != nullptr && refereerc->IsOnline())) {
+            keyboard = refereerc_state.keyboard;
         }
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
         float car_vx, car_vy, car_vt;
-        if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
+        if (dbus_state.channels[0] || dbus_state.channels[1] || dbus_state.channels[2] || dbus_state.channels[3] ||
+            dbus_state.channels[4]) {
             // 优先使用遥控器
             const float speed_scale = 0.5;
-            car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
-            car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
-            car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
+            car_vx = (float)dbus_state.channels[0] / 660.0f * speed_scale;
+            car_vy = (float)dbus_state.channels[1] / 660.0f * speed_scale;
+            car_vt = (float)dbus_state.channels[4] / 660.0f * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
