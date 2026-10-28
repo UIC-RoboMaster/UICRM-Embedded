@@ -137,8 +137,7 @@ void RM_RTOS_Default_Task(const void* args) {
             ->SetSpeed(dbus_state.channels[0] * ratio, dbus_state.channels[1] * ratio, dbus_state.channels[2] * ratio);
 
         // Kill switch
-        if (dbus_state.left_switch == Up ||
-            dbus_state.left_switch == Down) {
+        if (dbus_state.left_switch == Up || dbus_state.left_switch == Down) {
             RM_ASSERT_TRUE(false, "Operation killed");
         }
         chassis->UpdatePower(true, 60, battery_vol->GetBatteryVol(), 50);

@@ -184,8 +184,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         print("\r\n");
         print(
             "[Referee RC %s] ",
-            (refereerc != nullptr && refereerc->IsOnline()) ? "\033[32mOnline\033[0m" :
-                                                                          "\033[31mOffline\033[0m"
+            (refereerc != nullptr && refereerc->IsOnline()) ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m"
         );
         print("\r\n");
 

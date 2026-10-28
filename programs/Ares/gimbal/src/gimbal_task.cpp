@@ -105,8 +105,8 @@ void gimbalTask(void* arg) {
         const float mouse_ratio = 0.5;
         const float remote_ratio = 0.005;
 
-        const bool vt13_c_mode = (refereerc != nullptr) && refereerc->IsOnline() &&
-                                 (refereerc_state.mode == controller::RefereeRcMode::C);
+        const bool vt13_c_mode =
+            (refereerc != nullptr) && refereerc->IsOnline() && (refereerc_state.mode == controller::RefereeRcMode::C);
 
         if (dbus->IsOnline()) {
             if (dbus_state.mouse.x != 0 || dbus_state.mouse.y != 0) {

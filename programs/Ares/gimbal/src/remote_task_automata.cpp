@@ -157,12 +157,11 @@ void remoteTask(void* arg) {
             refereerc->GetState(refereerc_state);
         }
 
-        const bool is_dbus_offline =
-            (!dbus->IsOnline()) || (dbus_state.right_switch == Down);
+        const bool is_dbus_offline = (!dbus->IsOnline()) || (dbus_state.right_switch == Down);
         // VT13必须在线且处于C模式才算可控
         const bool is_vt13_offline =
-            !((refereerc != nullptr && refereerc->IsOnline()) &&
-              (refereerc_state.mode == controller::RefereeRcMode::C));
+            !((refereerc != nullptr && refereerc->IsOnline()) && (refereerc_state.mode == controller::RefereeRcMode::C)
+            );
 
         is_controller_online = !is_dbus_offline || !is_vt13_offline;
 #ifdef HAS_REFEREE
@@ -194,8 +193,8 @@ void remoteTask(void* arg) {
         keyboard = {};
         mouse = {};
 
-        const bool vt13_c_mode = (refereerc != nullptr && refereerc->IsOnline()) &&
-                                 (refereerc_state.mode == controller::RefereeRcMode::C);
+        const bool vt13_c_mode =
+            (refereerc != nullptr && refereerc->IsOnline()) && (refereerc_state.mode == controller::RefereeRcMode::C);
 
         if (dbus->IsOnline()) {  // DBUS
             state_r = dbus_state.right_switch;

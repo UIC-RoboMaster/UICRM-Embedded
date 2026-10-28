@@ -98,8 +98,8 @@ void remoteTask(void* arg) {
             refereerc->GetState(refereerc_state);
         }
 
-        const bool vt13_c_mode = (refereerc != nullptr && refereerc->IsOnline()) &&
-                                 (refereerc_state.mode == controller::RefereeRcMode::C);
+        const bool vt13_c_mode =
+            (refereerc != nullptr && refereerc->IsOnline()) && (refereerc_state.mode == controller::RefereeRcMode::C);
 
         // Offline Detection && Security Check
         is_dbus_offline = (!dbus->IsOnline()) || dbus_state.right_switch == Down;

@@ -67,8 +67,8 @@ void chassisTask(void* arg) {
             continue;
         }
 
-        const bool vt13_c_mode = (refereerc != nullptr) && refereerc->IsOnline() &&
-                                 (refereerc_state.mode == controller::RefereeRcMode::C);
+        const bool vt13_c_mode =
+            (refereerc != nullptr) && refereerc->IsOnline() && (refereerc_state.mode == controller::RefereeRcMode::C);
 
         controller::KeyboardState keyboard{};
         if (dbus->IsOnline()) {
