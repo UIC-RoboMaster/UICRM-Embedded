@@ -8,10 +8,6 @@ uicrm_add_arm_executable(${PROJECT_NAME}_omni
         TARGET ${BOARD_NAME}
         SOURCES omni_example.cpp)
 
-uicrm_add_arm_executable(${PROJECT_NAME}_sbus
-        TARGET ${BOARD_NAME}
-        SOURCES sbus.cpp)
-
 uicrm_add_arm_executable(${PROJECT_NAME}_can_bridge
         TARGET ${BOARD_NAME}
         SOURCES can_bridge_chassis.cpp)

@@ -24,7 +24,7 @@
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 
 bsp::CAN* can = nullptr;
 driver::DjiMotorBase* fl_motor = nullptr;
@@ -33,7 +33,7 @@ driver::DjiMotorBase* bl_motor = nullptr;
 driver::DjiMotorBase* br_motor = nullptr;
 
 control::Chassis* chassis = nullptr;
-remote::DBUS* dbus = nullptr;
+controller::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init() {
     bsp::SetHighresClockTimer(&htim2);  // TIM2 is configured with a 1 MHz counter.
@@ -88,21 +88,28 @@ void RM_RTOS_Init() {
     chassis_data.model = control::CHASSIS_OMNI_WHEEL;
     chassis = new control::Chassis(chassis_data);
 
-    dbus = new remote::DBUS(&huart3);
+    dbus = new controller::DBUS(&huart3);
     HAL_Delay(300);
 }
 
 void RM_RTOS_Default_Task(const void* args) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(args);
 
     osDelay(500);  // DBUS initialization needs time
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
         const float ratio = 1.0f / 660.0f * 6 * PI;
-        chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
+        chassis
+            ->SetSpeed(dbus_state.channels[0] * ratio, dbus_state.channels[1] * ratio, dbus_state.channels[2] * ratio);
 
         // Kill switch
-        if (dbus->swl == remote::UP || dbus->swl == remote::DOWN) {
+        if (dbus_state.left_switch == Up ||
+            dbus_state.left_switch == Down) {
             RM_ASSERT_TRUE(false, "Operation killed");
         }
         chassis->SetPower(false, 30, 20, 60);
