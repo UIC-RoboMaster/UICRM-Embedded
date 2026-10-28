@@ -34,7 +34,7 @@ namespace driver {
          * @brief 判断节点是否在线
          * @return true 表示当前连接节点在线，false 表示当前节点连接离线
          */
-        bool IsOnline() const;
+        virtual bool IsOnline() const;
 
         /**
          * @return 获取节点上一个心跳包的时间（以毫秒为单位）

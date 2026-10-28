@@ -25,24 +25,124 @@
 #include <cstring>
 
 /** @brief 遥控协议解析与状态管理。 */
-namespace remote {
+namespace controller {
+    /**
+     * @brief 两档拨杆的公共逻辑位置。
+     * @note 具体设备负责将协议值转换为位置；枚举数值不用于解码或判断拨动方向。
+     */
+    enum class TwoPositionSwitch : uint8_t {
+        Down = 0,  ///< 下档。
+        Up = 1     ///< 上档。
+    };
+
+    /**
+     * @brief 三档拨杆的公共逻辑位置。
+     * @note 枚举数值保持稳定。
+     * 各设备须显式映射协议值，不得依赖枚举数值解码或判断物理拨动方向。
+     */
+    enum class ThreePositionSwitch : uint8_t {
+        Up = 1,    ///< 上档。
+        Down = 2,  ///< 下档。
+        Mid = 3    ///< 中档。
+    };
+
+    /**
+     * @brief 获取两档拨杆的名称，便于日志输出。
+     * @param[in] position 拨杆位置。
+     * @return "Up" 或 "Down"；非法枚举值返回 "Unknown"。
+     */
+    constexpr const char* SwitchName(TwoPositionSwitch position) {
+        using enum TwoPositionSwitch;
+        switch (position) {
+            case Up:
+                return "Up";
+            case Down:
+                return "Down";
+        }
+        return "Unknown";
+    }
+
+    /**
+     * @brief 获取三档拨杆的名称，便于日志输出。
+     * @param[in] position 拨杆位置。
+     * @return "Up"、"Mid" 或 "Down"；非法枚举值返回 "Unknown"。
+     */
+    constexpr const char* SwitchName(ThreePositionSwitch position) {
+        using enum ThreePositionSwitch;
+        switch (position) {
+            case Up:
+                return "Up";
+            case Mid:
+                return "Mid";
+            case Down:
+                return "Down";
+        }
+        return "Unknown";
+    }
+
+    /**
+     * @brief DBUS 与 RefereeRC 共用的鼠标状态。
+     * @details 三轴保留协议中的原始有符号数值，范围 -32768～32767，静止值为 0，
+     * 不套用摇杆的 ±660 范围或死区。按键 false 表示松开，true 表示按下。
+     * @note 协议未提供的按键保持 false；DBUS 不提供中键，RefereeRC 支持左、右、中键。
+     */
+    struct MouseState {
+        int16_t x = 0;        ///< 鼠标 X 轴输入。
+        int16_t y = 0;        ///< 鼠标 Y 轴输入。
+        int16_t z = 0;        ///< 鼠标滚轮输入。
+        bool left = false;    ///< 鼠标左键是否按下。
+        bool right = false;   ///< 鼠标右键是否按下。
+        bool middle = false;  ///< 鼠标中键是否按下；DBUS 始终为 false。
+    };
+
+    /**
+     * @brief DBUS 与 RefereeRC 共用的 16 键键盘状态。
+     * @details code 与 bit 共享两字节存储；各按键位 0 表示松开、1 表示按下，
+     * 多个按键可同时按下。默认 code 为 0，支持 keyboard.code 和 keyboard.bit.W 等访问。
+     * @note 位域视图采用本项目 GCC/ARM 布局；线上数据仍由各协议按小端字节显式解码，
+     * 不把接收缓存强制转换为此类型。更换编译器平台须验证位域布局。
+     */
+    union KeyboardState {
+        uint16_t code = 0;  ///< 完整 16 位按键位图，范围 0～65535。
+        struct {
+            uint16_t W : 1;      ///< bit0：W 键是否按下。
+            uint16_t S : 1;      ///< bit1：S 键是否按下。
+            uint16_t A : 1;      ///< bit2：A 键是否按下。
+            uint16_t D : 1;      ///< bit3：D 键是否按下。
+            uint16_t SHIFT : 1;  ///< bit4：SHIFT 键是否按下。
+            uint16_t CTRL : 1;   ///< bit5：CTRL 键是否按下。
+            uint16_t Q : 1;      ///< bit6：Q 键是否按下。
+            uint16_t E : 1;      ///< bit7：E 键是否按下。
+            uint16_t R : 1;      ///< bit8：R 键是否按下。
+            uint16_t F : 1;      ///< bit9：F 键是否按下。
+            uint16_t G : 1;      ///< bit10：G 键是否按下。
+            uint16_t Z : 1;      ///< bit11：Z 键是否按下。
+            uint16_t X : 1;      ///< bit12：X 键是否按下。
+            uint16_t C : 1;      ///< bit13：C 键是否按下。
+            uint16_t V : 1;      ///< bit14：V 键是否按下。
+            uint16_t B : 1;      ///< bit15：B 键是否按下。
+        } __attribute__((packed)) bit;
+    } __attribute__((packed));
+    static_assert(sizeof(KeyboardState) == 2, "KeyboardState must occupy two bytes");
+
     /**
      * @brief 遥控接收器的公共状态接口。
      * @details 仅管理有效帧序号、接收时间及协议失控标志，不统一各协议的通道布局。
      * UART、时钟和控制映射由接入层提供。校验失败或数据未收齐时不提交状态。
-     * @note 所有方法须在同一线程调用或由接入层同步保护，不保证跨 ISR/任务的原子快照。
+     * @note 不提供内部同步；与接收中断并发读取时，不保证各字段来自同一帧。
+     * UpdateData 只允许单一接收上下文调用；解析、重置及协议配置不得并发执行。
      */
-    class RemoteReceiver {
+    class ControllerReceiver {
       public:
         /**
          * @brief 设置接收器的初始在线超时。
          * @param[in] online_threshold_ms 超时阈值，单位毫秒，默认 250。
          */
-        explicit RemoteReceiver(uint32_t online_threshold_ms = 250) : online_threshold_ms_(online_threshold_ms) {
+        explicit ControllerReceiver(uint32_t online_threshold_ms = 250) : online_threshold_ms_(online_threshold_ms) {
         }
 
         /** @brief 支持通过基类指针销毁派生接收器。 */
-        virtual ~RemoteReceiver() = default;
+        virtual ~ControllerReceiver() = default;
 
         /**
          * @brief 输入接收字节，具体边界和校验规则由派生协议定义。
@@ -114,11 +214,11 @@ namespace remote {
         }
 
       private:
-        uint32_t online_threshold_ms_;     ///< 在线超时阈值，单位毫秒。
-        uint32_t last_valid_ms_ = 0;       ///< 最近有效帧时间，单位毫秒。
-        uint32_t sequence_ = 0;           ///< 有效帧提交序号。
-        bool received_ = false;          ///< 是否曾提交有效帧。
-        bool failsafe_ = false;          ///< 最近有效帧的协议失控标志。
+        uint32_t online_threshold_ms_;  ///< 在线超时阈值，单位毫秒。
+        uint32_t last_valid_ms_ = 0;    ///< 最近有效帧时间，单位毫秒。
+        uint32_t sequence_ = 0;         ///< 有效帧提交序号。
+        bool received_ = false;         ///< 是否曾提交有效帧。
+        bool failsafe_ = false;         ///< 最近有效帧的协议失控标志。
     };
     /** @brief 接收器内部字节解码工具，不涉及 UART、控制映射或有效帧提交。 */
     namespace detail {
@@ -185,4 +285,4 @@ namespace remote {
             std::memmove(buffer.data(), buffer.data() + offset, used);
         }
     }  // namespace detail
-}  // namespace remote
+}  // namespace controller

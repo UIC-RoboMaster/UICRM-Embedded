@@ -17,12 +17,39 @@
  # Public License along with this program.  If not, see     #
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
-#include "protocols/refereerc_receiver.h"
+#include "refereerc.h"
 
+#include "bsp_os.h"
 #include "crc_check.h"
 
-namespace remote {
-    void RefereeRcReceiver::UpdateData(const uint8_t* data, size_t size, uint32_t now_ms) {
+namespace controller {
+    RefereeRC::RefereeRC(uint32_t online_threshold_ms) : ControllerReceiver(online_threshold_ms) {
+    }
+
+    RefereeRC::RefereeRC(UART_HandleTypeDef* huart, uint32_t online_threshold_ms)
+        : ControllerReceiver(online_threshold_ms) {
+        huart->Init.BaudRate = 921600;
+        huart->Init.WordLength = UART_WORDLENGTH_8B;
+        huart->Init.Parity = UART_PARITY_NONE;
+        huart->Init.StopBits = UART_STOPBITS_1;
+        if (HAL_UART_Init(huart) != HAL_OK) {
+            Error_Handler();
+            return;
+        }
+        uart_ = new bsp::UART(huart);
+        uart_->RegisterCallback(UartCallback, this);
+        uart_->SetupRx(300);
+    }
+
+    RefereeRC::~RefereeRC() {
+        delete uart_;
+    }
+
+    bool RefereeRC::IsOnline() const {
+        return ControllerReceiver::IsOnline(bsp::GetHighresTickMilliSec());
+    }
+
+    void RefereeRC::UpdateData(const uint8_t* data, size_t size, uint32_t now_ms) {
         if (data == nullptr) {
             return;
         }
@@ -41,11 +68,11 @@ namespace remote {
         }
     }
 
-    void RefereeRcReceiver::ResetStream() {
+    void RefereeRC::ResetStream() {
         used_ = 0;
     }
 
-    bool RefereeRcReceiver::GetState(Vt13Frame& output) const {
+    bool RefereeRC::GetState(RefereeRcFrame& output) const {
         if (!HasState()) {
             return false;
         }
@@ -53,11 +80,24 @@ namespace remote {
         return true;
     }
 
-    bool RefereeRcReceiver::Decode(uint32_t now_ms) {
+    void RefereeRC::UartCallback(void* context) {
+        auto* self = static_cast<RefereeRC*>(context);
+        uint8_t* data = nullptr;
+        const int32_t length = self->uart_->Read<true>(&data);
+        if (length <= 0 || data == nullptr) {
+            if (length != 0) {
+                self->ResetStream();
+            }
+            return;
+        }
+        self->UpdateData(data, static_cast<size_t>(length), bsp::GetHighresTickMilliSec());
+    }
+
+    bool RefereeRC::Decode(uint32_t now_ms) {
         if (buffer_[0] != SOF || buffer_[1] != CMD || !verify_crc16_check_sum(buffer_.data(), FRAME_SIZE)) {
             return false;
         }
-        Vt13Frame next;
+        RefereeRcFrame next;
         for (size_t i = 0; i < next.channels.size(); ++i) {
             const size_t offset = i < 4 ? 16 + 11 * i : 65;
             const uint16_t raw = detail::DecodeBits(buffer_.data(), offset, 11);
@@ -71,7 +111,7 @@ namespace remote {
         if (mode > 2) {
             return false;
         }
-        next.mode = static_cast<Vt13Mode>(mode);
+        next.mode = static_cast<RefereeRcMode>(mode);
         next.pause = detail::DecodeBits(buffer_.data(), 62, 1) != 0;
         next.left_button = detail::DecodeBits(buffer_.data(), 63, 1) != 0;
         next.right_button = detail::DecodeBits(buffer_.data(), 64, 1) != 0;
@@ -95,4 +135,4 @@ namespace remote {
         CommitFrame(now_ms, false);
         return true;
     }
-}  // namespace remote
+}  // namespace controller

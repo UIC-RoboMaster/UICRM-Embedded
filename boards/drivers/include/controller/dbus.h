@@ -22,61 +22,10 @@
 
 #include <array>
 
-#include "remote.h"
+#include "controller.h"
 #include "bsp_uart.h"
 
-namespace remote {
-    /** @brief DBUS 拨杆位置，数值与协议编码一致。 */
-    enum class DbusSwitchPosition : uint8_t {
-        Up = 1,      ///< 上
-        Down = 2,    ///< 下
-        Middle = 3   ///< 中
-    };
-
-    /**
-     * @brief DBUS 鼠标输入，保持协议中的原始有符号数值。
-     * @details 三轴范围均为 -32768～32767，静止值为 0，不套用摇杆的 ±660 范围或死区。
-     * 原始左右键字段必须为 0 或 1，否则拒绝整帧；输出 false 表示松开，true 表示按下。
-     */
-    struct DbusMouseState {
-        int16_t x = 0;        ///< 鼠标 X 轴输入，范围 -32768～32767。
-        int16_t y = 0;        ///< 鼠标 Y 轴输入，范围 -32768～32767。
-        int16_t z = 0;        ///< 鼠标滚轮输入，范围 -32768～32767。
-        bool left = false;   ///< 鼠标左键是否按下。
-        bool right = false;  ///< 鼠标右键是否按下。
-    };
-
-    /**
-     * @brief DBUS 键盘状态，按旧 API 提供完整位图 code 和按键位域 bit。
-     * @details 位序沿用旧代码；多个按键可同时为 1，不采用旧版手册中不同的键位定义。
-     * code 与 bit 共享存储，支持 keyboard.code 或 keyboard.bit.W 等访问。
-     * code 范围为 0～65535，每个按键位只能为 0 或 1，多个按键可同时按下。
-     * @note 位域视图采用本项目 GCC/ARM 布局；线上数据仍按小端字节显式解码，
-     * 不把接收缓存强制转换为该类型。新编译器平台须验证位域布局。
-     */
-    union DbusKeyboardState {
-        uint16_t code = 0;  ///< 完整 16 位按键位图，默认没有按键按下。
-        struct {
-            uint16_t W : 1;  ///< bit0：W 键是否按下。
-            uint16_t S : 1;  ///< bit1：S 键是否按下。
-            uint16_t A : 1;  ///< bit2：A 键是否按下。
-            uint16_t D : 1;  ///< bit3：D 键是否按下。
-            uint16_t SHIFT : 1;  ///< bit4：SHIFT 键是否按下。
-            uint16_t CTRL : 1;  ///< bit5：CTRL 键是否按下。
-            uint16_t Q : 1;  ///< bit6：Q 键是否按下。
-            uint16_t E : 1;  ///< bit7：E 键是否按下。
-            uint16_t R : 1;  ///< bit8：R 键是否按下。
-            uint16_t F : 1;  ///< bit9：F 键是否按下。
-            uint16_t G : 1;  ///< bit10：G 键是否按下。
-            uint16_t Z : 1;  ///< bit11：Z 键是否按下。
-            uint16_t X : 1;  ///< bit12：X 键是否按下。
-            uint16_t C : 1;  ///< bit13：C 键是否按下。
-            uint16_t V : 1;  ///< bit14：V 键是否按下。
-            uint16_t B : 1;  ///< bit15：B 键是否按下。
-        } __attribute__((packed)) bit;
-    } __attribute__((packed));
-    static_assert(sizeof(DbusKeyboardState) == 2, "DBUS keyboard must occupy two bytes");
-
+namespace controller {
     /**
      * @brief DBUS 有效帧快照，通道数值沿用旧 DBUS 的减中心与死区处理。
      * @details 原始值减去 1024，绝对值不大于 10 时置零，正常行程为 -660～660。
@@ -97,21 +46,22 @@ namespace remote {
          *          +v            v+
          */
         std::array<int16_t, 5> channels{};
-        DbusSwitchPosition right_switch = DbusSwitchPosition::Middle;  ///< 右拨杆位置。
-        DbusSwitchPosition left_switch = DbusSwitchPosition::Middle;   ///< 左拨杆位置。
-        DbusMouseState mouse{};             ///< 鼠标状态。
-        DbusKeyboardState keyboard{};     ///< 键盘状态，支持 code 和 bit 按键访问。
+        ThreePositionSwitch right_switch = ThreePositionSwitch::Mid;  ///< 右拨杆位置。
+        ThreePositionSwitch left_switch = ThreePositionSwitch::Mid;   ///< 左拨杆位置。
+        MouseState mouse{};        ///< 鼠标状态；DBUS 不提供中键，middle 始终为 false。
+        KeyboardState keyboard{};  ///< 键盘状态，支持 code 和 bit 按键访问。
     };
 
     /**
      * @brief DBUS 18 字节接收器，支持通过 UART 句柄构造后自动接收。
      * @details DBUS 无帧头及 CRC，校验长度、拨杆、鼠标按钮和配置的通道范围。
      * 字段合理性检查不能保证完整性，也不能用于猜测字节流的帧边界。
-     * @note UART 模式内部通过 IDLE 回调接收；跨 ISR/任务读取仍须同步保护。
+     * @note UART 模式内部通过 IDLE 回调接收；并发读取不保证整帧一致性。
+     * UpdateData 与 SetChannelRange 不得并发调用，UART 模式下修改范围须先停止接收。
      */
-    class DbusReceiver final : public RemoteReceiver {
+    class DBUS final : public ControllerReceiver {
       public:
-        static constexpr size_t FRAME_SIZE = 18;  ///< 单帧长度，单位字节。
+        static constexpr size_t FRAME_SIZE = 18;       ///< 单帧长度，单位字节。
         static constexpr uint16_t CHANNEL_MIN = 364;   ///< 原始通道有效下限。
         static constexpr uint16_t CHANNEL_MAX = 1684;  ///< 原始通道有效上限。
 
@@ -119,29 +69,21 @@ namespace remote {
          * @brief 绑定并拥有 UART 接收对象，自动配置缓存和接收回调。
          * @param[in] huart 已完成板级配置的 UART 句柄，不得为同一 UART 重复创建接收对象。
          * @param[in] online_threshold_ms 在线超时，单位毫秒，默认 250。
-         * @note 波特率、偶校验、停止位及反相仍由板级配置负责；对象须覆盖中断使用周期。
+         * @note 内部配置 100000 baud、8E1（HAL 使用 9 位字长以包含偶校验位）。
+         * 引脚、DMA、中断及信号反相由板级配置；绑定前不得启动该 UART 的收发。
+         * 对象须覆盖中断使用周期。
          */
-        explicit DbusReceiver(UART_HandleTypeDef* huart, uint32_t online_threshold_ms = 250);
+        explicit DBUS(UART_HandleTypeDef* huart, uint32_t online_threshold_ms = 250);
 
-        /**
-         * @brief 复用旧包装已拥有的 UART，不创建第二个 UART 对象。
-         * @param[in] uart 已存在的 UART，生命周期须长于本接收器。
-         * @note 兼容包装在自身回调中调用 RxCompleteCallback；本构造不替换原回调。
-         */
-        explicit DbusReceiver(bsp::UART& uart, uint32_t online_threshold_ms = 250);
+        /** @brief 释放本接收器拥有的 UART；调用前须停止相关接收中断。 */
+        ~DBUS() override;
 
-        /** @brief 释放本接收器拥有的 UART；借用的 UART 不释放。 */
-        ~DbusReceiver() override;
+        DBUS(const DBUS&) = delete;
 
-        DbusReceiver(const DbusReceiver&) = delete;
-
-        DbusReceiver& operator=(const DbusReceiver&) = delete;
+        DBUS& operator=(const DBUS&) = delete;
 
         /** @brief 使用系统毫秒时钟判断有效 DBUS 帧是否在线，无需调用方传时间。 */
         bool IsOnline() const;
-
-        /** @brief UART 接收回调入口，读取接收块并按 IDLE 边界校验；UART 模式自动调用。 */
-        void RxCompleteCallback();
 
         /**
          * @brief 输入具有明确边界的完整 DBUS 接收块，一次调用只处理一帧。
@@ -172,21 +114,31 @@ namespace remote {
         bool SetChannelRange(uint16_t minimum, uint16_t maximum);
 
       private:
+        /** @brief UART 接收回调入口，读取接收块并按 IDLE 边界校验。 */
+        void RxCompleteCallback();
+
+        /**
+         * @brief 将 DBUS 两位拨杆编码显式转换为公共三档位置。
+         * @param[in] raw 协议编码：1 为上档，2 为下档，3 为中档，0 非法。
+         * @param[out] output 成功时接收逻辑位置；失败时保持原值。
+         * @return 编码合法时为 true，否则为 false。
+         */
+        static bool DecodeSwitch(uint16_t raw, ThreePositionSwitch& output);
+
         /**
          * @brief 校验并解码一帧，对有效数据更新快照并提交状态。
          * @param[in] data 已收齐的 FRAME_SIZE 字节候选帧。
          * @param[in] now_ms 本帧接收时间，单位毫秒。
          * @return 校验通过并提交时为 true，否则为 false。
          * @details 校验五通道原始范围、左右拨杆及鼠标按钮；转换通道中心与死区，解码键鼠。
-         * 所有校验通过后才整体替换最后状态并调用 CommitValidFrame；失败时状态、序号及有效时间不变。
+         * 所有校验通过后才整体替换最后状态并调用 CommitFrame；失败时状态、序号及有效时间不变。
          * @note 仅由内部完整候选帧入口调用，不负责收集半包或恢复字节边界。
          */
         bool Decode(const uint8_t* data, uint32_t now_ms);
         static void UartCallback(void* context);  ///< UART 回调转发入口。
-        bsp::UART* uart_ = nullptr;              ///< 内部拥有或旧包装借用的 UART。
-        bool owns_uart_ = false;                ///< 是否负责销毁 UART。
-        uint16_t channel_min_ = CHANNEL_MIN;       ///< 原始通道值校验下限。
-        uint16_t channel_max_ = CHANNEL_MAX;       ///< 原始通道值校验上限。
-        DbusFrame state_{};                        ///< 最后一帧有效状态。
+        bsp::UART* uart_ = nullptr;               ///< 内部独占的 UART。
+        uint16_t channel_min_ = CHANNEL_MIN;      ///< 原始通道值校验下限。
+        uint16_t channel_max_ = CHANNEL_MAX;      ///< 原始通道值校验上限。
+        DbusFrame state_{};                       ///< 最后一帧有效状态。
     };
-}  // namespace remote
+}  // namespace controller

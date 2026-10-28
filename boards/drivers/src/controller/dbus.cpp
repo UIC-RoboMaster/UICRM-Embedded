@@ -17,50 +17,53 @@
  # Public License along with this program.  If not, see     #
  # <https://www.gnu.org/licenses/>.                         #
  ###########################################################*/
-#include "protocols/dbus_receiver.h"
+#include "dbus.h"
 
 #include "bsp_os.h"
 
-namespace remote {
-    DbusReceiver::DbusReceiver(UART_HandleTypeDef* huart, uint32_t online_threshold_ms)
-        : RemoteReceiver(online_threshold_ms), uart_(new bsp::UART(huart)), owns_uart_(true) {
+namespace controller {
+    DBUS::DBUS(UART_HandleTypeDef* huart, uint32_t online_threshold_ms) : ControllerReceiver(online_threshold_ms) {
+        huart->Init.BaudRate = 100000;
+        huart->Init.WordLength = UART_WORDLENGTH_9B;
+        huart->Init.Parity = UART_PARITY_EVEN;
+        huart->Init.StopBits = UART_STOPBITS_1;
+        if (HAL_UART_Init(huart) != HAL_OK) {
+            Error_Handler();
+            return;
+        }
+        uart_ = new bsp::UART(huart);
         uart_->RegisterCallback(UartCallback, this);
         uart_->SetupRx(FRAME_SIZE + 1);
     }
 
-    DbusReceiver::DbusReceiver(bsp::UART& uart, uint32_t online_threshold_ms)
-        : RemoteReceiver(online_threshold_ms), uart_(&uart) {
-        uart_->SetupRx(FRAME_SIZE + 1);
+    DBUS::~DBUS() {
+        delete uart_;
     }
 
-    DbusReceiver::~DbusReceiver() {
-        if (owns_uart_) delete uart_;
+    bool DBUS::IsOnline() const {
+        return ControllerReceiver::IsOnline(bsp::GetHighresTickMilliSec());
     }
 
-    bool DbusReceiver::IsOnline() const {
-        return RemoteReceiver::IsOnline(bsp::GetHighresTickMilliSec());
+    void DBUS::UartCallback(void* context) {
+        static_cast<DBUS*>(context)->RxCompleteCallback();
     }
 
-    void DbusReceiver::UartCallback(void* context) {
-        static_cast<DbusReceiver*>(context)->RxCompleteCallback();
-    }
-
-    void DbusReceiver::RxCompleteCallback() {
-        if (!uart_) return;
+    void DBUS::RxCompleteCallback() {
+        if (!uart_)
+            return;
         uint8_t* data = nullptr;
         const int32_t length = uart_->Read<true>(&data);
-        UpdateData(data, length > 0 ? static_cast<size_t>(length) : 0,
-                      bsp::GetHighresTickMilliSec());
+        UpdateData(data, length > 0 ? static_cast<size_t>(length) : 0, bsp::GetHighresTickMilliSec());
     }
 
-    void DbusReceiver::UpdateData(const uint8_t* data, size_t size, uint32_t now_ms) {
+    void DBUS::UpdateData(const uint8_t* data, size_t size, uint32_t now_ms) {
         // UART IDLE supplies a candidate frame boundary; only a full block is accepted.
         if (data != nullptr && size == FRAME_SIZE) {
             Decode(data, now_ms);
         }
     }
 
-    bool DbusReceiver::SetChannelRange(uint16_t minimum, uint16_t maximum) {
+    bool DBUS::SetChannelRange(uint16_t minimum, uint16_t maximum) {
         if (minimum < CHANNEL_MIN || minimum > maximum || maximum > CHANNEL_MAX) {
             return false;
         }
@@ -69,7 +72,7 @@ namespace remote {
         return true;
     }
 
-    bool DbusReceiver::GetState(DbusFrame& output) const {
+    bool DBUS::GetState(DbusFrame& output) const {
         if (!HasState()) {
             return false;
         }
@@ -77,7 +80,23 @@ namespace remote {
         return true;
     }
 
-    bool DbusReceiver::Decode(const uint8_t* data, uint32_t now_ms) {
+    bool DBUS::DecodeSwitch(uint16_t raw, ThreePositionSwitch& output) {
+        switch (raw) {
+            case 1:
+                output = ThreePositionSwitch::Up;
+                return true;
+            case 2:
+                output = ThreePositionSwitch::Down;
+                return true;
+            case 3:
+                output = ThreePositionSwitch::Mid;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    bool DBUS::Decode(const uint8_t* data, uint32_t now_ms) {
         DbusFrame next;
         for (size_t i = 0; i < next.channels.size(); ++i) {
             // 处理 ch0-4
@@ -97,11 +116,10 @@ namespace remote {
         const auto right = detail::DecodeBits(data, 44, 2);
         const auto left = detail::DecodeBits(data, 46, 2);
         // 检测左右拨杆范围 + 鼠标左右键（data[12]/data[13])
-        if (right == 0 || left == 0 || data[12] > 1 || data[13] > 1) {
+        if (!DecodeSwitch(right, next.right_switch) || !DecodeSwitch(left, next.left_switch) || data[12] > 1 ||
+            data[13] > 1) {
             return false;
         }
-        next.right_switch = static_cast<DbusSwitchPosition>(right);
-        next.left_switch = static_cast<DbusSwitchPosition>(left);
         next.mouse.x = detail::DecodeInt16LE(data + 6);
         next.mouse.y = detail::DecodeInt16LE(data + 8);
         next.mouse.z = detail::DecodeInt16LE(data + 10);
@@ -112,4 +130,4 @@ namespace remote {
         CommitFrame(now_ms, false);
         return true;
     }
-}  // namespace remote
+}  // namespace controller
