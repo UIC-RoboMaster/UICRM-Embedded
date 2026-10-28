@@ -24,7 +24,6 @@
 
 #include "bsp_usb.h"
 #include "crc_check.h"
-#include "dji_remote.h"
 #include "bsp_os.h"
 
 static const uint8_t SOF = 0xA5;
@@ -42,14 +41,10 @@ namespace communication {
     void Protocol::ResyncRx() {
         size_t next = 1;
         while (next < rx_used_ && bufferRx[next] != SOF &&
-               bufferRx[next] != remote::RefereeRcReceiver::SOF) {
+               bufferRx[next] != controller::RefereeRC::SOF) {
             ++next;
         }
         DiscardRx(next);
-    }
-
-    void Protocol::ProcessVt13Rx(const uint8_t* data, size_t size) {
-        ProcessDataRx(remote::RefereeRcReceiver::CMD, data, static_cast<int>(size));
     }
 
     bool Protocol::Receive(package_t package) {
@@ -59,34 +54,33 @@ namespace communication {
         const uint32_t now_ms = bsp::GetHighresTickMilliSec();
         for (int i = 0; i < package.length; ++i) {
             const auto byte = package.data[i];
-            if (!rx_used_ && byte != SOF && byte != remote::RefereeRcReceiver::SOF) continue;
+            if (!rx_used_ && byte != SOF && byte != controller::RefereeRC::SOF) continue;
             // A5 lengths are capped below; every full candidate is consumed or
             // resynchronized before the next append, keeping this buffer bounded.
             bufferRx[rx_used_++] = byte;
             while (rx_used_) {
-                if (bufferRx[0] != SOF && bufferRx[0] != remote::RefereeRcReceiver::SOF) {
+                if (bufferRx[0] != SOF && bufferRx[0] != controller::RefereeRC::SOF) {
                     ResyncRx();
                     continue;
                 }
-                if (bufferRx[0] == remote::RefereeRcReceiver::SOF) {
+                if (bufferRx[0] == controller::RefereeRC::SOF) {
                     if (rx_used_ < 2) break;
-                    if (bufferRx[1] != remote::RefereeRcReceiver::CMD) {
+                    if (bufferRx[1] != controller::RefereeRC::CMD) {
                         ResyncRx();
                         continue;
                     }
-                    if (rx_used_ < remote::RefereeRcReceiver::FRAME_SIZE) break;
+                    if (rx_used_ < controller::RefereeRC::FRAME_SIZE) break;
                     // Protocol owns stream framing; the receiver owns VT13
                     // validation, decoding and the independent input timestamp.
-                    refereerc_receiver_.ResetStream();
-                    const auto sequence = refereerc_receiver_.GetSequence();
-                    refereerc_receiver_.UpdateData(bufferRx, remote::RefereeRcReceiver::FRAME_SIZE, now_ms);
-                    refereerc_receiver_.ResetStream();
-                    if (refereerc_receiver_.GetSequence() == sequence) {
+                    refereerc_.ResetStream();
+                    const auto sequence = refereerc_.GetSequence();
+                    refereerc_.UpdateData(bufferRx, controller::RefereeRC::FRAME_SIZE, now_ms);
+                    refereerc_.ResetStream();
+                    if (refereerc_.GetSequence() == sequence) {
                         ResyncRx();
                         continue;
                     }
-                    ProcessVt13Rx(bufferRx, remote::RefereeRcReceiver::FRAME_SIZE);
-                    DiscardRx(remote::RefereeRcReceiver::FRAME_SIZE);
+                    DiscardRx(controller::RefereeRC::FRAME_SIZE);
                 } else {
                     if (rx_used_ < FRAME_HEADER_LEN) break;
                     const int payload = int(bufferRx[1]) | (int(bufferRx[2]) << BYTE);
@@ -292,11 +286,6 @@ namespace communication {
                 return false;
         }
         return true;
-    }
-
-    void Referee::ProcessVt13Rx(const uint8_t* data, size_t size) {
-        // Wire-compatible snapshot only; validation/decoding lives in RefereeRcReceiver.
-        if (size == sizeof(vt13_packet)) memcpy(&vt13_packet, data, size);
     }
 
     int Referee::ProcessDataTx(int cmd_id, uint8_t* data) {

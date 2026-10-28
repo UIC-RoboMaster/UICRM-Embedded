@@ -25,8 +25,7 @@
 #include "bsp_uart.h"
 #include "bsp_usb.h"
 #include "connection_driver.h"
-#include "dji_remote.h"
-#include "protocols/refereerc_receiver.h"
+#include "refereerc.h"
 
 namespace communication {
 
@@ -47,7 +46,9 @@ namespace communication {
          * @return true for success; false for failure
          */
         bool Receive(package_t package);
-        const remote::RefereeRcReceiver& Vt13() const { return refereerc_receiver_; }
+        const controller::RefereeRC& RefereeRc() const {
+            return refereerc_;
+        }
 
         /**
          * @brief Generate the package to be sent according to the command and save to the internal
@@ -65,8 +66,6 @@ namespace communication {
 
         uint8_t bufferRx[MAX_FRAME_LEN] = {0};
         uint8_t bufferTx[MAX_FRAME_LEN] = {0};
-        // Called only for a complete VT13 frame accepted by the new receiver.
-        virtual void ProcessVt13Rx(const uint8_t* data, size_t size);
 
         /**
          * @brief verify the header of frame with crc8
@@ -124,7 +123,7 @@ namespace communication {
 
       private:
         size_t rx_used_ = 0;
-        remote::RefereeRcReceiver refereerc_receiver_;
+        controller::RefereeRC refereerc_;
         void DiscardRx(size_t size);
         void ResyncRx();
     };
@@ -533,13 +532,6 @@ namespace communication {
         uint8_t cmd_source;
     } __packed map_command_t;
 
-    // Obsolete 0x0304 layout, retained only for old robot source compatibility.
-    typedef struct {
-        remote::mouse_t mouse;
-        remote::keyboard_t keyboard;
-        uint16_t reserved;
-    } __packed remote_control_t;
-
     /* ===== MAP_ROBOT_DATA 0x0305 ===== */
     typedef struct {
         uint16_t target_robot_id;
@@ -608,13 +600,10 @@ namespace communication {
 
         custom_robot_data_t custom_robot_data{};                  // 0x0302
         map_command_t map_command{};                              // 0x0303
-        remote_control_t remote_control{};  // Obsolete: never updated by Receive; migrate old callers.
         map_robot_data_t map_robot_data{};                        // 0x0305
         custom_client_data_t custom_client_data{};                // 0x0306
         custom_client_map_command_t custom_client_map_command{};  // 0x0307
         custom_info_t custom_info{};                              // 0x0308
-
-        remote::vt13_packet_t vt13_packet{};
 
         void PrepareUIContent(content graph_content);
 
@@ -639,7 +628,6 @@ namespace communication {
          */
         int ProcessDataTx(int cmd_id, uint8_t* data) final;
 
-        void ProcessVt13Rx(const uint8_t* data, size_t size) override;
         content graph_content_ = NO_GRAPH;
     };
 
