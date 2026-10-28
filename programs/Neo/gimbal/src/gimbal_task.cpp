@@ -85,6 +85,13 @@ void gimbalTask(void* arg) {
 
     //    float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         bool gimbal_en = is_activate;
 #ifdef HAS_REFEREE
         gimbal_en = gimbal_en && referee->game_robot_status.mains_power_gimbal_output;
@@ -118,7 +125,7 @@ void gimbalTask(void* arg) {
         yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
-        //    if (dbus->swr == remote::UP) {
+        //    if (dbus_state.right_switch == controller::ThreePositionSwitch::Up) {
         //      gimbal->TargetAbs(0, 0);
         //      gimbal->Update();
         //      pitch_target = pitch_curr;
@@ -128,19 +135,19 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         if (dbus->IsOnline()) {
-            if (dbus->mouse.y != 0) {
-                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
+            if (dbus_state.mouse.y != 0) {
+                pitch_ratio = dbus_state.mouse.y / 32767.0 * 7.5 / 7.0;
             } else {
-                pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
+                pitch_ratio = -dbus_state.channels[3] / 18000.0 / 7.0;
             }
-            if (dbus->mouse.x != 0) {
-                yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
+            if (dbus_state.mouse.x != 0) {
+                yaw_ratio = -dbus_state.mouse.x / 32767.0 * 7.5 / 7.0;
             } else {
-                yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
+                yaw_ratio = -dbus_state.channels[2] / 18000.0 / 7.0;
             }
-        } else if (refereerc->IsOnline()) {
-            pitch_ratio = refereerc->remote_control.mouse.y / 32767.0 * 7.5 / 7.0;
-            yaw_ratio = -refereerc->remote_control.mouse.x / 32767.0 * 7.5 / 7.0;
+        } else if ((refereerc != nullptr && refereerc->IsOnline())) {
+            pitch_ratio = refereerc_state.mouse.y / 32767.0 * 7.5 / 7.0;
+            yaw_ratio = -refereerc_state.mouse.x / 32767.0 * 7.5 / 7.0;
         } else {
             pitch_ratio = 0;
             yaw_ratio = 0;
