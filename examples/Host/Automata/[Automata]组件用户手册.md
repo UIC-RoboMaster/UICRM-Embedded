@@ -146,8 +146,10 @@ auto aut = control::AutomataBuilder<States>()
 
 ```cpp
 // 射击（供弹轮）
+controller::DbusFrame dbus_state{};
+dbus->GetState(dbus_state);
 auto shoot_builder_with_items = control::AutomataBuilder<ShootMode>()
-    .item<control::AutomataInputEdge>(dbus->swl)
+    .item<control::AutomataInputEdge>(dbus_state.left_switch)
     .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
     .item<control::AutomataInputRaw>(is_referee_shoot_available)
     .item<control::AutomataInputEdge>(bool{}); // shoot_key
@@ -157,7 +159,7 @@ auto tranlogic_shooting_condition = TRANLOGIC {
     const auto& fric_state = COMPONENT(1);
     const auto& referee_permit = COMPONENT(2);
     const auto& shoot_key = COMPONENT(3);
-    return (swl.get() == remote::DOWN || shoot_key.get()) &&
+    return (swl.get() == controller::ThreePositionSwitch::Down || shoot_key.get()) &&
         fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
         referee_permit.get();
 };
