@@ -21,7 +21,7 @@
 #pragma once
 #include "DjiMotorBase.h"
 #include "bsp_can.h"
-#include "buzzer_notes.h"
+#include "buzzer_songs.h"
 #include "buzzer_task.h"
 #include "cmsis_os2.h"
 #include "gimbal.h"

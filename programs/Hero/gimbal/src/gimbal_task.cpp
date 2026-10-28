@@ -59,7 +59,7 @@ void gimbalTask(void* arg) {
     }
 
     // buzzer->SingTone(bsp::BuzzerNote::La6M);
-    Buzzer_Sing(SingCaliStart);
+    Buzzer_Sing(driver::songs::SingCaliStart);
     imu->Calibrate();
     i = 0;
     while (!imu->DataReady() || !imu->CaliDone()) {
@@ -69,7 +69,7 @@ void gimbalTask(void* arg) {
         osDelay(1);
         ++i;
     }
-    Buzzer_Sing(SingCaliDone);
+    Buzzer_Sing(driver::songs::SingCaliDone);
     float pitch_ratio, yaw_ratio;
     float pitch_curr, yaw_curr;
     pitch_curr = -imu->INS_angle[2];

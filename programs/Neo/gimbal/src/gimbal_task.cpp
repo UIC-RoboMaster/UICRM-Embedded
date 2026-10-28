@@ -64,7 +64,7 @@ void gimbalTask(void* arg) {
     // 云台复位完成后，播放一段音乐，代表开始校准陀螺仪
     // 校准陀螺仪会对陀螺仪进行2000次的读取，然后取平均值作为校准值
     // buzzer->SingTone(bsp::BuzzerNote::La6M);
-    Buzzer_Sing(SingCaliStart);
+    Buzzer_Sing(driver::songs::SingCaliStart);
     imu->Calibrate();
     i = 0;
     while (!imu->DataReady() || !imu->CaliDone()) {
@@ -75,7 +75,7 @@ void gimbalTask(void* arg) {
         ++i;
     }
     // 校准完成后播放一段音乐
-    Buzzer_Sing(SingCaliDone);
+    Buzzer_Sing(driver::songs::SingCaliDone);
     osDelay(100);
 
     // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度

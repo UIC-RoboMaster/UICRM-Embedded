@@ -1,5 +1,5 @@
 /*###########################################################
- # Copyright (c) 2023-2024. BNU-HKBU UIC RoboMaster         #
+ # Copyright (c) 2026-2027. BNU-HKBU UIC RoboMaster         #
  #                                                          #
  # This program is free software: you can redistribute it   #
  # and/or modify it under the terms of the GNU General      #
@@ -33,29 +33,44 @@ namespace driver {
      * @note there are three octaves in total
      */
     enum class BuzzerNote {
-        Do1L = 262,  ///*261.63Hz*/    3822us
-        Re2L = 294,  ///*293.66Hz*/    3405us
-        Mi3L = 330,  ///*329.63Hz*/    3034us
-        Fa4L = 349,  ///*349.23Hz*/    2863us
-        So5L = 392,  ///*392.00Hz*/    2551us
-        La6L = 440,  ///*440.00Hz*/    2272us
-        Si7L = 494,  ///*493.88Hz*/    2052us
+        Do1L = 262,       // C4: 261.63 Hz, 3822 us
+        Do1SharpL = 277,  // C#4: 277.18 Hz, 3608 us
+        Re2L = 294,       // D4: 293.66 Hz, 3405 us
+        Re2SharpL = 311,  // D#4: 311.13 Hz, 3214 us
+        Mi3L = 330,       // E4: 329.63 Hz, 3034 us
+        Fa4L = 349,       // F4: 349.23 Hz, 2863 us
+        Fa4SharpL = 370,  // F#4: 369.99 Hz, 2703 us
+        So5L = 392,       // G4: 392.00 Hz, 2551 us
+        So5SharpL = 415,  // G#4: 415.30 Hz, 2408 us
+        La6L = 440,       // A4: 440.00 Hz, 2273 us
+        La6SharpL = 466,  // A#4: 466.16 Hz, 2145 us
+        Si7L = 494,       // B4: 493.88 Hz, 2025 us
 
-        Do1M = 523,  ///*523.25Hz*/    1911us
-        Re2M = 587,  ///*587.33Hz*/    1703us
-        Mi3M = 659,  ///*659.26Hz*/    1517us
-        Fa4M = 698,  ///*698.46Hz*/    1432us
-        So5M = 784,  ///*784.00Hz*/    1276us
-        La6M = 880,  ///*880.00Hz*/    1136us
-        Si7M = 988,  ///*987.77Hz*/    1012us
+        Do1M = 523,       // C5: 523.25 Hz, 1911 us
+        Do1SharpM = 554,  // C#5: 554.37 Hz, 1804 us
+        Re2M = 587,       // D5: 587.33 Hz, 1703 us
+        Re2SharpM = 622,  // D#5: 622.25 Hz, 1607 us
+        Mi3M = 659,       // E5: 659.26 Hz, 1517 us
+        Fa4M = 698,       // F5: 698.46 Hz, 1432 us
+        Fa4SharpM = 740,  // F#5: 739.99 Hz, 1351 us
+        So5M = 784,       // G5: 783.99 Hz, 1276 us
+        So5SharpM = 831,  // G#5: 830.61 Hz, 1204 us
+        La6M = 880,       // A5: 880.00 Hz, 1136 us
+        La6SharpM = 932,  // A#5: 932.33 Hz, 1073 us
+        Si7M = 988,       // B5: 987.77 Hz, 1012 us
 
-        Do1H = 1047,  ///*1046.50Hz*/   956us
-        Re2H = 1175,  ///*1174.66Hz*/   851us
-        Mi3H = 1319,  ///*1318.51Hz*/   758us
-        Fa4H = 1397,  ///*1396.91Hz*/   716us
-        So5H = 1568,  ///*1567.98Hz*/   638us
-        La6H = 1760,  ///*1760.00Hz*/   568us
-        Si7H = 1976,  ///*1975.53Hz*/   506us
+        Do1H = 1047,       // C6: 1046.50 Hz, 956 us
+        Do1SharpH = 1109,  // C#6: 1108.73 Hz, 902 us
+        Re2H = 1175,       // D6: 1174.66 Hz, 851 us
+        Re2SharpH = 1245,  // D#6: 1244.51 Hz, 804 us
+        Mi3H = 1319,       // E6: 1318.51 Hz, 758 us
+        Fa4H = 1397,       // F6: 1396.91 Hz, 716 us
+        Fa4SharpH = 1480,  // F#6: 1479.98 Hz, 676 us
+        So5H = 1568,       // G6: 1567.98 Hz, 638 us
+        So5SharpH = 1661,  // G#6: 1661.22 Hz, 602 us
+        La6H = 1760,       // A6: 1760.00 Hz, 568 us
+        La6SharpH = 1865,  // A#6: 1864.66 Hz, 536 us
+        Si7H = 1976,       // B6: 1975.53 Hz, 506 us
 
         Silent = 0,
         Finish = -1,
