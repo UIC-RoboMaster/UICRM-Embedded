@@ -51,13 +51,13 @@ const bsp::thread_init_t thread_init = {
 };
 
 void init_minipc() {
-    minipc_uart = new bsp::UART(&huart6);
-    minipc_uart->SetBaudrate(921600);
-    minipc_uart->SetupRx(300);
-    minipc_uart->SetupTx(300);
-    minipc = new communication::Host(minipc_uart);
-    minipc_thread = new bsp::Thread(thread_init);
-    minipc_thread->Start();
+    // minipc_uart = new bsp::UART(&huart6);
+    // minipc_uart->SetBaudrate(921600);
+    // minipc_uart->SetupRx(300);
+    // minipc_uart->SetupTx(300);
+    // minipc = new communication::Host(minipc_uart);
+    // minipc_thread = new bsp::Thread(thread_init);
+    // minipc_thread->Start();
 }
 
 void minipc_task(void* args) {

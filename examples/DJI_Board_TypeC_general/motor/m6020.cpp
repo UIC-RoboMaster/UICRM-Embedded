@@ -36,13 +36,13 @@ static driver::Motor6020* motor1 = nullptr;
 void RM_RTOS_Init() {
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
 
-    print_use_uart(&huart1);
+    print_use_uart(&huart6, true, 921600);
     can1 = new bsp::CAN(&hcan1, true);
     motor1 = new driver::Motor6020(can1, 0x209, 0x2fe);
     motor1->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
         .kp = 80,
-        .ki = 1,
+        .ki = 2,
         .kd = 0,
         .max_out = 16384,
         .max_iout = 2000,

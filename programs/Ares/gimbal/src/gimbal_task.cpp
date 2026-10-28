@@ -194,8 +194,8 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 4500,
-        .ki = 0,
+        .kp = 1000,
+        .ki = 10,
         .kd = 0,
         .max_out = 16383,
         .max_iout = 10000,

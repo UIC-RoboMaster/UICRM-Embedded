@@ -25,7 +25,7 @@ driver::Motor3508* flywheel_right = nullptr;
 
 driver::DjiMotorBase* steering_motor = nullptr;
 
-bsp::GPIO* shoot_key = nullptr;
+// bsp::GPIO* shoot_key = nullptr;
 
 bool jam_notify_flags = false;
 
@@ -46,131 +46,76 @@ osThreadId_t shootTaskHandle;
 
 void shootTask(void* arg) {
     UNUSED(arg);
-    // 启动等待
-    osDelay(1000);
-    while (remote_mode == REMOTE_MODE_KILL) {
-        osDelay(SHOOT_OS_DELAY);
-    }
-    // 等待IMU初始化
-    while (imu->CaliDone()) {
-        osDelay(SHOOT_OS_DELAY);
-    }
-
-    steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
-
-    Ease* flywheel_speed_ease = new Ease(0, 1);
+    Ease flywheel_output(0, 1);
+    bool was_enabled = false;
 
     while (true) {
-        bool shoot_en = true;
-        shoot_en &= remote_mode != REMOTE_MODE_KILL;
-#ifdef HAS_REFEREE
-        shoot_en &= referee->game_robot_status.mains_power_shooter_output;
-#endif
+        const bool shoot_en = dbus->IsOnline() && remote_mode == REMOTE_MODE_FOLLOW &&
+                              (dbus->swr == remote::UP || dbus->swr == remote::MID) &&
+                              imu->CaliDone() && steering_motor->IsOnline();
         if (!shoot_en) {
-            // 死了
             kill_shoot();
+            flywheel_output = Ease(0, 1);
+            was_enabled = false;
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
 
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING || shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
-            flywheel_speed_ease->SetTarget(900);
-        } else {
-            flywheel_speed_ease->SetTarget(0);
+        if (!was_enabled) {
+            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
+            steering_motor->Enable();
+            flywheel_left->Enable();
+            flywheel_right->Enable();
+            was_enabled = true;
         }
-        flywheel_speed_ease->Calc();
-        flywheel_left->SetOutput(flywheel_speed_ease->GetOutput());
-        flywheel_right->SetOutput(flywheel_speed_ease->GetOutput());
 
-        // 检测摩擦轮是否就绪
-        // 由shoot_task切换到SHOOT_FRIC_MODE_PREPARED
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING && flywheel_speed_ease->IsAtTarget()) {
+        const bool flywheel_requested = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
+                                        shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED;
+        // 保留原程序 SetOutput(900) 的原始输出量级，不将 900 改解释为 rad/s。
+        flywheel_output.SetTarget(flywheel_requested ? 900 : 0);
+        const float output = flywheel_output.Calc();
+        flywheel_left->SetTarget(output);
+        flywheel_right->SetTarget(output);
+
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING && flywheel_output.IsAtTarget() &&
+            flywheel_left->IsOnline() && flywheel_right->IsOnline()) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
         }
-
-        if (shoot_flywheel_mode != SHOOT_FRIC_MODE_PREPARED) {
+        if (shoot_flywheel_mode != SHOOT_FRIC_MODE_PREPARED ||
+            !flywheel_left->IsOnline() || !flywheel_right->IsOnline()) {
             steering_motor->SetTarget(steering_motor->GetOutputShaftTheta());
             osDelay(SHOOT_OS_DELAY);
             continue;
         }
-        /* 摩擦轮就绪后执行以下部分 */
-
-        if (shoot_load_mode == SHOOT_MODE_STOP) {
-            steering_motor->Hold();
-            // todo: 这里为什么要是true才能停下？target_angel为什么会超过范围？
-        }
-        if (shoot_load_mode == SHOOT_MODE_IDLE) {
-            uint8_t loaded = shoot_key->Read();
-            if (loaded) {
-                steering_motor->Hold(true);
-            } else {
-                // 没有准备就绪，则旋转拔弹电机
-                steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, false);
-            }
-        }
-
-#ifdef HAS_REFEREE
-        int heat_limit = referee->game_robot_status.shooter_heat_limit;
-        int heat_buffer = referee->power_heat_data.shooter_id1_17mm_cooling_heat;
-        const int shooter_heat_threashold = 25;
-        if (heat_buffer > heat_limit - shooter_heat_threashold) {
-            // 临时解决方案
-            steering_motor->Hold();
-            print("overheat!\n");
-            osDelay(SHOOT_OS_DELAY);
-            continue;
-        }
-        UNUSED(heat_limit);
-        UNUSED(heat_buffer);
-#endif
 
         if (shoot_load_mode == SHOOT_MODE_SINGLE) {
-            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8, true);
-            uint8_t loaded = shoot_key->Read();
-            // 等到这一粒子弹发射出去再变成IDLE，否则会因为当前有子弹而直接锁定造成无法发射子弹
-            if (!loaded) {
-                shoot_load_mode = SHOOT_MODE_IDLE;
-            }
+            steering_motor->SetTarget(steering_motor->GetOutputShaftTheta() + 2 * PI / 8);
+            // 无弹丸传感器时每个 SINGLE 指令只设置一次目标。
+            shoot_load_mode = SHOOT_MODE_IDLE;
+        } else if (shoot_load_mode == SHOOT_MODE_BURST) {
+            // 上一个供弹步进到位后才继续，避免每毫秒无限累加目标。
+            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, false);
+        } else if (shoot_load_mode == SHOOT_MODE_STOP || shoot_load_mode == SHOOT_MODE_DISABLE) {
+            steering_motor->Hold();
         }
-        if (shoot_load_mode == SHOOT_MODE_BURST) {
-            steering_motor->SetTarget(steering_motor->GetTarget() + 2 * PI / 8, true);
-        }
-
         osDelay(SHOOT_OS_DELAY);
     }
 }
-
 void init_shoot() {
-    //TODO: id
     flywheel_left = new driver::Motor3508(can2, 0x202);
     flywheel_right = new driver::Motor3508(can2, 0x203);
+    flywheel_left->Disable();
+    flywheel_right->Disable();
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
 
-    control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 150,
-        .ki = 0.03,
-        .kd = 1,
-        .max_out = 30000,
-        .max_iout = 10000,
-        .deadband = 0,                                          // 死区
-        .A = 3 * PI,                                            // 变速积分所能达到的最大值为A+B
-        .B = 2 * PI,                                            // 启动变速积分的死区
-        .output_filtering_coefficient = 0.1,                    // 输出滤波系数
-        .derivative_filtering_coefficient = 0,                  // 微分滤波系数
-        .mode = control::ConstrainedPID::Integral_Limit |       // 积分限幅
-                control::ConstrainedPID::OutputFilter |         // 输出滤波
-                control::ConstrainedPID::Trapezoid_Intergral |  // 梯形积分
-                control::ConstrainedPID::ChangingIntegralRate,  // 变速积分
-    };
-    flywheel_left->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
-    flywheel_right->ReInitPID(omega_pid_init, driver::DjiMotorBase::OMEGA);
-
-    // TODO: 反向旋转
-    flywheel_left->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
-    flywheel_right->SetMode(driver::DjiMotorBase::OMEGA);
-
+    // 使用原始电流目标，使后台电机线程负责发送，避免 SetOutput 被速度 PID 覆盖。
+    flywheel_left->SetMode(driver::DjiMotorBase::CURRENT | driver::DjiMotorBase::INVERTED);
+    flywheel_right->SetMode(driver::DjiMotorBase::CURRENT);
+    flywheel_left->SetTarget(0);
+    flywheel_right->SetTarget(0);
     steering_motor = new driver::Motor2006(can1, 0x207);
+    steering_motor->Disable();
 
     steering_motor->SetTransmissionRatio(36);
     control::ConstrainedPID::PID_Init_t steering_motor_theta_pid_init = {
@@ -211,6 +156,11 @@ void init_shoot() {
     steering_motor->RegisterErrorCallback(jam_callback, steering_motor);
 }
 void kill_shoot() {
+    steering_motor->Disable();
+    flywheel_left->Disable();
+    flywheel_right->Disable();
+    flywheel_left->SetTarget(0);
+    flywheel_right->SetTarget(0);
     steering_motor->SetOutput(0);
     flywheel_left->SetOutput(0);
     flywheel_right->SetOutput(0);

@@ -22,198 +22,83 @@
 
 #include "bsp_os.h"
 #include "bsp_print.h"
-#include "buzzer_notes.h"
 #include "buzzer_task.h"
 #include "chassis_task.h"
 #include "cmsis_os.h"
 #include "gimbal_task.h"
 #include "imu_task.h"
-#include "minipc_task.h"
 #include "public_port.h"
-#include "referee_task.h"
 #include "remote_task.h"
 #include "shoot_task.h"
-#include "ui_task.h"
-/**
- * 在当前版本的程序中，每一个部件都需要作为一个全局的变量被初始化，然后在对应的任务中被使用
- */
-// TODO: delete
 
 void RM_RTOS_Init(void) {
-    // 设置高精度定时器以能够获取微秒级别的精度的运行时间数据
     bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
-    // 初始化调试串口，使print()函数能够输出调试信息
     print_use_uart(&huart6, true, 921600);
-    // 初始化can总线，can在各个进程中都需要被使用所以在这里独立初始化
-    init_can();
-    // 初始化IMU
-    init_imu();
-    // 初始化蜂鸣器，蜂鸣器在需要的时候会在后台播放音乐
-    init_buzzer();
-    // 初始化裁判系统，裁判系统类能够读取裁判系统的数据
-    init_referee();
-    // 初始化遥控器与远程模式选择，遥控器类能够读取遥控器的数据
-    init_minipc();
-    init_remote();
-    // 初始化发射机构，发射机构类能够控制发射机构的动作
-    init_shoot();
-    // 初始化云台，云台类能够控制云台的动作
-    init_gimbal();
-    // 初始化底盘，底盘类能够控制底盘的动作
-    init_chassis();
-    // 初始化用户界面，用户界面类能够在图传上显示实时状态
-    init_ui();
+    // 单独发送启动标记，用于区分串口链路与后续任务打印的问题。
+    static uint8_t startup_message[] = "DGSTD BOOT UART6 921600\r\n";
+    HAL_UART_Transmit(&huart6, startup_message, sizeof(startup_message) - 1, 100);
 
+    // DBUS 控制云台与发射机构；未安装的裁判、图传、自瞄不参与。
+    init_can();
+    init_imu();
+    init_buzzer();
+    init_remote();
+    init_shoot();
+    init_gimbal();
+    init_chassis();
 }
 
 void RM_RTOS_Threads_Init(void) {
-    //    extimuTaskHandle = osThreadNew(extimuTask, nullptr, &extimuTaskAttribute);
-    // 分别启动每个任务
+    imuTaskHandle = osThreadNew(imuTask, nullptr, &imuTaskAttribute);
     buzzerTaskHandle = osThreadNew(buzzerTask, nullptr, &buzzerTaskAttribute);
     remoteTaskHandle = osThreadNew(remoteTask, nullptr, &remoteTaskAttribute);
     gimbalTaskHandle = osThreadNew(gimbalTask, nullptr, &gimbalTaskAttribute);
-    chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
     shootTaskHandle = osThreadNew(shootTask, nullptr, &shootTaskAttribute);
-    if (ENABLE_UI)
-        uiTaskHandle = osThreadNew(uiTask, nullptr, &uiTaskAttribute);
+    chassisTaskHandle = osThreadNew(chassisTask, nullptr, &chassisTaskAttribute);
 }
 
 void RM_RTOS_Default_Task(const void* arg) {
     UNUSED(arg);
-    osDelay(100);
-    Buzzer_Sing(DJI);
-
-    // while (true) {
-    //     uint8_t buffer[sizeof(control::ConstrainedPID::PID_State_t) * 2 + 2] = {0xAA, 0xBB};
-    //
-    //     control::ConstrainedPID::PID_State_t state;
-    //     state = yaw_motor->GetPIDState(driver::DjiMotorBase::THETA);
-    //     state.dout = -state.dout;
-    //     // state.error = car_vy;
-    //     // state.pout = car_vy_diff.get();
-    //     // extern float pitch_feedforward;
-    //     // state.iout = pitch_feedforward;
-    //     memcpy(buffer + 2, &state, sizeof(state));
-    //
-    //     state = yaw_motor->GetPIDState(driver::DjiMotorBase::OMEGA);
-    //     state.dout = -state.dout;
-    //     memcpy(buffer + 2 + sizeof(state), &state, sizeof(state));
-    //
-    //     dump(&state, sizeof(buffer));
-    //     osDelay(4);
-    // }
 
     while (true) {
-        if (referee->game_robot_status.mains_power_gimbal_output) {
-
-        } else {
-
-        }
-        //        print("%.4f %.4f\r\n", yaw_motor->GetTheta(), yaw_motor->GetOmega());
-        //        osDelay(2);
-        set_cursor(0, 0);
-        clear_screen();
-
-        // Mode info
-        print("Mode:%s\r\n", remote_mode_str(remote_mode));
-        print("Shoot Fric Mode:%s\r\n", shoot_fric_mode_str(shoot_flywheel_mode));
-        print("Shoot Mode:%s\r\n", shoot_load_mode_str(shoot_load_mode));
-        print("AutoAim:%d\r\n", is_autoaim);
-        print("\r\n");
-
-        // DBUS info
-        print(
-            "DBUS [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [TWL: %d] [SWL: %d] [SWR: %d]"
-            "@ %d "
-            "ms\r\n",
-            dbus->ch0,
-            dbus->ch1,
-            dbus->ch2,
-            dbus->ch3,
-            dbus->ch4,
-            dbus->swl,
-            dbus->swr,
-            dbus->GetLastUptime()
-        );
-        print("\r\n");
-
-        // Remote info
-        print(
-            "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d]"
-            " [Mode: %d] [SWL: %d] [SWR: %d] [Trig: %d]\r\n",
-            refereerc->vt13_packet.remote.ch0,
-            refereerc->vt13_packet.remote.ch1,
-            refereerc->vt13_packet.remote.ch2,
-            refereerc->vt13_packet.remote.ch3,
-            refereerc->vt13_packet.remote.ch4,
-            refereerc->vt13_packet.remote.mode_sw,
-            (int)refereerc->vt13_packet.remote.swl,
-            (int)refereerc->vt13_packet.remote.swr ? 1 : 0,
-            (int)refereerc->vt13_packet.remote.trigger ? 1 : 0
-        );
-        print("\r\n");
-        auto& mouse = refereerc->vt13_packet.mouse;
-        print(
-            "Mouse: [X: %d] [Y: %d] [ROLL: %d] [L %d] [R %d] [MID %d]",
-            mouse.x,
-            mouse.y,
-            mouse.roll,
-            mouse.l,
-            mouse.r,
-            mouse.mid
-        );
-        print("\r\n");
-
-        // Chassis info
-        print("Chassis speed %.3f %.3f %.3f\r\n", chassis->chassis_vx, chassis->chassis_vy, chassis->chassis_vt);
-        print(
-            "Power %.3fV %.3fA %.3fW\r\n",
-            referee->power_heat_data.chassis_volt / 1000.0,
-            referee->power_heat_data.chassis_current / 1000.0,
-            referee->power_heat_data.chassis_power
-        );
-        print("\r\n");
-
-        // Gimbal info
-        print(
-            "Gimbal target P%.3f Y%.3f\r\n",
-            gimbal->getPitchTarget() - gimbal_param->pitch_offset_,
-            gimbal->getYawTarget() - gimbal_param->yaw_offset_
-        );
-        print("INS Angle: P%.3f Y%.3f R %.3f\r\n", INS_Angle.pitch, INS_Angle.yaw, INS_Angle.roll);
-        print(
-            "Vision Target: P%.3f Y%.3f acc[%d] shoot{%d} time(%d)\r\n",
-            minipc->target_angle.target_pitch,
-            minipc->target_angle.target_yaw,
-            minipc->target_angle.accuracy,
-            minipc->shoot_cmd.shoot_cmd,
-            minipc->GetLastUptime()
-        );
-        print("\r\n");
-
-        // Shoot info
-        print("Shooter Cooling Heat: %hu\r\n", referee->power_heat_data.shooter_id1_17mm_cooling_heat);
-        print("Bullet Frequency: %hhu\r\n", referee->shoot_data.bullet_freq);
-        print("Bullet Speed: %.3f\r\n", referee->shoot_data.bullet_speed);
-        print("\r\n");
-
-        // Online info
-        print("Comm Stat:  ");
-        print_enabled("DBUS", dbus->IsOnline());
-        print_enabled("Referee", referee->IsOnline());
-        print_enabled("Referee RC", refereerc->IsOnline());
-        print("\r\n");
-        print("Motor Stat: ");
-        print_enabled("Yaw", yaw_motor->IsOnline());
-        print_enabled("Pitch", pitch_motor->IsOnline());
-        print_enabled("Steering", steering_motor->IsOnline());
-        print("\r\n");
-        print("Ref Pwr En: ");
-        print_enabled("Chassis", referee->game_robot_status.mains_power_chassis_output);
-        print_enabled("Gimbal", referee->game_robot_status.mains_power_gimbal_output);
-        print_enabled("Shooter", referee->game_robot_status.mains_power_shooter_output);
-        print("\r\n");
-
-        osDelay(50);
+        // 连续文本输出，不清屏、不使用颜色；online/en 分别表示反馈在线/允许输出。
+        print("DGSTD DBUS-CHASSIS t=%lu UART6=921600 mode=%s DBUS=%d SWR=%d CH2=%d CH3=%d\r\n",
+              (unsigned long)bsp::GetHighresTickMilliSec(),
+              remote_mode_str(remote_mode), (int)dbus->IsOnline(),
+              (int)dbus->swr, (int)dbus->ch2, (int)dbus->ch3);
+        print("SWL=%d FRIC=%s LOAD=%s\r\n",
+              (int)dbus->swl, shoot_fric_mode_str(shoot_flywheel_mode),
+              shoot_load_mode_str(shoot_load_mode));
+        print("CH0=%d CH1=%d CH4=%d CHASSIS tx_en=%d vx=%.3f vy=%.3f vt=%.3f\r\n",
+              (int)dbus->ch0, (int)dbus->ch1, (int)dbus->ch4,
+              (int)chassis_control_enabled, chassis_vx, chassis_vy, chassis_vt);
+        print("P enc=%.4f tgt=%.4f en=%d online=%d out=%d curr=%d w=%.4f\r\n",
+              pitch_motor->GetTheta(), pitch_motor->GetTarget(),
+              (int)pitch_motor->IsEnable(), (int)pitch_motor->IsOnline(),
+              (int)pitch_motor->GetOutput(), (int)pitch_motor->GetCurr(),
+              pitch_motor->GetOmega());
+        print("Y enc=%.4f tgt=%.4f en=%d online=%d out=%d curr=%d w=%.4f\r\n",
+              yaw_motor->GetTheta(), yaw_motor->GetTarget(),
+              (int)yaw_motor->IsEnable(), (int)yaw_motor->IsOnline(),
+              (int)yaw_motor->GetOutput(), (int)yaw_motor->GetCurr(),
+              yaw_motor->GetOmega());
+        // err 是折算到最短路径后的角度差，跨过编码器 0 点时仍可直接判断方向。
+        // vcmd 是角度环要求的速度，i 是速度环累计的积分输出（原始指令单位）。
+        const auto pitch_theta = pitch_motor->GetPIDState(driver::DjiMotorBase::THETA);
+        const auto pitch_omega = pitch_motor->GetPIDState(driver::DjiMotorBase::OMEGA);
+        const auto yaw_theta = yaw_motor->GetPIDState(driver::DjiMotorBase::THETA);
+        const auto yaw_omega = yaw_motor->GetPIDState(driver::DjiMotorBase::OMEGA);
+        print("P ctl err=%.4f vcmd=%.4f i=%.0f | Y ctl err=%.4f vcmd=%.4f i=%.0f\r\n",
+              pitch_theta.error, pitch_theta.output, pitch_omega.iout,
+              yaw_theta.error, yaw_theta.output, yaw_omega.iout);
+        print("S enc=%.4f tgt=%.4f en=%d online=%d out=%d curr=%d\r\n",
+              steering_motor->GetOutputShaftTheta(), steering_motor->GetTarget(),
+              (int)steering_motor->IsEnable(), (int)steering_motor->IsOnline(),
+              (int)steering_motor->GetOutput(), (int)steering_motor->GetCurr());
+        // 直接读 IMU 原始姿态，关闭云台输出时也能观察，当前不参与电机控制。
+        print("IMU cal=%d warm=%d yaw=%.4f pitch=%.4f roll=%.4f\r\n\r\n",
+              (int)imu->CaliDone(), (int)imu->DataReady(),
+              imu->INS_angle[0], imu->INS_angle[1], imu->INS_angle[2]);
+        osDelay(200);
     }
 }

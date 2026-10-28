@@ -34,39 +34,29 @@ diff<float> car_vx_diff, car_vy_diff, car_vt_diff;
 
 communication::CanBridge* can_bridge = nullptr;
 control::ChassisCanBridgeSender* chassis = nullptr;
+bool chassis_control_enabled = false;
 
 void chassisTask(void* arg) {
     UNUSED(arg);
     kill_chassis();
     osDelay(1000);
 
-    while (remote_mode == REMOTE_MODE_KILL) {
-        kill_chassis();
-        osDelay(CHASSIS_OS_DELAY);
-    }
-
-    while (!imu->CaliDone()) {
-        osDelay(1);
-    }
-
-    chassis->Enable();
-
     while (true) {
-        if (remote_mode == REMOTE_MODE_KILL) {
+        const bool enabled = dbus->IsOnline() &&
+                             (dbus->swr == remote::UP || dbus->swr == remote::MID) &&
+                             remote_mode == REMOTE_MODE_FOLLOW &&
+                             imu->CaliDone() && yaw_motor->IsOnline();
+        if (!enabled) {
             kill_chassis();
-            while (remote_mode == REMOTE_MODE_KILL) {
-                osDelay(CHASSIS_OS_DELAY + 2);
-            }
-            chassis->Enable();
+            osDelay(CHASSIS_OS_DELAY);
             continue;
         }
-
-        remote::keyboard_t keyboard;
-        if (dbus->IsOnline()) {
-            keyboard = dbus->keyboard;
-        } else if (refereerc->IsOnline()) {
-            keyboard = refereerc->vt13_packet.keyboard;
+        if (!chassis_control_enabled) {
+            chassis->Enable();
+            chassis_control_enabled = true;
         }
+
+        const remote::keyboard_t keyboard = dbus->keyboard;
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
         //        if (keyboard.bit.X) {
@@ -81,17 +71,6 @@ void chassisTask(void* arg) {
             car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
             car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
             car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
-        } else if (refereerc->vt13_packet.remote.ch0 != remote::vt13_remote_t::ROCKER_MID ||
-                   refereerc->vt13_packet.remote.ch1 != remote::vt13_remote_t::ROCKER_MID ||
-                   refereerc->vt13_packet.remote.ch4 != remote::vt13_remote_t::ROCKER_MID) {
-            // 使用VT13遥控器
-            const float speed_scale = 0.5;
-            car_vx = (float)(refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
-                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
-            car_vy = (float)(refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) /
-                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
-            car_vt = (float)(refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) /
-                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
@@ -114,51 +93,18 @@ void chassisTask(void* arg) {
         car_vy_diff.calc(car_vy);
         car_vt_diff.calc(car_vt);
 
-        // 云台相对底盘的角度，通过云台和底盘连接的电机获取
-        float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
-        // 云台当前相对云台零点的角度，通过IMU获取
-        float B = INS_Angle.yaw;
-        // 云台目标相对云台零点的角度，直接读取gimbal class获取
-        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
-        float chassis_target_diff = C - B + A;
-        chassis_target_diff = -chassis_target_diff;
-        chassis_target_diff = pitch_diff = wrap<float>(chassis_target_diff, -PI, PI);
+        // 用实际 Yaw 编码器角度转换平移方向，避免混入 IMU 世界坐标。
+        const float A = wrapc<float>(yaw_motor->GetTheta() - gimbal_param->yaw_offset_, -PI, PI);
+        const float chassis_target_diff = -A;
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
         float cos_yaw = arm_cos_f32(chassis_target_diff);
         chassis_vx = cos_yaw * car_vx + sin_yaw * car_vy;
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
-        chassis_vt = 0;
-
-        if (remote_mode == REMOTE_MODE_ADVANCED || remote_mode == REMOTE_MODE_AUTOAIM) {
-            // 手动模式下，遥控器直接控制底盘速度
-            chassis_vx = car_vx;
-            chassis_vy = car_vy;
-            chassis_vt = car_vt;
-        }
-
-        if (remote_mode == REMOTE_MODE_FOLLOW) {
-            // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向
-            const float angle_threshold = 0.02f;
-            float chassis_vt_pid_error = chassis_target_diff;
-            if (fabs(chassis_vt_pid_error) < angle_threshold) {
-                chassis_vt_pid_error = 0;
-            }
-
-            static control::ConstrainedPID* chassis_vt_pid = new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
-            float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
-            if (chassis_vt_pid_error != 0)
-                chassis_vt = vt;
-        }
-
-        if (remote_mode == REMOTE_MODE_SPIN) {
-            // 小陀螺模式，拨盘用来控制底盘加速度
-            static float spin_speed = 0.6f;
-            spin_speed = spin_speed + car_vt * 0.01;
-            spin_speed = clip<float>(spin_speed, -1, 1);
-            chassis_vt = spin_speed;
-        }
+        // 当前 Yaw 保持相对底盘的编码器角度，自动跟随会持续追逐这个固定偏角。
+        // 先用 CH4 拨轮手动转向；恢复 IMU 稳定后再启用底盘自动跟随。
+        chassis_vt = car_vt;
 
         // 进行缩放
         chassis_vx *= chassis_max_xy_speed;
@@ -200,5 +146,7 @@ void init_chassis() {
     chassis->Disable();
 }
 void kill_chassis() {
+    chassis_control_enabled = false;
+    chassis_vx = chassis_vy = chassis_vt = 0;
     chassis->Disable();
 }
