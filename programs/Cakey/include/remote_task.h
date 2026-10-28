@@ -20,12 +20,12 @@
 
 #pragma once
 #include "cmsis_os2.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 #include "main.h"
 #include "referee_task.h"
 #include "user_define.h"
 #include "utils.h"
-extern remote::DBUS* dbus;
+extern controller::DBUS* dbus;
 /**
  * @brief Dbus Init
  */
