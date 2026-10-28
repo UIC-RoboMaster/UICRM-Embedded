@@ -51,6 +51,13 @@ void chassisTask(void* arg) {
     chassis->Enable();
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_chassis();
             while (remote_mode == REMOTE_MODE_KILL) {
@@ -61,13 +68,13 @@ void chassisTask(void* arg) {
         }
 
         const bool vt13_c_mode = (refereerc != nullptr) && refereerc->IsOnline() &&
-                                 (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C);
+                                 (refereerc_state.mode == controller::RefereeRcMode::C);
 
-        remote::keyboard_t keyboard{};
+        controller::KeyboardState keyboard{};
         if (dbus->IsOnline()) {
-            keyboard = dbus->keyboard;
+            keyboard = dbus_state.keyboard;
         } else if (vt13_c_mode) {
-            keyboard = refereerc->vt13_packet.keyboard;
+            keyboard = refereerc_state.keyboard;
         }
 
         // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
@@ -80,26 +87,21 @@ void chassisTask(void* arg) {
         //     car_vy = 0;
         //     car_vt = 0;
         // } else
-        if (dbus->IsOnline() && (abs(dbus->ch0) > dbus_rocker_deadband || abs(dbus->ch1) > dbus_rocker_deadband ||
-                                 abs(dbus->ch4) > dbus_rocker_deadband)) {
+        if (dbus->IsOnline() &&
+            (abs(dbus_state.channels[0]) > dbus_rocker_deadband || abs(dbus_state.channels[1]) > dbus_rocker_deadband ||
+             abs(dbus_state.channels[4]) > dbus_rocker_deadband)) {
             // 优先使用遥控器
             const float speed_scale = 0.5;
-            car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
-            car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
-            car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
-        } else if (vt13_c_mode && (abs((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) >
-                                       vt13_rocker_deadband ||
-                                   abs((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) >
-                                       vt13_rocker_deadband ||
-                                   abs((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) >
-                                       vt13_rocker_deadband)) {
+            car_vx = (float)dbus_state.channels[0] / 660.0f * speed_scale;
+            car_vy = (float)dbus_state.channels[1] / 660.0f * speed_scale;
+            car_vt = (float)dbus_state.channels[4] / 660.0f * speed_scale;
+        } else if (vt13_c_mode && (abs((int)refereerc_state.channels[0]) > vt13_rocker_deadband ||
+                                   abs((int)refereerc_state.channels[1]) > vt13_rocker_deadband ||
+                                   abs((int)refereerc_state.channels[4]) > vt13_rocker_deadband)) {
             const float speed_scale = 0.5;
-            car_vx = (float)((int)refereerc->vt13_packet.remote.ch0 - remote::vt13_remote_t::ROCKER_MID) /
-                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
-            car_vy = (float)((int)refereerc->vt13_packet.remote.ch1 - remote::vt13_remote_t::ROCKER_MID) /
-                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
-            car_vt = (float)((int)refereerc->vt13_packet.remote.ch4 - remote::vt13_remote_t::ROCKER_MID) /
-                     remote::vt13_remote_t::ROCKER_RANGE * speed_scale;
+            car_vx = (float)((int)refereerc_state.channels[0]) / 660.0f * speed_scale;
+            car_vy = (float)((int)refereerc_state.channels[1]) / 660.0f * speed_scale;
+            car_vt = (float)((int)refereerc_state.channels[4]) / 660.0f * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;

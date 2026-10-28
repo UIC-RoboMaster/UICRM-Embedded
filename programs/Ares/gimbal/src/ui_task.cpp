@@ -130,6 +130,13 @@ void uiTask(void* arg) {
     BoolEdgeDetector* shoot_jam_edge = new BoolEdgeDetector(false);
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         // Update chassis GUI
         // 通过两个云台电机的角度
         relative_angle = yaw_motor->GetThetaDelta(gimbal_param->yaw_offset_);
@@ -256,10 +263,10 @@ void uiTask(void* arg) {
         }
 
         // V key to refresh UI (via refereerc VT13 link)
-        if (refereerc->IsOnline()) {
-            v_edge->input(refereerc->vt13_packet.keyboard.bit.V);
+        if ((refereerc != nullptr && refereerc->IsOnline())) {
+            v_edge->input(refereerc_state.keyboard.bit.V);
         } else {
-            v_edge->input(dbus->keyboard.bit.V);
+            v_edge->input(dbus_state.keyboard.bit.V);
         }
 
         if (v_edge->posEdge()) {
@@ -320,9 +327,9 @@ void uiTask(void* arg) {
 
         // C key to clear diagnostics messages
         if (dbus->IsOnline()) {
-            c_edge->input(dbus->keyboard.bit.C);
+            c_edge->input(dbus_state.keyboard.bit.C);
         } else {
-            c_edge->input(refereerc->vt13_packet.keyboard.bit.C);
+            c_edge->input(refereerc_state.keyboard.bit.C);
         }
         if (c_edge->posEdge()) {
             diagGUI->Clear(UI_Delay);

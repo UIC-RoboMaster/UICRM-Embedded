@@ -76,6 +76,11 @@ void RM_RTOS_Default_Task(const void* arg) {
     // }
     char s[50];
     while (true) {
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         set_cursor(0, 0);
         clear_screen();
         switch (remote_mode) {
@@ -143,7 +148,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         // }
 
         print("[UI] ");
-        if (refereerc->vt13_packet.keyboard.bit.V) {
+        if (refereerc_state.keyboard.bit.V) {
             print("UI refresh success");
         }
         print("\n");
@@ -164,20 +169,24 @@ void RM_RTOS_Default_Task(const void* arg) {
         print(
             "VT13 [CH0: %-4d] [CH1: %-4d] [CH2: %-4d] [CH3: %-4d] [CH4: %-4d] [Mode: %d] [SWL: %d] "
             "[SWR: %d] [Trig: %d]\r\n",
-            refereerc->vt13_packet.remote.ch0,
-            refereerc->vt13_packet.remote.ch1,
-            refereerc->vt13_packet.remote.ch2,
-            refereerc->vt13_packet.remote.ch3,
-            refereerc->vt13_packet.remote.ch4,
-            refereerc->vt13_packet.remote.mode_sw,
-            refereerc->vt13_packet.remote.swl,
-            refereerc->vt13_packet.remote.swr,
-            refereerc->vt13_packet.remote.trigger
+            refereerc_state.channels[0],
+            refereerc_state.channels[1],
+            refereerc_state.channels[2],
+            refereerc_state.channels[3],
+            refereerc_state.channels[4],
+            static_cast<unsigned>(refereerc_state.mode),
+            refereerc_state.left_button,
+            refereerc_state.right_button,
+            refereerc_state.trigger
         );
         print("\r\n");
         print("[Referee %s] ", referee->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
         print("\r\n");
-        print("[Referee RC %s] ", refereerc->IsOnline() ? "\033[32mOnline\033[0m" : "\033[31mOffline\033[0m");
+        print(
+            "[Referee RC %s] ",
+            (refereerc != nullptr && refereerc->IsOnline()) ? "\033[32mOnline\033[0m" :
+                                                                          "\033[31mOffline\033[0m"
+        );
         print("\r\n");
 
         // Gimbal info

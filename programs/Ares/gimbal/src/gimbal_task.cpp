@@ -18,7 +18,7 @@
 #include "gimbal_task.h"
 
 #include "chassis_task.h"
-#include "dji_remote.h"
+#include "dbus.h"
 // #include "minipc_task.h"
 
 osThreadId_t gimbalTaskHandle;
@@ -77,6 +77,13 @@ void gimbalTask(void* arg) {
     // float pitch_target, yaw_target;
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         // 如果遥控器处于关闭状态，关闭两个电机
         check_kill();
 
@@ -85,7 +92,7 @@ void gimbalTask(void* arg) {
         yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
-        //    if (dbus->swr == remote::UP) {
+        //    if (dbus_state.right_switch == controller::ThreePositionSwitch::Up) {
         //      gimbal->TargetAbs(0, 0);
         //      gimbal->Update();
         //      pitch_target = pitch_curr;
@@ -99,27 +106,24 @@ void gimbalTask(void* arg) {
         const float remote_ratio = 0.005;
 
         const bool vt13_c_mode = (refereerc != nullptr) && refereerc->IsOnline() &&
-                                 (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C);
+                                 (refereerc_state.mode == controller::RefereeRcMode::C);
 
         if (dbus->IsOnline()) {
-            if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
-                pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
-                yaw_ratio = (float)dbus->mouse.x / mouse_xy_max * mouse_ratio;
+            if (dbus_state.mouse.x != 0 || dbus_state.mouse.y != 0) {
+                pitch_ratio = (float)dbus_state.mouse.y / 32767.0 * mouse_ratio;
+                yaw_ratio = (float)dbus_state.mouse.x / 32767.0 * mouse_ratio;
             } else {
-                pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
-                yaw_ratio = (float)dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
+                pitch_ratio = (float)dbus_state.channels[3] / 660.0f * remote_ratio;
+                yaw_ratio = (float)dbus_state.channels[2] / 660.0f * remote_ratio;
             }
         } else if (vt13_c_mode) {
             // DBUS离线时使用VT13：优先摇杆，否则鼠标
-            if (refereerc->vt13_packet.remote.ch3 != remote::vt13_remote_t::ROCKER_MID ||
-                refereerc->vt13_packet.remote.ch2 != remote::vt13_remote_t::ROCKER_MID) {
-                pitch_ratio = (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) /
-                              remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
-                yaw_ratio = (float)(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
-                            remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
+            if (refereerc_state.channels[3] != 0 || refereerc_state.channels[2] != 0) {
+                pitch_ratio = (float)(refereerc_state.channels[2]) / 660.0f / 18000.0 * 660.0 / 7.0;
+                yaw_ratio = (float)(refereerc_state.channels[3]) / 660.0f / 18000.0 * 660.0 / 7.0;
             } else {
-                pitch_ratio = -refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
-                yaw_ratio = refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
+                pitch_ratio = -refereerc_state.mouse.y / 32767.0 * 7.5 / 7.0;
+                yaw_ratio = refereerc_state.mouse.x / 32767.0 * 7.5 / 7.0;
             }
         } else {
             pitch_ratio = 0;

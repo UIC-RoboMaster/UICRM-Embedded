@@ -25,22 +25,27 @@
 #include "AutomataSystem.h"
 #include "imu_task.h"
 
-remote::DBUS* dbus = nullptr;
+controller::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_FOLLOW;
 ShootFricMode shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
 ShootMode shoot_load_mode = SHOOT_MODE_STOP;
 bool turbo_shoot = false;
 
 void init_dbus() {
-    dbus = new remote::DBUS(&huart3);
+    dbus = new controller::DBUS(&huart3);
 }
 
 osThreadId_t remoteTaskHandle;
 
 void remoteTask(void* arg) {
+    using enum controller::ThreePositionSwitch;
+
     // 接口转换
     UNUSED(arg);
     osDelay(1000);
+
+    controller::DbusFrame dbus_state{};
+    dbus->GetState(dbus_state);
 
     // 遥控器是否在线
     bool is_controller_online = false;
@@ -49,21 +54,24 @@ void remoteTask(void* arg) {
     // 裁判系统端是否允许射击
     bool is_referee_shoot_available = false;
 
-    remote::switch_t state_r = remote::MID;
-    remote::switch_t state_l = remote::MID;
-    remote::keyboard_t keyboard{};
-    remote::mouse_t mouse{};
+    controller::ThreePositionSwitch state_r = Mid;
+    controller::ThreePositionSwitch state_l = Mid;
+    controller::KeyboardState keyboard{};
+    controller::MouseState mouse{};
     BoolEdgeDetector turbo_edge{false};
 
     // clang-format off
 
     // 使/失能（上/下电）
     auto tranlogic_active_condition = TRANLOGIC {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
         const auto& referee_cmd_dead = COMPONENT(0);
         const auto& control_online = COMPONENT(1);
         // 遥控器在线 && 右摇杆不在最下档 && 裁判系统反馈 未阵亡
         return control_online.get()
-        && (!dbus->IsOnline() || dbus->swr != remote::DOWN)
+        && (!dbus->IsOnline() || dbus_state.right_switch != Down)
         && !referee_cmd_dead.get();
     };
     auto activate_aut = control::AutomataBuilder<ActivateStates>()
@@ -79,12 +87,12 @@ void remoteTask(void* arg) {
         const auto& swr = COMPONENT(0);
         const auto& mode_change_key = COMPONENT(1);
         const auto& vt13_change_button = COMPONENT(2);
-        return (swr.downEdge() && swr.get() == remote::UP)
+        return (swr.downEdge() && swr.get() == Up)
         || mode_change_key.upEdge()
         || vt13_change_button.upEdge();
     };
     auto remote_mode_aut = control::AutomataBuilder<RemoteMode>()
-        .item<control::AutomataInputEdge>(dbus->swr)
+        .item<control::AutomataInputEdge>(dbus_state.right_switch)
         .item<control::AutomataInputEdge>(bool{}) // mode_change_key
         .item<control::AutomataInputEdge>(bool{}) // vt13_change_button
         .transition<REMOTE_MODE_FOLLOW, REMOTE_MODE_SPIN>(tranlogic_next_remote_mode_trigger)
@@ -97,12 +105,12 @@ void remoteTask(void* arg) {
         const auto& swl = COMPONENT(0);
         const auto& fric_key = COMPONENT(1);
         const auto& vt13_fric_button = COMPONENT(2);
-        return (swl.downEdge() && swl.get() == remote::UP)
+        return (swl.downEdge() && swl.get() == Up)
         || fric_key.upEdge()
         || vt13_fric_button.upEdge();
     };
     auto fric_wheel_aut = control::AutomataBuilder<ShootFricMode>()
-        .item<control::AutomataInputEdge>(dbus->swl)
+        .item<control::AutomataInputEdge>(dbus_state.left_switch)
         .item<control::AutomataInputEdge>(bool{}) // friction_key
         .item<control::AutomataInputEdge>(bool{}) // vt13_fric_button
         // 加速中 → 停
@@ -125,12 +133,12 @@ void remoteTask(void* arg) {
         const auto& referee_permit = COMPONENT(2);
         const auto& shoot_key = COMPONENT(3);
         const auto& vt13_shoot_button = COMPONENT(4);
-        return (swl.get() == remote::DOWN || shoot_key.get() || vt13_shoot_button.get()) &&
+        return (swl.get() == Down || shoot_key.get() || vt13_shoot_button.get()) &&
             fric_state.get() == SHOOT_FRIC_MODE_PREPARED &&
             referee_permit.get();
     };
     auto shoot_aut = control::AutomataBuilder<ShootMode>()
-        .item<control::AutomataInputEdge>(dbus->swl)
+        .item<control::AutomataInputEdge>(dbus_state.left_switch)
         .item<control::AutomataInputRaw>(SHOOT_FRIC_MODE_STOP)
         .item<control::AutomataInputRaw>(is_referee_shoot_available)
         .item<control::AutomataInputEdge>(bool{}) // shoot_key
@@ -142,10 +150,19 @@ void remoteTask(void* arg) {
     // clang-format on
 
     while (true) {
-        const bool is_dbus_offline = (!dbus->IsOnline()) || (dbus->swr == remote::DOWN);
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
+        const bool is_dbus_offline =
+            (!dbus->IsOnline()) || (dbus_state.right_switch == Down);
         // VT13必须在线且处于C模式才算可控
         const bool is_vt13_offline =
-            !(refereerc->IsOnline() && (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C));
+            !((refereerc != nullptr && refereerc->IsOnline()) &&
+              (refereerc_state.mode == controller::RefereeRcMode::C));
 
         is_controller_online = !is_dbus_offline || !is_vt13_offline;
 #ifdef HAS_REFEREE
@@ -172,22 +189,22 @@ void remoteTask(void* arg) {
         }
 
         // 每帧先清零，再按当前在线的控制源更新，避免残留上一帧键鼠输入
-        state_r = remote::MID;
-        state_l = remote::MID;
-        memset(&keyboard, 0, sizeof(keyboard));
-        memset(&mouse, 0, sizeof(mouse));
+        state_r = Mid;
+        state_l = Mid;
+        keyboard = {};
+        mouse = {};
 
-        const bool vt13_c_mode =
-            refereerc->IsOnline() && (refereerc->vt13_packet.remote.mode_sw == remote::vt13_remote_t::MODE_C);
+        const bool vt13_c_mode = (refereerc != nullptr && refereerc->IsOnline()) &&
+                                 (refereerc_state.mode == controller::RefereeRcMode::C);
 
         if (dbus->IsOnline()) {  // DBUS
-            state_r = dbus->swr;
-            state_l = dbus->swl;
-            keyboard = dbus->keyboard;
-            mouse = dbus->mouse;
+            state_r = dbus_state.right_switch;
+            state_l = dbus_state.left_switch;
+            keyboard = dbus_state.keyboard;
+            mouse = dbus_state.mouse;
         } else if (vt13_c_mode) {
-            keyboard = refereerc->vt13_packet.keyboard;
-            mouse = (remote::mouse_t)refereerc->vt13_packet.mouse;
+            keyboard = refereerc_state.keyboard;
+            mouse = refereerc_state.mouse;
         }
 
         turbo_edge.input(keyboard.bit.F);
@@ -200,14 +217,14 @@ void remoteTask(void* arg) {
         remote_mode_aut.input(std::make_tuple(
             state_r,
             static_cast<bool>(keyboard.bit.SHIFT),
-            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.pause)
+            vt13_c_mode && static_cast<bool>(refereerc_state.pause)
         ));
         remote_mode = remote_mode_aut.state();
 
         fric_wheel_aut.input(std::make_tuple(
             state_l,
             static_cast<bool>(keyboard.bit.Z),
-            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.swl)
+            vt13_c_mode && static_cast<bool>(refereerc_state.left_button)
         ));
         shoot_flywheel_mode = fric_wheel_aut.state();
 
@@ -215,8 +232,8 @@ void remoteTask(void* arg) {
             state_l,
             shoot_flywheel_mode,
             shoot_permitted,
-            static_cast<bool>(mouse.l),
-            vt13_c_mode && static_cast<bool>(refereerc->vt13_packet.remote.trigger)
+            static_cast<bool>(mouse.left),
+            vt13_c_mode && static_cast<bool>(refereerc_state.trigger)
         ));
         shoot_load_mode = shoot_aut.state();
 
