@@ -22,7 +22,7 @@
 #include "bsp_print.h"
 #include "chassis.h"
 #include "cmsis_os.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 #include "main.h"
 #include "power_meter.h"
 
@@ -33,7 +33,7 @@ driver::DjiMotorBase* bl_motor = nullptr;
 driver::DjiMotorBase* br_motor = nullptr;
 
 control::Chassis* chassis = nullptr;
-remote::DBUS* dbus = nullptr;
+controller::DBUS* dbus = nullptr;
 
 power_meter* power_meter_1 = nullptr;
 bsp::BatteryVol* battery_vol = nullptr;
@@ -110,7 +110,7 @@ void RM_RTOS_Init() {
     chassis_data.power_limit_on = true;
     chassis = new control::Chassis(chassis_data);
 
-    dbus = new remote::DBUS(&BOARD_DBUS);
+    dbus = new controller::DBUS(&BOARD_DBUS);
 
     power_meter_1 = new power_meter(&BOARD_UART2, 1, callback);
     battery_vol = new bsp::BatteryVol(&hadc3, ADC_CHANNEL_8, 1, ADC_SAMPLETIME_3CYCLES);
@@ -122,16 +122,23 @@ void RM_RTOS_Init() {
 }
 
 void RM_RTOS_Default_Task(const void* args) {
+    using enum controller::ThreePositionSwitch;
+
     UNUSED(args);
 
     osDelay(500);  // DBUS initialization needs time
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
         const float ratio = 1.0f / 660.0f * 6 * PI;
-        chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
+        chassis
+            ->SetSpeed(dbus_state.channels[0] * ratio, dbus_state.channels[1] * ratio, dbus_state.channels[2] * ratio);
 
         // Kill switch
-        if (dbus->swl == remote::UP || dbus->swl == remote::DOWN) {
+        if (dbus_state.left_switch == Up ||
+            dbus_state.left_switch == Down) {
             RM_ASSERT_TRUE(false, "Operation killed");
         }
         chassis->UpdatePower(true, 60, battery_vol->GetBatteryVol(), 50);

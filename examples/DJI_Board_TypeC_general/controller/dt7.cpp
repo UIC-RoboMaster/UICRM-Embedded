@@ -25,24 +25,23 @@
 #include "dbus.h"
 
 namespace {
-    remote::Dbus* receiver = nullptr;
+    controller::DBUS* receiver = nullptr;
 }
 
 void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
 
-    receiver = new remote::Dbus(&huart3);
+    receiver = new controller::DBUS(&huart3);
 }
 
 void RM_RTOS_Default_Task(const void* argument) {
     UNUSED(argument);
     while (true) {
-        remote::DbusFrame state;
-        bool online = receiver->IsOnline();
-        bool has_state = receiver->GetState(state);
-        uint32_t sequence = receiver->GetSequence();
-        uint32_t last_valid_ms = receiver->GetLastValidTimeMs();
-
+        controller::DbusFrame state;
+        const bool has_state = receiver->GetState(state);
+        const bool online = receiver->IsOnline();
+        const uint32_t sequence = receiver->GetSequence();
+        const uint32_t last_valid_ms = receiver->GetLastValidTimeMs();
 
         set_cursor(0, 0);
         clear_screen();
@@ -54,8 +53,11 @@ void RM_RTOS_Default_Task(const void* argument) {
             print("Right X/Y: %d / %d\r\n", state.channels[0], state.channels[1]);
             print("Left X/Y: %d / %d\r\n", state.channels[2], state.channels[3]);
             print("Dial: %d\r\n", state.channels[4]);
-            print("Switch L/R: %u / %u\r\n", static_cast<unsigned>(state.left_switch),
-                  static_cast<unsigned>(state.right_switch));
+            print(
+                "Switch L/R: %s / %s\r\n",
+                controller::SwitchName(state.left_switch),
+                controller::SwitchName(state.right_switch)
+            );
             print("Mouse X/Y: %d / %d\r\n", state.mouse.x, state.mouse.y);
             print("Mouse Z: %d\r\n", state.mouse.z);
             print("Mouse L/R: %d / %d\r\n", state.mouse.left, state.mouse.right);

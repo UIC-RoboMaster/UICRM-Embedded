@@ -24,50 +24,25 @@
 #include "cmsis_os.h"
 #include "sbus.h"
 
-namespace {
-    remote::I6x* receiver = nullptr;
-
-    const char* PositionName(remote::TwoPositionSwitch position) {
-        return position == remote::TwoPositionSwitch::Up ? "UP" : "DOWN";
-    }
-
-    const char* PositionName(remote::ThreePositionSwitch position) {
-        switch (position) {
-            case remote::ThreePositionSwitch::Up:
-                return "UP";
-            case remote::ThreePositionSwitch::Mid:
-                return "MID";
-            case remote::ThreePositionSwitch::Down:
-                return "DOWN";
-        }
-        return "UNKNOWN";
-    }
-}
+static controller::I6x* receiver = nullptr;
 
 void RM_RTOS_Init(void) {
     print_use_uart(&huart1);
 
-    receiver = new remote::I6x(&huart3);
+    // I6x 继承 SBUS 的 UART 接收，无需另外创建 SBUS 或注册回调。
+    receiver = new controller::I6x(&huart3);
 }
 
 void RM_RTOS_Default_Task(const void* argument) {
     UNUSED(argument);
     while (true) {
-        remote::I6xState state;
-        bool online;
-        bool has_state;
-        uint32_t sequence;
-        uint32_t last_valid_ms;
+        controller::I6xState state;
+        controller::SbusFrame raw;
 
-        // USART3 优先级为 4，FreeRTOS 临界区不能屏蔽它。
-        // 保存并短暂关闭中断，拷贝后恢复原状态；打印和延时在保护区外。
-        const uint32_t interrupt_mask = __get_PRIMASK();
-        __disable_irq();
-        online = receiver->IsOnline();
-        has_state = receiver->GetState(state);
-        sequence = receiver->GetSequence();
-        last_valid_ms = receiver->GetLastValidTimeMs();
-        __set_PRIMASK(interrupt_mask);
+        const bool has_state = receiver->GetState(state) && receiver->GetRawState(raw);
+        const bool online = receiver->IsOnline();
+        const uint32_t sequence = receiver->GetSequence();
+        const uint32_t last_valid_ms = receiver->GetLastValidTimeMs();
 
         set_cursor(0, 0);
         clear_screen();
@@ -75,24 +50,29 @@ void RM_RTOS_Default_Task(const void* argument) {
         print("Sequence: %lu\r\n", static_cast<unsigned long>(sequence));
         print("Last valid: %lu ms\r\n", static_cast<unsigned long>(last_valid_ms));
         if (has_state) {
-            print("Frame lost: %d  Failsafe: %d  Flags: 0x%02X\r\n",
-                  state.frame_lost, state.failsafe, static_cast<unsigned>(state.flags));
+            print(
+                "Frame lost: %d  Failsafe: %d  Flags: 0x%02X\r\n",
+                state.frame_lost,
+                state.failsafe,
+                static_cast<unsigned>(raw.flags)
+            );
             // CH1/2：右 X/Y；CH3/4：左 Y/X；CH5/6：VrA/VrB；CH7～10：SwA～SwD。
             // I6x 已统一映射到 ±660 并处理原始 ±10 死区；原始通道保留用于诊断。
             print("Right X/Y: %d / %d\r\n", state.channels[0], state.channels[1]);
             print("Left X/Y: %d / %d\r\n", state.channels[3], state.channels[2]);
             print("VrA/VrB: %d / %d\r\n", state.channels[4], state.channels[5]);
-            print("SwA: %s  SwB: %s  SwC: %s  SwD: %s\r\n",
-                  PositionName(state.sw_a), PositionName(state.sw_b), PositionName(state.sw_c),
-                  PositionName(state.sw_d));
-            print("Switch codes A/B/C/D: %u / %u / %u / %u\r\n",
-                  static_cast<unsigned>(state.sw_a), static_cast<unsigned>(state.sw_b),
-                  static_cast<unsigned>(state.sw_c), static_cast<unsigned>(state.sw_d));
+            print(
+                "Switch A/B/C/D: %s / %s / %s / %s\r\n",
+                controller::SwitchName(state.sw_a),
+                controller::SwitchName(state.sw_b),
+                controller::SwitchName(state.sw_c),
+                controller::SwitchName(state.sw_d)
+            );
             print("Usable: %d\r\n", online && !state.failsafe && !state.frame_lost);
-            for (size_t i = 0; i < state.raw_channels.size(); ++i) {
-                print("Raw CH%u: %u\r\n", static_cast<unsigned>(i + 1),
-                      static_cast<unsigned>(state.raw_channels[i]));
+            for (size_t i = 0; i < raw.channels.size(); ++i) {
+                print("Raw CH%u: %u\r\n", static_cast<unsigned>(i + 1), static_cast<unsigned>(raw.channels[i]));
             }
+            print("Digital CH17/18: %d / %d\r\n", raw.channel17, raw.channel18);
             // 离线仍可读到最后有效帧，在线也可能失控；实际控制须分别检查。
         } else {
             print("Waiting for a valid SBUS frame\r\n");
