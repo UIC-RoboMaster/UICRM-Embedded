@@ -24,13 +24,13 @@
 #include "bsp_uart.h"
 #include "can_bridge.h"
 #include "cmsis_os.h"
-#include "dji_dbus.h"
+#include "dbus.h"
 #include "main.h"
 
 static bsp::CAN* can1 = nullptr;
 static communication::CanBridge* can_bridge = nullptr;
 
-static remote::DBUS* dbus = nullptr;
+static controller::DBUS* dbus = nullptr;
 
 void RM_RTOS_Init(void) {
     print_use_usb();
@@ -38,18 +38,21 @@ void RM_RTOS_Init(void) {
     can1 = new bsp::CAN(&hcan1, true, 8);
     can_bridge = new communication::CanBridge(can1, 0x02);
 
-    dbus = new remote::DBUS(&huart1);
+    dbus = new controller::DBUS(&huart1);
 }
 
 void RM_RTOS_Default_Task(const void* argument) {
     UNUSED(argument);
 
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+
         communication::can_bridge_data_t data;
-        data.data_four_int16.data[0] = dbus->ch0;
-        data.data_four_int16.data[1] = dbus->ch1;
-        data.data_four_int16.data[2] = dbus->ch2;
-        data.data_four_int16.data[3] = dbus->ch3;
+        data.data_four_int16.data[0] = dbus_state.channels[0];
+        data.data_four_int16.data[1] = dbus_state.channels[1];
+        data.data_four_int16.data[2] = dbus_state.channels[2];
+        data.data_four_int16.data[3] = dbus_state.channels[3];
         communication::can_bridge_ext_id_t ext_id;
         ext_id.data.rx_id = 0x01;
         ext_id.data.type = communication::CAN_BRIDGE_TYPE_FOUR_INT16;
