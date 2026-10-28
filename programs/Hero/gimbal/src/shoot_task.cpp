@@ -55,8 +55,8 @@ void shootTask(void* arg) {
     while (!imu->DataReady() || !imu->CaliDone()) {
         osDelay(SHOOT_OS_DELAY);
     }
-    //    int last_state = remote::MID;
-    //    int last_state_2 = remote::MID;
+    //    auto last_state = controller::ThreePositionSwitch::Mid;
+    //    auto last_state_2 = controller::ThreePositionSwitch::Mid;
     //    uint8_t shoot_state = 0;
     //    int shoot_flywheel_offset = 0;
     //    uint8_t shoot_state_2 = 0;

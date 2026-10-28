@@ -78,6 +78,13 @@ void gimbalTask(void* arg) {
 
     float actural_chassis_turn_speed = chassis_vt / 6.0f;
     while (true) {
+        controller::DbusFrame dbus_state{};
+        dbus->GetState(dbus_state);
+        controller::RefereeRcFrame refereerc_state{};
+        if (refereerc != nullptr) {
+            refereerc->GetState(refereerc_state);
+        }
+
         if (remote_mode == REMOTE_MODE_KILL) {
             kill_gimbal();
             osDelay(GIMBAL_OS_DELAY);
@@ -91,7 +98,7 @@ void gimbalTask(void* arg) {
         yaw_curr = imu->INS_angle[0];
         //        pitch_curr = witimu->INS_angle[0];
         //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
-        //    if (dbus->swr == remote::UP) {
+        //    if (dbus_state.right_switch == controller::ThreePositionSwitch::Up) {
         //      gimbal->TargetAbs(0, 0);
         //      gimbal->Update();
         //      pitch_target = pitch_curr;
@@ -101,34 +108,31 @@ void gimbalTask(void* arg) {
         //      continue;
         //    }
         if (dbus->IsOnline()) {
-            if (dbus->mouse.y != 0) {
-                pitch_ratio = dbus->mouse.y / 32767.0 * 7.5 / 7.0;
-            } else if (refereerc->IsOnline() &&
-                       (refereerc->vt13_packet.mouse.x != 0 || refereerc->vt13_packet.mouse.y != 0)) {
+            if (dbus_state.mouse.y != 0) {
+                pitch_ratio = dbus_state.mouse.y / 32767.0 * 7.5 / 7.0;
+            } else if ((refereerc != nullptr && refereerc->IsOnline()) &&
+                       (refereerc_state.mouse.x != 0 || refereerc_state.mouse.y != 0)) {
                 // DBUS在线但摇杆/鼠标无输入时，使用VT13鼠标
-                pitch_ratio = refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
+                pitch_ratio = refereerc_state.mouse.y / 32767.0 * 7.5 / 7.0;
             } else {
-                pitch_ratio = -dbus->ch3 / 18000.0 / 7.0;
+                pitch_ratio = -dbus_state.channels[3] / 18000.0 / 7.0;
             }
-            if (dbus->mouse.x != 0) {
-                yaw_ratio = -dbus->mouse.x / 32767.0 * 7.5 / 7.0;
-            } else if (refereerc->IsOnline() &&
-                       (refereerc->vt13_packet.mouse.x != 0 || refereerc->vt13_packet.mouse.y != 0)) {
-                yaw_ratio = -refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
+            if (dbus_state.mouse.x != 0) {
+                yaw_ratio = -dbus_state.mouse.x / 32767.0 * 7.5 / 7.0;
+            } else if ((refereerc != nullptr && refereerc->IsOnline()) &&
+                       (refereerc_state.mouse.x != 0 || refereerc_state.mouse.y != 0)) {
+                yaw_ratio = -refereerc_state.mouse.x / 32767.0 * 7.5 / 7.0;
             } else {
-                yaw_ratio = -dbus->ch2 / 18000.0 / 7.0;
+                yaw_ratio = -dbus_state.channels[2] / 18000.0 / 7.0;
             }
-        } else if (refereerc->IsOnline()) {
+        } else if ((refereerc != nullptr && refereerc->IsOnline())) {
             // DBUS离线时使用VT13：优先摇杆，否则鼠标
-            if (refereerc->vt13_packet.remote.ch3 != remote::vt13_remote_t::ROCKER_MID ||
-                refereerc->vt13_packet.remote.ch2 != remote::vt13_remote_t::ROCKER_MID) {
-                pitch_ratio = (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) /
-                              remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
-                yaw_ratio = (float)-(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
-                            remote::vt13_remote_t::ROCKER_RANGE / 18000.0 * 660.0 / 7.0;
+            if (refereerc_state.channels[3] != 0 || refereerc_state.channels[2] != 0) {
+                pitch_ratio = (float)(refereerc_state.channels[2]) / 660.0f / 18000.0 * 660.0 / 7.0;
+                yaw_ratio = (float)-(refereerc_state.channels[3]) / 660.0f / 18000.0 * 660.0 / 7.0;
             } else {
-                pitch_ratio = -refereerc->vt13_packet.mouse.y / 32767.0 * 7.5 / 7.0;
-                yaw_ratio = -refereerc->vt13_packet.mouse.x / 32767.0 * 7.5 / 7.0;
+                pitch_ratio = -refereerc_state.mouse.y / 32767.0 * 7.5 / 7.0;
+                yaw_ratio = -refereerc_state.mouse.x / 32767.0 * 7.5 / 7.0;
             }
         } else {
             pitch_ratio = 0;
