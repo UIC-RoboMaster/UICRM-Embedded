@@ -21,8 +21,12 @@
 #include "chassis_task.h"
 osThreadId_t chassisTaskHandle;
 
-const float chassis_max_xy_speed = 2 * PI * 10;
-const float chassis_max_t_speed = 2 * PI * 5;
+// 在已验证可运动的低速版本上提速 2 倍，保留原指令单位。
+const float chassis_max_xy_speed = 4 * PI;
+const float chassis_max_t_speed = 2 * PI;
+// 每轮允许的速度指令变化量，越大则加减速越快。
+const float chassis_xy_ramp_step = 0.04f;
+const float chassis_turn_ramp_step = 0.02f;
 
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -40,6 +44,9 @@ void chassisTask(void* arg) {
     UNUSED(arg);
     kill_chassis();
     osDelay(1000);
+    Ease chassis_ease_vx(0, chassis_xy_ramp_step);
+    Ease chassis_ease_vy(0, chassis_xy_ramp_step);
+    Ease chassis_ease_vt(0, chassis_turn_ramp_step);
 
     while (true) {
         const bool enabled = dbus->IsOnline() &&
@@ -48,6 +55,9 @@ void chassisTask(void* arg) {
                              imu->CaliDone() && yaw_motor->IsOnline();
         if (!enabled) {
             kill_chassis();
+            chassis_ease_vx = Ease(0, chassis_xy_ramp_step);
+            chassis_ease_vy = Ease(0, chassis_xy_ramp_step);
+            chassis_ease_vt = Ease(0, chassis_turn_ramp_step);
             osDelay(CHASSIS_OS_DELAY);
             continue;
         }
@@ -111,11 +121,6 @@ void chassisTask(void* arg) {
         chassis_vy *= chassis_max_xy_speed;
         chassis_vt *= chassis_max_t_speed;
 
-        static const float move_ease_ratio = 0.9;
-        static const float turn_ease_ratio = 0.9;
-        static Ease chassis_ease_vx(0, move_ease_ratio);
-        static Ease chassis_ease_vy(0, move_ease_ratio);
-        static Ease chassis_ease_vt(0, turn_ease_ratio);
         chassis_vx = chassis_ease_vx.Calc(chassis_vx);
         chassis_vy = chassis_ease_vy.Calc(chassis_vy);
         chassis_vt = chassis_ease_vt.Calc(chassis_vt);

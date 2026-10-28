@@ -51,5 +51,6 @@ extern driver::Motor6020* yaw_motor;
 extern control::gimbal_data_t* gimbal_param;
 extern float pitch_diff, yaw_diff;
 extern INS_Angle_t INS_Angle;
+extern const char* gimbal_phase;
 void init_gimbal();
 void kill_gimbal();

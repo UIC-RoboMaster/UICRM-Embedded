@@ -32,6 +32,7 @@ control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
 INS_Angle_t INS_Angle;
+const char* gimbal_phase = "STARTUP";
 
 control::gimbal_t gimbal_data;
 
@@ -48,6 +49,7 @@ void gimbalTask(void* arg) {
     osDelay(1500);
 
     // 保留现有启动回中；只有 DBUS 和两个电机反馈正常时才允许输出。
+    gimbal_phase = "CENTER";
     for (int i = 0; i < 1500; ++i) {
         check_kill();
         gimbal->TargetAbs(0, 0);
@@ -56,6 +58,7 @@ void gimbalTask(void* arg) {
     }
 
     Buzzer_Sing(SingCaliStart);
+    gimbal_phase = "IMU_CALI";
     imu->Calibrate();
     while (!imu->CaliDone()) {
         check_kill();
@@ -66,9 +69,11 @@ void gimbalTask(void* arg) {
     Buzzer_Sing(SingCaliDone);
     osDelay(100);
 
-    // 每轮最大增加 0.0002 rad；1 ms 周期下约为 11.5 度/秒。
-    const float remote_ratio = 0.0002f;
+    // Pitch 保留提速；Yaw 出现持续鸣叫和抖动，先回退到提速前的目标变化速度。
+    const float pitch_remote_ratio = 0.0008f;
+    const float yaw_remote_ratio = 0.0004f;
     const int rocker_deadband = 10;
+    gimbal_phase = "REMOTE";
     while (true) {
         check_kill();
         INS_Angle.pitch = imu->INS_angle[1];
@@ -78,10 +83,10 @@ void gimbalTask(void* arg) {
         pitch_diff = 0;
         yaw_diff = 0;
         if (dbus->ch3 > rocker_deadband || dbus->ch3 < -rocker_deadband) {
-            pitch_diff = clip<float>((float)dbus->ch3 / dbus->ROCKER_MAX, -1.0f, 1.0f) * remote_ratio;
+            pitch_diff = clip<float>((float)dbus->ch3 / dbus->ROCKER_MAX, -1.0f, 1.0f) * pitch_remote_ratio;
         }
         if (dbus->ch2 > rocker_deadband || dbus->ch2 < -rocker_deadband) {
-            yaw_diff = clip<float>((float)dbus->ch2 / dbus->ROCKER_MAX, -1.0f, 1.0f) * remote_ratio;
+            yaw_diff = clip<float>((float)dbus->ch2 / dbus->ROCKER_MAX, -1.0f, 1.0f) * yaw_remote_ratio;
         }
 
         // 先验证编码器位置控制；IMU、自瞄和底盘前馈均不修改电机目标。
@@ -103,7 +108,7 @@ void init_gimbal() {
         .kp = 4,
         .ki = 0,
         .kd = 0,
-        .max_out = 0.5f,  // 调试阶段：角度环要求的速度最多 0.5 rad/s
+        .max_out = 0.8f,  // Pitch 速度指令上限约为 45.8 度/秒
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
@@ -118,7 +123,7 @@ void init_gimbal() {
         .ki = 2,  // 每次速度环计算累加；低速时逐步补足重力负载所需的输出
         .kd = 0,
         // 原参数在静止时最多只有 500 * 0.5 + 2500 = 2750，实车无法回位。
-        // 保持角度环 0.5 rad/s 的速度指令上限，增加可用输出；仍须实车验证。
+        // 速度指令上限见角度环；这里限制负载所需的输出。
         .max_out = 8000,
         .max_iout = 6000,
         .deadband = 0,                                                // 死区
@@ -145,10 +150,10 @@ void init_gimbal() {
     yaw_motor->Disable();
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init =
-        {.kp = 8,
+        {.kp = 12,
          .ki = 0,
          .kd = 0,  // 再大会在前面顿一下
-         .max_out = 0.5f,  // 与 Pitch 一样限制回位速度指令，增强输出不依赖提高速度
+         .max_out = 0.5f,  // Yaw 先恢复提速前的速度指令上限，约为 28.6 度/秒
          .max_iout = PI / 8,
          .deadband = PI / 180,
          .A = 0,                                    // 变速积分所能达到的最大值为A+B
@@ -159,11 +164,11 @@ void init_gimbal() {
                  control::ConstrainedPID::Integral_Limit};
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 1500,  // 恢复上一轮可运动版本的速度环比例
+        .kp = 1000,  // 恢复上一轮可运动版本的速度环比例
         .ki = 1,  // 持续存在误差时逐步克服静摩擦
         .kd = 0,
         .max_out = 4000,  // 本车低速负载测试限幅
-        .max_iout = 3000,  // 为 0 会把积分项清零，不能补足静摩擦负载
+        .max_iout = 2000,  // 为 0 会把积分项清零，不能补足静摩擦负载
         .deadband = 0,    // 低速位置测试：避免小速度指令被死区清零
         .A = 0.5 * PI,    // 变速积分所能达到的最大值为A+B
         .B = 0.5 * PI,    // 启动变速积分的死区
