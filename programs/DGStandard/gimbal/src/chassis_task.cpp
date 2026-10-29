@@ -109,14 +109,10 @@ void chassisTask(void* arg) {
         car_vy_diff.calc(car_vy);
         car_vt_diff.calc(car_vt);
 
-        // 云台相对底盘的角度，通过云台和底盘连接的电机获取
-        float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
-        // 云台当前相对云台零点的角度，通过IMU获取
-        float B = INS_Angle.yaw;
-        // 云台目标相对云台零点的角度，直接读取gimbal class获取
-        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
-        float chassis_target_diff = C - B + A;
-        chassis_target_diff = -chassis_target_diff;
+        // 云台（枪口）相对底盘的角度：yaw 电机编码器减去云台零位
+        // 注意：当前云台是纯编码器控制（Update），IMU yaw 零点是上电任意值且会漂移，
+        // 不能像 10-26 那样把 IMU 角混入换算（B 漂移会导致底盘方向乱转）
+        float chassis_target_diff = -(yaw_motor->GetTheta() - gimbal_param->yaw_offset_);
         chassis_target_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
         // 底盘以底盘自己为基准的运动速度
