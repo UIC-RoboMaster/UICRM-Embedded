@@ -50,19 +50,33 @@ namespace remote {
     } __packed dbus_t;
 
     DBUS::DBUS(UART_HandleTypeDef* huart) : bsp::UART(huart) {
+        ch0 = ch1 = ch2 = ch3 = ch4 = 0;
+        swl = swr = DOWN;
+        mouse = {};
+        keyboard = {};
         SetupRx(sizeof(dbus_t) + 1);
     }
 
     void DBUS::RxCompleteCallback() {
-        Heartbeat();
-
         uint8_t* data;
         // data frame misalignment
-        if (this->Read<true>(&data) != sizeof(dbus_t))
+        if (this->Read<true>(&data) != sizeof(dbus_t)) {
+            ++rejected_frames;
             return;
+        }
 
         // re-interpret the data buffer and decode into class properties
         dbus_t* repr = reinterpret_cast<dbus_t*>(data);
+        // 拒绝明显错位的数据；四个摇杆通道允许少量端点误差。
+        const auto valid_rocker = [](uint16_t value) {
+            return value >= RC_ROCKER_MID - 700 && value <= RC_ROCKER_MID + 700;
+        };
+        if (!valid_rocker(repr->ch0) || !valid_rocker(repr->ch1) ||
+            !valid_rocker(repr->ch2) || !valid_rocker(repr->ch3) ||
+            repr->swl < UP || repr->swl > MID || repr->swr < UP || repr->swr > MID) {
+            ++rejected_frames;
+            return;
+        }
         this->ch0 = repr->ch0 - RC_ROCKER_MID;
         this->ch1 = repr->ch1 - RC_ROCKER_MID;
         this->ch2 = repr->ch2 - RC_ROCKER_MID;
@@ -78,6 +92,8 @@ namespace remote {
 
         memcpy(&this->mouse, &repr->mouse, sizeof(mouse_t));
         memcpy(&this->keyboard, &repr->keyboard, sizeof(keyboard_t));
+        ++accepted_frames;
+        Heartbeat();
     }
 
 } /* namespace remote */

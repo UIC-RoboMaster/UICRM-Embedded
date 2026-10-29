@@ -353,12 +353,19 @@ namespace driver {
     }
 
     void DjiMotorBase::CalcOutput() {
+        const uint8_t reset_mode = pid_integral_reset_requested_.exchange(0, std::memory_order_relaxed);
+        if (reset_mode & THETA)
+            theta_pid_.ResetIntegral();
+        if (reset_mode & OMEGA)
+            omega_pid_.ResetIntegral();
         if (state_.feedback_pending) {
             FeedbackUpdate();
             state_.feedback_pending = false;
         }
 
         if (!state_.enable) {
+            speed_command_ = 0;
+            speed_command_direction_ = 0;
             // 如果电机被禁用，则清空 PID 积分项并输出 0
             SetOutput(0);
             // CURRENT 模式下不使用角度/速度 PID，无需清积分
@@ -412,6 +419,21 @@ namespace driver {
 
         // 速度前馈
         target += state_.speed_feedforward;
+        if ((state_.mode & OMEGA) && speed_command_acceleration_ > 0) {
+            // 目标角重置/反向不会再让速度环设定值瞬间跨过正负最大速度。
+            const float dt = clip<float>(update_time_diff * 1e-6f, 0, 0.005f);
+            const float step = speed_command_acceleration_ * dt;
+            speed_command_ += clip<float>(target - speed_command_, -step, step);
+            target = speed_command_;
+            const int direction = target > 0.01f ? 1 : (target < -0.01f ? -1 : 0);
+            if (direction != 0) {
+                if (speed_command_direction_ != 0 && direction != speed_command_direction_)
+                    omega_pid_.ResetIntegral();
+                speed_command_direction_ = direction;
+            }
+        } else {
+            speed_command_ = target;
+        }
 
         // 处理速度环 PID，输出反馈电流
         if (state_.mode & OMEGA) {
@@ -423,6 +445,18 @@ namespace driver {
         if (state_.mode != NONE) {
             SetOutput(static_cast<int16_t>(target));
         }
+    }
+
+    void DjiMotorBase::RequestPIDIntegralReset(uint8_t mode) {
+        pid_integral_reset_requested_.fetch_or(mode & (THETA | OMEGA), std::memory_order_relaxed);
+    }
+
+    void DjiMotorBase::SetSpeedCommandAcceleration(float acceleration) {
+        speed_command_acceleration_ = acceleration > 0 ? acceleration : 0;
+    }
+
+    float DjiMotorBase::GetSpeedCommand() const {
+        return speed_command_;
     }
 
     void DjiMotorBase::ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode) {

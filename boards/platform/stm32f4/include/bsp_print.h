@@ -59,7 +59,7 @@ void print_use_rtt();
 /**
  * @brief dump raw array data to uart or usb
  */
-uint32_t dump(const void* data, uint8_t length);
+uint32_t dump(const void* data, uint32_t length);
 
 /**
  * @brief print data in a pretty format, representing hexadecimal numbers in text
@@ -75,7 +75,7 @@ void dump_pretty(const void* data, uint8_t length);
  * @return 打印的字节数
  *
  * @note    此函数需要足够的栈空间
- * @note    最大打印长度为 32
+ * @note    最大打印长度为 1023 字节，超出部分截断
  * @note    会在 NDEBUG 模式下不执行任何操作
  */
 /**
@@ -87,7 +87,7 @@ void dump_pretty(const void* data, uint8_t length);
  * @return  number of bytes printed
  *
  * @note    this function requires sufficient stack allocation
- * @note    maximum print length is 32
+ * @note    maximum print length is 1023 bytes; longer messages are truncated
  * @note    will perform no-op in NDEBUG mode
  */
 uint32_t print(const char* format, ...);

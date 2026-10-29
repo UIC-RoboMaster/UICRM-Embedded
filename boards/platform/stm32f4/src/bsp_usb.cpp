@@ -24,8 +24,11 @@
 #include "bsp_error_handler.h"
 #include "cmsis_os.h"
 #include "task.h"
+#include "usb_device.h"
 #include "usbd_cdc.h"
 #include "usbd_cdc_if.h"
+
+extern "C" USBD_HandleTypeDef hUsbDeviceFS;
 
 static bsp::VirtualUSB* usb = nullptr;
 
@@ -111,11 +114,19 @@ namespace bsp {
         } else {
             taskENTER_CRITICAL();
         }
+        // 未枚举/断开时不能调用 CDC_Transmit_FS：其内部会直接解引用 pClassData。
+        if (!tx_size_ || !hUsbDeviceFS.pClassData || hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) {
+            tx_pending_ = 0;
+            if (FromISR)
+                taskEXIT_CRITICAL_FROM_ISR(isrflags);
+            else
+                taskEXIT_CRITICAL();
+            return 0;
+        }
         if (length > tx_size_)
             length = tx_size_;
-        /* try to transmit the data */
-        uint8_t status = CDC_Transmit_FS(data, length);
-        if (status == USBD_BUSY || tx_pending_) {
+        auto* cdc = static_cast<USBD_CDC_HandleTypeDef*>(hUsbDeviceFS.pClassData);
+        if (cdc->TxState != 0) {
             /* usb not available, queuing up data */
             if (length + tx_pending_ > tx_size_) {
                 length = tx_size_ - tx_pending_;
@@ -123,6 +134,11 @@ namespace bsp {
             }
             memcpy(tx_write_ + tx_pending_, data, length);
             tx_pending_ += length;
+        } else {
+            // 异步传输必须使用自有缓冲区，不能引用下一次 print 会改写的格式化缓冲区。
+            memcpy(tx_read_, data, length);
+            if (CDC_Transmit_FS(tx_read_, length) != USBD_OK)
+                length = 0;
         }
         if (FromISR) {
             taskEXIT_CRITICAL_FROM_ISR(isrflags);
@@ -145,7 +161,8 @@ namespace bsp {
             tx_read_ = tx_write_;
             tx_write_ = tmp;
             /* initiate new transmission call for pending data */
-            CDC_Transmit_FS(tx_read_, tx_pending_);
+            if (hUsbDeviceFS.pClassData && hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED)
+                CDC_Transmit_FS(tx_read_, tx_pending_);
             /* clear the number of pending bytes */
             tx_pending_ = 0;
         }

@@ -19,14 +19,18 @@
  ###########################################################*/
 
 #include "chassis_task.h"
+#include "remote_control.h"
 osThreadId_t chassisTaskHandle;
 
-// 在已验证可运动的低速版本上提速 2 倍，保留原指令单位。
-const float chassis_max_xy_speed = 4 * PI;
-const float chassis_max_t_speed = 2 * PI;
+// false：推杆以底盘车头为方向基准；true：恢复以枪口为方向基准的换算。
+const bool chassis_gimbal_relative = false;
+
+// 与实车可用的参考程序一致：满杆平移指令为 6 * PI，不再额外乘 0.5。
+const float chassis_max_xy_speed = 6 * PI;
+const float chassis_max_t_speed = 3 * PI;
 // 每轮允许的速度指令变化量，越大则加减速越快。
-const float chassis_xy_ramp_step = 0.04f;
-const float chassis_turn_ramp_step = 0.02f;
+const float chassis_xy_ramp_step = 0.12f;
+const float chassis_turn_ramp_step = 0.06f;
 
 float chassis_vx = 0;
 float chassis_vy = 0;
@@ -68,7 +72,7 @@ void chassisTask(void* arg) {
 
         const remote::keyboard_t keyboard = dbus->keyboard;
 
-        // 以云台为基准的（整车的）运动速度，范围为[-1, 1]
+        // 摇杆输入；方向基准由 chassis_gimbal_relative 选择。
         //        if (keyboard.bit.X) {
         //            // 刹车
         //            car_vx = 0;
@@ -77,10 +81,11 @@ void chassisTask(void* arg) {
         //        } else
         if (dbus->ch0 || dbus->ch1 || dbus->ch2 || dbus->ch3 || dbus->ch4) {
             // 优先使用遥控器
-            const float speed_scale = 0.5;
-            car_vx = (float)dbus->ch0 / dbus->ROCKER_MAX * speed_scale;
-            car_vy = (float)dbus->ch1 / dbus->ROCKER_MAX * speed_scale;
-            car_vt = (float)dbus->ch4 / dbus->ROCKER_MAX * speed_scale;
+            const float speed_scale = 1.0f;
+            const int rocker_deadband = 10;
+            car_vx = dgstandard::NormalizeRocker(dbus->ch0, dbus->ROCKER_MAX, rocker_deadband) * speed_scale;
+            car_vy = dgstandard::NormalizeRocker(dbus->ch1, dbus->ROCKER_MAX, rocker_deadband) * speed_scale;
+            car_vt = dgstandard::NormalizeRocker(dbus->ch4, dbus->ROCKER_MAX, rocker_deadband) * speed_scale;
         } else {
             // 使用键盘
             const float keyboard_speed = keyboard.bit.SHIFT ? 1 : 0.5;
@@ -105,7 +110,7 @@ void chassisTask(void* arg) {
 
         // 用实际 Yaw 编码器角度转换平移方向，避免混入 IMU 世界坐标。
         const float A = wrapc<float>(yaw_motor->GetTheta() - gimbal_param->yaw_offset_, -PI, PI);
-        const float chassis_target_diff = -A;
+        const float chassis_target_diff = chassis_gimbal_relative ? -A : 0;
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);

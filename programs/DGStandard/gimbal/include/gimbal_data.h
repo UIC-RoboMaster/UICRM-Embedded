@@ -25,8 +25,8 @@
 // basic information of gimbal
 const control::gimbal_data_t gimbal_init_data = {
     // 下挡关闭输出、枪口扶正时测得的编码器位置（2026-10-28）。
-    .pitch_offset_ = 5.2692f,
-    .yaw_offset_ = 1.1643f,
+    .pitch_offset_ = 5.3206f,
+    .yaw_offset_ = 3.9569f,
     .pitch_max_ = 0.45f,
     .yaw_max_ = PI,
     .yaw_circle_ = true,

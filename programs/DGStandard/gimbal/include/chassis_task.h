@@ -48,6 +48,7 @@ void kill_chassis();
 
 extern control::ChassisCanBridgeSender* chassis;
 extern bool chassis_control_enabled;
+extern const bool chassis_gimbal_relative;
 
 extern float chassis_vx;
 extern float chassis_vy;

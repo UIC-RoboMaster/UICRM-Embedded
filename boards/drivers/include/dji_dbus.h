@@ -62,6 +62,10 @@ namespace remote {
         // Add custom rx data handler
         void RxCompleteCallback() override final;
 
+        // 诊断计数：只在合法帧发布后更新在线心跳。
+        volatile uint32_t accepted_frames = 0;
+        volatile uint32_t rejected_frames = 0;
+
         // rocker channel information
         /**
          * @note 遥控器的样式

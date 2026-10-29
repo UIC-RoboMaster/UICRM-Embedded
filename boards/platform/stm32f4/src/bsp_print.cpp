@@ -67,7 +67,7 @@ void print_use_rtt() {
     SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
 }
 
-uint32_t dump(const void* data, uint8_t length) {
+uint32_t dump(const void* data, uint32_t length) {
     if (print_uart)
         return print_uart->Write((uint8_t*)data, length);
 #ifndef NO_USB
@@ -101,7 +101,11 @@ uint32_t print(const char* format, ...) {
     length = vsnprintf(print_buffer, MAX_PRINT_LEN, format, args);
     va_end(args);
 
-    return dump(print_buffer, length);
+    if (length <= 0)
+        return 0;
+    // vsnprintf 返回完整结果所需长度；实际缓冲区最多包含 MAX_PRINT_LEN - 1 字节。
+    const uint32_t written = length >= MAX_PRINT_LEN ? MAX_PRINT_LEN - 1 : length;
+    return dump(print_buffer, written);
 #endif  // #ifdef NDEBUG
 }
 

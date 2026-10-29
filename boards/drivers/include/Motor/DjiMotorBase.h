@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #pragma once
+#include <atomic>
 #include <unordered_map>
 
 #include "CanMotorBase.h"
@@ -275,6 +276,19 @@ namespace driver {
         void ReInitPID(control::ConstrainedPID::PID_Init_t pid_init, uint8_t mode);
 
         /**
+         * @brief 请求清除指定环的积分，由电机任务执行，避免并发修改 PID 状态。
+         * @param mode THETA、OMEGA 或二者按位或；不会修改 PID 参数。
+         */
+        void RequestPIDIntegralReset(uint8_t mode);
+
+        /**
+         * @brief 初始化时设置速度环指令的加速度上限 [rad/s^2]；0 为禁用。
+         * @note 启用后在速度指令换向时清除旧积分，只作用于配置过的电机。
+         */
+        void SetSpeedCommandAcceleration(float acceleration);
+        float GetSpeedCommand() const;
+
+        /**
          * @brief 获取电机 PID 数值
          */
         control::ConstrainedPID::PID_State_t GetPIDState(uint8_t mode) const;
@@ -344,6 +358,10 @@ namespace driver {
       private:
         control::ConstrainedPID omega_pid_;
         control::ConstrainedPID theta_pid_;
+        std::atomic<uint8_t> pid_integral_reset_requested_{0};
+        float speed_command_acceleration_ = 0;
+        float speed_command_ = 0;
+        int speed_command_direction_ = 0;
 
         callback_t error_callback_ = [](void* instance) { UNUSED(instance); };
         void* error_callback_instance_ = nullptr;

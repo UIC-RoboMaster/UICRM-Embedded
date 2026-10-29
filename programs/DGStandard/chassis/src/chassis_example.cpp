@@ -98,11 +98,16 @@ void RM_RTOS_Default_Task(const void* args) {
 
     while (true) {
         const float ratio = 1.0f / 660.0f * 6 * PI;
-        chassis->SetSpeed(dbus->ch0 * ratio, dbus->ch1 * ratio, dbus->ch2 * ratio);
+        // 摇杆中心死区（±10）：回中残留不再产生持续漂移/自转
+        const float ch0 = (dbus->ch0 >= -10 && dbus->ch0 <= 10) ? 0.0f : dbus->ch0 * ratio;
+        const float ch1 = (dbus->ch1 >= -10 && dbus->ch1 <= 10) ? 0.0f : dbus->ch1 * ratio;
+        const float ch4 = (dbus->ch4 >= -10 && dbus->ch4 <= 10) ? 0.0f : dbus->ch4 * ratio;
+        // ch4（左波轮）负责转向，避免与云台板的 ch2（云台 yaw）抢同一个摇杆通道
+        chassis->SetSpeed(ch0, ch1, ch4);
 
-        // Kill switch
-        if (dbus->swl == remote::UP || dbus->swl == remote::DOWN) {
-            RM_ASSERT_TRUE(false, "Operation killed");
+        // 安全停车：右拨杆 DOWN = 停车；左拨杆留给发射机构（云台板用它切摩擦轮/发射），不再冻结底盘
+        if (dbus->swr == remote::DOWN) {
+            chassis->SetSpeed(0, 0, 0);
         }
 
         set_cursor(0, 0);
@@ -112,7 +117,7 @@ void RM_RTOS_Default_Task(const void* args) {
         print_enabled("fl_motor", fl_motor->IsOnline());
         print_enabled("fr_motor", fr_motor->IsOnline());
         print_enabled("bl_motor", bl_motor->IsOnline());
-        print_enabled("bl_motor", br_motor->IsOnline());
+        print_enabled("br_motor", br_motor->IsOnline());
         print("\r\n");
 
         print(
