@@ -21,6 +21,7 @@
 #include "remote_task.h"
 
 #include "bsp_os.h"
+#include "utils.h"
 
 remote::DBUS* dbus = nullptr;
 RemoteMode remote_mode = REMOTE_MODE_KILL;
@@ -49,7 +50,6 @@ osThreadId_t remoteTaskHandle;
 
 void remoteTask(void* arg) {
     UNUSED(arg);
-    remote::switch_t last_left = remote::MID;
 
     while (true) {
         const bool enabled = dbus->IsOnline() &&
@@ -62,16 +62,42 @@ void remoteTask(void* arg) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
             shoot_load_mode = SHOOT_MODE_DISABLE;
         } else {
-            // 左拨杆：UP = 打开摩擦轮，MID = 保持，DOWN = 关闭摩擦轮
-            const remote::switch_t left = dbus->swl;
-            if (left == remote::UP && last_left != remote::UP) {
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
-                shoot_load_mode = SHOOT_MODE_IDLE;
-            } else if (left == remote::DOWN && last_left != remote::DOWN) {
-                shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-                shoot_load_mode = SHOOT_MODE_STOP;
+            // 原始遥控逻辑：UP=切换摩擦轮（上拨打开、回中、再上拨关闭）；DOWN=单发，按住=连发
+            static BoolEdgeDetector* flywheel_edge = new BoolEdgeDetector(false);
+            static BoolEdgeDetector* shoot_edge = new BoolEdgeDetector(false);
+            static uint32_t shoot_burst_timestamp = 0;
+            static BoolEdgeDetector* burst_edge = new BoolEdgeDetector(false);
+
+            flywheel_edge->input(dbus->swl == remote::UP);
+            shoot_edge->input(dbus->swl == remote::DOWN);
+
+            // 上拨：切换摩擦轮（原来停止则开始转，原来转则停止）
+            if (flywheel_edge->posEdge()) {
+                if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+                    shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+                    shoot_load_mode = SHOOT_MODE_IDLE;
+                } else {
+                    shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
+                    shoot_load_mode = SHOOT_MODE_STOP;
+                }
             }
-            last_left = left;
+
+            // 下拨：单发；按住超过 200ms 转连发；松开停止
+            if (shoot_edge->posEdge()) {
+                shoot_load_mode = SHOOT_MODE_SINGLE;
+                shoot_burst_timestamp = 0;
+            }
+            if (dbus->swl == remote::DOWN) {
+                shoot_burst_timestamp += REMOTE_OS_DELAY;
+            }
+            burst_edge->input(shoot_burst_timestamp > 200);
+            if (burst_edge->posEdge()) {
+                shoot_load_mode = SHOOT_MODE_BURST;
+            }
+            if (shoot_edge->negEdge()) {
+                shoot_load_mode = SHOOT_MODE_STOP;
+                shoot_burst_timestamp = 0;
+            }
         }
         osDelay(REMOTE_OS_DELAY);
     }
