@@ -130,18 +130,9 @@ void chassisTask(void* arg) {
         }
 
         if (remote_mode == REMOTE_MODE_FOLLOW) {
-            // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向（自动跟随）
-            const float angle_threshold = 0.02f;
-            float chassis_vt_pid_error = chassis_target_diff;
-            if (fabs(chassis_vt_pid_error) < angle_threshold) {
-                chassis_vt_pid_error = 0;
-            }
-
-            static control::ConstrainedPID* chassis_vt_pid =
-                new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
-            float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
-            if (chassis_vt_pid_error != 0)
-                chassis_vt = vt;
+            // 自动跟随（底盘自己转过去对准枪口）需要 IMU 跟枪转才能收敛；
+            // 当前板子装在固定座，暂时退回手动转向（左波轮 ch4）
+            chassis_vt = car_vt;
         }
 
         if (remote_mode == REMOTE_MODE_SPIN) {
