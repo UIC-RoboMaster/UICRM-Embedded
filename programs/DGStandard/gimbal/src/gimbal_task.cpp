@@ -20,10 +20,9 @@
 
 #include "gimbal_task.h"
 
-
+#include "chassis_task.h"
 #include "dji_remote.h"
-#include "remote_control.h"
-
+#include "minipc_task.h"
 
 osThreadId_t gimbalTaskHandle;
 
@@ -33,12 +32,6 @@ control::Gimbal* gimbal = nullptr;
 control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
 INS_Angle_t INS_Angle;
-const char* gimbal_phase = "STARTUP";
-float yaw_peak_speed = 0;
-int yaw_peak_output = 0;
-uint32_t gimbal_inhibit_mask = 0;
-uint32_t gimbal_last_inhibit_mask = 0;
-uint32_t gimbal_disable_events = 0;
 
 control::gimbal_t gimbal_data;
 
@@ -48,82 +41,157 @@ float pitch_feedforward;
 
 void gimbalTask(void* arg) {
     UNUSED(arg);
+    // 任务启动时先关掉两个电机，然后等待遥控器连接
     pitch_motor->Disable();
     yaw_motor->Disable();
-    pitch_motor->SetSpeedFeedforward(0);
-    yaw_motor->SetSpeedFeedforward(0);
     osDelay(1500);
 
-    // 保留现有启动回中；只有 DBUS 和两个电机反馈正常时才允许输出。
-    gimbal_phase = "CENTER";
-    for (int i = 0; i < 1500; ++i) {
+    // 遥控器连接后等待一段时间，等云台完全复位
+    int i;
+    for (i = 0; i < 1500; i++) {
         check_kill();
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
         osDelay(1);
     }
 
+    // 云台复位完成后，播放一段音乐，代表开始校准陀螺仪
+    // 校准陀螺仪会对陀螺仪进行2000次的读取，然后取平均值作为校准值
+    // buzzer->SingTone(bsp::BuzzerNote::La6M);
     Buzzer_Sing(SingCaliStart);
-    gimbal_phase = "IMU_CALI";
+    //    reset_yaw();
     imu->Calibrate();
+    i = 0;
     while (!imu->CaliDone()) {
-        check_kill();
         gimbal->TargetAbs(0, 0);
         gimbal->Update();
         osDelay(1);
+        ++i;
     }
+    // 校准完成后播放一段音乐
     Buzzer_Sing(SingCaliDone);
     osDelay(100);
 
-    // 单位为 rad/s，使用实际任务间隔，避免调度快慢改变遥控灵敏度。
-    const float pitch_remote_speed = 1.5f;
-    const float yaw_remote_speed = 2.0f;
-    const float yaw_target_lead_limit = PI / 12;  // 移动时目标最多领先实际位置 15 度。
-    const int rocker_deadband = 10;
-    // 左手同时操作 yaw 时 ch3 会带入 60~80 的串动，用大死区滤掉（实测数据见日志）
-    const int pitch_rocker_deadband = 100;
-    const float tick_seconds = 1.0f / osKernelGetTickFreq();
-    uint32_t previous_tick = osKernelGetTickCount();
-    int yaw_last_direction = 0;
-    gimbal_phase = "REMOTE";
+    // 初始化当前陀螺仪角度、遥控器输入转换的角度、目标角度
+    float pitch_ratio, yaw_ratio;
+    INS_Angle.pitch = imu->INS_angle[1];
+    INS_Angle.yaw = imu->INS_angle[0];
+    //    pitch_curr = witimu->INS_angle[0];
+    //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
+    float pitch_target = 0, yaw_target = 0;
+
     while (true) {
+        // 如果遥控器处于关闭状态，关闭两个电机
         check_kill();
-        const uint32_t now = osKernelGetTickCount();
-        // 掉线/关闭后重新使能，不补算等待期间的摇杆输入。
-        const float dt = clip<float>((now - previous_tick) * tick_seconds, 0, 0.005f);
-        previous_tick = now;
+
+        // 获取当前陀螺仪角度
         INS_Angle.pitch = imu->INS_angle[1];
         INS_Angle.yaw = imu->INS_angle[0];
-        INS_Angle.roll = imu->INS_angle[2];
+        //        pitch_curr = witimu->INS_angle[0];
+        //        yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
+        //    if (dbus->swr == remote::UP) {
+        //      gimbal->TargetAbs(0, 0);
+        //      gimbal->Update();
+        //      pitch_target = pitch_curr;
+        //      yaw_target = yaw_curr;
+        //      control::MotorCANBase::TransmitOutput(gimbal_motors, 3);
+        //      osDelay(1);
+        //      continue;
+        //    }
+        // 如果遥控器处于开机状态，优先使用遥控器输入，否则使用裁判系统图传输入
+        const float mouse_ratio = 1;
+        const float remote_ratio = 0.005;
+        if (dbus->IsOnline()) {
+            if (dbus->mouse.x != 0 || dbus->mouse.y != 0) {
+                pitch_ratio = (float)dbus->mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = (float)dbus->mouse.x / mouse_xy_max * mouse_ratio;
+            } else if (refereerc->IsOnline() &&
+                       (refereerc->vt13_packet.mouse.x != 0 || refereerc->vt13_packet.mouse.y != 0)) {
+                pitch_ratio = (float)refereerc->remote_control.mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = (float)refereerc->remote_control.mouse.x / mouse_xy_max * mouse_ratio;
+            } else {
+                pitch_ratio = (float)dbus->ch3 / dbus->ROCKER_MAX * remote_ratio;
+                yaw_ratio = (float)dbus->ch2 / dbus->ROCKER_MAX * remote_ratio;
+            }
+        } else if (refereerc->IsOnline()) {
+            if (refereerc->vt13_packet.remote.ch3 != remote::vt13_remote_t::ROCKER_MID ||
+                refereerc->vt13_packet.remote.ch2 != remote::vt13_remote_t::ROCKER_MID) {
+                pitch_ratio = (float)(refereerc->vt13_packet.remote.ch2 - remote::vt13_remote_t::ROCKER_MID) /
+                              remote::vt13_remote_t::ROCKER_RANGE * remote_ratio;
+                yaw_ratio = (float)(refereerc->vt13_packet.remote.ch3 - remote::vt13_remote_t::ROCKER_MID) /
+                            remote::vt13_remote_t::ROCKER_RANGE * remote_ratio;
+            } else {
+                pitch_ratio = -refereerc->vt13_packet.mouse.y / mouse_xy_max * mouse_ratio;
+                yaw_ratio = refereerc->vt13_packet.mouse.x / mouse_xy_max * mouse_ratio;
+            }
+        } else {
+            pitch_ratio = 0;
+            yaw_ratio = 0;
+        }
 
-        pitch_diff = dgstandard::NormalizeRocker(dbus->ch3, dbus->ROCKER_MAX, pitch_rocker_deadband) *
-                     pitch_remote_speed * dt;
-        float yaw_input = dgstandard::NormalizeRocker(dbus->ch2, dbus->ROCKER_MAX, rocker_deadband);
-        if (gimbal_param->yaw_inverted)
-            yaw_input = -yaw_input;
-        const float yaw_error = wrapc<float>(yaw_motor->GetTarget() - yaw_motor->GetTheta(), -PI, PI);
-        const auto yaw_step = dgstandard::AdvanceYawTarget(
-            yaw_error, yaw_input, dt, yaw_remote_speed, yaw_target_lead_limit, yaw_last_direction);
-        yaw_last_direction = yaw_step.direction;
-        yaw_diff = gimbal_param->yaw_inverted ? -yaw_step.delta : yaw_step.delta;
-        // 原始框架无 RequestPIDIntegralReset 接口；换向时的目标重锚定已由 AdvanceYawTarget 完成
+        // 根据遥控器输入计算目标角度，并且进行限幅
+        pitch_target = clip<float>(pitch_ratio, -gimbal_param->pitch_max_, gimbal_param->pitch_max_);
+        yaw_target = wrap<float>(yaw_ratio, -gimbal_param->yaw_max_, gimbal_param->yaw_max_);
 
-        // 编码器参考系控制：枪与底盘夹角固定，稳定可控。
-        // IMU 参考系（UpdateIMU）要求板载 IMU 跟随枪一起转（板子装在 yaw 旋转件上）；
-        // 当前板子装在固定座，IMU 不随枪转，用 UpdateIMU 会目标追着实际跑、失控自转。
-        gimbal->TargetRel(pitch_diff, yaw_diff);
-        gimbal->Update();
-        // 比 USB 打印更频繁地保留峰值，避免 200ms 打印漏掉短时突变。
-        const float yaw_speed_abs = fabsf(yaw_motor->GetOmega());
-        const int yaw_output = yaw_motor->GetOutput();
-        const int yaw_output_abs = yaw_output < 0 ? -yaw_output : yaw_output;
-        if (yaw_speed_abs > yaw_peak_speed)
-            yaw_peak_speed = yaw_speed_abs;
-        if (yaw_output_abs > yaw_peak_output)
-            yaw_peak_output = yaw_output_abs;
+        pitch_diff = clip<float>(pitch_target, -PI, PI);
+        yaw_diff = wrap<float>(yaw_target, -PI, PI);
+
+        //        if (-0.005 < pitch_diff && pitch_diff < 0.005) {
+        //            pitch_diff = 0;
+        //        }
+
+        const float offset_ratio =
+            0.185;  // 底盘给出速度：31.416rad/s，实际速度：20*2*PI/21=5.81rad/s，计算可得比率大约为0.185
+        const float offset_filter_ratio =
+            0.02;  // 由于底盘相应延迟所以需要有延迟滤波，在跟随模式和小陀螺模式下切换，观察云台在启停时是否偏向一侧
+        static float speed_offset = 0;
+        speed_offset = (chassis_vt * offset_ratio) * offset_filter_ratio + speed_offset * (1 - offset_filter_ratio);
+
+        yaw_motor->SetSpeedFeedforward(speed_offset);
+
+        // 前后移动pitch前馈
+        // const float car_vy_ratio = 100000;
+        // pitch_feedforward = car_vy_diff.get() * car_vy_ratio;
+        // pitch_motor->SetCurrentOffset(pitch_feedforward);
+
+        switch (remote_mode) {
+            case REMOTE_MODE_SPIN:
+            case REMOTE_MODE_FOLLOW:
+                // 如果是跟随模式或者旋转模式，将IMU作为参考系
+                if (minipc->IsOnline() && is_autoaim &&
+                    (abs(minipc->target_angle.target_pitch) > 0.01 && abs(minipc->target_angle.target_pitch) < 100 &&
+                     abs(minipc->target_angle.target_yaw) > 0.01 && abs(minipc->target_angle.target_yaw) < 100)) {
+                    gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
+                } else {
+                    gimbal->TargetRel(pitch_diff, yaw_diff);
+                }
+                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+                break;
+            case REMOTE_MODE_ADVANCED:
+                // 如果是高级模式，将电机获取的云台当前角度作为参考系
+                gimbal->TargetRel(pitch_diff, yaw_diff);
+                gimbal->Update();
+                break;
+                //            case REMOTE_MODE_AUTOAIM:
+                //                gimbal->TargetReal(minipc->target_angle.target_pitch,
+                //                                   minipc->target_angle.target_yaw);
+                //                gimbal->Update();
+                //                break;
+            case REMOTE_MODE_AUTOAIM:
+                if (minipc->target_angle.target_pitch < 10e3 && minipc->target_angle.target_yaw < 10e3 &&
+                    minipc->target_angle.shoot_cmd) {
+                    gimbal->TargetAbs(minipc->target_angle.target_pitch, -minipc->target_angle.target_yaw);
+                }
+                gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+                break;
+            default:
+                break;
+        }
+
         osDelay(GIMBAL_OS_DELAY);
     }
 }
+
 void init_gimbal() {
     // 云台需要使用两个6020电机，并且进行角度环和速度环双环控制。此时我们需要初始化两个电机对象和四个PID对象，并且将四个PID对象分别绑定到两个电机对象上。
 
@@ -131,13 +199,12 @@ void init_gimbal() {
      * pitch motor
      */
     pitch_motor = new driver::Motor6020(can2, 0x209);
-    pitch_motor->Disable();
     pitch_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t pitch_motor_theta_pid_init = {
-        .kp = 4,
+        .kp = 12,
         .ki = 0,
-        .kd = 0,
-        .max_out = 1.5f,  // Pitch 速度指令上限约为 85.9 度/秒
+        .kd = 50,
+        .max_out = 6 * PI,  // 最高旋转速度
         .max_iout = 0,
         .deadband = 0,                                 // 死区
         .A = 0,                                        // 变速积分所能达到的最大值为A+B
@@ -148,13 +215,11 @@ void init_gimbal() {
     };
     pitch_motor->ReInitPID(pitch_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t pitch_motor_omega_pid_init = {
-        .kp = 3000,  // 实车已可回位；先降低 25% 试调，观察超调是否减轻
-        .ki = 20,  // 负载变化（yaw 转动引起的重力分量变化）时快速补足输出，减轻 pitch 下沉
-        .kd = 0,
-        // 原参数在静止时最多只有 500 * 0.5 + 2500 = 2750，实车无法回位。
-        // 速度指令上限见角度环；这里限制负载所需的输出。
-        .max_out = 8000,
-        .max_iout = 6000,
+        .kp = 8192,
+        .ki = 5,
+        .kd = 5000,
+        .max_out = 16384,  // 最大电流输出，参考说明书
+        .max_iout = 2000,
         .deadband = 0,                                                // 死区
         .A = 1.5 * PI,                                                // 变速积分所能达到的最大值为A+B
         .B = 1 * PI,                                                  // 启动变速积分的死区
@@ -176,15 +241,16 @@ void init_gimbal() {
      * yaw motor
      */
     yaw_motor = new driver::Motor6020(can1, 0x209);
-    yaw_motor->Disable();
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init =
-        {.kp = 12,  // 提高追赶强度；换向纠偏由 lead limit 与积分复位机制控制
-         .ki = 0,
-         .kd = 0,  // 再大会在前面顿一下
-         .max_out = 2.0f,  // Yaw 速度指令上限约为 114.6 度/秒
+        {.kp = 12,
+         .ki = 0.001,
+         .kd = 200,  // 再大会在前面顿一下
+         .max_out =
+             3 *
+             PI,  // 电机功率不够，如果以更高速度旋转，电机会无法在末端及时减速，观察到速度->电流环输出已经是最大值。
          .max_iout = PI / 8,
-         .deadband = PI / 1800,  // 0.1 度，减轻轻推时等待目标跨过死区的问题。
+         .deadband = PI / 180,
          .A = 0,                                    // 变速积分所能达到的最大值为A+B
          .B = 0,                                    // 启动变速积分的死区
          .output_filtering_coefficient = 0.5,       // 输出滤波系数
@@ -193,12 +259,12 @@ void init_gimbal() {
                  control::ConstrainedPID::Integral_Limit};
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 1000,  // 恢复上一轮可运动版本的速度环比例
-        .ki = 80,  // 快速建立克服静摩擦的电流（原 1 需数秒才攒够 2000，导致起步延迟）
-        .kd = 0,
-        .max_out = 4000,  // 本车低速负载测试限幅
-        .max_iout = 2000,  // 为 0 会把积分项清零，不能补足静摩擦负载
-        .deadband = 0,    // 低速位置测试：避免小速度指令被死区清零
+        .kp = 5000,
+        .ki = 5,
+        .kd = 10000000,
+        .max_out = 16384,  // 最大电流输出，参考说明书
+        .max_iout = 2000,
+        .deadband = 0.3,  // 死区
         .A = 0.5 * PI,    // 变速积分所能达到的最大值为A+B
         .B = 0.5 * PI,    // 启动变速积分的死区
         .output_filtering_coefficient = 0.5,
@@ -215,50 +281,31 @@ void init_gimbal() {
     yaw_motor->SetSpeedFilter(0.1);
     yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
-
     // 初始化云台对象
     gimbal_data.pitch_motor = pitch_motor;
     gimbal_data.yaw_motor = yaw_motor;
     gimbal_data.data = gimbal_init_data;
     gimbal = new control::Gimbal(gimbal_data);
     gimbal_param = gimbal->GetData();
-    // 在使能前先写入回中目标，避免短暂追踪默认的编码器 0。
-    gimbal->TargetAbs(0, 0);
-    gimbal->Update();
 }
 
-inline uint32_t gimbal_inhibit_reason() {
-    uint32_t reason = 0;
-    if (!dbus->IsOnline())
-        reason |= 1;
-    if (dbus->swr != remote::UP && dbus->swr != remote::MID)
-        reason |= 2;
-    if (remote_mode != REMOTE_MODE_FOLLOW)
-        reason |= 4;
-    if (!pitch_motor->IsOnline())
-        reason |= 8;
-    if (!yaw_motor->IsOnline())
-        reason |= 16;
-    return reason;
+inline bool gimbal_en() {
+    bool gimbal_en = true;
+    gimbal_en &= remote_mode != REMOTE_MODE_KILL;
+#ifdef HAS_REFEREE
+    gimbal_en &= referee->game_robot_status.mains_power_gimbal_output;
+#endif
+    return gimbal_en;
 }
 
 void check_kill() {
-    uint32_t reason = gimbal_inhibit_reason();
-    bool counted = false;
-    while (reason != 0) {
-        if (!counted) {
-            ++gimbal_disable_events;
-            gimbal_last_inhibit_mask = 0;
-            counted = true;
-        }
-        gimbal_inhibit_mask = reason;
-        gimbal_last_inhibit_mask |= reason;
+    while (!gimbal_en()) {
         yaw_motor->Disable();
         pitch_motor->Disable();
+        steering_motor->Disable();
         osDelay(1);
-        reason = gimbal_inhibit_reason();
     }
-    gimbal_inhibit_mask = 0;
     yaw_motor->Enable();
     pitch_motor->Enable();
+    steering_motor->Enable();
 }
