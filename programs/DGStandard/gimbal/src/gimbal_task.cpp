@@ -33,6 +33,14 @@ control::gimbal_data_t* gimbal_param = nullptr;
 float pitch_diff, yaw_diff;
 INS_Angle_t INS_Angle;
 
+// 诊断用全局（main.cpp 诊断屏打印）
+const char* gimbal_phase = "STARTUP";
+float yaw_peak_speed = 0;
+int yaw_peak_output = 0;
+uint32_t gimbal_inhibit_mask = 0;
+uint32_t gimbal_last_inhibit_mask = 0;
+uint32_t gimbal_disable_events = 0;
+
 control::gimbal_t gimbal_data;
 
 void check_kill();
@@ -47,6 +55,7 @@ void gimbalTask(void* arg) {
     osDelay(1500);
 
     // 遥控器连接后等待一段时间，等云台完全复位
+    gimbal_phase = "CENTER";
     int i;
     for (i = 0; i < 1500; i++) {
         check_kill();
@@ -59,6 +68,7 @@ void gimbalTask(void* arg) {
     // 校准陀螺仪会对陀螺仪进行2000次的读取，然后取平均值作为校准值
     // buzzer->SingTone(bsp::BuzzerNote::La6M);
     Buzzer_Sing(SingCaliStart);
+    gimbal_phase = "IMU_CALI";
     //    reset_yaw();
     imu->Calibrate();
     i = 0;
@@ -79,10 +89,20 @@ void gimbalTask(void* arg) {
     //    pitch_curr = witimu->INS_angle[0];
     //    yaw_curr = wrap<float>(witimu->INS_angle[2]-yaw_offset, -PI, PI);
     float pitch_target = 0, yaw_target = 0;
+    gimbal_phase = "REMOTE";
 
     while (true) {
         // 如果遥控器处于关闭状态，关闭两个电机
         check_kill();
+
+        // 诊断：记录 yaw 峰值
+        const float yaw_speed_abs = fabsf(yaw_motor->GetOmega());
+        const int yaw_output = yaw_motor->GetOutput();
+        const int yaw_output_abs = yaw_output < 0 ? -yaw_output : yaw_output;
+        if (yaw_speed_abs > yaw_peak_speed)
+            yaw_peak_speed = yaw_speed_abs;
+        if (yaw_output_abs > yaw_peak_output)
+            yaw_peak_output = yaw_output_abs;
 
         // 获取当前陀螺仪角度
         INS_Angle.pitch = imu->INS_angle[1];
@@ -299,12 +319,20 @@ inline bool gimbal_en() {
 }
 
 void check_kill() {
+    bool counted = false;
     while (!gimbal_en()) {
+        if (!counted) {
+            ++gimbal_disable_events;
+            counted = true;
+        }
+        gimbal_inhibit_mask = 1;
+        gimbal_last_inhibit_mask |= 1;
         yaw_motor->Disable();
         pitch_motor->Disable();
         steering_motor->Disable();
         osDelay(1);
     }
+    gimbal_inhibit_mask = 0;
     yaw_motor->Enable();
     pitch_motor->Enable();
     steering_motor->Enable();
