@@ -108,10 +108,11 @@ void gimbalTask(void* arg) {
         yaw_diff = gimbal_param->yaw_inverted ? -yaw_step.delta : yaw_step.delta;
         // 原始框架无 RequestPIDIntegralReset 接口；换向时的目标重锚定已由 AdvanceYawTarget 完成
 
-        // FOLLOW 用 IMU 参考系（板子装在枪口上、跟枪一起转）：
-        // 枪保持指向世界方向，底盘转向时枪自动反向补偿，夹角收敛，自动跟随才能工作
+        // 编码器参考系控制：枪与底盘夹角固定，稳定可控。
+        // IMU 参考系（UpdateIMU）要求板载 IMU 跟随枪一起转（板子装在 yaw 旋转件上）；
+        // 当前板子装在固定座，IMU 不随枪转，用 UpdateIMU 会目标追着实际跑、失控自转。
         gimbal->TargetRel(pitch_diff, yaw_diff);
-        gimbal->UpdateIMU(INS_Angle.pitch, INS_Angle.yaw);
+        gimbal->Update();
         // 比 USB 打印更频繁地保留峰值，避免 200ms 打印漏掉短时突变。
         const float yaw_speed_abs = fabsf(yaw_motor->GetOmega());
         const int yaw_output = yaw_motor->GetOutput();
