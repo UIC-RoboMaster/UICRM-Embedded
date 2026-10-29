@@ -19,10 +19,11 @@
  ###########################################################*/
 
 #include "chassis_task.h"
+#include "gimbal_task.h"
 #include "remote_control.h"
 osThreadId_t chassisTaskHandle;
 
-// true：以枪口（yaw 编码器）为方向基准，FOLLOW 模式下底盘随枪口方向运动
+// 已恢复 10-26 原始随枪口逻辑（FOLLOW 自动跟随）；此标志仅用于诊断显示
 const bool chassis_gimbal_relative = true;
 
 // 恢复 10-26 版本的满杆速度：平移 10*PI、旋转 5*PI
@@ -108,18 +109,52 @@ void chassisTask(void* arg) {
         car_vy_diff.calc(car_vy);
         car_vt_diff.calc(car_vt);
 
-        // 用实际 Yaw 编码器角度转换平移方向，避免混入 IMU 世界坐标。
-        const float A = wrapc<float>(yaw_motor->GetTheta() - gimbal_param->yaw_offset_, -PI, PI);
-        const float chassis_target_diff = chassis_gimbal_relative ? -A : 0;
+        // 云台相对底盘的角度，通过云台和底盘连接的电机获取
+        float A = yaw_motor->GetTheta() - gimbal_param->yaw_offset_;
+        // 云台当前相对云台零点的角度，通过IMU获取
+        float B = INS_Angle.yaw;
+        // 云台目标相对云台零点的角度，直接读取gimbal class获取
+        float C = gimbal->getYawTarget() - gimbal_param->yaw_offset_;
+        float chassis_target_diff = C - B + A;
+        chassis_target_diff = -chassis_target_diff;
+        chassis_target_diff = wrap<float>(chassis_target_diff, -PI, PI);
 
         // 底盘以底盘自己为基准的运动速度
         float sin_yaw = arm_sin_f32(chassis_target_diff);
         float cos_yaw = arm_cos_f32(chassis_target_diff);
         chassis_vx = cos_yaw * car_vx + sin_yaw * car_vy;
         chassis_vy = -sin_yaw * car_vx + cos_yaw * car_vy;
-        // 当前 Yaw 保持相对底盘的编码器角度，自动跟随会持续追逐这个固定偏角。
-        // 先用 CH4 拨轮手动转向；恢复 IMU 稳定后再启用底盘自动跟随。
-        chassis_vt = car_vt;
+        chassis_vt = 0;
+
+        if (remote_mode == REMOTE_MODE_ADVANCED || remote_mode == REMOTE_MODE_AUTOAIM) {
+            // 手动模式下，遥控器直接控制底盘速度
+            chassis_vx = car_vx;
+            chassis_vy = car_vy;
+            chassis_vt = car_vt;
+        }
+
+        if (remote_mode == REMOTE_MODE_FOLLOW) {
+            // 读取底盘和云台yaw轴角度差，控制底盘转向云台的方向（自动跟随）
+            const float angle_threshold = 0.02f;
+            float chassis_vt_pid_error = chassis_target_diff;
+            if (fabs(chassis_vt_pid_error) < angle_threshold) {
+                chassis_vt_pid_error = 0;
+            }
+
+            static control::ConstrainedPID* chassis_vt_pid =
+                new control::ConstrainedPID(2 / (2 * PI), 0, 0, 0.5, 1);
+            float vt = chassis_vt_pid->ComputeOutput(chassis_vt_pid_error);
+            if (chassis_vt_pid_error != 0)
+                chassis_vt = vt;
+        }
+
+        if (remote_mode == REMOTE_MODE_SPIN) {
+            // 小陀螺模式，拨盘用来控制底盘加速度
+            static float spin_speed = 0.6f;
+            spin_speed = spin_speed + car_vt * 0.01;
+            spin_speed = clip<float>(spin_speed, -1, 1);
+            chassis_vt = spin_speed;
+        }
 
         // 进行缩放
         chassis_vx *= chassis_max_xy_speed;
