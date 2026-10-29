@@ -31,6 +31,10 @@ float chassis_vt = 0;
 bool chassis_boost_flag = true;
 float car_vx, car_vy, car_vt;
 
+// 诊断用全局（main.cpp 诊断屏打印；仅作显示，不影响控制逻辑）
+const bool chassis_gimbal_relative = true;
+bool chassis_control_enabled = false;
+
 diff<float> car_vx_diff, car_vy_diff, car_vt_diff;
 
 communication::CanBridge* can_bridge = nullptr;
@@ -51,6 +55,7 @@ void chassisTask(void* arg) {
     }
 
     chassis->Enable();
+    chassis_control_enabled = true;
 
     while (true) {
         if (remote_mode == REMOTE_MODE_KILL) {
@@ -59,6 +64,7 @@ void chassisTask(void* arg) {
                 osDelay(CHASSIS_OS_DELAY + 2);
             }
             chassis->Enable();
+            chassis_control_enabled = true;
             continue;
         }
 
@@ -201,5 +207,6 @@ void init_chassis() {
     chassis->Disable();
 }
 void kill_chassis() {
+    chassis_control_enabled = false;
     chassis->Disable();
 }
