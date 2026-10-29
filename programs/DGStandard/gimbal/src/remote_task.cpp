@@ -49,9 +49,7 @@ osThreadId_t remoteTaskHandle;
 
 void remoteTask(void* arg) {
     UNUSED(arg);
-    bool shoot_controls_armed = false;
     remote::switch_t last_left = remote::MID;
-    uint32_t down_started_ms = 0;
 
     while (true) {
         const bool enabled = dbus->IsOnline() &&
@@ -63,36 +61,14 @@ void remoteTask(void* arg) {
         if (!enabled) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
             shoot_load_mode = SHOOT_MODE_DISABLE;
-            shoot_controls_armed = false;
-        } else if (!shoot_controls_armed) {
-            // 每次解锁后左拨杆先回中，避免下挡开机或重连后立即供弹。
-            shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
-            shoot_load_mode = SHOOT_MODE_STOP;
-            if (dbus->swl == remote::MID) {
-                shoot_controls_armed = true;
-                last_left = remote::MID;
-            }
         } else {
+            // 左拨杆：UP = 打开摩擦轮，MID = 保持，DOWN = 关闭摩擦轮
             const remote::switch_t left = dbus->swl;
-            const uint32_t now_ms = bsp::GetHighresTickMilliSec();
             if (left == remote::UP && last_left != remote::UP) {
-                shoot_flywheel_mode = shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP
-                                          ? SHOOT_FRIC_MODE_PREPARING : SHOOT_FRIC_MODE_STOP;
-                shoot_load_mode = SHOOT_MODE_STOP;
-            }
-            if (left == remote::DOWN) {
-                if (last_left != remote::DOWN) {
-                    down_started_ms = now_ms;
-                    shoot_load_mode = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED
-                                          ? SHOOT_MODE_SINGLE : SHOOT_MODE_STOP;
-                } else if (now_ms - down_started_ms >= 200 &&
-                           shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED) {
-                    shoot_load_mode = SHOOT_MODE_BURST;
-                }
-            } else if (last_left == remote::DOWN) {
-                shoot_load_mode = SHOOT_MODE_STOP;
-            }
-            if (shoot_flywheel_mode == SHOOT_FRIC_MODE_STOP) {
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARING;
+                shoot_load_mode = SHOOT_MODE_IDLE;
+            } else if (left == remote::DOWN && last_left != remote::DOWN) {
+                shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
                 shoot_load_mode = SHOOT_MODE_STOP;
             }
             last_left = left;
