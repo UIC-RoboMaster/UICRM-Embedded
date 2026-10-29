@@ -44,6 +44,8 @@ const osThreadAttr_t shootTaskAttribute =
 
 extern driver::DjiMotorBase* steering_motor;
 extern bool jam_notify_flags;
+extern driver::Motor3508* flywheel_left;
+extern driver::Motor3508* flywheel_right;
 
 extern control::ConstrainedPID::PID_Init_t steering_motor_theta_normal_pid_init;
 extern control::ConstrainedPID::PID_Init_t steering_motor_theta_fast_pid_init;

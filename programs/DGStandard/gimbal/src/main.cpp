@@ -113,6 +113,10 @@ void RM_RTOS_Default_Task(const void* arg) {
                         steering_motor->GetOutputShaftTheta(), steering_motor->GetTarget(),
                         (int)steering_motor->IsEnable(), (int)steering_motor->IsOnline(),
                         (int)steering_motor->GetOutput(), (int)steering_motor->GetCurr());
+        diagnostic_line("FLY online=%d/%d out=%d/%d curr=%d/%d\r\n",
+                        (int)flywheel_left->IsOnline(), (int)flywheel_right->IsOnline(),
+                        (int)flywheel_left->GetOutput(), (int)flywheel_right->GetOutput(),
+                        (int)flywheel_left->GetCurr(), (int)flywheel_right->GetCurr());
         diagnostic_line("IMU cal=%d warm=%d yaw=%.4f pitch=%.4f roll=%.4f\r\n\r\n",
                         (int)imu->CaliDone(), (int)imu->DataReady(),
                         imu->INS_angle[0], imu->INS_angle[1], imu->INS_angle[2]);

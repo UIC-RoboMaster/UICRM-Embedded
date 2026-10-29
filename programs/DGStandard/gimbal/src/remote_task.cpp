@@ -62,6 +62,10 @@ void remoteTask(void* arg) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_STOP;
             shoot_load_mode = SHOOT_MODE_DISABLE;
         } else {
+            // 解锁后把 DISABLE 清回 STOP，避免状态残留
+            if (shoot_load_mode == SHOOT_MODE_DISABLE) {
+                shoot_load_mode = SHOOT_MODE_STOP;
+            }
             // 原始遥控逻辑：UP=切换摩擦轮（上拨打开、回中、再上拨关闭）；DOWN=单发，按住=连发
             static BoolEdgeDetector* flywheel_edge = new BoolEdgeDetector(false);
             static BoolEdgeDetector* shoot_edge = new BoolEdgeDetector(false);
