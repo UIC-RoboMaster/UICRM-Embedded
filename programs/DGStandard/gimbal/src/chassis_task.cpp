@@ -22,12 +22,12 @@
 #include "remote_control.h"
 osThreadId_t chassisTaskHandle;
 
-// false：推杆以底盘车头为方向基准；true：恢复以枪口为方向基准的换算。
-const bool chassis_gimbal_relative = false;
+// true：以枪口（yaw 编码器）为方向基准，FOLLOW 模式下底盘随枪口方向运动
+const bool chassis_gimbal_relative = true;
 
-// 与实车可用的参考程序一致：满杆平移指令为 6 * PI，不再额外乘 0.5。
-const float chassis_max_xy_speed = 6 * PI;
-const float chassis_max_t_speed = 3 * PI;
+// 恢复 10-26 版本的满杆速度：平移 10*PI、旋转 5*PI
+const float chassis_max_xy_speed = 10 * PI;
+const float chassis_max_t_speed = 5 * PI;
 // 每轮允许的速度指令变化量，越大则加减速越快。
 const float chassis_xy_ramp_step = 0.12f;
 const float chassis_turn_ramp_step = 0.06f;

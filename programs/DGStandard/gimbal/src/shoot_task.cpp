@@ -71,8 +71,8 @@ void shootTask(void* arg) {
 
         const bool flywheel_requested = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
                                         shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED;
-        // 保留原程序 SetOutput(900) 的原始输出量级，不将 900 改解释为 rad/s。
-        flywheel_output.SetTarget(flywheel_requested ? 900 : 0);
+        // 测试用低速（原 900 rad/s 接近电机极限，台架测试太危险）；实弹调参时再提高
+        flywheel_output.SetTarget(flywheel_requested ? 300 : 0);
         const float output = flywheel_output.Calc();
         flywheel_left->SetTarget(output);
         flywheel_right->SetTarget(output);
