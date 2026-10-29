@@ -106,8 +106,7 @@ void gimbalTask(void* arg) {
             yaw_error, yaw_input, dt, yaw_remote_speed, yaw_target_lead_limit, yaw_last_direction);
         yaw_last_direction = yaw_step.direction;
         yaw_diff = gimbal_param->yaw_inverted ? -yaw_step.delta : yaw_step.delta;
-        if (yaw_step.reset_integral)
-            yaw_motor->RequestPIDIntegralReset(driver::DjiMotorBase::OMEGA);
+        // 原始框架无 RequestPIDIntegralReset 接口；换向时的目标重锚定已由 AdvanceYawTarget 完成
 
         // 先验证编码器位置控制；IMU、自瞄和底盘前馈均不修改电机目标。
         gimbal->TargetRel(pitch_diff, yaw_diff);
@@ -212,7 +211,6 @@ void init_gimbal() {
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
     yaw_motor->SetSpeedFilter(0.1);
-    yaw_motor->SetSpeedCommandAcceleration(10.0f);  // 速度指令约 0.2s 内到位，减少起步附加延迟
     yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
 

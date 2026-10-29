@@ -81,8 +81,7 @@ void RM_RTOS_Default_Task(const void* arg) {
                         (unsigned long)now, gimbal_phase, remote_mode_str(remote_mode),
                         (int)dbus->IsOnline(), (int)dbus->swr, (int)dbus->ch2, (int)dbus->ch3);
         const uint32_t last_rx = dbus->GetLastUptime();
-        diagnostic_line("RC ok=%lu bad=%lu age_ms=%lu | inhibit=%lu last=%lu stops=%lu\r\n",
-                        (unsigned long)dbus->accepted_frames, (unsigned long)dbus->rejected_frames,
+        diagnostic_line("RC age_ms=%lu | inhibit=%lu last=%lu stops=%lu\r\n",
                         (unsigned long)(last_rx == 0 ? 0 : bsp::GetHighresTickMilliSec() - last_rx),
                         (unsigned long)gimbal_inhibit_mask, (unsigned long)gimbal_last_inhibit_mask,
                         (unsigned long)gimbal_disable_events);
@@ -109,8 +108,7 @@ void RM_RTOS_Default_Task(const void* arg) {
         diagnostic_line("P ctl err=%.4f vcmd=%.4f i=%.0f | Y ctl err=%.4f vcmd=%.4f i=%.0f\r\n",
                         pitch_theta.error, pitch_theta.output, pitch_omega.iout,
                         yaw_theta.error, yaw_theta.output, yaw_omega.iout);
-        diagnostic_line("Y diag slewed=%.4f peak_w=%.4f peak_out=%d\r\n",
-                        yaw_motor->GetSpeedCommand(), yaw_peak_speed, yaw_peak_output);
+        diagnostic_line("Y diag peak_w=%.4f peak_out=%d\r\n", yaw_peak_speed, yaw_peak_output);
         diagnostic_line("S enc=%.4f tgt=%.4f en=%d online=%d out=%d curr=%d\r\n",
                         steering_motor->GetOutputShaftTheta(), steering_motor->GetTarget(),
                         (int)steering_motor->IsEnable(), (int)steering_motor->IsOnline(),
