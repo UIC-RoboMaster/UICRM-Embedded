@@ -108,9 +108,21 @@ void gimbalTask(void* arg) {
         yaw_diff = gimbal_param->yaw_inverted ? -yaw_step.delta : yaw_step.delta;
         // 原始框架无 RequestPIDIntegralReset 接口；换向时的目标重锚定已由 AdvanceYawTarget 完成
 
-        // 编码器参考系控制：枪与底盘夹角固定，稳定可控。
-        // IMU 参考系（UpdateIMU）要求板载 IMU 跟随枪一起转（板子装在 yaw 旋转件上）；
-        // 当前板子装在固定座，IMU 不随枪转，用 UpdateIMU 会目标追着实际跑、失控自转。
+        // 板载 IMU 装在固定座（随底盘转）：用 IMU yaw 变化量补偿底盘旋转，
+        // 让枪口保持世界方向，底盘自动跟随才能收敛。
+        // 若烧录后底盘越转越快（方向反了），把下面负号去掉。
+        static float last_ins_yaw = 0;
+        static bool ins_yaw_inited = false;
+        if (!ins_yaw_inited) {
+            last_ins_yaw = INS_Angle.yaw;
+            ins_yaw_inited = true;
+        }
+        const float ins_yaw_delta = wrap<float>(INS_Angle.yaw - last_ins_yaw, -PI, PI);
+        last_ins_yaw = INS_Angle.yaw;
+        yaw_diff += -ins_yaw_delta;
+
+        // 编码器参考系 + IMU 变化量补偿；不使用 UpdateIMU（其绝对误差项在
+        // IMU 不随枪转时会导致目标追着实际跑、失控自转）
         gimbal->TargetRel(pitch_diff, yaw_diff);
         gimbal->Update();
         // 比 USB 打印更频繁地保留峰值，避免 200ms 打印漏掉短时突变。
