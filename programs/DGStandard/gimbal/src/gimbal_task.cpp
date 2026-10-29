@@ -108,9 +108,8 @@ void gimbalTask(void* arg) {
         yaw_diff = gimbal_param->yaw_inverted ? -yaw_step.delta : yaw_step.delta;
         // 原始框架无 RequestPIDIntegralReset 接口；换向时的目标重锚定已由 AdvanceYawTarget 完成
 
-        // 板载 IMU 装在固定座（随底盘转）：用 IMU yaw 变化量补偿底盘旋转，
-        // 让枪口保持世界方向，底盘自动跟随才能收敛。
-        // 若烧录后底盘越转越快（方向反了），把下面负号去掉。
+        // 板载 IMU 装在固定座（随底盘转）：用 IMU yaw 变化量调整枪口目标，
+        // 使底盘转向时枪口跟随同向、夹角收敛（符号经实车数据验证）。
         static float last_ins_yaw = 0;
         static bool ins_yaw_inited = false;
         if (!ins_yaw_inited) {
@@ -119,7 +118,7 @@ void gimbalTask(void* arg) {
         }
         const float ins_yaw_delta = wrap<float>(INS_Angle.yaw - last_ins_yaw, -PI, PI);
         last_ins_yaw = INS_Angle.yaw;
-        yaw_diff += -ins_yaw_delta;
+        yaw_diff += ins_yaw_delta;
 
         // 编码器参考系 + IMU 变化量补偿；不使用 UpdateIMU（其绝对误差项在
         // IMU 不随枪转时会导致目标追着实际跑、失控自转）
