@@ -161,16 +161,16 @@ namespace controller {
     }
 
     TwoPositionSwitch I6x::TwoPosition(uint16_t raw) {
-        return raw >= 1024 ? TwoPositionSwitch::Up : TwoPositionSwitch::Down;
+        return raw < 1024 ? TwoPositionSwitch::Up : TwoPositionSwitch::Down;
     }
 
     ThreePositionSwitch I6x::ThreePosition(uint16_t raw) {
-        // Classify by the nearest calibrated position: 240, 1024, 1807.
+        // Physical Up/Mid/Down correspond to the low/center/high channel values.
         if (raw < (240 + 1024) / 2) {
-            return ThreePositionSwitch::Down;
+            return ThreePositionSwitch::Up;
         }
         if (raw > (1024 + 1807) / 2) {
-            return ThreePositionSwitch::Up;
+            return ThreePositionSwitch::Down;
         }
         return ThreePositionSwitch::Mid;
     }
