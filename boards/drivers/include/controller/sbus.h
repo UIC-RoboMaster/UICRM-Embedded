@@ -167,7 +167,7 @@ namespace controller {
      * @brief FS-i6X/iA10B 设备适配，继承 SBUS 的接收和在线状态。
      * @details 使用 240/1024/1807 标定端点及中心，原始 ±10 死区包含边界。
      * 中心两侧按各自行程缩放并四舍五入，输出饱和至 ±660。
-     * 高拨杆通道值对应上档，模拟通道保持固定方向。
+     * 低拨杆通道值对应物理上档，高值对应物理下档；模拟通道保持固定方向。
      * @note 发射机应保持 I6xState 所述通道分配；本类不包含机器人动作。
      * 不另建 UART、接收缓存或在线时间。
      */
@@ -196,14 +196,14 @@ namespace controller {
         /**
          * @brief 以原始中心值 1024 为界解码两档拨杆。
          * @param[in] raw SBUS 原始通道值。
-         * @return raw >= 1024 为 Up，否则为 Down。
+         * @return raw < 1024 为 Up，否则为 Down。
          */
         static TwoPositionSwitch TwoPosition(uint16_t raw);
 
         /**
          * @brief 按最近标定位置解码三档拨杆。
          * @param[in] raw SBUS 原始通道值。
-         * @return 小于 632 为 Down，632～1415 为 Mid，至少 1416 为 Up。
+         * @return 小于 632 为 Up，632～1415 为 Mid，至少 1416 为 Down。
          */
         static ThreePositionSwitch ThreePosition(uint16_t raw);
     };
