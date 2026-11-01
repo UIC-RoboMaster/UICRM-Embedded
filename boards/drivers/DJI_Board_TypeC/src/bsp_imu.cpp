@@ -663,19 +663,23 @@ namespace bsp {
             TempPWM = TempControl(BMI088_real_data_.temp);
         }
 
-        if (calibrate_ && Temp > heater_param_.temp - 2) {
+        // 温度门槛只用于首次零偏校准；完成校准后，温度回落也必须继续更新姿态。
+        // 否则 CaliDone 仍为真而 INS_angle 冻结，云台会在旧角度上持续纠偏。
+        if (calibrate_ && (calidone_ || Temp > heater_param_.temp - 2)) {
             if (!useMag_) {
-                if (++count_ < zeroDriftTry) {
-                    for (int i = 0; i < 3; ++i) {
-                        zeroDriftTemp[i] += BMI088_real_data_.gyro[i];
+                if (!calidone_) {
+                    if (++count_ < zeroDriftTry) {
+                        for (int i = 0; i < 3; ++i) {
+                            zeroDriftTemp[i] += BMI088_real_data_.gyro[i];
+                        }
+                        return;
+                    } else if (count_ == zeroDriftTry) {
+                        for (int i = 0; i < 3; ++i) {
+                            zeroDrift[i] = zeroDriftTemp[i] / (float)zeroDriftTry;
+                        }
+                        calidone_ = true;
+                        return;
                     }
-                    return;
-                } else if (count_ == zeroDriftTry) {
-                    for (int i = 0; i < 3; ++i) {
-                        zeroDrift[i] = zeroDriftTemp[i] / (float)zeroDriftTry;
-                    }
-                    calidone_ = true;
-                    return;
                 }
                 for (int i = 0; i < 3; ++i) {
                     BMI088_real_data_.gyro[i] -= zeroDrift[i];
@@ -708,6 +712,7 @@ namespace bsp {
                 INS_angle + INS_PITCH_ADDRESS_OFFSET,
                 INS_angle + INS_ROLL_ADDRESS_OFFSET
             );
+            ++attitude_update_count_;
         }
     }
 

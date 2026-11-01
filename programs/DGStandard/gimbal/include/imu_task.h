@@ -45,6 +45,9 @@ protected:
  void RxCompleteCallback() final;
 };
 extern IMU* imu;
+extern volatile uint32_t imu_attitude_samples;
+uint32_t imu_attitude_age_ms();
+bool imu_attitude_fresh();
 void imuTask(void* arg);
 
 void init_imu();

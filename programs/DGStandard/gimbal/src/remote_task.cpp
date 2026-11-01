@@ -52,10 +52,11 @@ void remoteTask(void* arg) {
     UNUSED(arg);
 
     while (true) {
-        const bool enabled = dbus->IsOnline() &&
-                             (dbus->swr == remote::UP || dbus->swr == remote::MID);
+        const auto mode = dgstandard::SelectRemoteMode(
+            dbus->IsOnline(), dbus->swr == remote::UP, dbus->swr == remote::MID);
+        const bool enabled = dgstandard::IsActiveRemoteMode(mode);
         is_killed = !enabled;
-        remote_mode = enabled ? REMOTE_MODE_FOLLOW : REMOTE_MODE_KILL;
+        remote_mode = mode;
         is_autoaim = false;
 
         if (!enabled) {

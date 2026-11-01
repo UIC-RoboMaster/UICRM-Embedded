@@ -19,6 +19,7 @@
  ###########################################################*/
 
 #include "imu_task.h"
+#include "bsp_os.h"
 
 osThreadId_t imuTaskHandle;
 
@@ -27,6 +28,20 @@ void IMU::RxCompleteCallback() {
 }
 
 IMU* imu = nullptr;
+volatile uint32_t imu_attitude_samples = 0;
+static volatile uint32_t imu_last_attitude_ms = 0;
+
+uint32_t imu_attitude_age_ms() {
+    if (imu_attitude_samples == 0)
+        return UINT32_MAX;
+    // 先读取上次采样时间，再读取当前时间，避免高优先级 IMU 任务抢占时无符号减法下溢。
+    const uint32_t last_update = imu_last_attitude_ms;
+    return bsp::GetHighresTickMilliSec() - last_update;
+}
+
+bool imu_attitude_fresh() {
+    return imu_attitude_samples != 0 && imu_attitude_age_ms() <= 20;
+}
 
 void imuTask(void* arg) {
     UNUSED(arg);
@@ -34,7 +49,12 @@ void imuTask(void* arg) {
     while (true) {
         uint32_t flags = osThreadFlagsWait(RX_SIGNAL, osFlagsWaitAll, osWaitForever);
         if (flags & RX_SIGNAL) {  // unnecessary check
+            const uint32_t previous_sample = imu->AttitudeUpdateCount();
             imu->Update();
+            if (imu->AttitudeUpdateCount() != previous_sample) {
+                imu_last_attitude_ms = bsp::GetHighresTickMilliSec();
+                imu_attitude_samples = imu->AttitudeUpdateCount();
+            }
         }
     }
 }

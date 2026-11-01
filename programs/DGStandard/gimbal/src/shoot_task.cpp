@@ -44,18 +44,34 @@ void jam_callback(void* args) {
 
 osThreadId_t shootTaskHandle;
 
+// 10-26 版的 SetOutput(900) 是原始输出指令，不是 900 rad/s。
+// 这里使用速度闭环：减速比 1，300 rad/s 约为电机 2865 转/分。
+const float flywheel_run_speed = 300.0f;
+const float flywheel_acceleration = 600.0f;  // rad/s²，启动约 0.5 秒。
+const float flywheel_ready_tolerance = 15.0f;
+const uint32_t flywheel_ready_ms = 100;
+
 void shootTask(void* arg) {
     UNUSED(arg);
-    Ease flywheel_output(0, 1);
+    float flywheel_speed_command = 0;
+    uint32_t ready_ticks = 0;
+    const uint32_t tick_frequency = osKernelGetTickFreq();
+    const uint32_t ready_duration_ticks = (flywheel_ready_ms * tick_frequency + 999) / 1000;
+    uint32_t previous_tick = osKernelGetTickCount();
     bool was_enabled = false;
 
     while (true) {
-        const bool shoot_en = dbus->IsOnline() && remote_mode == REMOTE_MODE_FOLLOW &&
+        const uint32_t now = osKernelGetTickCount();
+        const uint32_t elapsed_ticks = now - previous_tick;
+        const float dt = clip<float>((float)elapsed_ticks / tick_frequency, 0, 0.01f);
+        previous_tick = now;
+        const bool shoot_en = dbus->IsOnline() && dgstandard::IsActiveRemoteMode(remote_mode) &&
                               (dbus->swr == remote::UP || dbus->swr == remote::MID) &&
                               imu->CaliDone() && steering_motor->IsOnline();
         if (!shoot_en) {
             kill_shoot();
-            flywheel_output = Ease(0, 1);
+            flywheel_speed_command = 0;
+            ready_ticks = 0;
             was_enabled = false;
             osDelay(SHOOT_OS_DELAY);
             continue;
@@ -71,14 +87,25 @@ void shootTask(void* arg) {
 
         const bool flywheel_requested = shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING ||
                                         shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARED;
-        // 测试用低速（原 900 rad/s 接近电机极限，台架测试太危险）；实弹调参时再提高
-        flywheel_output.SetTarget(flywheel_requested ? 300 : 0);
-        const float output = flywheel_output.Calc();
-        flywheel_left->SetTarget(output);
-        flywheel_right->SetTarget(output);
+        if (flywheel_requested) {
+            flywheel_speed_command = clip<float>(
+                flywheel_speed_command + flywheel_acceleration * dt, 0, flywheel_run_speed);
+        } else {
+            // 第二次上拨立即给零速度；保留速度环输出，主动减速而非零电流滑行。
+            flywheel_speed_command = 0;
+        }
+        flywheel_left->SetTarget(flywheel_speed_command);
+        flywheel_right->SetTarget(flywheel_speed_command);
 
-        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING && flywheel_output.IsAtTarget() &&
-            flywheel_left->IsOnline() && flywheel_right->IsOnline()) {
+        const bool at_speed = flywheel_requested && flywheel_speed_command >= flywheel_run_speed &&
+            flywheel_left->IsOnline() && flywheel_right->IsOnline() &&
+            fabsf(flywheel_left->GetOutputShaftOmega() - flywheel_left->GetTarget()) <= flywheel_ready_tolerance &&
+            fabsf(flywheel_right->GetOutputShaftOmega() - flywheel_right->GetTarget()) <= flywheel_ready_tolerance;
+        if (at_speed)
+            ready_ticks += elapsed_ticks;
+        else
+            ready_ticks = 0;
+        if (shoot_flywheel_mode == SHOOT_FRIC_MODE_PREPARING && ready_ticks >= ready_duration_ticks) {
             shoot_flywheel_mode = SHOOT_FRIC_MODE_PREPARED;
         }
         if (shoot_flywheel_mode != SHOOT_FRIC_MODE_PREPARED ||
@@ -109,9 +136,24 @@ void init_shoot() {
     flywheel_left->SetTransmissionRatio(1);
     flywheel_right->SetTransmissionRatio(1);
 
-    // 使用原始电流目标，使后台电机线程负责发送，避免 SetOutput 被速度 PID 覆盖。
-    flywheel_left->SetMode(driver::DjiMotorBase::CURRENT | driver::DjiMotorBase::INVERTED);
-    flywheel_right->SetMode(driver::DjiMotorBase::CURRENT);
+    // 输出仍限制在原来的 ±4000；P 速度环避免积分残留拖延关停。
+    control::ConstrainedPID::PID_Init_t flywheel_omega_pid_init = {
+        .kp = 60,
+        .ki = 0,
+        .kd = 0,
+        .max_out = 4000,
+        .max_iout = 0,
+        .deadband = 1.5f,
+        .A = 0,
+        .B = 0,
+        .output_filtering_coefficient = 0.2f,
+        .derivative_filtering_coefficient = 0,
+        .mode = control::ConstrainedPID::OutputFilter
+    };
+    flywheel_left->ReInitPID(flywheel_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    flywheel_right->ReInitPID(flywheel_omega_pid_init, driver::DjiMotorBase::OMEGA);
+    flywheel_left->SetMode(driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::INVERTED);
+    flywheel_right->SetMode(driver::DjiMotorBase::OMEGA);
     flywheel_left->SetTarget(0);
     flywheel_right->SetTarget(0);
     steering_motor = new driver::Motor2006(can1, 0x207);

@@ -53,6 +53,8 @@ extern const bool chassis_gimbal_relative;
 extern float chassis_vx;
 extern float chassis_vy;
 extern float chassis_vt;
+extern float chassis_follow_error;
+extern const char* chassis_turn_phase;
 extern bool chassis_boost_flag;
 extern float car_vx, car_vy, car_vt;
 

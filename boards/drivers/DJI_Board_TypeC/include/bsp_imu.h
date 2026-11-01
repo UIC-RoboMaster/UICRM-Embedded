@@ -520,6 +520,7 @@ namespace bsp {
         bool CaliDone();
         void Update();
         bool DataReady();
+        uint32_t AttitudeUpdateCount() const { return attitude_update_count_; }
 
         float INS_quat[4] = {0.0f, 0.0f, 0.0f, 0.0f};  // qw, qx, qy, qz
         float INS_angle[3] = {0.0f, 0.0f, 0.0f};       // yaw, pitch, roll
@@ -536,6 +537,7 @@ namespace bsp {
         unsigned long count_ = 0;
         bool calibrate_ = false;
         bool calidone_ = false;
+        volatile uint32_t attitude_update_count_ = 0;
 
         unsigned zeroDriftTry = 3000;
         float zeroDrift[3] = {0, 0, 0};

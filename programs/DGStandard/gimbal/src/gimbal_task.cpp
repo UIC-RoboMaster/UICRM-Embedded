@@ -23,6 +23,8 @@
 
 #include "dji_remote.h"
 #include "remote_control.h"
+#include "yaw_follow_control.h"
+#include "yaw_stabilization.h"
 
 
 osThreadId_t gimbalTaskHandle;
@@ -36,9 +38,18 @@ INS_Angle_t INS_Angle;
 const char* gimbal_phase = "STARTUP";
 float yaw_peak_speed = 0;
 int yaw_peak_output = 0;
+float yaw_peak_heading_error = 0;
+uint32_t yaw_diagnostic_samples = 0;
+uint32_t yaw_output_limit_samples = 0;
+uint32_t yaw_compensation_limit_samples = 0;
 uint32_t gimbal_inhibit_mask = 0;
 uint32_t gimbal_last_inhibit_mask = 0;
 uint32_t gimbal_disable_events = 0;
+bool yaw_world_ready = false;
+float yaw_world_target = 0;
+float yaw_world_error = 0;
+float yaw_base_rate = 0;
+float yaw_compensation_rate = 0;
 
 control::gimbal_t gimbal_data;
 
@@ -84,7 +95,9 @@ void gimbalTask(void* arg) {
     const int pitch_rocker_deadband = 100;
     const float tick_seconds = 1.0f / osKernelGetTickFreq();
     uint32_t previous_tick = osKernelGetTickCount();
-    int yaw_last_direction = 0;
+    // 下档手转实测：编码器增加时 IMU yaw 减少，先统一到电机正方向。
+    dgstandard::WorldYawControl world_yaw(-1.0f);
+    dgstandard::YawBaseRateEstimator base_rate_estimator;
     gimbal_phase = "REMOTE";
     while (true) {
         check_kill();
@@ -92,6 +105,16 @@ void gimbalTask(void* arg) {
         // 掉线/关闭后重新使能，不补算等待期间的摇杆输入。
         const float dt = clip<float>((now - previous_tick) * tick_seconds, 0, 0.005f);
         previous_tick = now;
+        if (!imu_attitude_fresh()) {
+            // 姿态失更时底盘任务会停转；云台保持最后的编码器目标，不用旧姿态累加纠偏。
+            // 保留空间目标，恢复数据后继续指向原方向；速度估计从当前采样重新起算。
+            yaw_base_rate = yaw_compensation_rate = 0;
+            base_rate_estimator.Reset(imu->INS_angle[0], yaw_motor->GetTheta());
+            gimbal_phase = "IMU_WAIT";
+            osDelay(1);
+            continue;
+        }
+        gimbal_phase = "REMOTE";
         INS_Angle.pitch = imu->INS_angle[1];
         INS_Angle.yaw = imu->INS_angle[0];
         INS_Angle.roll = imu->INS_angle[2];
@@ -101,18 +124,25 @@ void gimbalTask(void* arg) {
         float yaw_input = dgstandard::NormalizeRocker(dbus->ch2, dbus->ROCKER_MAX, rocker_deadband);
         if (gimbal_param->yaw_inverted)
             yaw_input = -yaw_input;
-        const float yaw_error = wrapc<float>(yaw_motor->GetTarget() - yaw_motor->GetTheta(), -PI, PI);
-        const auto yaw_step = dgstandard::AdvanceYawTarget(
-            yaw_error, yaw_input, dt, yaw_remote_speed, yaw_target_lead_limit, yaw_last_direction);
-        yaw_last_direction = yaw_step.direction;
-        yaw_diff = gimbal_param->yaw_inverted ? -yaw_step.delta : yaw_step.delta;
-        // 原始框架无 RequestPIDIntegralReset 接口；换向时的目标重锚定已由 AdvanceYawTarget 完成
-
-        // 编码器参考系控制：枪与底盘夹角固定，稳定可控。
-        // IMU 参考系（UpdateIMU）要求板载 IMU 跟随枪一起转（板子装在 yaw 旋转件上）；
-        // 当前板子装在固定座，IMU 不随枪转，用 UpdateIMU 会目标追着实际跑、失控自转。
+        const float encoder_yaw = yaw_motor->GetTheta();
+        if (!yaw_world_ready) {
+            world_yaw.Reset(INS_Angle.yaw);
+            base_rate_estimator.Reset(INS_Angle.yaw, encoder_yaw);
+        }
+        yaw_base_rate = base_rate_estimator.Update(INS_Angle.yaw, encoder_yaw, dt);
+        yaw_compensation_rate = base_rate_estimator.Compensation();
+        const float heading_target = world_yaw.Update(
+            INS_Angle.yaw, encoder_yaw, yaw_input, dt,
+            yaw_remote_speed, yaw_target_lead_limit);
+        const float encoder_target = dgstandard::CompensatedYawTarget(heading_target, yaw_compensation_rate);
+        yaw_world_target = world_yaw.Target();
+        yaw_world_error = world_yaw.Error();
+        // Pitch 继续走原编码器控制；只把 Yaw 的空间误差换算为编码器目标。
+        const float encoder_step = wrapc<float>(encoder_target - gimbal->getYawTarget(), -PI, PI);
+        yaw_diff = gimbal_param->yaw_inverted ? -encoder_step : encoder_step;
         gimbal->TargetRel(pitch_diff, yaw_diff);
         gimbal->Update();
+        yaw_world_ready = true;
         // 比 USB 打印更频繁地保留峰值，避免 200ms 打印漏掉短时突变。
         const float yaw_speed_abs = fabsf(yaw_motor->GetOmega());
         const int yaw_output = yaw_motor->GetOutput();
@@ -121,6 +151,14 @@ void gimbalTask(void* arg) {
             yaw_peak_speed = yaw_speed_abs;
         if (yaw_output_abs > yaw_peak_output)
             yaw_peak_output = yaw_output_abs;
+        const float heading_error_abs = fabsf(dgstandard::WrapYawError(yaw_world_target + INS_Angle.yaw));
+        if (heading_error_abs > yaw_peak_heading_error)
+            yaw_peak_heading_error = heading_error_abs;
+        ++yaw_diagnostic_samples;
+        if (yaw_output_abs >= dgstandard::kYawMaxOutput - 1)
+            ++yaw_output_limit_samples;
+        if (fabsf(yaw_base_rate) >= dgstandard::kYawCompensationMaxRate)
+            ++yaw_compensation_limit_samples;
         osDelay(GIMBAL_OS_DELAY);
     }
 }
@@ -179,12 +217,12 @@ void init_gimbal() {
     yaw_motor->Disable();
     yaw_motor->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t yaw_motor_theta_pid_init =
-        {.kp = 12,  // 提高追赶强度；换向纠偏由 lead limit 与积分复位机制控制
+        {.kp = dgstandard::kYawAngleGain,  // 补偿速度按同一增益换算为目标角偏置。
          .ki = 0,
          .kd = 0,  // 再大会在前面顿一下
-         .max_out = 2.0f,  // Yaw 速度指令上限约为 114.6 度/秒
+         .max_out = dgstandard::kYawMaxRate,  // Yaw 速度指令上限约为 114.6 度/秒
          .max_iout = PI / 8,
-         .deadband = PI / 1800,  // 0.1 度，减轻轻推时等待目标跨过死区的问题。
+         .deadband = 0,  // 小误差连续纠偏，不在 0.1 度边缘切换零/非零速度。
          .A = 0,                                    // 变速积分所能达到的最大值为A+B
          .B = 0,                                    // 启动变速积分的死区
          .output_filtering_coefficient = 0.5,       // 输出滤波系数
@@ -193,10 +231,10 @@ void init_gimbal() {
                  control::ConstrainedPID::Integral_Limit};
     yaw_motor->ReInitPID(yaw_motor_theta_pid_init, driver::DjiMotorBase::THETA);
     control::ConstrainedPID::PID_Init_t yaw_motor_omega_pid_init = {
-        .kp = 1000,  // 恢复上一轮可运动版本的速度环比例
-        .ki = 80,  // 快速建立克服静摩擦的电流（原 1 需数秒才攒够 2000，导致起步延迟）
+        .kp = 1000,
+        .ki = dgstandard::kYawSpeedIntegralPerTick,  // 80 -> 8，减轻低速积分蓄力后的反复冲摆。
         .kd = 0,
-        .max_out = 4000,  // 本车低速负载测试限幅
+        .max_out = dgstandard::kYawMaxOutput,
         .max_iout = 2000,  // 为 0 会把积分项清零，不能补足静摩擦负载
         .deadband = 0,    // 低速位置测试：避免小速度指令被死区清零
         .A = 0.5 * PI,    // 变速积分所能达到的最大值为A+B
@@ -212,7 +250,8 @@ void init_gimbal() {
     };
     yaw_motor->ReInitPID(yaw_motor_omega_pid_init, driver::DjiMotorBase::OMEGA);
     // 给电机启动角度环和速度环，并且这是一个绝对角度电机，需要启动绝对角度模式
-    yaw_motor->SetSpeedFilter(0.1);
+    // 新反馈权重 0.1 -> 0.25，减少速度反馈滞后，及时反映运动和制动。
+    yaw_motor->SetSpeedFilter(dgstandard::kYawSpeedFeedbackFilter);
     yaw_motor->SetMode(driver::DjiMotorBase::THETA | driver::DjiMotorBase::OMEGA | driver::DjiMotorBase::ABSOLUTE);
 
 
@@ -233,7 +272,7 @@ inline uint32_t gimbal_inhibit_reason() {
         reason |= 1;
     if (dbus->swr != remote::UP && dbus->swr != remote::MID)
         reason |= 2;
-    if (remote_mode != REMOTE_MODE_FOLLOW)
+    if (!dgstandard::IsActiveRemoteMode(remote_mode))
         reason |= 4;
     if (!pitch_motor->IsOnline())
         reason |= 8;
@@ -253,6 +292,9 @@ void check_kill() {
         }
         gimbal_inhibit_mask = reason;
         gimbal_last_inhibit_mask |= reason;
+        // 关闭输出后不保留旧空间目标；重新解锁时从当前枪口方向开始。
+        yaw_world_ready = false;
+        yaw_base_rate = yaw_compensation_rate = 0;
         yaw_motor->Disable();
         pitch_motor->Disable();
         osDelay(1);

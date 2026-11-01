@@ -22,6 +22,7 @@
 #include "cmsis_os2.h"
 #include "dji_dbus.h"
 #include "main.h"
+#include "remote_mode.h"
 #include "referee_task.h"
 #include "user_define.h"
 #include "utils.h"
@@ -31,43 +32,6 @@ extern remote::DBUS* dbus;
  */
 void init_dbus();
 
-enum RemoteMode {
-    REMOTE_MODE_PREPARE = -2,
-    REMOTE_MODE_KILL = -1,
-    REMOTE_MODE_STOP = 0,
-    REMOTE_MODE_FOLLOW = 1,
-    REMOTE_MODE_SPIN = 2,
-    REMOTE_MODE_ADVANCED = 3,
-    REMOTE_MODE_AUTOAIM = 4,
-};
-inline const char* remote_mode_str(RemoteMode mode) {
-    switch (mode) {
-        case REMOTE_MODE_PREPARE:
-            return "PREPARE";
-            break;
-        case REMOTE_MODE_KILL:
-            return "KILL";
-            break;
-        case REMOTE_MODE_STOP:
-            return "STOP";
-            break;
-        case REMOTE_MODE_FOLLOW:
-            return "FOLLOW";
-            break;
-        case REMOTE_MODE_SPIN:
-            return "SPIN";
-            break;
-        case REMOTE_MODE_ADVANCED:
-            return "ADVANCED";
-            break;
-        case REMOTE_MODE_AUTOAIM:
-            return "AUTOAIM";
-            break;
-        default:
-            return "UNKNOWN";
-            break;
-    }
-}
 extern RemoteMode remote_mode;
 
 enum ShootFricMode {
