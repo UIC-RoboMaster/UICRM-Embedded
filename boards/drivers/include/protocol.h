@@ -313,8 +313,10 @@ namespace communication {
 
         uint16_t shooter_cooling_rate;
         uint16_t shooter_heat_limit;
-
         uint16_t chassis_power_limit;
+
+        float bullet_speed_limit;
+
         uint8_t mains_power_gimbal_output : 1;
         uint8_t mains_power_chassis_output : 1;
         uint8_t mains_power_shooter_output : 1;
