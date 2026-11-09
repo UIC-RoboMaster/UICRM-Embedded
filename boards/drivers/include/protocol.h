@@ -514,7 +514,12 @@ namespace communication {
 
     /* ===== RADAR_DECISION 0x0121 ===== */
     typedef struct {
-        uint32_t radar_cmd;
+        uint8_t radar_cmd;
+        uint8_t password_cmd;
+        uint8_t password[6];
+        uint8_t armor_fortify_cmd;
+        uint16_t fortify_center_x;
+        uint16_t fortify_center_y;
     } __packed radar_cmd_t;
 
     /* ===== End Sub Command ===== */
