@@ -22,7 +22,7 @@ function(uicrm_add_arm_executable name)
 
     add_executable(${name}.elf ${ARG_SOURCES})
     target_link_libraries(${name}.elf
-        PRIVATE ${ARG_DEPENDS} ${ARG_TARGET} ${ARG_TARGET}_platform ${ARG_TARGET}_algorithm ${ARG_TARGET}_drivers ${ARG_TARGET}_components)
+        PRIVATE ${ARG_DEPENDS} ${ARG_TARGET} ${ARG_TARGET}_platform ${ARG_TARGET}_algorithm ${ARG_TARGET}_drivers ${ARG_TARGET}_components ${ARG_TARGET}_communication)
     
     target_include_directories(${name}.elf PRIVATE ${ARG_INCLUDES})
     target_compile_definitions(${name}.elf PRIVATE ${ARG_DEFINES})
