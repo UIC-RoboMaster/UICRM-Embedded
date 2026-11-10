@@ -319,6 +319,7 @@ namespace communication {
         image->width = graph_width;
         image->start_x = start_x;
         image->start_y = start_y;
+        // Todo: Fix P2: 浮点图形仍按 IEEE 754 位模式编码，显示结果错误
         float float_data = graph_float;
         int32_t float2int_data;
         memcpy(&float2int_data, (uint8_t*)&float_data, 4);
@@ -450,6 +451,7 @@ namespace communication {
                 graph.graphic_data_struct = va_arg(arg, graphic_data_t);
                 //                length = sizeof(graphic_single_t);
                 graph_content = SINGLE_GRAPH;
+                va_end(arg);
                 return WriteData((uint8_t*)(&graph), graph_content);
                 //                memcpy(data_buffer, &graph, length);
                 break;
@@ -462,6 +464,7 @@ namespace communication {
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
                 //                length = sizeof(graphic_double_t);
                 graph_content = DOUBLE_GRAPH;
+                va_end(arg);
                 return WriteData((uint8_t*)(&graph), graph_content);
                 //                memcpy(data_buffer, &graph, length);
                 break;
@@ -474,6 +477,7 @@ namespace communication {
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
                 //                length = sizeof(graphic_five_t);
                 graph_content = FIVE_GRAPH;
+                va_end(arg);
                 return WriteData((uint8_t*)(&graph), graph_content);
                 //                memcpy(data_buffer, &graph, length);
                 break;
@@ -486,12 +490,14 @@ namespace communication {
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
                 //                length = sizeof(graphic_seven_t);
                 graph_content = SEVEN_GRAPH;
+                va_end(arg);
                 return WriteData((uint8_t*)(&graph), graph_content);
                 //                memcpy(data_buffer, &graph, length);
                 break;
             }
             default:;
         }
+        va_end(arg);
         return -1;
 
         //        return length;
