@@ -114,6 +114,12 @@ namespace communication {
         uint32_t end_x,
         uint32_t end_y
     ) {
+        // Todo: P2: Review: 短图形名未补齐 3 字节，会导致图形索引不稳定
+        /* "c"、`"a"、"gc"` 等短名称只覆盖部分字节，其余字节保留原值。协议使用全部 3 字节作为修改、删除的索引。
+            已复现：预填 A5 后绘制 "c"，名称为 A5 A5
+           63。如果新建的图形对象带有不同残留字节，相同名称的修改或删除就可能找不到原图形。
+            **修补建议：**每次写名称前先清零 graphic_name[3]，再按现有顺序复制。各绘图函数统一处理。
+         */
         for (int i = 0; i < 3 && name[i] != 0; i++)
             image->graphic_name[2 - i] = name[i];
         image->operate_type = graphOperate;
