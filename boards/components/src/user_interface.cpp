@@ -114,6 +114,12 @@ namespace communication {
         uint32_t end_x,
         uint32_t end_y
     ) {
+        // Todo: P2: Review: 短图形名未补齐 3 字节，会导致图形索引不稳定
+        /* "c"、`"a"、"gc"` 等短名称只覆盖部分字节，其余字节保留原值。协议使用全部 3 字节作为修改、删除的索引。
+            已复现：预填 A5 后绘制 "c"，名称为 A5 A5
+           63。如果新建的图形对象带有不同残留字节，相同名称的修改或删除就可能找不到原图形。
+            **修补建议：**每次写名称前先清零 graphic_name[3]，再按现有顺序复制。各绘图函数统一处理。
+         */
         for (int i = 0; i < 3 && name[i] != 0; i++)
             image->graphic_name[2 - i] = name[i];
         image->operate_type = graphOperate;
@@ -319,6 +325,7 @@ namespace communication {
         image->width = graph_width;
         image->start_x = start_x;
         image->start_y = start_y;
+        // Todo: Fix P2: 浮点图形仍按 IEEE 754 位模式编码，显示结果错误
         float float_data = graph_float;
         int32_t float2int_data;
         memcpy(&float2int_data, (uint8_t*)&float_data, 4);
@@ -413,6 +420,12 @@ namespace communication {
             case DELETE_GRAPH:
                 memcpy((uint8_t*)(&referee_->graphic_delete), data_buffer, sizeof(graphic_delete_t));
                 break;
+            case SENTRY_DECISION_CMD:
+                memcpy((uint8_t*)(&referee_->sentry_cmd), data_buffer, sizeof(sentry_cmd_t));
+                break;
+            case RADAR_DECISION_CMD:
+                memcpy((uint8_t*)(&referee_->radar_cmd), data_buffer, sizeof(radar_cmd_t));
+                break;
             default:
                 break;
         }
@@ -450,6 +463,7 @@ namespace communication {
                 graph.graphic_data_struct = va_arg(arg, graphic_data_t);
                 //                length = sizeof(graphic_single_t);
                 graph_content = SINGLE_GRAPH;
+                va_end(arg);
                 return WriteData((uint8_t*)(&graph), graph_content);
                 //                memcpy(data_buffer, &graph, length);
                 break;
@@ -462,6 +476,7 @@ namespace communication {
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
                 //                length = sizeof(graphic_double_t);
                 graph_content = DOUBLE_GRAPH;
+                va_end(arg);
                 return WriteData((uint8_t*)(&graph), graph_content);
                 //                memcpy(data_buffer, &graph, length);
                 break;
@@ -474,6 +489,7 @@ namespace communication {
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
                 //                length = sizeof(graphic_five_t);
                 graph_content = FIVE_GRAPH;
+                va_end(arg);
                 return WriteData((uint8_t*)(&graph), graph_content);
                 //                memcpy(data_buffer, &graph, length);
                 break;
@@ -486,12 +502,14 @@ namespace communication {
                     graph.graphic_data_struct[i] = va_arg(arg, graphic_data_t);
                 //                length = sizeof(graphic_seven_t);
                 graph_content = SEVEN_GRAPH;
+                va_end(arg);
                 return WriteData((uint8_t*)(&graph), graph_content);
                 //                memcpy(data_buffer, &graph, length);
                 break;
             }
             default:;
         }
+        va_end(arg);
         return -1;
 
         //        return length;
