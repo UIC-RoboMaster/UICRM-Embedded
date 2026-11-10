@@ -165,6 +165,19 @@ namespace communication {
         delete callback_thread_;
     }
 
+    /**
+     * @brief 组装协议数据帧并交给串口驱动发送。
+     *
+     * 调用 Protocol::Transmit 组帧；组帧成功后，将完整数据帧
+     * 交给串口驱动。
+     *
+     * @param cmd_id 协议命令码，例如裁判系统交互数据的 0x0301。
+     * @return 组帧成功时返回包含数据地址和完整帧长度的包；
+     *         组帧失败时返回数据地址为 nullptr、长度为 0 的包。
+     *
+     * @note 返回包表示组帧结果，不能单独用来确认串口发送已经完成。
+     * @note 返回的数据地址指向内部发送缓冲区，后续组帧可能覆盖该数据。
+     */
     package_t UARTProtocol::Transmit(int cmd_id) {
         package_t package = Protocol::Transmit(cmd_id);
         if (package.data && package.length > 0)
@@ -343,6 +356,14 @@ namespace communication {
                     case CHAR_GRAPH:
                         data_len = sizeof(graphic_character_t);
                         memcpy(data, &graphic_character, data_len);
+                        break;
+                    case SENTRY_DECISION_CMD:
+                        data_len = sizeof(sentry_cmd_t);
+                        memcpy(data, &sentry_cmd, data_len);
+                        break;
+                    case RADAR_DECISION_CMD:
+                        data_len = sizeof(radar_cmd_t);
+                        memcpy(data, &radar_cmd, data_len);
                         break;
                     default:
                         data_len = -1;

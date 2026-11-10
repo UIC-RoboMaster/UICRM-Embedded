@@ -478,13 +478,13 @@ namespace communication {
         graphic_data_t graphic_data_struct[2];
     } __packed graphic_double_t;
 
-    /* ===== GRAPHIC_FIVE 0x0105 ===== */
+    /* ===== GRAPHIC_FIVE 0x0103 ===== */
     typedef struct {
         robot_interactive_data_header_t header;
         graphic_data_t graphic_data_struct[5];
     } __packed graphic_five_t;
 
-    /* ===== GRAPHIC_SEVEN 0x0107 ===== */
+    /* ===== GRAPHIC_SEVEN 0x0104 ===== */
     typedef struct {
         robot_interactive_data_header_t header;
         graphic_data_t graphic_data_struct[7];
@@ -505,15 +505,19 @@ namespace communication {
         FIVE_GRAPH,
         SEVEN_GRAPH,
         CHAR_GRAPH,
+        SENTRY_DECISION_CMD,
+        RADAR_DECISION_CMD
     };
 
     /* ===== SENTRY_DECISION 0x0120 ===== */
     typedef struct {
+        robot_interactive_data_header_t header;
         uint32_t sentry_cmd;
     } __packed sentry_cmd_t;
 
     /* ===== RADAR_DECISION 0x0121 ===== */
     typedef struct {
+        robot_interactive_data_header_t header;
         uint8_t radar_cmd;
         uint8_t password_cmd;
         uint8_t password[6];
@@ -573,6 +577,13 @@ namespace communication {
         uint8_t user_data[30];
     } __packed custom_info_t;
 
+    /**
+     * @brief 裁判系统通信类。
+     *
+     * 基于串口协议处理裁判系统数据，保存已解析的数据，并组装
+     * 支持发送的协议数据。接收和发送的数据类型由 ProcessDataRx
+     * 和 ProcessDataTx 中的命令码分支决定。
+     */
     class Referee : public UARTProtocol {
       public:
         Referee(bsp::UART* uart);
@@ -598,12 +609,15 @@ namespace communication {
         sentry_info_t sentry_info{};                            // 0x020D
         radar_info_t radar_info{};                              // 0x020E
 
-        graphic_delete_t graphic_delete{};
-        graphic_single_t graphic_single{};
-        graphic_double_t graphic_double{};
-        graphic_five_t graphic_five{};
-        graphic_seven_t graphic_seven{};
-        graphic_character_t graphic_character{};
+        graphic_delete_t graphic_delete{};        // 0x0100
+        graphic_single_t graphic_single{};        // 0x0101
+        graphic_double_t graphic_double{};        // 0x0102
+        graphic_five_t graphic_five{};            // 0x0103
+        graphic_seven_t graphic_seven{};          // 0x0104
+        graphic_character_t graphic_character{};  // 0x0110
+
+        sentry_cmd_t sentry_cmd{};  // 0x0120
+        radar_cmd_t radar_cmd{};    // 0x0121
 
         custom_robot_data_t custom_robot_data{};                  // 0x0302
         map_command_t map_command{};                              // 0x0303
@@ -612,6 +626,17 @@ namespace communication {
         custom_client_map_command_t custom_client_map_command{};  // 0x0307
         custom_info_t custom_info{};                              // 0x0308
 
+        /**
+         * @brief 指定下一次 0x0301 交互数据组帧使用的 UI 内容类型。
+         *
+         * 调用前需填好对应的 graphic_* 成员，包括子命令 ID、发送者 ID、接收者 ID 和内容数据。
+         * 本函数仅记录类型，不复制数据或发送串口数据；随后调用 Transmit(STUDENT_INTERACTIVE)
+         * 时，ProcessDataTx() 才会复制所选成员，并将待发送类型重置为 NO_GRAPH。
+         *
+         * @param graph_content UI 内容类型：DELETE_GRAPH、SINGLE_GRAPH、DOUBLE_GRAPH、FIVE_GRAPH、
+         *                      SEVEN_GRAPH 或 CHAR_GRAPH；NO_GRAPH 表示没有待发送的 UI 内容。
+         * @note 连续调用会覆盖前一次选择，不会排队；每次发送 UI 内容前均需重新指定类型。
+         */
         void PrepareUIContent(content graph_content);
 
       private:

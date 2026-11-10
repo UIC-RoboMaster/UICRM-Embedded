@@ -414,6 +414,12 @@ namespace communication {
             case DELETE_GRAPH:
                 memcpy((uint8_t*)(&referee_->graphic_delete), data_buffer, sizeof(graphic_delete_t));
                 break;
+            case SENTRY_DECISION_CMD:
+                memcpy((uint8_t*)(&referee_->sentry_cmd), data_buffer, sizeof(sentry_cmd_t));
+                break;
+            case RADAR_DECISION_CMD:
+                memcpy((uint8_t*)(&referee_->radar_cmd), data_buffer, sizeof(radar_cmd_t));
+                break;
             default:
                 break;
         }
