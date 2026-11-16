@@ -26,12 +26,12 @@
 #include "cmsis_os.h"
 #include "task.h"
 
-namespace host_comm {
+namespace host {
 
     namespace {
         static_assert(
-            sizeof(host_gimbal_status_t) + referee_comm::HEADER_SIZE + referee_comm::CMD_ID_SIZE +
-                    referee_comm::TAIL_SIZE <=
+            sizeof(host_gimbal_status_t) + referee::HEADER_SIZE + referee::CMD_ID_SIZE +
+                    referee::TAIL_SIZE <=
                 TX_CAPACITY,
             "TX_CAPACITY 装不下最大的上行帧"
         );
@@ -79,7 +79,7 @@ namespace host_comm {
     }
 
     bool Host::PostForward(const uint8_t* frame, size_t size) {
-        if (frame == nullptr || size == 0 || size > referee_comm::MAX_PACKET) {
+        if (frame == nullptr || size == 0 || size > referee::MAX_PACKET) {
             ++stats_.forward_dropped;
             return false;
         }
@@ -123,7 +123,7 @@ namespace host_comm {
         static_cast<Host*>(ctx)->Feed(data, size);
     }
 
-    void Host::OnFrame(void* ctx, const referee_comm::Frame& frame, const uint8_t* raw, size_t size) {
+    void Host::OnFrame(void* ctx, const referee::Frame& frame, const uint8_t* raw, size_t size) {
         (void)raw;
         (void)size;
         Host* self = static_cast<Host*>(ctx);
@@ -231,18 +231,18 @@ namespace host_comm {
     size_t Host::Build(uint16_t cmd, uint8_t* out, size_t capacity) {
         switch (cmd) {
             case HOST_VERSION:
-                return referee_comm::Encode(out, capacity, seq_++, cmd, &version, sizeof(version));
+                return referee::Encode(out, capacity, seq_++, cmd, &version, sizeof(version));
             case ROBOT_STATUS:
-                return referee_comm::Encode(out, capacity, seq_++, cmd, &robot_status, sizeof(robot_status));
+                return referee::Encode(out, capacity, seq_++, cmd, &robot_status, sizeof(robot_status));
             case CHASSIS_STATUS:
-                return referee_comm::Encode(out, capacity, seq_++, cmd, &chassis_status, sizeof(chassis_status));
+                return referee::Encode(out, capacity, seq_++, cmd, &chassis_status, sizeof(chassis_status));
             case GIMBAL_STATUS:
-                return referee_comm::Encode(out, capacity, seq_++, cmd, &gimbal_status, sizeof(gimbal_status));
+                return referee::Encode(out, capacity, seq_++, cmd, &gimbal_status, sizeof(gimbal_status));
             case SHOOT_STATUS:
-                return referee_comm::Encode(out, capacity, seq_++, cmd, &shoot_status, sizeof(shoot_status));
+                return referee::Encode(out, capacity, seq_++, cmd, &shoot_status, sizeof(shoot_status));
             default:
                 return 0;
         }
     }
 
-}  // namespace host_comm
+}  // namespace host

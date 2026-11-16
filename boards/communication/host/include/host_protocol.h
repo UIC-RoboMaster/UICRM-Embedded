@@ -32,7 +32,7 @@
  * 方向：上行 MCU → minipc（0x05xx，状态与反馈）与下行 minipc → MCU
  * （0x04xx，控制指令）两个方向的 data 段字段都在本文件定义。
  *
- * 线格式与裁判系统一致（见 referee_comm::Encode，frame.h）：A5 帧头 + CRC8 + CRC16。
+ * 线格式与裁判系统一致（见 referee::Encode，frame.h）：A5 帧头 + CRC8 + CRC16。
  * 两条流共用同一链路时，minipc 按 cmd_id 号段区分：
  *   裁判 0x0001~0x0A06（转发原始帧）  下行 0x04xx  上行 0x05xx
  *
@@ -46,7 +46,7 @@
  * 各帧建议发送频率与触发方式见各结构体注释。
  */
 
-namespace host_comm {
+namespace host {
 
     /** @brief 协议版本，字段布局变更时递增。 */
     constexpr uint8_t HOST_PROTOCOL_VERSION = 2;
@@ -209,4 +209,4 @@ namespace host_comm {
     } __packed host_log_t;
     static_assert(sizeof(host_log_t) == 62, "0x0505 长度应为 62");
 
-}  // namespace host_comm
+}  // namespace host

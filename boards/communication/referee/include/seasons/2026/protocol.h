@@ -35,7 +35,7 @@
  *   0x0307 一览表标 103，结构体 delta_x/y 各 49 字节，实际 105
  */
 
-namespace referee_comm {
+namespace referee {
     namespace v2026 {
 
         /** @brief 2026 赛季命令码。 */
@@ -501,7 +501,7 @@ namespace referee_comm {
          * 未知命令静默忽略，保证与其它赛季固件共存于同一总线时互不干扰。
          * 并发：OnCommand 在接收线程中调用，跨线程读取状态须由调用方保证一致性。
          */
-        class Protocol final : public ::referee_comm::Protocol {
+        class Protocol final : public ::referee::Protocol {
           public:
             bool OnCommand(const Frame& frame) override;
             int OnBuild(uint16_t cmd_id, uint8_t* out, size_t capacity) override;
@@ -572,4 +572,4 @@ namespace referee_comm {
         };
 
     }  // namespace v2026
-}  // namespace referee_comm
+}  // namespace referee

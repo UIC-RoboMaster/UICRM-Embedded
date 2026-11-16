@@ -42,45 +42,45 @@ namespace {
     constexpr uint32_t BUFFER_SIZE = 1024;
     constexpr uint32_t PRINT_PERIOD_MS = 500;
 
-    host_comm::ByteLink* link = nullptr;
-    host_comm::Host* host = nullptr;
+    host::ByteLink* link = nullptr;
+    host::Host* comm = nullptr;
 
     /** @brief 所有字段填 1，让上位机一眼看出是联调帧。 */
     void FillTestPayload() {
-        host->version.host_version = 1;
-        host->version.referee_season = 1;
-        host->version.robot_type = 1;
-        host->version.chassis_type = 1;
-        host->version.gimbal_type = 1;
+        comm->version.host_version = 1;
+        comm->version.referee_season = 1;
+        comm->version.robot_type = 1;
+        comm->version.chassis_type = 1;
+        comm->version.gimbal_type = 1;
 
-        host->robot_status.enable = 1;
-        host->robot_status.controller_online = 1;
-        host->robot_status.robot_mode = 1;
-        host->robot_status.fric_mode = 1;
-        host->robot_status.shoot_mode = 1;
-        host->robot_status.module_online = 1;
+        comm->robot_status.enable = 1;
+        comm->robot_status.controller_online = 1;
+        comm->robot_status.robot_mode = 1;
+        comm->robot_status.fric_mode = 1;
+        comm->robot_status.shoot_mode = 1;
+        comm->robot_status.module_online = 1;
 
-        host->chassis_status.chassis_enabled = 1;
-        host->chassis_status.speed_x = 1.0f;
-        host->chassis_status.speed_y = 1.0f;
-        host->chassis_status.speed_turn = 1.0f;
-        host->chassis_status.feedback_angle = 1.0f;
+        comm->chassis_status.chassis_enabled = 1;
+        comm->chassis_status.speed_x = 1.0f;
+        comm->chassis_status.speed_y = 1.0f;
+        comm->chassis_status.speed_turn = 1.0f;
+        comm->chassis_status.feedback_angle = 1.0f;
 
-        host->gimbal_status.gimbal_enable = 1;
-        host->gimbal_status.autoaim_enabled = 1;
-        host->gimbal_status.pitch_angle = 1.0f;
-        host->gimbal_status.yaw_angle = 1.0f;
-        host->gimbal_status.roll_angle = 1.0f;
-        host->gimbal_status.upper_yaw_angle = 1.0f;
-        host->gimbal_status.fold_yaw_angle = 1.0f;
+        comm->gimbal_status.gimbal_enable = 1;
+        comm->gimbal_status.autoaim_enabled = 1;
+        comm->gimbal_status.pitch_angle = 1.0f;
+        comm->gimbal_status.yaw_angle = 1.0f;
+        comm->gimbal_status.roll_angle = 1.0f;
+        comm->gimbal_status.upper_yaw_angle = 1.0f;
+        comm->gimbal_status.fold_yaw_angle = 1.0f;
 
-        host->shoot_status.shoot_enable = 1;
-        host->shoot_status.fric_state = 1;
-        host->shoot_status.load_state = 1;
+        comm->shoot_status.shoot_enable = 1;
+        comm->shoot_status.fric_state = 1;
+        comm->shoot_status.load_state = 1;
     }
 
     void PrintStatus() {
-        const host_comm::Host::Stats& s = host->stats();
+        const host::Host::Stats& s = comm->stats();
         print(
             "tx=%luB/%luf rx=%lu/%lu drop=%lu retry=%lu\r\n",
             static_cast<unsigned long>(s.tx_bytes),
@@ -92,17 +92,17 @@ namespace {
         );
         print(
             "minipc=%d aim=%d nav=%d\r\n",
-            host->IsOnline() ? 1 : 0,
-            host->AimValid() ? 1 : 0,
-            host->NavigationValid() ? 1 : 0
+            comm->IsOnline() ? 1 : 0,
+            comm->AimValid() ? 1 : 0,
+            comm->NavigationValid() ? 1 : 0
         );
-        print("aim %.3f %.3f shoot=%u\r\n", host->aim.pitch, host->aim.yaw, host->aim.shoot);
+        print("aim %.3f %.3f shoot=%u\r\n", comm->aim.pitch, comm->aim.yaw, comm->aim.shoot);
         print(
             "nav %.3f %.3f %.3f ang=%.3f\r\n",
-            host->navigation.vx,
-            host->navigation.vy,
-            host->navigation.wz,
-            host->navigation.target_angle
+            comm->navigation.vx,
+            comm->navigation.vy,
+            comm->navigation.wz,
+            comm->navigation.target_angle
         );
     }
 }  // namespace
@@ -114,9 +114,9 @@ void RM_RTOS_Init(void) {
     auto* usb = new bsp::VirtualUSB();
     usb->SetupRx(BUFFER_SIZE);
     usb->SetupTx(BUFFER_SIZE);
-    link = new host_comm::UsbLink(usb);
+    link = new host::UsbLink(usb);
 
-    host = new host_comm::Host(*link);
+    comm = new host::Host(*link);
     FillTestPayload();
 }
 
@@ -132,10 +132,10 @@ void RM_RTOS_Default_Task(const void* arg) {
     while (true) {
         const uint32_t now = HAL_GetTick();
         // 两个例外：时间戳必须递增，shot_count 回填下行计数。
-        host->version.uptime_ms = now;
-        host->shoot_status.shot_count = static_cast<uint16_t>(host->stats().rx_frames);
+        comm->version.uptime_ms = now;
+        comm->shoot_status.shot_count = static_cast<uint16_t>(comm->stats().rx_frames);
 
-        host->Pump(now);
+        comm->Pump(now);
 
         if (now - last_print >= PRINT_PERIOD_MS) {
             last_print = now;

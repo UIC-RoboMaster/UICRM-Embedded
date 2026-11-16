@@ -22,7 +22,7 @@
 
 #include <string.h>
 
-namespace referee_comm {
+namespace referee {
     namespace v2026 {
 
         template <typename T>
@@ -199,4 +199,4 @@ namespace referee_comm {
         }
 
     }  // namespace v2026
-}  // namespace referee_comm
+}  // namespace referee

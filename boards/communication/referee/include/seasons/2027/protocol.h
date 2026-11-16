@@ -40,7 +40,7 @@
  *   删除 0x0102 补给站、0x0205 空中能量、0x0302、0x0306
  */
 
-namespace referee_comm {
+namespace referee {
     namespace v2027 {
 
         /** @brief 2027 赛季命令码。 */
@@ -500,7 +500,7 @@ namespace referee_comm {
          * 未知命令静默忽略，保证新旧固件在同一总线上互不干扰。
          * 并发：OnCommand 在接收线程中调用，跨线程读取状态须由调用方保证一致性。
          */
-        class Protocol final : public ::referee_comm::Protocol {
+        class Protocol final : public ::referee::Protocol {
           public:
             bool OnCommand(const Frame& frame) override;
             int OnBuild(uint16_t cmd_id, uint8_t* out, size_t capacity) override;
@@ -566,4 +566,4 @@ namespace referee_comm {
         };
 
     }  // namespace v2027
-}  // namespace referee_comm
+}  // namespace referee

@@ -22,7 +22,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace referee_comm {
+namespace referee {
 
     /*
      * 裁判系统线格式（2018~2027 各赛季一致，改动需先核实官方规则）：
@@ -123,4 +123,4 @@ namespace referee_comm {
         size_t used_ = 0;                  ///< 缓存中待处理字节数。
     };
 
-}  // namespace referee_comm
+}  // namespace referee

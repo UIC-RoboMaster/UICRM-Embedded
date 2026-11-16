@@ -29,7 +29,7 @@ namespace bsp {
 #endif
 }  // namespace bsp
 
-namespace host_comm {
+namespace host {
 
     /**
      * @brief 面向字节流的物理链路。
@@ -103,4 +103,4 @@ namespace host_comm {
     };
 #endif
 
-}  // namespace host_comm
+}  // namespace host

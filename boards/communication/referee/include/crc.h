@@ -33,7 +33,7 @@
  * 算法与查表顺序保持原样。
  */
 
-namespace referee_comm {
+namespace referee {
 
     /** @brief CRC8 初值。 */
     constexpr uint8_t CRC8_INIT = 0xff;
@@ -90,4 +90,4 @@ namespace referee_comm {
      */
     void Append_CRC16_Check_Sum(uint8_t* pchMessage, uint32_t dwLength);
 
-}  // namespace referee_comm
+}  // namespace referee

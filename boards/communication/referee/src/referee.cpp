@@ -23,7 +23,7 @@
 #include "bsp_os.h"
 #include "crc.h"
 
-namespace referee_comm {
+namespace referee {
 
     int Protocol::OnBuild(uint16_t cmd_id, uint8_t* out, size_t capacity) {
         (void)cmd_id;
@@ -112,4 +112,4 @@ namespace referee_comm {
         referee->Feed(referee->read_ptr_, referee->read_len_);
     }
 
-}  // namespace referee_comm
+}  // namespace referee

@@ -20,7 +20,7 @@
 
 #include "crc.h"
 
-namespace referee_comm {
+namespace referee {
 
     namespace {
 
@@ -119,4 +119,4 @@ namespace referee_comm {
         pchMessage[dwLength - 1] = static_cast<uint8_t>((wCRC >> 8) & 0x00ff);
     }
 
-}  // namespace referee_comm
+}  // namespace referee

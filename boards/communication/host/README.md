@@ -211,9 +211,9 @@ uart->SetBaudrate(921600);
 uart->SetupRx(1024);
 uart->SetupTx(1024);
 
-auto* link = new host_comm::UartLink(uart);
-auto* host = new host_comm::Host(*link);
-auto* referee = new referee_comm::Referee(referee_uart, protocol, host);
+auto* link = new host::UartLink(uart);
+auto* comm = new host::Host(*link);
+auto* referee = new referee::Referee(referee_uart, protocol, comm);
 
 // 1 kHz 任务里：填数据 + 推一拍
 void minipc_task(void*) {

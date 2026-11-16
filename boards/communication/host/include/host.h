@@ -24,9 +24,9 @@
 
 #include "frame.h"
 #include "link.h"
-#include "protocol.h"
+#include "host_protocol.h"
 
-namespace host_comm {
+namespace host {
 
     /** @brief 转发队列深度。1 kHz 轮询下一次只需吸收 1 ms 内的裁判突发，4 槽足够。 */
     constexpr size_t FORWARD_DEPTH = 4;
@@ -58,7 +58,7 @@ namespace host_comm {
      * 并发：Pump 只允许单一线程调用；PostForward 由裁判接收线程调用；
      * 下行状态在链路中断中写入，应用侧读取时以 Valid() 判断时效。
      */
-    class Host final : public referee_comm::ForwardSink {
+    class Host final : public referee::ForwardSink {
       public:
         /** @brief 运行计数，用于台架观测链路质量。 */
         struct Stats {
@@ -120,7 +120,7 @@ namespace host_comm {
         static void OnRx(void* ctx, const uint8_t* data, size_t size);
 
         /** @brief 下行帧分发，由 Decoder 回调。 */
-        static void OnFrame(void* ctx, const referee_comm::Frame& frame, const uint8_t* raw, size_t size);
+        static void OnFrame(void* ctx, const referee::Frame& frame, const uint8_t* raw, size_t size);
 
         /** @brief 按命令码构造一帧并写出，上一帧未写完时返回 false。 */
         bool Emit(uint16_t cmd);
@@ -134,7 +134,7 @@ namespace host_comm {
         void EmitDue(size_t index, uint32_t now_ms);
 
         ByteLink& link_;
-        referee_comm::Decoder decoder_;
+        referee::Decoder decoder_;
 
         /** @brief 上行调度表，500Hz 姿态在最前，其余按周期放宽。 */
         Schedule schedule_[SCHEDULE_COUNT] = {
@@ -156,7 +156,7 @@ namespace host_comm {
 
         struct ForwardSlot {
             uint16_t length;
-            uint8_t data[referee_comm::MAX_PACKET];
+            uint8_t data[referee::MAX_PACKET];
         };
         ForwardSlot forward_[FORWARD_DEPTH] = {};
         volatile uint32_t forward_head_ = 0;  ///< 生产者写入位置。
@@ -169,4 +169,4 @@ namespace host_comm {
         Stats stats_{};
     };
 
-}  // namespace host_comm
+}  // namespace host

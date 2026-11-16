@@ -24,7 +24,7 @@
 
 #include "crc.h"
 
-namespace referee_comm {
+namespace referee {
 
     size_t Encode(
         uint8_t* out, size_t capacity, uint8_t seq, uint16_t cmd_id, const void* payload, uint16_t length
@@ -109,4 +109,4 @@ namespace referee_comm {
         Discard(next);
     }
 
-}  // namespace referee_comm
+}  // namespace referee

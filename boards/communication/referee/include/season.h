@@ -29,12 +29,12 @@
  *           ...
  *           DEFINES HAS_REFEREE REFEREE_SEASON=2027)
  *
- * 业务代码统一通过 referee_comm::season 引用具体实现，不直接写 v2026 / v2027，
+ * 业务代码统一通过 referee::season 引用具体实现，不直接写 v2026 / v2027，
  * 切换赛季时只改 program 的 CMakeLists，不动任何业务源文件：
  *
  *   #include "season.h"
- *   referee_comm::season::Protocol protocol;
- *   referee_comm::Referee referee(&huart3, protocol);
+ *   referee::season::Protocol protocol;
+ *   referee::Referee referee(&huart3, protocol);
  */
 
 #ifndef REFEREE_SEASON
@@ -43,14 +43,14 @@
 
 #if REFEREE_SEASON == 2026
 #include "seasons/2026/protocol.h"
-namespace referee_comm {
+namespace referee {
     namespace season = v2026;
-}  // namespace referee_comm
+}  // namespace referee
 #elif REFEREE_SEASON == 2027
 #include "seasons/2027/protocol.h"
-namespace referee_comm {
+namespace referee {
     namespace season = v2027;
-}  // namespace referee_comm
+}  // namespace referee
 #else
 #error "Unsupported REFEREE_SEASON, expected 2026 or 2027"
 #endif

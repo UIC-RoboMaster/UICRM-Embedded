@@ -25,7 +25,7 @@
 #include "bsp_usb.h"
 #endif
 
-namespace host_comm {
+namespace host {
 
     void BspLink::SetRxHandler(RxHandler handler, void* ctx) {
         handler_ = handler;
@@ -66,4 +66,4 @@ namespace host_comm {
     }
 #endif
 
-}  // namespace host_comm
+}  // namespace host

@@ -26,7 +26,7 @@
 #include "bsp_uart.h"
 #include "frame.h"
 
-namespace referee_comm {
+namespace referee {
 
     /**
      * @brief 赛季相关的载荷解码与编码接口。
@@ -149,4 +149,4 @@ namespace referee_comm {
         uint32_t online_threshold_ = 250;    ///< 离线判定阈值，单位毫秒。
     };
 
-}  // namespace referee_comm
+}  // namespace referee
