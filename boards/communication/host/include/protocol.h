@@ -21,16 +21,18 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "referee.h"
-#include "../../../../../build/hero-merge-check/source/boards/drivers/include/protocol.h"
+// 本文件不依赖 HAL；未包含 STM32 头文件时自行提供紧凑布局修饰。
+#ifndef __packed
+#define __packed __attribute__((packed))
+#endif
 
 /*
  * UICRM Host 协议 v1.0 —— 通信字段定义。
  *
- * 方向：本文件只定义 MCU → minipc（上位机）的上行字段；
- * 下行（minipc → MCU）字段另行设计，暂不在本文件出现。
+ * 方向：上行 MCU → minipc（0x05xx，状态与反馈）与下行 minipc → MCU
+ * （0x04xx，控制指令）两个方向的 data 段字段都在本文件定义。
  *
- * 线格式与裁判系统一致（见 referee.h）：A5 帧头 + CRC8 + CRC16。
+ * 线格式与裁判系统一致（见 referee_comm::Encode，frame.h）：A5 帧头 + CRC8 + CRC16。
  * 两条流共用同一链路时，minipc 按 cmd_id 号段区分：
  *   裁判 0x0001~0x0A06（转发原始帧）  下行 0x04xx  上行 0x05xx
  *
@@ -47,17 +49,21 @@
 namespace host_comm {
 
     /** @brief 协议版本，字段布局变更时递增。 */
-    constexpr uint8_t HOST_PROTOCOL_VERSION = 1;
+    constexpr uint8_t HOST_PROTOCOL_VERSION = 2;
 
     /**
-     * @brief 上行命令码（MCU → minipc）。
-     * @details 号段 0x05xx。删除的号位不重用，避免新旧固件混跑时语义错位；
+     * @brief 命令码，上行 0x05xx（MCU → minipc），下行 0x04xx（minipc → MCU）。
+     * @details 删除的号位不重用，避免新旧固件混跑时语义错位；
      * 唯一例外是 0x0501，旧版为功率热量血量上传（已由裁判转发覆盖），
      * 新协议改为机器人状态，混跑时以 0x0500 的协议版本区分：
-     *   0x0401 原 PACK 调试载荷     —— 保留不重用
-     *   0x0403 原 NO_TARGET_FLAG    —— 已并入 0x0402 下行设计（待定稿）
+     *   0x0401 原 PACK 调试载荷     —— 现改为导航控制，旧载荷不再兼容
+     *   0x0403 原 NO_TARGET_FLAG    —— 已并入 0x0400，保留不重用
+     *   0x0404 原 SHOOT_CMD         —— 已并入 0x0400，保留不重用
      */
     enum Cmd : uint16_t {
+        AIM_CMD = 0x0400,          ///< 自瞄目标角与开火许可，500Hz，延迟敏感
+        NAVIGATION_CMD = 0x0401,   ///< 底盘导航速度指令，50~100Hz
+
         HOST_VERSION = 0x0500,     ///< 协议版本握手与硬件构型，1Hz，兼作 MCU 心跳
         ROBOT_STATUS = 0x0501,     ///< 机器人状态汇总，1Hz + 变化即发
         CHASSIS_STATUS = 0x0502,   ///< 底盘速度反馈，100Hz
@@ -65,6 +71,42 @@ namespace host_comm {
         SHOOT_STATUS = 0x0504,     ///< 发射模块状态，50Hz
         HOST_LOG = 0x0505,         ///< 调试日志通道，事件驱动，可选
     };
+
+    /* ===== 0x0400 自瞄控制 9 字节 500Hz ===== */
+    /**
+     * @brief minipc 下发的云台目标角与开火许可。
+     * @details pitch/yaw 为世界系绝对角（IMU 零位，与 0x0503 的 pitch_angle/yaw_angle
+     * 同一参考），不是增量，MCU 直接作为闭环目标，无需累加。
+     * shoot 只是 minipc 的开火意图，最终由 MCU 结合云台/发射使能、摩擦轮达速、
+     * 弹量与热量裁决后才拨弹，与 0x0503 的 autoaim_enabled 构成双向确认：
+     * minipc 收到 autoaim_enabled=1 才发目标角与 shoot=1，MCU 收到超时未更新即停火。
+     * 目标丢失时 minipc 应停止发送本帧（或置 shoot=0），MCU 侧须实现接收超时保护，
+     * 不能依赖对端主动停止。
+     */
+    typedef struct {
+        float pitch;    ///< 世界系绝对 pitch，rad
+        float yaw;      ///< 世界系绝对 yaw，rad
+        uint8_t shoot;  ///< 1 允许发弹，0 禁止发弹
+    } __packed host_aim_cmd_t;
+    static_assert(sizeof(host_aim_cmd_t) == 9, "0x0400 长度应为 9");
+
+    /* ===== 0x0401 导航控制 16 字节 50~100Hz ===== */
+    /**
+     * @brief minipc 下发的底盘速度指令，导航闭环用。
+     * @details vx/vy/wz 为体坐标系指令，x 前、y 左、wz 逆时针为正，与 0x0502 反馈同向。
+     * vy 的线上符号：发送端下发前已取反（沿用 SerialBoard::send 的约定），此约定已确认保留，
+     * 解析时按该约定理解，不要再次取反。
+     * target_angle 为目标航向角（rad），当前固定下发 0，待导航侧提供航向后透传；
+     * 闭环所需的底盘航向反馈见 0x0502 的 feedback_angle。
+     * 指令为绝对速度而非增量，minipc 须周期下发，MCU 侧超时即按停车处理。
+     */
+    typedef struct {
+        float vx;            ///< 体坐标系前进速度，m/s
+        float vy;            ///< 体坐标系左移速度，m/s，发送端已取反
+        float wz;            ///< 转向角速度，rad/s，逆时针为正
+        float target_angle;  ///< 目标航向角，rad，当前固定 0
+    } __packed host_navigation_cmd_t;
+    static_assert(sizeof(host_navigation_cmd_t) == 16, "0x0401 长度应为 16");
 
     /* ===== 0x0500 协议版本与硬件构型 10 字节 1Hz ===== */
     /**
