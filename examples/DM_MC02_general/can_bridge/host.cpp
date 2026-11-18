@@ -38,7 +38,7 @@ void RM_RTOS_Init(void) {
     can1 = new bsp::CAN(&hfdcan1, true, 8);
     can_bridge = new communication::CanBridge(can1, 0x02);
 
-    dbus = new controller::DBUS(&huart3);
+    dbus = new controller::DBUS(&huart5);
 }
 
 void RM_RTOS_Default_Task(const void* argument) {

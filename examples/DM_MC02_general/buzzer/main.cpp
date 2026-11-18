@@ -25,7 +25,7 @@
 #include "tim.h"
 
 void RM_RTOS_Init(void) {
-    driver::Buzzer buzzer(&htim12, 2, 1000000);
+    driver::Buzzer buzzer(&BOARD_TIM_BUZZER, BOARD_TIM_BUZZER_CH, 1000000);
     buzzer.SingSong(driver::songs::DJI);
     HAL_Delay(500);
     //    buzzer.SingSong(driver::songs::Laohu);

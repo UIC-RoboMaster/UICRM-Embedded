@@ -21,13 +21,13 @@
 #include "AHRS.h"
 
 #include "BMI088.h"
-#include "IST8310.h"
 #include "bsp_gpio.h"
 #include "bsp_os.h"
 #include "bsp_spi.h"
 #include "cmsis_os.h"
 #include "heater.h"
 #include "main.h"
+#include "tim.h"
 
 #define RX_SIGNAL (1 << 0)
 
@@ -83,7 +83,7 @@ void RM_RTOS_Init(void) {
     bmi088 = new imu::BMI088(bmi088Init);
 
     ahrs = new control::AHRS(false);
-    heater_pwm = new bsp::PWM(&htim3, 4, 1000000, 500, 0);
+    heater_pwm = new bsp::PWM(&BOARD_TIM_IMUHEATER, BOARD_TIM_IMUHEATER_CH, 1000000, 500, 0);
     driver::heater_init_t heater_init = {
         .pwm = heater_pwm,
         .target_temp = 45.0f,

@@ -24,12 +24,13 @@
 #include "cmsis_os.h"
 #include "dbus.h"
 #include "main.h"
+#include "tim.h"
 #include "utils.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
 
-// Refer to typeA datasheet for channel detail
+// Refer to DM_MC02 schematic for channel detail
 #define LEFT_MOTOR_PWM_CHANNEL 1
 #define RIGHT_MOTOR_PWM_CHANNEL 3
 #define TIM_CLOCK_FREQ 1000000
@@ -44,9 +45,9 @@ void RM_RTOS_Init() {
     dbus = new controller::DBUS(&huart5);
     print_use_uart(&huart1);
     motor1 =
-        new driver::PWMMotorBase(&htim1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
+        new driver::PWMMotorBase(&BOARD_TIM_PWM1, LEFT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
     motor2 =
-        new driver::PWMMotorBase(&htim1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
+        new driver::PWMMotorBase(&BOARD_TIM_PWM1, RIGHT_MOTOR_PWM_CHANNEL, TIM_CLOCK_FREQ, MOTOR_OUT_FREQ, SNAIL_IDLE_THROTTLE);
     motor1->SetOutput(0);
     motor2->SetOutput(0);
     // Snail need to be run at idle throttle for some

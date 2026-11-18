@@ -28,7 +28,7 @@
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
 
-// Refer to typeA datasheet for channel detail
+// Refer to DM_MC02 schematic for channel detail
 static bsp::CAN* can1 = nullptr;
 static driver::Motor3508* motor1 = nullptr;
 

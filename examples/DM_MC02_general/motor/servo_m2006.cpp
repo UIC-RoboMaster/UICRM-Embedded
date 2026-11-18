@@ -25,6 +25,7 @@
 #include "cmsis_os.h"
 #include "dbus.h"
 #include "main.h"
+#include "tim.h"
 
 bsp::CAN* can2 = NULL;
 driver::DjiMotorBase* motor1 = NULL;
@@ -33,7 +34,7 @@ controller::DBUS* dbus = nullptr;
 float load_step_angle = 2 * PI / 8;
 
 void RM_RTOS_Init() {
-    bsp::SetHighresClockTimer(&htim24);
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     HAL_Delay(200);
     print_use_uart(&huart1);
     dbus = new controller::DBUS(&huart5);

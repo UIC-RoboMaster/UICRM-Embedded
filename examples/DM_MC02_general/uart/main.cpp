@@ -38,9 +38,7 @@ void uartReply(void* arg) {
 }
 
 void RM_RTOS_Init(void) {
-    /// because imu occupies uart1, no other UART can be used, so we need to use UART to print
-    // print_use_uart(&huart1);
-
+    // 本示例占用 USART10 做收发回环；需要调试输出时用 print_use_rtt()
     UART = new bsp::UART(&huart10);
 
     UART->SetupTx(200, false);

@@ -20,10 +20,12 @@
 
 #include "DjiMotorBase.h"
 #include "bsp_gpio.h"
+#include "bsp_os.h"
 #include "bsp_print.h"
 #include "cmsis_os.h"
 #include "main.h"
 #include "pid.h"
+#include "tim.h"
 
 #define KEY_GPIO_GROUP KEY_GPIO_Port
 #define KEY_GPIO_PIN KEY_Pin
@@ -32,12 +34,14 @@ static bsp::CAN* can1 = nullptr;
 static driver::Motor6020* motor1 = nullptr;
 
 void RM_RTOS_Init() {
+    bsp::SetHighresClockTimer(&BOARD_TIM_SYS);
     print_use_uart(&huart1);
-    can1 = new bsp::CAN(&hfdcan1);
-    motor1 = new driver::Motor6020(can1, 0x209, 0x2fe);
+
+    can1 = new bsp::CAN(&hfdcan3);
+    motor1 = new driver::Motor6020(can1, 0x20A);
     motor1->SetTransmissionRatio(1);
     control::ConstrainedPID::PID_Init_t omega_pid_init = {
-        .kp = 200,
+        .kp = 50,
         .ki = 1,
         .kd = 0,
         .max_out = 16384,
