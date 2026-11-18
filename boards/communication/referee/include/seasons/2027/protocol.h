@@ -295,7 +295,7 @@ namespace referee {
         } __packed interaction_layer_delete_t;
         static_assert(sizeof(interaction_layer_delete_t) == 2, "0x0100 长度应为 2");
 
-        /** @brief 单个图形，15 字节。 */
+        /** @brief 0x0101 单个图形，15 字节。 */
         typedef struct {
             uint8_t figure_name[3];     ///< 图形名，作为删除与修改的索引
             uint32_t operate_type : 3;  ///< 0 空操作，1 增加，2 修改，3 删除
@@ -312,6 +312,21 @@ namespace referee {
             uint32_t details_e : 11;  ///< 结束角度或小数部分
         } __packed interaction_figure_t;
         static_assert(sizeof(interaction_figure_t) == 15, "单个图形长度应为 15");
+
+        /** @brief 绘制 N 个图形 */
+        template <unsigned N>
+        struct __packed interaction_figures_t {
+            static_assert(N == 1 || N == 2 || N == 5 || N == 7, "图形数量仅支持 1、2、5、7");
+            interaction_figure_t interaction_figure[N];
+            static_assert(sizeof(interaction_figure) == 15 * N, "单个图形长度应为 15 * N");
+        };
+
+        /** @brief 0x0102 绘制 2 个图形 */
+        typedef interaction_figures_t<2> interaction_figure_2_t;
+        /** @brief 0x0103 绘制 5 个图形 */
+        typedef interaction_figures_t<5> interaction_figure_5_t;
+        /** @brief 0x0104 绘制 7 个图形 */
+        typedef interaction_figures_t<7> interaction_figure_7_t;
 
         /** @brief 0x0110 字符图形 45 字节，机器人发给选手端。 */
         typedef struct {
