@@ -84,7 +84,7 @@ namespace referee {
             RADAR_OPPONENT_KEY = 0x0A06,
         };
 
-        /* ===== 0x0001 比赛状态 11 字节 1Hz ===== */
+        /** @brief 0x0001 比赛状态 11 字节 1Hz */
         typedef struct {
             uint8_t game_type : 4;  ///< 1 超级对抗赛，2 单项赛，3 ICRA，4 联盟赛 3V3，5 联盟赛步兵对抗
             uint8_t game_progress : 4;   ///< 0 未开始，1 准备，2 自检，3 倒计时，4 比赛中，5 结算
@@ -93,13 +93,13 @@ namespace referee {
         } __packed game_status_t;
         static_assert(sizeof(game_status_t) == 11, "0x0001 长度应为 11");
 
-        /* ===== 0x0002 比赛结果 1 字节 ===== */
+        /** @brief 0x0002 比赛结果 1 字节 */
         typedef struct {
             uint8_t winner;  ///< 0 平局，1 红方胜，2 蓝方胜
         } __packed game_result_t;
         static_assert(sizeof(game_result_t) == 1, "0x0002 长度应为 1");
 
-        /* ===== 0x0003 机器人血量 24 字节 3Hz ===== */
+        /** @brief 0x0003 机器人血量 24 字节 3Hz */
         typedef struct {
             uint16_t ally_1_robot_HP;       ///< 己方 1 号重装血量
             uint16_t reserved;              ///< 保留位
@@ -116,14 +116,14 @@ namespace referee {
         } __packed game_robot_HP_t;
         static_assert(sizeof(game_robot_HP_t) == 24, "0x0003 长度应为 24");
 
-        /* ===== 0x0101 场地事件 8 字节 1Hz ===== */
+        /** @brief 0x0101 场地事件 8 字节 1Hz */
         typedef struct {
             uint32_t event_data;    ///< 增益点与阵地状态位域
             uint32_t event_data_2;  ///< 地形跨越与飞镖命中位域
         } __packed event_data_t;
         static_assert(sizeof(event_data_t) == 8, "0x0101 长度应为 8");
 
-        /* ===== 0x0104 裁判警告 3 字节 ===== */
+        /** @brief 0x0104 裁判警告 3 字节 */
         typedef struct {
             uint8_t level;               ///< 判罚等级
             uint8_t offending_robot_id;  ///< 违规机器人 ID
@@ -131,14 +131,14 @@ namespace referee {
         } __packed referee_warning_t;
         static_assert(sizeof(referee_warning_t) == 3, "0x0104 长度应为 3");
 
-        /* ===== 0x0105 飞镖发射数据 3 字节 1Hz ===== */
+        /** @brief 0x0105 飞镖发射数据 3 字节 1Hz */
         typedef struct {
             uint8_t dart_remaining_time;  ///< 飞镖发射站剩余时间
             uint16_t dart_info;           ///< 飞镖状态位域
         } __packed dart_info_t;
         static_assert(sizeof(dart_info_t) == 3, "0x0105 长度应为 3");
 
-        /* ===== 0x0201 机器人性能体系 17 字节 10Hz ===== */
+        /** @brief 0x0201 机器人性能体系 17 字节 10Hz */
         typedef struct {
             uint8_t robot_id;                             ///< 本机器人 ID
             uint8_t robot_level;                          ///< 机器人等级
@@ -154,7 +154,7 @@ namespace referee {
         } __packed robot_status_t;
         static_assert(sizeof(robot_status_t) == 17, "0x0201 长度应为 17");
 
-        /* ===== 0x0202 缓冲能量与射击热量 14 字节 10Hz ===== */
+        /** @brief 0x0202 缓冲能量与射击热量 14 字节 10Hz */
         typedef struct {
             uint16_t reserved_0;                ///< 保留位
             uint16_t reserved_1;                ///< 保留位
@@ -165,7 +165,7 @@ namespace referee {
         } __packed power_heat_data_t;
         static_assert(sizeof(power_heat_data_t) == 14, "0x0202 长度应为 14");
 
-        /* ===== 0x0203 机器人位置 12 字节 1Hz ===== */
+        /** @brief 0x0203 机器人位置 12 字节 1Hz */
         typedef struct {
             float x;      ///< x 坐标，单位 m
             float y;      ///< y 坐标，单位 m
@@ -173,7 +173,7 @@ namespace referee {
         } __packed robot_pos_t;
         static_assert(sizeof(robot_pos_t) == 12, "0x0203 长度应为 12");
 
-        /* ===== 0x0204 机器人增益 7 字节 3Hz ===== */
+        /** @brief 0x0204 机器人增益 7 字节 3Hz */
         typedef struct {
             uint8_t recovery_buff;       ///< 回血增益百分比
             uint16_t cooling_buff;       ///< 冷却增益直接值，2027 扩为 16 位
@@ -183,7 +183,7 @@ namespace referee {
         } __packed buff_t;
         static_assert(sizeof(buff_t) == 7, "0x0204 长度应为 7");
 
-        /* ===== 0x0206 伤害状态 7 字节 ===== */
+        /** @brief 0x0206 伤害状态 7 字节 */
         typedef struct {
             uint8_t armor_id : 4;             ///< 装甲或测速模块 ID
             uint8_t HP_deduction_reason : 4;  ///< 掉血类型
@@ -193,7 +193,7 @@ namespace referee {
         } __packed hurt_data_t;
         static_assert(sizeof(hurt_data_t) == 7, "0x0206 长度应为 7");
 
-        /* ===== 0x0207 实时射击 7 字节 ===== */
+        /** @brief 0x0207 实时射击 7 字节 */
         typedef struct {
             uint8_t bullet_type;          ///< 1 为 17mm，2 为 42mm
             uint8_t shooter_number;       ///< 1 为 17mm 发射机构，3 为 42mm 发射机构
@@ -202,7 +202,7 @@ namespace referee {
         } __packed shoot_data_t;
         static_assert(sizeof(shoot_data_t) == 7, "0x0207 长度应为 7");
 
-        /* ===== 0x0208 允许发弹量 8 字节 10Hz ===== */
+        /** @brief 0x0208 允许发弹量 8 字节 10Hz */
         typedef struct {
             uint16_t projectile_allowance_17mm;      ///< 17mm 允许发弹量
             uint16_t projectile_allowance_42mm;      ///< 42mm 允许发弹量
@@ -211,14 +211,14 @@ namespace referee {
         } __packed projectile_allowance_t;
         static_assert(sizeof(projectile_allowance_t) == 8, "0x0208 长度应为 8");
 
-        /* ===== 0x0209 RFID 状态 6 字节 3Hz ===== */
+        /** @brief 0x0209 RFID 状态 6 字节 3Hz */
         typedef struct {
             uint32_t rfid_status;    ///< 增益点 RFID 状态位域
             uint16_t rfid_status_2;  ///< 扩展 RFID 状态位域，2027 新增
         } __packed rfid_status_t;
         static_assert(sizeof(rfid_status_t) == 6, "0x0209 长度应为 6");
 
-        /* ===== 0x020A 飞镖选手端指令 6 字节 3Hz ===== */
+        /** @brief 0x020A 飞镖选手端指令 6 字节 3Hz */
         typedef struct {
             uint8_t dart_launch_opening_status;  ///< 1 关闭，2 开关中，0 已开启
             uint8_t reserved;                    ///< 保留位
@@ -227,7 +227,7 @@ namespace referee {
         } __packed dart_client_cmd_t;
         static_assert(sizeof(dart_client_cmd_t) == 6, "0x020A 长度应为 6");
 
-        /* ===== 0x020B 地面机器人位置 40 字节 1Hz ===== */
+        /** @brief 0x020B 地面机器人位置 40 字节 1Hz */
         typedef struct {
             float heavyengineer_x;  ///< 己方重装 x，单位 m
             float heavyengineer_y;  ///< 己方重装 y，单位 m
@@ -242,13 +242,13 @@ namespace referee {
         } __packed ground_robot_position_t;
         static_assert(sizeof(ground_robot_position_t) == 40, "0x020B 长度应为 40");
 
-        /* ===== 0x020C 雷达标记进度 2 字节 1Hz ===== */
+        /** @brief 0x020C 雷达标记进度 2 字节 1Hz */
         typedef struct {
             uint16_t mark_progress;  ///< 双方易伤与特殊标识位域，2027 压为 16 位
         } __packed radar_mark_data_t;
         static_assert(sizeof(radar_mark_data_t) == 2, "0x020C 长度应为 2");
 
-        /* ===== 0x020D 哨兵自主决策信息 14 字节 1Hz ===== */
+        /** @brief 0x020D 哨兵自主决策信息 14 字节 1Hz */
         typedef struct {
             uint32_t sentry_info;    ///< 兑换与复活状态位域
             uint16_t sentry_info_2;  ///< 姿态与脱战状态位域，2027 新增
@@ -256,7 +256,7 @@ namespace referee {
         } __packed sentry_info_t;
         static_assert(sizeof(sentry_info_t) == 14, "0x020D 长度应为 14");
 
-        /* ===== 0x020E 雷达自主决策信息 8 字节 1Hz ===== */
+        /** @brief 0x020E 雷达自主决策信息 8 字节 1Hz */
         typedef struct {
             uint8_t radar_info;         ///< 双倍易伤与加密等级位域
             uint8_t radar_info_2;       ///< 装甲加固状态位域，2027 新增
@@ -266,9 +266,9 @@ namespace referee {
         } __packed radar_info_t;
         static_assert(sizeof(radar_info_t) == 8, "0x020E 长度应为 8");
 
-        /* ===== 0x0301 机器人交互数据 118 字节 ===== */
+        /** @brief 0x0301 机器人交互数据 118 字节 */
 
-        /** @brief 交互数据命令码。 */
+        /** @brief 0x0301 机器人交互协议的子内容 ID。 */
         enum InteractionCmd : uint16_t {
             LAYER_DELETE = 0x0100,
             FIGURE_ONE = 0x0101,
@@ -288,7 +288,7 @@ namespace referee {
         } __packed robot_interaction_t;
         static_assert(sizeof(robot_interaction_t) == 118, "0x0301 长度应为 118");
 
-        /** @brief 删除图层。 */
+        /** @brief 0x0100 删除图层。 */
         typedef struct {
             uint8_t delete_type;  ///< 0 空操作，1 删除图层，2 删除所有
             uint8_t layer;        ///< 图层数 0~9
@@ -342,7 +342,7 @@ namespace referee {
         } __packed radar_cmd_t;
         static_assert(sizeof(radar_cmd_t) == 13, "0x0121 长度应为 13");
 
-        /* ===== 0x0303 选手端小地图交互 12 字节 ===== */
+        /** @brief 0x0303 选手端小地图交互 12 字节 */
         typedef struct {
             float target_position_x;  ///< 目标 x，单位 m
             float target_position_y;  ///< 目标 y，单位 m
@@ -352,7 +352,7 @@ namespace referee {
         } __packed map_command_t;
         static_assert(sizeof(map_command_t) == 12, "0x0303 长度应为 12");
 
-        /* ===== 0x0305 小地图机器人数据 48 字节 ===== */
+        /** @brief 0x0305 小地图机器人数据 48 字节 */
         typedef struct {
             uint16_t opponent_heavyengineer_position_x;  ///< 对方重装 x，单位 cm
             uint16_t opponent_heavyengineer_position_y;  ///< 对方重装 y，单位 cm
@@ -381,7 +381,7 @@ namespace referee {
         } __packed map_robot_data_t;
         static_assert(sizeof(map_robot_data_t) == 48, "0x0305 长度应为 48");
 
-        /* ===== 0x0307 小地图路径 105 字节 ===== */
+        /** @brief 0x0307 小地图路径 105 字节 */
         typedef struct {
             uint8_t intention;          ///< 意图
             uint16_t start_position_x;  ///< 路径起点 x，单位 dm
@@ -392,7 +392,7 @@ namespace referee {
         } __packed map_data_t;
         static_assert(sizeof(map_data_t) == 105, "0x0307 长度应为 105");
 
-        /* ===== 0x0308 选手端自定义消息 34 字节 ===== */
+        /** @brief 0x0308 选手端自定义消息 34 字节 */
         typedef struct {
             uint16_t sender_id;     ///< 发送者 ID
             uint16_t receiver_id;   ///< 接收者 ID
@@ -400,19 +400,19 @@ namespace referee {
         } __packed custom_info_t;
         static_assert(sizeof(custom_info_t) == 34, "0x0308 长度应为 34");
 
-        /* ===== 0x0310 机器人发给自定义终端 300 字节 ===== */
+        /** @brief 0x0310 机器人发给自定义终端 300 字节 */
         typedef struct {
             uint8_t data[300];  ///< 自定义数据，无重传机制
         } __packed robot_custom_data_t;
         static_assert(sizeof(robot_custom_data_t) == 300, "0x0310 长度应为 300");
 
-        /* ===== 0x0311 自定义终端发给机器人 60 字节 ===== */
+        /** @brief 0x0311 自定义终端发给机器人 60 字节 */
         typedef struct {
             uint8_t data[60];  ///< 自定义指令
         } __packed custom_control_t;
         static_assert(sizeof(custom_control_t) == 60, "0x0311 长度应为 60");
 
-        /* ===== 0x0A01 对方机器人位置 24 字节 ===== */
+        /** @brief 0x0A01 对方机器人位置 24 字节 */
         typedef struct {
             uint16_t opponent_heavyengineer_x;  ///< 对方重装 x，单位 cm
             uint16_t opponent_heavyengineer_y;  ///< 对方重装 y，单位 cm
@@ -429,7 +429,7 @@ namespace referee {
         } __packed radar_opponent_pos_t;
         static_assert(sizeof(radar_opponent_pos_t) == 24, "0x0A01 长度应为 24");
 
-        /* ===== 0x0A02 对方机器人血量 12 字节 ===== */
+        /** @brief 0x0A02 对方机器人血量 12 字节 */
         typedef struct {
             uint16_t opponent_1_robot_HP;  ///< 对方 1 号重装血量
             uint16_t reserved;             ///< 保留位
@@ -440,7 +440,7 @@ namespace referee {
         } __packed radar_opponent_hp_t;
         static_assert(sizeof(radar_opponent_hp_t) == 12, "0x0A02 长度应为 12");
 
-        /* ===== 0x0A03 对方允许发弹量 10 字节 ===== */
+        /** @brief 0x0A03 对方允许发弹量 10 字节 */
         typedef struct {
             uint16_t opponent_1_allowance;  ///< 对方 1 号重装允许发弹量
             uint16_t opponent_3_allowance;  ///< 对方 3 号步兵允许发弹量
@@ -450,7 +450,7 @@ namespace referee {
         } __packed radar_opponent_allowance_t;
         static_assert(sizeof(radar_opponent_allowance_t) == 10, "0x0A03 长度应为 10");
 
-        /* ===== 0x0A04 对方宏观状态 12 字节 ===== */
+        /** @brief 0x0A04 对方宏观状态 12 字节 */
         typedef struct {
             uint16_t opponent_remaining_coin;  ///< 对方剩余金币数
             uint16_t opponent_total_coin;      ///< 对方累计总金币数
@@ -469,7 +469,7 @@ namespace referee {
         } __packed opponent_buff_t;
         static_assert(sizeof(opponent_buff_t) == 7, "单个增益长度应为 7");
 
-        /* ===== 0x0A05 对方各机器人增益 47 字节 ===== */
+        /** @brief 0x0A05 对方各机器人增益 47 字节 */
         typedef struct {
             opponent_buff_t heavyengineer;  ///< 对方重装增益
             uint8_t reserved[7];            ///< 保留位
@@ -488,7 +488,7 @@ namespace referee {
         } __packed radar_opponent_buff_t;
         static_assert(sizeof(radar_opponent_buff_t) == 47, "0x0A05 长度应为 47");
 
-        /* ===== 0x0A06 对方干扰波密钥 6 字节 ===== */
+        /** @brief 0x0A06 对方干扰波密钥 6 字节 */
         typedef struct {
             uint8_t key[6];  ///< 6 个 ASCII 字母或数字
         } __packed radar_opponent_key_t;
