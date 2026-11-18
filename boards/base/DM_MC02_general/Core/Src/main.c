@@ -120,6 +120,7 @@ int main(void)
   MX_OCTOSPI2_Init();
   MX_TIM12_Init();
   MX_ADC1_Init();
+  MX_ADC3_Init();
   MX_FDCAN1_Init();
   MX_FDCAN2_Init();
   MX_TIM23_Init();
@@ -127,9 +128,12 @@ int main(void)
   MX_SPI3_Init();
   MX_SPI6_Init();
   /* USER CODE BEGIN 2 */
+  if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK ||
+      HAL_ADCEx_Calibration_Start(&hadc3, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK) {
+    Error_Handler();
+  }
   RM_DMA_UART5_INIT();
   RM_UART5_Init();
-  // RM_SPI6_Init();
   /* USER CODE END 2 */
 
   /* Init scheduler */

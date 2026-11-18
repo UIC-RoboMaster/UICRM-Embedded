@@ -47,6 +47,12 @@ namespace bsp {
 
     void SetHighresClockTimer(TIM_HandleTypeDef* htim) {
         htim_os = htim;
+        if (!htim)
+            return;
+        // 立即启动计数器，保证调度器启动前 GetHighresTickMicroSec() 就有效
+        __HAL_TIM_SET_AUTORELOAD(htim, 0xffffffff);
+        __HAL_TIM_SET_COUNTER(htim, 0);
+        __HAL_TIM_ENABLE(htim);
     }
 
     uint64_t GetHighresTickMicroSec(void) {

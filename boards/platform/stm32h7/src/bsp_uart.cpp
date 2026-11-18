@@ -96,14 +96,19 @@ namespace bsp {
         if (!uart)
             return;
 
+        if (uart->rx_dma_ && uart->rx_size_ &&
+            (huart->Instance->ISR & (UART_FLAG_PE | UART_FLAG_FE | UART_FLAG_NE | UART_FLAG_ORE))) {
+            // 丢弃错误帧并重装 DMA，避免 HAL 错误处理关闭 DMAR 后停收。
+            uint8_t* data;
+            __HAL_UART_SEND_REQ(huart, UART_RXDATA_FLUSH_REQUEST);
+            uart->Read<true>(&data);
+            __HAL_UART_CLEAR_IDLEFLAG(huart);
+            return;
+        }
+
         if (__HAL_UART_GET_FLAG(huart, UART_FLAG_IDLE) && __HAL_UART_GET_IT_SOURCE(huart, UART_IT_IDLE)) {
             uart->RxCompleteCallback();
             __HAL_UART_CLEAR_IDLEFLAG(huart);
-        }
-
-        // TODO(alvin): add actual error handler in the future, ignore it for now
-        if (__HAL_UART_GET_IT_SOURCE(huart, UART_IT_ERR)) {
-            __HAL_UART_CLEAR_PEFLAG(huart);
         }
     }
 
@@ -154,11 +159,11 @@ namespace bsp {
 
         rx_dma_ = dma;
 
-        // TODO: Rx No DMA is currently not supported
         if (rx_dma_) {
             /* enable uart rx dma transfer in back ground */
             UartStartDmaNoInt(huart_, rx_data_[0], rx_data_[1], rx_size_);
         } else {
+            // TODO: Rx No DMA is currently not supported
             HAL_UART_RegisterCallback(huart_, HAL_UART_RX_COMPLETE_CB_ID, RxCompleteCallbackWrapper);
             HAL_UART_Receive_IT(huart_, rx_data_[0], rx_size_);
         }
@@ -188,9 +193,8 @@ namespace bsp {
             return -1;
         /* capture pending bytes and perform hardware buffer switch */
         int32_t length;
-        // TODO: Rx No DMA is currently not supported
         if (!rx_dma_) {
-            // dma not supported
+            /* 非 DMA 模式：用 RxXferCount 推算本次收到的字节数 */
             (void)__HAL_UART_DISABLE_IT(huart_, UART_IT_IDLE);
             (void)__HAL_UART_DISABLE_IT(huart_, UART_IT_RXNE);
             length = rx_size_ - huart_->RxXferCount;
@@ -220,8 +224,15 @@ namespace bsp {
 #else
         // software double buffer
         HAL_DMA_Abort(huart_->hdmarx);
+        // 无中断 DMA 在异常中止后需要显式恢复句柄。
+        huart_->hdmarx->State = HAL_DMA_STATE_READY;
+        huart_->hdmarx->ErrorCode = HAL_DMA_ERROR_NONE;
         HAL_DMA_Start(huart_->hdmarx, (uint32_t)&huart_->Instance->RDR, (uint32_t)rx_data_[rx_index_], rx_size_);
 #endif
+        __HAL_UART_CLEAR_FLAG(huart_, UART_CLEAR_PEF | UART_CLEAR_FEF | UART_CLEAR_NEF | UART_CLEAR_OREF);
+        huart_->ErrorCode = HAL_UART_ERROR_NONE;
+        SET_BIT(huart_->Instance->CR1, USART_CR1_PEIE | USART_CR1_IDLEIE);
+        SET_BIT(huart_->Instance->CR3, USART_CR3_EIE | USART_CR3_DMAR);
 
         // exit critical session
         if (FromISR) {
@@ -303,9 +314,9 @@ namespace bsp {
     void UART::RxCompleteCallback() {
         if (rx_ptr_ != nullptr) {
             *rx_len_ = this->Read<true>(rx_ptr_);
-            if (callback_ != nullptr)
-                callback_(callback_args_);
         }
+        if (callback_ != nullptr)
+            callback_(callback_args_);
     }
     void UART::SetBaudrate(uint32_t baudrate) {
         if (HAL_UART_DeInit(huart_) != HAL_OK)

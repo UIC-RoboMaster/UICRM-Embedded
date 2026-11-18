@@ -45,7 +45,17 @@ extern TIM_HandleTypeDef htim23;
 extern TIM_HandleTypeDef htim24;
 
 /* USER CODE BEGIN Private defines */
+// 板级定时器分配：TIMxCLK = 270 MHz，下表定时器 PSC 均已分频到 1 MHz 计数
+#define BOARD_TIM_PWM1 htim1          // PE9(CH1) / PE13(CH3)
+#define BOARD_TIM_PWM2 htim2          // PA0(CH1) / PA2(CH3)
 
+#define BOARD_TIM_IMUHEATER htim3
+#define BOARD_TIM_IMUHEATER_CH 4      // PB1
+
+#define BOARD_TIM_SYS htim24          // 1 MHz 32 位，高分辨率计时/运行统计
+
+#define BOARD_TIM_BUZZER htim12
+#define BOARD_TIM_BUZZER_CH 2         // PB15
 /* USER CODE END Private defines */
 
 void MX_TIM1_Init(void);

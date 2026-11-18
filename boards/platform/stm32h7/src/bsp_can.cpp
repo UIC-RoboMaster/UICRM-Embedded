@@ -104,8 +104,8 @@ namespace bsp {
         if (ext_callback_count_ >= MAX_CAN_DEVICES)
             return -1;
 
-        rx_ext_args_[callback_count_] = args;
-        rx_ext_callbacks_[callback_count_] = callback;
+        rx_ext_args_[ext_callback_count_] = args;
+        rx_ext_callbacks_[ext_callback_count_] = callback;
         ext_to_index_[ext_id_suffix] = ext_callback_count_;
         ext_callback_count_++;
 
@@ -113,18 +113,15 @@ namespace bsp {
     }
 
     int CAN::Transmit(uint16_t id, const uint8_t data[], uint32_t length) {
-        if (length == 8) {
-            length = FDCAN_DLC_BYTES_8;
-        }
-        RM_EXPECT_TRUE(IS_FDCAN_DLC(length), "CAN tx data length exceeds limit");
-        if (!IS_FDCAN_DLC(length))
+        RM_EXPECT_TRUE(length <= MAX_CAN_DATA_SIZE, "CAN tx data length exceeds limit");
+        if (length > MAX_CAN_DATA_SIZE)
             return -1;
 
         FDCAN_TxHeaderTypeDef header =
             {.Identifier = id,
              .IdType = FDCAN_STANDARD_ID,
              .TxFrameType = FDCAN_DATA_FRAME,
-             .DataLength = FDCAN_DLC_BYTES_8,
+             .DataLength = length * (FDCAN_DLC_BYTES_8 / 8),
              .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
              .BitRateSwitch = FDCAN_BRS_OFF,
              .FDFormat = FDCAN_CLASSIC_CAN,
@@ -142,18 +139,15 @@ namespace bsp {
     }
 
     int CAN::TransmitExtend(uint32_t id, const uint8_t data[], uint32_t length) {
-        if (length == 8) {
-            length = FDCAN_DLC_BYTES_8;
-        }
-        RM_EXPECT_TRUE(IS_FDCAN_DLC(length), "CAN tx data length exceeds limit");
-        if (!IS_FDCAN_DLC(length))
+        RM_EXPECT_TRUE(length <= MAX_CAN_DATA_SIZE, "CAN tx data length exceeds limit");
+        if (length > MAX_CAN_DATA_SIZE)
             return -1;
 
         FDCAN_TxHeaderTypeDef header =
             {.Identifier = id,
              .IdType = FDCAN_EXTENDED_ID,
              .TxFrameType = FDCAN_DATA_FRAME,
-             .DataLength = length,
+             .DataLength = length * (FDCAN_DLC_BYTES_8 / 8),
              .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
              .BitRateSwitch = FDCAN_BRS_OFF,
              .FDFormat = FDCAN_CLASSIC_CAN,

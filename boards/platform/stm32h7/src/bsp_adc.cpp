@@ -20,7 +20,7 @@
 
 #include "bsp_adc.h"
 
-#include "string.h"
+#include "bsp_error_handler.h"
 namespace bsp {
     bADC::bADC(ADC_HandleTypeDef* hadc, uint32_t channel, uint32_t rank, uint32_t sampling_time) {
         hadc_ = hadc;
@@ -29,21 +29,24 @@ namespace bsp {
         sampling_time_ = sampling_time;
     }
     void bADC::Start() {
-        ADC_ChannelConfTypeDef sConfig;
-        memset(&sConfig, 0, sizeof(sConfig));
+        // Internal paths (TSEN/VREFEN) can only be enabled with the ADC disabled.
+        Stop();
+        ADC_ChannelConfTypeDef sConfig = {};
         sConfig.Channel = channel_;
         sConfig.Rank = rank_;
         sConfig.SamplingTime = sampling_time_;
+        sConfig.SingleDiff = ADC_SINGLE_ENDED;
+        sConfig.OffsetNumber = ADC_OFFSET_NONE;
         if (HAL_ADC_ConfigChannel(hadc_, &sConfig) != HAL_OK) {
             Error_Handler();
         }
     }
     void bADC::Stop() {
-        HAL_ADC_Stop(hadc_);
+        RM_ASSERT_HAL_OK(HAL_ADC_Stop(hadc_), "Failed to stop ADC");
     }
     uint32_t bADC::Read() {
-        HAL_ADC_Start(hadc_);
-        HAL_ADC_PollForConversion(hadc_, 10);
+        RM_ASSERT_HAL_OK(HAL_ADC_Start(hadc_), "Failed to start ADC");
+        RM_ASSERT_HAL_OK(HAL_ADC_PollForConversion(hadc_, 10), "ADC conversion timed out");
         return (uint32_t)HAL_ADC_GetValue(hadc_);
     }
 }  // namespace bsp

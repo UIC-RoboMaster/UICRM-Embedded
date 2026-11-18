@@ -104,6 +104,7 @@ namespace bsp {
          * @note memory is not copied for optimal performance, so second call to this
          *       method will invalidate the buffer produced by the previous call
          */
+        template <bool FromISR = false>
         uint32_t Read(uint8_t** data);
 
         /**
@@ -207,6 +208,10 @@ namespace bsp {
         uint32_t rx_pending_;
         uint8_t* rx_write_;
         uint8_t* rx_read_;
+        uint8_t** rx_ptr_ = nullptr;
+        uint32_t* rx_len_ = nullptr;
+        usb_rx_callback_t callback_ = nullptr;
+        void* callback_args_ = nullptr;
         /* tx */
         uint32_t tx_size_;
         uint32_t tx_pending_;

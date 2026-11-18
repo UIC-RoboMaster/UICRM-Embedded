@@ -20,6 +20,7 @@
 
 #include "bsp_print.h"
 
+#include "SEGGER_RTT.h"
 #include "bsp_uart.h"
 #include "bsp_usb.h"
 #include "cmsis_os.h"
@@ -33,6 +34,7 @@ bsp::UART* print_uart = NULL;
 #ifndef NO_USB
 static bsp::VirtualUSB* print_usb = NULL;
 #endif
+static bool print_rtt = false;
 static char print_buffer[MAX_PRINT_LEN];
 
 void print_use_uart(UART_HandleTypeDef* huart, bool dma, uint32_t baudrate) {
@@ -58,6 +60,15 @@ void print_use_usb() {
 }
 #endif
 
+void print_use_rtt() {
+    print_uart = NULL;
+#ifndef NO_USB
+    print_usb = NULL;
+#endif
+    print_rtt = true;
+    SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
+}
+
 int32_t print(const char* format, ...) {
 #ifdef NDEBUG
     UNUSED(format);
@@ -80,6 +91,8 @@ int32_t print(const char* format, ...) {
     else if (print_usb)
         return print_usb->Write((uint8_t*)print_buffer, length);
 #endif
+    else if (print_rtt)
+        return SEGGER_RTT_Write(0, print_buffer, length);
     else
         return 0;
 #endif  // #ifdef NDEBUG

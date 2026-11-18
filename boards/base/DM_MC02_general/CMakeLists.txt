@@ -19,6 +19,8 @@ target_compile_definitions(${PROJECT_NAME}_interface INTERFACE ${MCU_LINE}
 target_compile_options(${PROJECT_NAME}_interface INTERFACE ${MCU_OPTIONS})
 target_link_options(${PROJECT_NAME}_interface INTERFACE
         ${MCU_OPTIONS} -T${CMAKE_CURRENT_SOURCE_DIR}/${MCU_LINKER_SCRIPT})
+set_property(TARGET ${PROJECT_NAME}_interface APPEND PROPERTY INTERFACE_LINK_DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/${MCU_LINKER_SCRIPT})
 
 target_link_libraries(${PROJECT_NAME}_interface INTERFACE board_interface)
 target_include_directories(${PROJECT_NAME}_interface INTERFACE

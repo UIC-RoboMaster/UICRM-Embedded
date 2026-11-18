@@ -291,7 +291,7 @@ void MX_TIM24_Init(void)
 
   /* USER CODE END TIM24_Init 1 */
   htim24.Instance = TIM24;
-  htim24.Init.Prescaler = 0;
+  htim24.Init.Prescaler = 269; /* 270 MHz / 270 = 1 MHz，供 bsp 高分辨率计时使用 */
   htim24.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim24.Init.Period = 4294967295;
   htim24.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -449,12 +449,12 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
     /**TIM3 GPIO Configuration
     PB1     ------> TIM3_CH4
     */
-    GPIO_InitStruct.Pin = IMU_TEMP_Pin;
+    GPIO_InitStruct.Pin = IMU_HEATER_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
-    HAL_GPIO_Init(IMU_TEMP_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(IMU_HEATER_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN TIM3_MspPostInit 1 */
 

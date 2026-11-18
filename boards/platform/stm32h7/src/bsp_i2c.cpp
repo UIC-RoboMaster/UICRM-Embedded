@@ -92,33 +92,42 @@ namespace bsp {
     }
 
     int I2C::Transmit(uint16_t id, const uint8_t data[], uint16_t length) {
-        switch (mode_) {
-            case I2C_MODE_BLOCKING:
-                return HAL_I2C_Master_Transmit(hi2c_, id, const_cast<uint8_t*>(data), length, 20);
-                break;
-            case I2C_MODE_IT:
-                return HAL_I2C_Master_Transmit_IT(hi2c_, id, const_cast<uint8_t*>(data), length);
-                break;
-            case I2C_MODE_DMA:
-                return HAL_I2C_Master_Transmit_DMA(hi2c_, id, const_cast<uint8_t*>(data), length);
-                break;
-        }
-        return 0;
+        if (mode_ == I2C_MODE_BLOCKING)
+            return HAL_I2C_Master_Transmit(hi2c_, id, const_cast<uint8_t*>(data), length, 20);
+
+        // H7 Master IT/DMA 不保存地址；完成中断前记录，启动失败时还原。
+        uint32_t primask = __get_PRIMASK();
+        __disable_irq();
+        uint32_t address = hi2c_->Devaddress;
+        hi2c_->Devaddress = id;
+        HAL_StatusTypeDef status = HAL_ERROR;
+        if (mode_ == I2C_MODE_IT)
+            status = HAL_I2C_Master_Transmit_IT(hi2c_, id, const_cast<uint8_t*>(data), length);
+        else if (mode_ == I2C_MODE_DMA)
+            status = HAL_I2C_Master_Transmit_DMA(hi2c_, id, const_cast<uint8_t*>(data), length);
+        if (status != HAL_OK)
+            hi2c_->Devaddress = address;
+        __set_PRIMASK(primask);
+        return status;
     }
 
     int I2C::Receive(uint16_t id, uint8_t* data, uint16_t length) {
-        switch (mode_) {
-            case I2C_MODE_BLOCKING:
-                return HAL_I2C_Master_Receive(hi2c_, id, data, length, 20);
-                break;
-            case I2C_MODE_IT:
-                return HAL_I2C_Master_Receive_IT(hi2c_, id, data, length);
-                break;
-            case I2C_MODE_DMA:
-                return HAL_I2C_Master_Receive_DMA(hi2c_, id, data, length);
-                break;
-        }
-        return 0;
+        if (mode_ == I2C_MODE_BLOCKING)
+            return HAL_I2C_Master_Receive(hi2c_, id, data, length, 20);
+
+        uint32_t primask = __get_PRIMASK();
+        __disable_irq();
+        uint32_t address = hi2c_->Devaddress;
+        hi2c_->Devaddress = id;
+        HAL_StatusTypeDef status = HAL_ERROR;
+        if (mode_ == I2C_MODE_IT)
+            status = HAL_I2C_Master_Receive_IT(hi2c_, id, data, length);
+        else if (mode_ == I2C_MODE_DMA)
+            status = HAL_I2C_Master_Receive_DMA(hi2c_, id, data, length);
+        if (status != HAL_OK)
+            hi2c_->Devaddress = address;
+        __set_PRIMASK(primask);
+        return status;
     }
 
     int I2C::MemoryRead(uint16_t id, uint16_t reg, uint8_t* data, uint16_t length) {

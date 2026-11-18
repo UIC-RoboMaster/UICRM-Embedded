@@ -108,6 +108,10 @@ extern USBD_CDC_ItfTypeDef USBD_Interface_fops_HS;
 uint8_t CDC_Transmit_HS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
+uint8_t CDC_IsReady_HS(void);
+void RM_USB_TxCplt_Callback(void);
+void RM_USB_Reset_Callback(void);
+void RM_USB_RxCplt_Callback(uint8_t *Buf, uint32_t Len);
 
 /* USER CODE END EXPORTED_FUNCTIONS */
 

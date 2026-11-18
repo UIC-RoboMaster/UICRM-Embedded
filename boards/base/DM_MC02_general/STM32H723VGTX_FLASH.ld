@@ -113,20 +113,20 @@ SECTIONS
     __exidx_end = .;
   } >FLASH
 
-  .preinit_array     :
+  .preinit_array (READONLY) :
   {
     PROVIDE_HIDDEN (__preinit_array_start = .);
     KEEP (*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
   } >FLASH
-  .init_array :
+  .init_array (READONLY) :
   {
     PROVIDE_HIDDEN (__init_array_start = .);
     KEEP (*(SORT(.init_array.*)))
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
   } >FLASH
-  .fini_array :
+  .fini_array (READONLY) :
   {
     PROVIDE_HIDDEN (__fini_array_start = .);
     KEEP (*(SORT(.fini_array.*)))
@@ -177,29 +177,33 @@ SECTIONS
     . = ALIGN(8);
   } >DTCMRAM
 
-  ._D1_Area :
+  ._D1_Area (NOLOAD) :
   {
     . = ALIGN(4);
+    *(._D1_Area ._D1_Area.*)
     . = ALIGN(4);
   } >RAM_D1
 
-  ._D2_Area :
-    {
-      . = ALIGN(4);
-      . = ALIGN(4);
-    } >RAM_D2
+  ._D2_Area (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(._D2_Area ._D2_Area.*)
+    . = ALIGN(4);
+  } >RAM_D2
 
-  ._D3_Area :
-    {
-      . = ALIGN(4);
-      . = ALIGN(4);
-    } >RAM_D3
+  ._D3_Area (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(._D3_Area ._D3_Area.*)
+    . = ALIGN(4);
+  } >RAM_D3
 
-  ._ITCMRAM_Area :
-    {
-      . = ALIGN(4);
-        . = ALIGN(4);
-    } >ITCMRAM
+  ._ITCMRAM_Area (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(._ITCMRAM_Area ._ITCMRAM_Area.*)
+    . = ALIGN(4);
+  } >ITCMRAM
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

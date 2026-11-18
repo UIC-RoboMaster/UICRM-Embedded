@@ -13,6 +13,6 @@ set(STM32H7_INCLUDES
 uicrm_add_board_specific_library(DM_MC02_general_platform
         TARGET DM_MC02_general
         SOURCES ${STM32H7_SOURCES}
-        INCLUDES ${STN32H7_INCLUDES}
+        INCLUDES ${STM32H7_INCLUDES}
+        DEPENDS rtt
 )
-target_include_directories(DM_MC02_general_platform PUBLIC ${STM32H7_INCLUDES})

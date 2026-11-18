@@ -78,8 +78,8 @@ void RM_RTOS_Default_Task(const void *argument);
 #define WS2812B_SPI_GPIO_Port GPIOA
 #define DCMI_PWRDOWN_Pin GPIO_PIN_5
 #define DCMI_PWRDOWN_GPIO_Port GPIOC
-#define IMU_TEMP_Pin GPIO_PIN_1
-#define IMU_TEMP_GPIO_Port GPIOB
+#define IMU_HEATER_Pin GPIO_PIN_1
+#define IMU_HEATER_GPIO_Port GPIOB
 #define Accel_INT_Pin GPIO_PIN_10
 #define Accel_INT_GPIO_Port GPIOE
 #define Accel_INT_EXTI_IRQn EXTI15_10_IRQn

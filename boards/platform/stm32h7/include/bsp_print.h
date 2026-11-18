@@ -52,6 +52,11 @@ void print_use_usb();
 #endif
 
 /**
+ * @brief 使用SEGGER RTT进行调试打印
+ */
+void print_use_rtt();
+
+/**
  * @brief 输出数据，类似于 printf
  *
  * @param format 格式化字符串
