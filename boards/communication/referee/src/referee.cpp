@@ -21,7 +21,6 @@
 #include "referee.h"
 
 #include "bsp_os.h"
-#include "crc.h"
 
 namespace referee {
 
@@ -68,20 +67,21 @@ namespace referee {
     size_t Referee::Transmit(uint16_t cmd_id) {
         uint8_t* const data = tx_ + HEADER_SIZE + CMD_ID_SIZE;
         const int length = protocol_.OnBuild(cmd_id, data, MAX_PAYLOAD);
-        if (length < 0 || static_cast<size_t>(length) > MAX_PAYLOAD)
+        if (length < 0)
             return 0;
 
-        const size_t total = HEADER_SIZE + CMD_ID_SIZE + static_cast<size_t>(length) + TAIL_SIZE;
-        tx_[0] = SOF;
-        tx_[1] = static_cast<uint8_t>(length & 0xFF);
-        tx_[2] = static_cast<uint8_t>((length >> 8) & 0xFF);
-        tx_[3] = seq_++;
-        Append_CRC8_Check_Sum(tx_, HEADER_SIZE);
+        return Transmit(cmd_id, data, static_cast<size_t>(length));
+    }
 
-        tx_[HEADER_SIZE] = static_cast<uint8_t>(cmd_id & 0xFF);
-        tx_[HEADER_SIZE + 1] = static_cast<uint8_t>((cmd_id >> 8) & 0xFF);
+    size_t Referee::Transmit(uint16_t cmd_id, const void* payload, size_t length) {
+        if (length > MAX_PAYLOAD)
+            return 0;
 
-        Append_CRC16_Check_Sum(tx_, static_cast<uint32_t>(total));
+        const size_t total = Encode(tx_, sizeof(tx_), seq_, cmd_id, payload, static_cast<uint16_t>(length));
+        if (total == 0)
+            return 0;
+
+        ++seq_;
         return Write(tx_, total);
     }
 

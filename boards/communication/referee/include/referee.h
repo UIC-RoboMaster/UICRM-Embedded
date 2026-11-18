@@ -93,11 +93,21 @@ namespace referee {
         void Feed(const uint8_t* data, size_t size);
 
         /**
-         * @brief 根据 @p cmd_id 封装协议数据，并发送。
+         * @brief 通过 Protocol::OnBuild 构造数据段，再封帧发送。
          * @param[in] cmd_id 命令码。
-         * @return 实际写出的字节数；该命令无内容或写失败时为 0。
+         * @return 串口接受的字节数；构造失败或未写入时为 0。
          */
         size_t Transmit(uint16_t cmd_id);
+
+        /**
+         * @brief 直接把调用方构造的数据段封帧发送，不调用 Protocol::OnBuild。
+         * @param[in] cmd_id 外层命令码，例如 UI 绘图使用 0x0301。
+         * @param[in] payload 完整 data 段，不含外层帧头、命令码和 CRC；仅在调用期间读取。
+         * @param[in] length data 段的实际字节数，不能超过 MAX_PAYLOAD；为 0 时 payload 可为空。
+         * @return 串口接受的字节数（含帧开销，可能短写）；参数非法或未写入时为 0。
+         * @note 0x0301 须包含 6 字节交互头和实际内容，协议相关的长度与频率限制由调用方保证。
+         */
+        size_t Transmit(uint16_t cmd_id, const void* payload, size_t length);
 
         /**
          * @brief 设置收到有效裁判帧后，把数据交给哪个对象。

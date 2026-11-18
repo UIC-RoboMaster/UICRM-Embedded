@@ -29,7 +29,7 @@ namespace referee {
     size_t Encode(
         uint8_t* out, size_t capacity, uint8_t seq, uint16_t cmd_id, const void* payload, uint16_t length
     ) {
-        if (out == nullptr || length > MAX_PAYLOAD)
+        if (out == nullptr || length > MAX_PAYLOAD || (length != 0 && payload == nullptr))
             return 0;
         const size_t total = HEADER_SIZE + CMD_ID_SIZE + static_cast<size_t>(length) + TAIL_SIZE;
         if (total > capacity)
@@ -43,8 +43,9 @@ namespace referee {
 
         out[HEADER_SIZE] = static_cast<uint8_t>(cmd_id & 0xFF);
         out[HEADER_SIZE + 1] = static_cast<uint8_t>((cmd_id >> 8) & 0xFF);
-        if (length > 0 && payload != nullptr)
-            memcpy(out + HEADER_SIZE + CMD_ID_SIZE, payload, length);
+        uint8_t* const data = out + HEADER_SIZE + CMD_ID_SIZE;
+        if (length != 0 && payload != data)
+            memcpy(data, payload, length);
 
         Append_CRC16_Check_Sum(out, static_cast<uint32_t>(total));
         return total;

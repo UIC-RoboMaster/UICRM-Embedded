@@ -86,7 +86,8 @@ namespace referee {
      * @param[in] capacity 目标缓冲容量。
      * @param[in] seq 包序号，由调用方维护。
      * @param[in] cmd_id 命令码。
-     * @param[in] payload data 段地址，length 为 0 时可为空。
+     * @param[in] payload data 段地址，length 为 0 时可为空；可指向 out 内的 data 段起点以原地封帧，
+     *            否则不得与 out 重叠。
      * @param[in] length data 段字节数。
      * @return 完整帧字节数；参数非法时返回 0。
      */
