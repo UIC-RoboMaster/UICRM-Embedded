@@ -46,11 +46,11 @@ namespace referee {
         virtual bool OnCommand(const Frame& frame) = 0;
 
         /**
-         * @brief 按命令码生成待发送的 data 段。
-         * @param[in] cmd_id 命令码。
-         * @param[out] out data 段写入地址，容量至少为 capacity。
-         * @param[in] capacity 可用字节数。
-         * @return 写入的字节数；不发送该命令时返回 -1。
+         * @brief 根据命令码构造待发送的数据段。
+         * @param[in] cmd_id 待构造的数据帧命令码。
+         * @param[out] out 输出缓冲区，用于写入构造后的数据段。
+         * @param[in] capacity 输出缓冲区的可用容量，单位为字节。
+         * @return 成功时返回实际写入的数据段长度；命令不受支持或缓冲区容量不足时返回 -1。
          */
         virtual int OnBuild(uint16_t cmd_id, uint8_t* out, size_t capacity);
     };
@@ -93,16 +93,21 @@ namespace referee {
         void Feed(const uint8_t* data, size_t size);
 
         /**
-         * @brief 按命令码向对端发送一帧。
+         * @brief 根据 @p cmd_id 封装协议数据，并发送。
          * @param[in] cmd_id 命令码。
          * @return 实际写出的字节数；该命令无内容或写失败时为 0。
          */
         size_t Transmit(uint16_t cmd_id);
 
         /**
-         * @brief 设置或取消原始帧转发目标。
-         * @param[in] sink 下游接收者，传 nullptr 表示停止转发。
-         * @warning 不得在接收线程正在运行时切换，须在启动前或停机后调用。
+         * @brief 设置收到有效裁判帧后，把数据交给哪个对象。
+         * @details 每收到一帧通过 CRC 校验的完整数据，就调用
+         * sink->PostForward()，将帧头、数据和校验尾原样交给它。
+         * 即使本地协议不认识该帧，也仍会转发。
+         * @param[in] sink 接收帧的对象；传入 nullptr 表示停止转发，
+         * 本地协议仍会继续解析收到的数据。
+         * @warning sink 必须保持有效。请在开始接收前设置；开始接收后，
+         * 只能确认接收处理已停止时再更换。
          */
         void SetForwardSink(ForwardSink* sink) {
             forward_ = sink;
@@ -126,8 +131,8 @@ namespace referee {
         Protocol& protocol_;
         ForwardSink* forward_ = nullptr;  ///< 原始帧转发目标，为空时不转发。
 
-        Decoder decoder_;             ///< 分帧与校验，半包状态由它持有。
-        uint8_t seq_ = 0;             ///< 发送包序号。
+        Decoder decoder_;              ///< 分帧与校验，半包状态由它持有。
+        uint8_t seq_ = 0;              ///< 发送包序号。
         uint8_t tx_[MAX_PACKET] = {};  ///< 发送缓存。
 
         uint8_t* read_ptr_ = nullptr;

@@ -91,6 +91,9 @@ namespace referee {
                     memcpy(&robot_interaction.receiver_id, frame.data + 4, 2);
                     memcpy(robot_interaction.user_data, frame.data + HEADER, user_length);
 
+                    /**
+                     *  @bug 调用方无法知道当前 user_data 有效长度。
+                     */
                     // 接收方向的子内容再拆一层；图形等发送方向内容保持透传。
                     switch (robot_interaction.data_cmd_id) {
                         case SENTRY_CMD:
@@ -149,14 +152,15 @@ namespace referee {
                         return -1;
                     if (capacity < sizeof(robot_interaction_t))
                         return -1;
+                    /** @bug sizeof(robot_interaction_t)长度默认 */
                     memcpy(out, &robot_interaction, sizeof(robot_interaction_t));
-                    return static_cast<int>(sizeof(robot_interaction_t));
+                    return sizeof(robot_interaction_t);
 
                 case ROBOT_CUSTOM_DATA:
                     if (capacity < sizeof(robot_custom_data_t))
                         return -1;
                     memcpy(out, &robot_custom_data, sizeof(robot_custom_data_t));
-                    return static_cast<int>(sizeof(robot_custom_data_t));
+                    return sizeof(robot_custom_data_t);
 
                 default:
                     return -1;
